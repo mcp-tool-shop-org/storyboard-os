@@ -107,6 +107,19 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@24.12.2)(lightningcss@1.32.0)
 
+  packages/cinematic-storyboard-domain:
+    dependencies:
+      '@storyboard-os/core':
+        specifier: workspace:*
+        version: link:../storyboard-core
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@24.12.2)(lightningcss@1.32.0)
+
   packages/marketing-storyboard-domain:
     dependencies:
       '@storyboard-os/core':

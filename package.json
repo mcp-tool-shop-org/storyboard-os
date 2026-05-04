@@ -11,7 +11,7 @@
     "test": "pnpm -r test",
     "test:watch": "pnpm --filter rpg-storyboard test:watch",
     "build:all": "pnpm -r build",
-    "build:packages": "pnpm --filter @storyboard-os/core build && pnpm --filter @storyboard-os/routing build && pnpm --filter @storyboard-os/rpg-domain build && pnpm --filter @storyboard-os/canvas build && pnpm --filter @storyboard-os/marketing-domain build",
+    "build:packages": "pnpm --filter @storyboard-os/core build && pnpm --filter @storyboard-os/routing build && pnpm --filter @storyboard-os/rpg-domain build && pnpm --filter @storyboard-os/canvas build && pnpm --filter @storyboard-os/marketing-domain build && pnpm --filter @storyboard-os/cinematic-domain build",
     "verify": "pnpm run build:packages && pnpm test && pnpm build"
   },
   "engines": {
