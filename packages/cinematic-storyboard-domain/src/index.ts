@@ -32,4 +32,17 @@ export type { CinematicTemplateId, CinematicTemplateDefinition } from './templat
 export { generateProductionBrief, generateProductionMarkdown } from './handoff';
 export type { ProductionBrief, ProductionBriefShot } from './handoff';
 
+export { getSequenceProductionSignals } from './productionSignals';
+export type {
+  ProductionSignals,
+  ContinuityRisk,
+  VfxBurdenSummary,
+  AudioBurdenSummary,
+  CameraComplexitySummary,
+  CameraComplexityShot,
+  DurationRollup,
+  BlockedShot,
+  SequenceHealthLevel,
+} from './productionSignals';
+
 export { storyboardOsLaunchTrailer } from './demo-sequence';

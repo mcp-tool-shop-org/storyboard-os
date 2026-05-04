@@ -23,10 +23,13 @@ import {
 import {
     getCinematicFrameBadges,
     getSequenceReadiness,
+    getSequenceProductionSignals,
     type CinematicBeatStatusLevel,
+    type SequenceHealthLevel,
 } from '@storyboard-os/cinematic-domain';
 import type { Storyboard } from '@storyboard-os/cinematic-domain';
 import CinematicFrameInspector from './CinematicFrameInspector';
+import ProductionSignalPanel from './ProductionSignalPanel';
 
 // ─── Cinematic canvas config ──────────────────────────────────────────────────
 
@@ -115,6 +118,7 @@ export default function CinematicStoryboardCanvas({ storyboard }: Props) {
     const handoffHref = `/sequences/${storyboard.id}/handoff`;
     const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
     const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
+    const [showSignals, setShowSignals] = useState(false);
     const [scale, setScale] = useState(1);
 
     const canvasRef = useRef<ViewportHandle | null>(null);
@@ -129,9 +133,14 @@ export default function CinematicStoryboardCanvas({ storyboard }: Props) {
         if (id) setSelectedFrameId(null);
     }, []);
 
-    // ── Readiness computation ──────────────────────────────────────────────────
+    // ── Readiness + production signals ──────────────────────────────────────────
     const readiness = useMemo(
         () => getSequenceReadiness(storyboard),
+        [storyboard],
+    );
+
+    const productionSignals = useMemo(
+        () => getSequenceProductionSignals(storyboard),
         [storyboard],
     );
 
@@ -188,9 +197,14 @@ export default function CinematicStoryboardCanvas({ storyboard }: Props) {
                 case '-':
                     canvasRef.current?.zoomOut();
                     break;
+                case 'p':
+                case 'P':
+                    setShowSignals(prev => !prev);
+                    break;
                 case 'Escape':
                     setSelectedFrameId(null);
                     setSelectedConnectionId(null);
+                    setShowSignals(false);
                     break;
             }
         }
@@ -228,6 +242,21 @@ export default function CinematicStoryboardCanvas({ storyboard }: Props) {
                         {storyboard.frames.length} shots · {storyboard.connections.length} connections
                     </span>
                     <ReadinessCounts summary={readiness} />
+                    <HealthBadge health={productionSignals.health} reason={productionSignals.healthReason} />
+                    <button
+                        onClick={() => setShowSignals(s => !s)}
+                        title="Production Signals (P)"
+                        style={{
+                            fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+                            padding: '4px 10px', borderRadius: 4,
+                            background: showSignals ? 'rgba(234,179,8,0.15)' : 'rgba(71,85,105,0.2)',
+                            border: showSignals ? '1px solid rgba(234,179,8,0.4)' : '1px solid #1e293b',
+                            color: showSignals ? '#EAB308' : '#94a3b8',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        Signals
+                    </button>
                     <a
                         href={handoffHref}
                         style={{
@@ -290,6 +319,14 @@ export default function CinematicStoryboardCanvas({ storyboard }: Props) {
                         onClose={() => setSelectedConnectionId(null)}
                     />
                 )}
+
+                {/* Production signal panel */}
+                {showSignals && !selectedFrame && !selectedConnection && (
+                    <ProductionSignalPanel
+                        signals={productionSignals}
+                        onClose={() => setShowSignals(false)}
+                    />
+                )}
             </div>
 
             {/* ── Legend footer ─────────────────────────────────────────────────── */}
@@ -335,7 +372,7 @@ export default function CinematicStoryboardCanvas({ storyboard }: Props) {
                         </span>
                     ))}
                     <span style={{ fontSize: 11, color: '#1e293b' }}>
-                        drag to pan · scroll to pan · ctrl+scroll to zoom · F fit · 0 reset
+                        drag to pan · scroll to pan · ctrl+scroll to zoom · F fit · 0 reset · P signals
                     </span>
                 </div>
             </footer>
@@ -429,6 +466,42 @@ function ReadinessCounts({ summary }: { summary: { ready: number; partial: numbe
 }
 
 // ─── ConnectionPanel ──────────────────────────────────────────────────────────
+
+// ─── HealthBadge ──────────────────────────────────────────────────────────────
+
+const HEALTH_BADGE_COLORS: Record<SequenceHealthLevel, string> = {
+    green: '#22C55E',
+    yellow: '#EAB308',
+    red: '#EF4444',
+};
+
+const HEALTH_BADGE_LABELS: Record<SequenceHealthLevel, string> = {
+    green: '● READY',
+    yellow: '▲ AT RISK',
+    red: '■ BLOCKED',
+};
+
+function HealthBadge({ health, reason }: { health: SequenceHealthLevel; reason: string }) {
+    const color = HEALTH_BADGE_COLORS[health];
+    return (
+        <span
+            title={reason}
+            style={{
+                fontSize: 10, fontWeight: 700,
+                padding: '2px 7px', borderRadius: 3,
+                background: `${color}18`,
+                border: `1px solid ${color}44`,
+                color,
+                letterSpacing: '0.04em',
+                cursor: 'default',
+            }}
+        >
+            {HEALTH_BADGE_LABELS[health]}
+        </span>
+    );
+}
+
+// ─── ConnectionPanel (continued) ──────────────────────────────────────────────
 
 interface ConnectionPanelProps {
     connection: { id: string; type: string; label?: string };
