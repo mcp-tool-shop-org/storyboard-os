@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.0.2] — 2026-05-04
+
+### Added
+
+#### Cinematic Phase 0 — Production Storyboard Vertical
+
+Third vertical proving multi-domain architecture. Zero changes to canvas, core, or routing.
+
+**C-0A — Domain Package (80 tests)**
+- `@storyboard-os/cinematic-domain` — 9 frame types, camera language (angle/movement/framing), VFX/audio/continuity requirements, 7 cinematic connection types, 3 templates, frame signals, beat status, validation, handoff export, demo trailer sequence
+- Frame types: sequence, shot, camera_move, action, dialogue, transition, vfx, audio, edit_beat
+- Connection types: sequence, match_cut, cutaway, reaction, transition, continuity, parallel_action, fallback
+
+**C-0B — App Vertical (9 pages)**
+- `apps/cinematic-storyboard` — Astro sequence board with cinematic canvas config, frame inspector (camera/VFX/audio/continuity), connection panel with cinematic grammar, production brief handoff page
+
+**C-0C — Production Signal Layer (12 tests)**
+- `getSequenceProductionSignals()` — continuity risk, VFX burden, audio burden, camera complexity, duration rollup, blocked shots, production health (green/yellow/red), pressure summary
+- App: ProductionSignalPanel with collapsible sections, HealthBadge in header, P keyboard shortcut
+
+**C-0D — Closeout**
+- Architecture docs updated with three-vertical proof
+- `docs/cinematic-storyboard.md` — product overview with deliberate exclusions
+- `docs/cinematic-phase-0-closeout.md` — phase closeout with acceptance gates
+- README updated with all three verticals
+- Landing page updated with cinematic vertical
+- CHANGELOG updated
+
+### Changed
+- Total: 603 tests, 54 pages, 6 packages, 3 apps (was 511/45/5/2)
+
+---
+
 ## [1.0.1] — 2026-05-04
 
 ### Added

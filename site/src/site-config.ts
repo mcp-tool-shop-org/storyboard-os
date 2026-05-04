@@ -9,16 +9,16 @@ export const config: SiteConfig = {
   footerText: 'MIT Licensed — built by <a href="https://mcp-tool-shop.github.io/" style="color:var(--color-muted);text-decoration:underline">MCP Tool Shop</a>',
 
   hero: {
-    badge: 'Open source · v1.0.1',
+    badge: 'Open source · v1.0.2',
     headline: 'Story structure that ships.',
-    headlineAccent: 'Multi-vertical.',
-    description: 'A visual authoring platform where every frame is an implementation spec. Two verticals — RPG quest authoring and marketing campaign implementation — share one canvas, zero cross-domain imports.',
+    headlineAccent: 'Three verticals.',
+    description: 'A visual authoring platform where every frame is an implementation spec. Three verticals — RPG quest authoring, marketing campaign implementation, and cinematic production storyboarding — share one canvas, zero cross-domain imports.',
     primaryCta: { href: '#platform', label: 'See the platform' },
     secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [
       { label: 'Install', code: 'git clone mcp-tool-shop-org/storyboard-os\npnpm install && pnpm dev' },
-      { label: 'Verify', code: 'pnpm verify  # 511 tests · 45 pages · 2 apps' },
-      { label: 'Packages', code: '@storyboard-os/core\n@storyboard-os/rpg-domain\n@storyboard-os/marketing-domain\n@storyboard-os/canvas\n@storyboard-os/routing' },
+      { label: 'Verify', code: 'pnpm verify  # 603 tests · 54 pages · 3 apps' },
+      { label: 'Packages', code: '@storyboard-os/core\n@storyboard-os/rpg-domain\n@storyboard-os/marketing-domain\n@storyboard-os/cinematic-domain\n@storyboard-os/canvas\n@storyboard-os/routing' },
     ],
   },
 
@@ -42,24 +42,28 @@ export const config: SiteConfig = {
           desc: 'The campaign-implementation contract: 9 frame types, launch readiness model, critical path analysis, approval gates, measurement loops, and campaign brief export. Answers: can this campaign ship?',
         },
         {
+          title: '@storyboard-os/cinematic-domain',
+          desc: 'The cinematic production contract: 9 frame types, camera language, VFX/audio/continuity requirements, production signals (health, burden, complexity), and production brief export. Answers: what makes this sequence hard to produce?',
+        },
+        {
           title: '@storyboard-os/canvas',
-          desc: 'Konva rendering with a ViewportHandle API — zoom, pan, fit, center, drag. Accepts any StoryboardCanvasConfig. Has no knowledge of RPG or marketing vocabulary.',
+          desc: 'Konva rendering with a ViewportHandle API — zoom, pan, fit, center, drag. Accepts any StoryboardCanvasConfig. Has no knowledge of RPG, marketing, or cinematic vocabulary.',
         },
         {
           title: '@storyboard-os/routing',
           desc: 'URL construction helpers with zero dependencies. One factory, three route builders. Each vertical passes its own base path — the canvas and domain work without modification.',
         },
         {
-          title: '511 tests, two verticals, zero cross-domain imports',
-          desc: 'The marketing vertical proved multi-vertical architecture: zero changes to canvas, core, or routing. Each domain is tested in isolation. The boundary is verified on every commit.',
+          title: '603 tests, three verticals, zero cross-domain imports',
+          desc: 'The cinematic vertical proved multi-vertical architecture for the third time: zero changes to canvas, core, or routing. Each domain is tested in isolation. The boundary is verified on every commit.',
         },
       ],
     },
     {
       kind: 'features',
       id: 'features',
-      title: 'Two verticals, one platform',
-      subtitle: 'rpg-storyboard for quest authoring. marketing-storyboard for campaign implementation. Both run locally — no backend, no accounts, no server.',
+      title: 'Three verticals, one platform',
+      subtitle: 'rpg-storyboard for quest authoring. marketing-storyboard for campaign implementation. cinematic-storyboard for production storyboarding. All run locally — no backend, no accounts, no server.',
       features: [
         {
           title: 'Game-state signal on the board',
@@ -93,6 +97,14 @@ export const config: SiteConfig = {
           title: 'Campaign brief handoff (marketing)',
           desc: 'Markdown + JSON export scoped to a campaign. Same topological sort, different domain. A campaign coordinator can read what ships, what blocks it, and what measures success.',
         },
+        {
+          title: 'Production signals (cinematic)',
+          desc: 'Continuity risk, VFX/audio burden, camera complexity, duration rollup, and blocked shots. The board shows production health derived from spec completeness — not from human-assigned status.',
+        },
+        {
+          title: 'Production brief handoff (cinematic)',
+          desc: 'Per-shot camera language, asset requirements, VFX/audio specs, and readiness status. An editor or animator can receive a sequence they didn\'t design and understand what to build.',
+        },
       ],
     },
     {
@@ -110,7 +122,7 @@ export const config: SiteConfig = {
         },
         {
           title: 'Verify before ship',
-          code: '# All 511 tests + full build in one command\npnpm verify  # 5 packages · 2 apps · 45 pages',
+          code: '# All 603 tests + full build in one command\npnpm verify  # 6 packages · 3 apps · 54 pages',
         },
       ],
     },

@@ -14,11 +14,17 @@
 
 ---
 
-A visual story-structure authoring platform for interactive narrative — quests, branches, scenes, encounters, consequences, and the game-state logic that connects them.
+A visual story-structure authoring platform for interactive narrative — quests, campaigns, cinematics, and the production logic that connects them.
 
-**rpg-storyboard** is the first vertical: a game-authoring tool for RPG video game quest and scene design. **marketing-storyboard** is the second vertical: a campaign implementation storyboard that answers "Can this campaign ship, and what blocks it?"
+**Three verticals, one platform:**
 
-Both are products, not demos. Neither imports from the other.
+| Vertical | Domain |
+|---|---|
+| `rpg-storyboard` | RPG quest / game narrative — implementation-ready authoring |
+| `marketing-storyboard` | Campaign launch — launch readiness + critical path |
+| `cinematic-storyboard` | Trailer / cutscene / explainer — production storyboarding |
+
+All three are products, not demos. None imports from the others.
 
 ---
 
@@ -77,6 +83,7 @@ Phase 1 established the read-only preview vertical: canvas rendering, game-state
 | `@storyboard-os/core` | Generic storyboard primitives: frame, connection, annotation, template, structural validator. No domain vocabulary. |
 | `@storyboard-os/rpg-domain` | RPG game-authoring contract: frame types, content fields, templates, readiness model, handoff generator, Tollhouse Ledger demo quest. |
 | `@storyboard-os/marketing-domain` | Marketing campaign-implementation contract: frame types (audience, message, touchpoint, asset, approval, launch_event, measurement), launch readiness model, critical path, approval gates, measurement loops, campaign brief export, demo campaign. |
+| `@storyboard-os/cinematic-domain` | Cinematic production contract: 9 frame types, camera language, VFX/audio/continuity requirements, production signals (health, burden, complexity, blocked shots), production brief handoff, 3 templates, demo trailer sequence. |
 | `@storyboard-os/canvas` | Konva canvas renderer: frames, connections, selection, drag, type badges, connection labels, zoom/pan viewport. Domain config passed in. |
 | `@storyboard-os/routing` | Configurable URL helpers: board and frame route generation. No dependencies. |
 
@@ -86,6 +93,7 @@ Phase 1 established the read-only preview vertical: canvas rendering, game-state
 |---|---|
 | `rpg-storyboard` | Astro RPG game-authoring product. Owns: RPG canvas config, frame inspector, handoff pages, template gallery, route setup, page layout. |
 | `marketing-storyboard` | Astro campaign-implementation storyboard. Owns: marketing canvas config, campaign board, frame inspector, launch readiness badge, critical path emphasis, launch blockers panel, campaign brief handoff. |
+| `cinematic-storyboard` | Astro cinematic production storyboard. Owns: cinematic canvas config, sequence board, frame inspector (camera/VFX/audio/continuity), production signal panel (health/burden/complexity), production brief handoff. |
 
 ---
 
@@ -104,10 +112,18 @@ apps/marketing-storyboard
   → @storyboard-os/canvas            (same canvas, different config)
   → @storyboard-os/routing           (URL helpers)
 
+apps/cinematic-storyboard
+  → @storyboard-os/cinematic-domain  (cinematic production contract)
+  → @storyboard-os/canvas            (same canvas, different config)
+  → @storyboard-os/routing           (URL helpers)
+
 @storyboard-os/rpg-domain
   → @storyboard-os/core              (generic primitives)
 
 @storyboard-os/marketing-domain
+  → @storyboard-os/core              (generic primitives)
+
+@storyboard-os/cinematic-domain
   → @storyboard-os/core              (generic primitives)
 
 @storyboard-os/canvas
@@ -120,7 +136,7 @@ apps/marketing-storyboard
   → (no deps)
 ```
 
-A third vertical (e.g. `apps/screenplay-storyboard`) would create its own domain package and reuse `@storyboard-os/core`, `@storyboard-os/canvas`, and `@storyboard-os/routing` without touching either existing domain package. The marketing vertical proved this pattern: zero changes to canvas, core, or routing.
+A fourth vertical would create its own domain package and reuse `@storyboard-os/core`, `@storyboard-os/canvas`, and `@storyboard-os/routing` without touching any existing domain package. Three verticals have now proven this pattern: zero changes to canvas, core, or routing.
 
 See [`docs/architecture.md`](docs/architecture.md) for full detail.
 
@@ -131,8 +147,8 @@ See [`docs/architecture.md`](docs/architecture.md) for full detail.
 ```bash
 pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
-pnpm test       # runs all package + app tests (511 tests)
-pnpm build      # builds both apps (45 pages)
+pnpm test       # runs all package + app tests (603 tests)
+pnpm build      # builds all 3 apps (54 pages)
 pnpm verify     # test + build in one command (ship gate)
 ```
 
@@ -158,10 +174,10 @@ See [`SECURITY.md`](SECURITY.md) for the full trust model and vulnerability repo
 ## Status
 
 ```
-Phase 2 complete + Marketing Phase 0 complete
-511/511 tests passing
-45/45 pages built
-5 packages · 2 apps
+Phase 2 complete + Marketing Phase 0 complete + Cinematic Phase 0 complete
+603/603 tests passing
+54/54 pages built
+6 packages · 3 apps
 ```
 
 | Phase | Description | Status |
@@ -185,6 +201,10 @@ Phase 2 complete + Marketing Phase 0 complete
 | M-0B | Marketing app vertical — Astro campaign board, frame inspector, handoff | ✅ |
 | M-0C | Launch readiness signal layer — critical path, approval gates, measurement loops | ✅ |
 | M-0D | Marketing closeout — docs, changelog, architecture proof | ✅ |
+| C-0A | Cinematic domain package — schema, camera language, VFX/audio, templates, validation, demo | ✅ |
+| C-0B | Cinematic app vertical — Astro sequence board, frame inspector, production brief | ✅ |
+| C-0C | Production signal layer — health, VFX/audio burden, camera complexity, blocked shots | ✅ |
+| C-0D | Cinematic closeout — docs, changelog, architecture proof | ✅ |
 
 ---
 
@@ -203,6 +223,10 @@ Route: `/storyboards/quest-01`
 - [`docs/architecture.md`](docs/architecture.md) — package separation, dependency rules, canvas viewport model, project storage boundary, extensibility
 - [`docs/product-brief.md`](docs/product-brief.md) — what rpg-storyboard is, target user, drift warnings, acceptance gates
 - [`docs/rpg-storyboard.md`](docs/rpg-storyboard.md) — RPG game-authoring contract, full authoring loop (Phase 2), readiness model, handoff export
+- [`docs/marketing-storyboard.md`](docs/marketing-storyboard.md) — Marketing campaign-implementation contract, launch readiness model, critical path, exclusions
+- [`docs/cinematic-storyboard.md`](docs/cinematic-storyboard.md) — Cinematic production storyboard, production signals, camera language, deliberate exclusions
+- [`docs/cinematic-phase-0-closeout.md`](docs/cinematic-phase-0-closeout.md) — Cinematic Phase 0 spine narrative, acceptance gates, proof
+- [`docs/marketing-phase-0-closeout.md`](docs/marketing-phase-0-closeout.md) — Marketing Phase 0 spine narrative, acceptance gates, proof
 - [`docs/phase-2-closeout.md`](docs/phase-2-closeout.md) — Phase 2 spine narrative, architecture integrity record, deliberate exclusions
 - [`docs/phase-1-closeout.md`](docs/phase-1-closeout.md) — Phase 1 spine narrative and architecture integrity record
 - [`docs/phase-0-closeout.md`](docs/phase-0-closeout.md) — Phase 0 dogfood verdict and original Phase 1 backlog

@@ -6,7 +6,7 @@ Each package owns one concern and does not import from packages above it.
 
 The split between **domain-neutral infrastructure** and **domain-specific authoring contract** is intentional and load-bearing. The platform can grow without each new vertical inheriting RPG vocabulary. The RPG vertical can evolve without being trapped inside generic library code.
 
-The marketing vertical (Phase M-0) proved this: it shipped a full campaign-implementation storyboard without modifying canvas, core, or routing.
+Three verticals have now proven this architecture: RPG, marketing, and cinematic all shipped without modifying canvas, core, or routing.
 
 ---
 
@@ -24,9 +24,15 @@ apps/marketing-storyboard
   │     └── @storyboard-os/core
   ├── @storyboard-os/canvas
   └── @storyboard-os/routing
+
+apps/cinematic-storyboard
+  ├── @storyboard-os/cinematic-domain
+  │     └── @storyboard-os/core
+  ├── @storyboard-os/canvas
+  └── @storyboard-os/routing
 ```
 
-Nothing in `@storyboard-os/core`, `@storyboard-os/canvas`, or `@storyboard-os/routing` imports from `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, or any app. The domains and apps import from the platform; the platform does not import from any domain. The two domain packages do not import from each other.
+Nothing in `@storyboard-os/core`, `@storyboard-os/canvas`, or `@storyboard-os/routing` imports from `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, `@storyboard-os/cinematic-domain`, or any app. The domains and apps import from the platform; the platform does not import from any domain. The three domain packages do not import from each other.
 
 ---
 
@@ -175,6 +181,71 @@ The marketing domain is a **campaign implementation storyboard**, not a marketin
 | Asset file attachments | File management is infrastructure, not domain |
 
 The domain answers one question: **Is this campaign's implementation spec complete enough to ship?** The launch readiness model is derived from spec completeness and graph structure — never from human-assigned status fields.
+
+---
+
+## `@storyboard-os/cinematic-domain`
+
+**Owns:** The cinematic production storyboard contract. Everything needed to answer "What makes this sequence hard to shoot, animate, edit, or hand off?" — nothing that answers "Who's on set today?" or "When is the deadline?"
+
+```ts
+// Schema — cinematic-specific frame types and content
+CinematicFrameType        // sequence | shot | camera_move | action | dialogue |
+                          // transition | vfx | audio | edit_beat
+CinematicFrameContent     // intent, visualDescription, cameraAngle, cameraMovement,
+                          // framing, durationEstimate, dialogue, actionNotes,
+                          // continuityRequirements, requiredAssets, vfxRequirements,
+                          // audioRequirements, editNotes, implementationChecklist, testCriteria
+CinematicConnectionType   // sequence | match_cut | cutaway | reaction | transition |
+                          // continuity | parallel_action | fallback
+
+// Frame signals (C-0A)
+getCinematicFrameBadges()       // per-frame badges: CAM, VFX, SFX, SPEC/PARTIAL/DRAFT/BLOCKED
+getCinematicFrameSignal()       // readiness + camera/VFX/audio/continuity indicators
+
+// Beat status (C-0A)
+getCinematicBeatStatus()        // BeatStatusLevel: ready | partial | draft | blocked
+getSequenceReadiness()          // counts by level across sequence
+
+// Production signals (C-0C)
+getSequenceProductionSignals()  // ProductionSignals: health, continuity risk, VFX burden,
+                                // audio burden, camera complexity, duration rollup,
+                                // blocked shots, pressure summary
+
+// Templates (C-0A)
+CINEMATIC_TEMPLATES             // trailer_flow | cutscene_sequence | explainer_video
+getCinematicTemplate()
+createCinematicStoryboard()
+
+// Validation (C-0A)
+validateCinematicStoryboard()   // domain rules on top of core structural validation
+
+// Handoff (C-0A)
+generateProductionBrief()       // ProductionBrief: per-shot camera, assets, readiness
+generateProductionMarkdown()    // Markdown for production brief
+
+// Demo sequence
+storyboardOsLaunchTrailer       // 8-frame demo trailer with full production spec
+```
+
+**Does not import from:** any app, `@storyboard-os/canvas`, `@storyboard-os/routing`, `@storyboard-os/rpg-domain`, or `@storyboard-os/marketing-domain`.
+
+**Imports from:** `@storyboard-os/core` only.
+
+### Design boundary — what the cinematic domain is NOT
+
+The cinematic domain is a **production storyboard**, not a film-planning suite.
+
+| Deliberately excluded | Why |
+|---|---|
+| Production scheduling / timelines | Scheduling belongs in production management tools |
+| Crew assignment / call sheets | People management is not frame semantics |
+| Asset management / file linking | File hosting is infrastructure, not domain logic |
+| Budget / cost estimation | Finance is a separate concern |
+| Render farm / pipeline integration | Execution infrastructure lives elsewhere |
+| Shot status workflows (review → approved) | Readiness is derived from spec completeness, not role-based gates |
+
+The domain answers one question: **What makes this sequence hard to produce?** Production signals are derived from frame content and graph structure — never from manually assigned status labels or external tracking systems.
 
 ---
 
@@ -337,16 +408,16 @@ This pattern is used by all three mutation callbacks: position change, content c
 
 ---
 
-## Adding a Second Vertical
+## Adding a Fourth Vertical
 
-A second vertical (e.g. `apps/screenplay-storyboard`) would:
+A fourth vertical (e.g. `apps/screenplay-storyboard`) would:
 
 1. Create `packages/screenplay-domain` implementing its own frame types, content fields, and templates on top of `@storyboard-os/core` generics
 2. Create an app that passes its own `StoryboardCanvasConfig` to `@storyboard-os/canvas`
 3. Create its own frame inspector reading its domain content fields
 4. Call `createStoryboardRoutes({ storyboardBasePath: '/scenes' })` from `@storyboard-os/routing`
 
-It would not touch `@storyboard-os/rpg-domain` at all. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification.
+It would not touch `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, or `@storyboard-os/cinematic-domain`. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification. Three verticals have proven this pattern.
 
 ---
 
