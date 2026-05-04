@@ -10,6 +10,44 @@ A visual authoring tool for RPG video game narrative, quest, scene, encounter, a
 
 ---
 
+## The Authoring Loop
+
+After Phase 1, the complete workflow:
+
+1. **Choose a starting point** — `/templates` shows three RPG production templates with beat-type sequences and production rationale. Or open the Tollhouse Ledger demo at `/storyboards/quest-01`.
+
+2. **Read the board** — the canvas shows game-state signal without opening any inspector:
+   - `STATE` badge (blue) — frame modifies game flags or variables
+   - `SPEC` / `PARTIAL` / `DRAFT` badge (green / orange / gray) — implementation depth at a glance
+
+3. **Inspect a beat** — click any frame to open the inspector:
+   - `READY` / `PARTIAL` / `DRAFT` / `BLOCKED` status chip
+   - Coverage counts: assets · tests · tasks
+   - Blockers (domain violations — choice/consequence/reveal without required fields)
+   - Spec gaps (missing designerNotes, assets, criteria, checklist)
+
+4. **Navigate the board** — board operations:
+   - `F` → fit all frames to screen
+   - `0` → reset to 100%
+   - `+` / `-` → zoom in/out
+   - `Escape` → deselect
+   - Drag background → pan
+   - Ctrl/Cmd + scroll → zoom at cursor
+   - Plain scroll → pan (natural trackpad)
+   - ViewControls overlay (lower-right) for mouse access
+
+5. **Inspect connections** — click any arrow to open the connection panel: type, source/target, condition/result label, type description.
+
+6. **Deep-read a beat** — click "Open" in the inspector to navigate to the full frame page at `/storyboards/[id]/frames/[frameId]`. Full implementation spec: player text, designer notes, entry/exit conditions, state changes, required assets, test criteria, checklist, annotations, connections.
+
+7. **Export handoff** — click "Handoff →" in the header to open `/storyboards/[id]/handoff`. The handoff page:
+   - Shows all beats in topological quest order (Kahn's algorithm, cycle-safe)
+   - Each beat: status, missing reasons, all spec fields, outgoing branches with labels
+   - Download as Markdown (developer-readable spec) or JSON (engine-ingestible)
+   - Readiness summary at the top: ready / partial / blocked / draft counts
+
+---
+
 ## The Game-Authoring Contract
 
 Every frame in `@storyboard-os/rpg-domain` carries implementation depth, not just story notes.
@@ -63,11 +101,68 @@ Connections are first-class entities. They carry game-state meaning, not just ar
 
 | Type | Meaning | Canvas Style |
 |---|---|---|
-| `sequence` | Linear progression — beat A leads to beat B | Solid gray |
-| `choice` | Player-driven branch — one of N paths opens | Dashed purple |
-| `consequence` | Outcome arc — state change drives the next beat | Solid red |
-| `optional` | Conditional or skippable path | Dashed dark |
-| `fallback` | Alternate route if primary path is blocked | Dashed orange |
+| `sequence` | Linear progression — beat A leads to beat B | Solid gray, 1.5px |
+| `choice` | Player-driven branch — one of N paths opens | Dashed purple, 2.5px |
+| `consequence` | Outcome arc — state change drives the next beat | Solid red, 2.5px |
+| `optional` | Conditional or skippable path | Dashed dark, 1.5px |
+| `fallback` | Alternate route if primary path is blocked | Dashed orange, 2px |
+
+Stroke weight distinguishes game-state branches (`choice`, `consequence`) from narrative sequence at a glance. This is configuration passed from the app to the canvas — the canvas has no knowledge of what the types mean.
+
+---
+
+## Implementation Readiness Model
+
+`getBeatStatus(frame)` in `@storyboard-os/rpg-domain` is the authoritative source of what "ready" means. The app renders the result; the domain decides it.
+
+### Status levels
+
+| Level | Meaning |
+|---|---|
+| `ready` | All spec sections present. Spec score ≥ 3 (designerNotes, requiredAssets, testCriteria, implementationChecklist). No domain violations. |
+| `partial` | Some spec present but incomplete. Spec score 1–2. |
+| `draft` | No spec present (score = 0). The beat exists structurally but carries no implementation depth. |
+| `blocked` | Domain violation: a `choice`/`consequence` frame missing `stateChanges`, or a `reveal` missing both `entryConditions` and `stateChanges`. Content is present but violates RPG contract. |
+
+Note: an empty `choice` frame (score = 0) is `draft`, not `blocked`. A frame must have at least some content before domain rules apply.
+
+### Missing reasons
+
+```ts
+type MissingSpecReason =
+  | 'no_state_changes'          // blocking: choice/consequence/reveal domain rule
+  | 'no_entry_or_state_change'  // blocking: reveal domain rule
+  | 'no_designer_notes'         // spec gap
+  | 'no_required_assets'        // spec gap
+  | 'no_test_criteria'          // spec gap
+  | 'no_implementation_checklist' // spec gap
+  | 'no_stakes'                 // advisory
+  | 'no_possible_outcomes';     // advisory
+```
+
+`BLOCKING_REASONS` (exported from `@storyboard-os/rpg-domain`) is the runtime set `{ 'no_state_changes', 'no_entry_or_state_change' }`. The app uses it to distinguish blockers (red ⚠) from spec gaps (gray –) in the inspector.
+
+---
+
+## Quest Handoff Export
+
+`generateHandoff(storyboard)` returns a `QuestHandoff` object. `generateMarkdown(handoff)` converts it to a developer-readable Markdown string.
+
+### Beat ordering
+
+Beats are ordered topologically using Kahn's algorithm — the sequence a developer would implement them: upstream dependencies before downstream outcomes. Cycles are detected and remaining frames appended without crashing.
+
+### Per-beat content
+
+Every `HandoffBeat` includes:
+- Status and missing reasons
+- All spec fields (conditions, state changes, assets, checklist, criteria)
+- `outgoingBranches` — type, label, destination ID and title
+- `incomingFromIds` — which beats lead here
+
+### Readiness summary
+
+The handoff header shows: `total`, `ready`, `partial`, `draft`, `blocked` counts and `readyFraction`. `blockedBeatIds` and `partialBeatIds` are listed at the top so the developer knows immediately what needs attention before implementation.
 
 ---
 
@@ -90,6 +185,8 @@ Per-frame annotations for authoring context.
 
 Templates generate complete boards. Every generated frame carries entry conditions, state changes, required assets, and test criteria. Templates are thinking structures, not blank starting points.
 
+Browse at `/templates`. Each card shows the beat-type sequence, beat count, production rationale, and links to Preview Board and Preview Handoff.
+
 ### Quest Flow (`quest_flow`) — 8 frames
 
 A complete quest spine: hook to future thread.
@@ -101,6 +198,8 @@ Opening Hook → Establishing Scene → Character Contact → Key Choice
 
 Design intent: linear quest with one major player-driven branch. The choice sets a flag that determines the encounter type. The reveal recontextualizes something from the opening. The consequence echoes forward into the next quest.
 
+**Best for:** First draft of any new quest. Forces every beat to carry state logic from the start.
+
 ### Quest Branch (`quest_branch`) — 7 frames
 
 A branching quest with three divergent paths and a convergence point.
@@ -110,7 +209,9 @@ Inciting Situation → Decision Point → [Path A | Path B | Path C]
   → Convergence Point → Fallout Thread
 ```
 
-Design intent: three paths with distinct costs and payoffs. Path A is fast and expensive. Path B is slow and informed. Path C is lateral and uncertain. All three arrive at the same convergence with different resources, information, and leverage.
+Design intent: three paths with distinct costs and payoffs. Path A is fast and expensive. Path B is slow and informed. Path C is lateral and uncertain. All three arrive at convergence with different resources, information, and leverage.
+
+**Best for:** Player decisions that should create genuinely different gameplay, not the same sequence with different paint.
 
 ### Cutscene Beat (`cutscene_beat`) — 5 frames
 
@@ -121,7 +222,9 @@ Establishing Frame → Character Beat → The Revelation
   → Player Response → The Shift
 ```
 
-Design intent: the player response frame is mandatory. Without it the sequence is a cinematic in the worst sense. The shift records the lasting game-state change this moment produces.
+Design intent: the player response frame is mandatory. Without it the sequence is a cutscene in the worst sense. The shift records the lasting game-state change this moment produces.
+
+**Best for:** Defining moments — the information that changes everything, the loss that matters.
 
 ---
 
@@ -141,7 +244,7 @@ Exported from `@storyboard-os/rpg-domain` as `tollhouseLedgerProject`.
 7. Consequence B: The Ledger Is Hidden — faction gains leverage, world repairs visually, weight is there
 8. Savan Has a Copy — future thread, Quest 02 entry condition, Velthari contact opened
 
-Every frame in the demo has specific flag names (`quest_tollhouse_active`, `orvyn_trust_level`, `ledger_state`, `savan_escaped`), asset requirements with implementation detail, and test criteria with pass/fail checks.
+Every frame has specific flag names (`quest_tollhouse_active`, `orvyn_trust_level`, `ledger_state`, `savan_escaped`), asset requirements with implementation detail, and test criteria with pass/fail checks.
 
 ---
 
@@ -159,4 +262,4 @@ Key guardrails (run on every template, every frame):
 - `testCriteria` defined on at least half of all frames
 - No frame content contains tabletop-drift terms (`gm notes`, `prep session`, `at the table`, `tabletop`, `campaign prep`, `run a session`)
 
-These tests run in `packages/rpg-storyboard-domain` and in `apps/rpg-storyboard`. Both must stay green.
+These tests run in `packages/rpg-storyboard-domain`. They must stay green. If a template change drops implementation depth below the guardrail threshold, the tests fail before the build runs.

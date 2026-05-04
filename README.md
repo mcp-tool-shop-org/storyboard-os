@@ -29,20 +29,37 @@ If a reader could mistake this for any of those, the product has drifted.
 
 ---
 
+## What rpg-storyboard Does (Phase 1)
+
+After Phase 1, a designer can:
+
+| Capability | What they get |
+|---|---|
+| **Visual board** | Quest flow and game-state branch logic side by side on a Konva canvas |
+| **Game-state signal** | Per-frame badges (STATE, SPEC/PARTIAL/DRAFT) without leaving the board |
+| **Implementation readiness** | Each beat shows READY/PARTIAL/DRAFT/BLOCKED status + what's missing |
+| **Quest handoff** | One-click Markdown + JSON export ordered by topological beat sequence |
+| **Templates** | Three RPG production starting points with beat-type sequences and rationale |
+| **Board operations** | Zoom, pan, fit-to-board, reset, keyboard shortcuts — laptop-usable navigation |
+
+The board is an operating surface. The beat inspector is an implementation spec. The handoff is a document a developer can build from.
+
+---
+
 ## Packages
 
 | Package | What it owns |
 |---|---|
 | `@storyboard-os/core` | Generic storyboard primitives: frame, connection, annotation, template, structural validator. No domain vocabulary. |
-| `@storyboard-os/rpg-domain` | RPG game-authoring contract: frame types, content fields, templates, RPG validation rules, Tollhouse Ledger demo quest. |
-| `@storyboard-os/canvas` | Konva canvas renderer: frames, connections, selection, drag, type badges, connection labels. Domain config passed in. |
+| `@storyboard-os/rpg-domain` | RPG game-authoring contract: frame types, content fields, templates, readiness model, handoff generator, Tollhouse Ledger demo quest. |
+| `@storyboard-os/canvas` | Konva canvas renderer: frames, connections, selection, drag, type badges, connection labels, zoom/pan viewport. Domain config passed in. |
 | `@storyboard-os/routing` | Configurable URL helpers: board and frame route generation. No dependencies. |
 
 ## Apps
 
 | App | What it is |
 |---|---|
-| `rpg-storyboard` | Astro RPG game-authoring product. Owns: RPG canvas config, frame inspector, Astro pages, route setup, page layout. |
+| `rpg-storyboard` | Astro RPG game-authoring product. Owns: RPG canvas config, frame inspector, handoff pages, template gallery, route setup, page layout. |
 
 ---
 
@@ -80,20 +97,22 @@ See [`docs/architecture.md`](docs/architecture.md) for full detail.
 ```bash
 pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
-pnpm test       # runs all package + app tests
-pnpm build      # builds rpg-storyboard
+pnpm test       # runs all package + app tests (295 tests)
+pnpm build      # builds rpg-storyboard (38 pages)
 ```
 
 Requirements: Node ≥ 20, pnpm ≥ 9.
+
+Test scope is automatically filtered to `@storyboard-os/*` packages and `rpg-storyboard` — it does not pick up sibling workspaces in the parent directory.
 
 ---
 
 ## Status
 
 ```
-Phase 0 + 0R + 0M: Complete
-138/138 tests passing
-10/10 pages built
+Phase 1 complete
+295/295 tests passing
+38/38 pages built
 ```
 
 | Phase | Description | Status |
@@ -101,7 +120,12 @@ Phase 0 + 0R + 0M: Complete
 | 0A–0F | RPG authoring proof — canvas, beat pages, templates, demo quest | ✅ |
 | 0R | Repair + re-anchor — every frame carries game-state spec | ✅ |
 | 0M | Monorepo migration — core, domain, canvas, routing extracted | ✅ |
-| 1A | Branch + state visibility on the canvas | Queued |
+| 1A | Branch + state visibility on the canvas | ✅ |
+| 1B | Implementation readiness per beat | ✅ |
+| 1C | Quest handoff export | ✅ |
+| 1D | Template gallery | ✅ |
+| 1E | Board operations — zoom, pan, fit, viewport controls | ✅ |
+| 1F | Release closeout — docs, changelog, architecture notes | ✅ |
 
 ---
 
@@ -111,12 +135,16 @@ Phase 0 + 0R + 0M: Complete
 
 Every frame in the demo is implementable as a quest in an RPG engine without supplementary documentation.
 
+Route: `/storyboards/quest-01`
+
 ---
 
 ## Docs
 
-- [`docs/architecture.md`](docs/architecture.md) — package separation, dependency rules, extensibility
+- [`docs/architecture.md`](docs/architecture.md) — package separation, dependency rules, canvas viewport model, extensibility
 - [`docs/product-brief.md`](docs/product-brief.md) — what rpg-storyboard is, target user, drift warnings, acceptance gates
-- [`docs/rpg-storyboard.md`](docs/rpg-storyboard.md) — RPG game-authoring contract: frame vocabulary, templates, state model
-- [`docs/phase-0-closeout.md`](docs/phase-0-closeout.md) — Phase 0 dogfood verdict and Phase 1 backlog
+- [`docs/rpg-storyboard.md`](docs/rpg-storyboard.md) — RPG game-authoring contract, authoring loop, readiness model, handoff export
+- [`docs/phase-0-closeout.md`](docs/phase-0-closeout.md) — Phase 0 dogfood verdict and original Phase 1 backlog
+- [`docs/phase-1-closeout.md`](docs/phase-1-closeout.md) — Phase 1 spine narrative and architecture integrity record
 - [`docs/monorepo-migration.md`](docs/monorepo-migration.md) — 0M migration log: what moved, why, and the resulting architecture
+- [`CHANGELOG.md`](CHANGELOG.md) — release history

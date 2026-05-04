@@ -56,8 +56,27 @@ FrameContent          // designerNotes, playerVisibleText, entryConditions, stat
 FrameAnnotationType   // designer_note | player_visible | author_only | danger | timing | branch_note
 StoryboardTemplateId  // quest_flow | quest_branch | cutscene_beat
 
+// Templates
 STORYBOARD_TEMPLATES, getStoryboardTemplate(), createStoryboardFromTemplate()
+
+// Validation
 validateRpgStoryboard()    // RPG domain rules on top of core structural validation
+
+// Canvas signals (Phase 1A)
+getFrameSignal()           // stateChangeSummary, branchConditionSummary, readiness, spec coverage
+getFrameBadges()           // FrameBadgeDescriptor[] — STATE badge, SPEC/PARTIAL/DRAFT readiness badge
+getChoiceBranchCount()
+
+// Readiness model (Phase 1B)
+getBeatStatus()            // BeatStatusLevel: ready | partial | draft | blocked
+getStoryboardReadiness()   // StoryboardReadinessSummary: counts by level, byFrame map
+BLOCKING_REASONS           // ReadonlySet<MissingSpecReason> for domain violations
+
+// Handoff export (Phase 1C)
+generateHandoff()          // QuestHandoff: ordered beats, branches, readiness summary
+generateMarkdown()         // Markdown string for dev handoff
+
+// Demo quest
 tollhouseLedgerProject     // Tollhouse Ledger demo quest
 ```
 
@@ -69,35 +88,73 @@ tollhouseLedgerProject     // Tollhouse Ledger demo quest
 
 ## `@storyboard-os/canvas`
 
-**Owns:** Konva rendering. Frames, connections, selection, drag, type badges, connection labels. All visual config comes in from outside.
+**Owns:** Konva rendering. Frames, connections, selection, drag, type badges, connection labels. All visual config and viewport control comes from the app via config and ref handle.
+
+### Rendering surface
 
 ```ts
-StoryboardCanvas   // Konva Stage renderer — accepts frames, connections, config
+StoryboardCanvas   // Konva Stage renderer — accepts frames, connections, config, viewport ref
 FrameCard          // Konva Group for one frame card — style injected by parent
 ConnectionLayer    // Konva Group for all connections — styles from config
 
 StoryboardCanvasConfig  // frameTypeStyles + connectionTypeStyles + fallbacks
-CanvasFrame             // minimal frame shape the canvas needs (id, type, title, summary, position, size)
-CanvasConnection        // minimal connection shape
+CanvasFrame             // minimal frame shape: id, type, title, summary, position, size, badges?
+CanvasConnection        // minimal connection shape: id, fromFrameId, toFrameId, type, label?
+CanvasBadge             // { text: string; color: string } — rendered without domain knowledge
 ```
 
 **Config injection:** The app/domain provides `StoryboardCanvasConfig` with per-type styles:
 ```ts
 const RPG_CANVAS_CONFIG: StoryboardCanvasConfig = {
   frameTypeStyles: {
-    hook:      { bg: '#1a1500', accent: '#EAB308', label: 'HOOK' },
-    choice:    { bg: '#14092e', accent: '#8B5CF6', label: 'CHOICE' },
+    hook:   { bg: '#1a1500', accent: '#EAB308', label: 'HOOK' },
+    choice: { bg: '#14092e', accent: '#8B5CF6', label: 'CHOICE' },
     // ...
   },
   connectionTypeStyles: {
-    sequence:    { stroke: '#475569' },
-    choice:      { stroke: '#8B5CF6', dash: [8, 4] },
+    sequence:    { stroke: '#475569', strokeWidth: 1.5 },
+    choice:      { stroke: '#8B5CF6', dash: [8, 4], strokeWidth: 2.5 },
     // ...
   },
 };
 ```
 
 A second vertical passes its own config. The canvas renders it without knowing what the types mean.
+
+### Viewport model (Phase 1E)
+
+The canvas owns its own viewport state — zoom, pan, fit. The app controls it via an imperative ref handle.
+
+```ts
+// Viewport state (pure math, no React/Konva)
+interface ViewState { scale: number; x: number; y: number; }
+DEFAULT_VIEW_STATE  // { scale: 1, x: 0, y: 0 }
+fitViewToFrames()   // compute scale + offset to fit all frames with padding
+centerOnFrame()     // compute offset to center one frame at current scale
+zoomAtPoint()       // zoom toward a screen point (pointer stays visually fixed)
+zoomFromCenter()    // zoom from container center
+clampScale()        // enforce [MIN_SCALE=0.1, MAX_SCALE=4]
+
+// Imperative handle — app calls these to control the viewport
+interface ViewportHandle {
+  fitToFrames(): void;                  // fit current frame positions to container
+  resetView(): void;                    // scale=1, x=0, y=0
+  zoomIn(): void;                       // ×1.2 from center
+  zoomOut(): void;                      // ÷1.2 from center
+  centerOnFrame(frame: CanvasFrame): void;
+  getScale(): number;
+}
+```
+
+**Interaction model:**
+- Background drag → pan (manual `onMouseDown/Move` on Stage, guards `e.target !== stage` so frame-card dragging is unaffected)
+- Ctrl/Cmd + scroll wheel → zoom at cursor
+- Plain scroll → pan (natural two-finger trackpad)
+- `autoFit` prop → fit all frames on first container measurement
+
+**Container sizing:** `StoryboardCanvas` wraps itself in a container div and uses `ResizeObserver` to measure it. The Stage fills the container; no explicit `width`/`height` props are required.
+
+**Viewport math is tested separately** (`viewport.test.ts` — 27 tests) because the pure functions have no DOM or Konva dependencies.
 
 **Does not import from:** `@storyboard-os/core`, `@storyboard-os/rpg-domain`, or any app.
 
@@ -111,9 +168,9 @@ A second vertical passes its own config. The canvas renders it without knowing w
 
 ```ts
 createStoryboardRoutes({ storyboardBasePath: '/storyboards' })
-  → boardRoute(storyboardId)    → '/storyboards/quest-01'
-  → frameRoute(storyboardId, frameId) → '/storyboards/quest-01/frames/hook-1'
-  → projectRoute(projectId)     → '/projects/tollhouse-ledger'
+  → boardRoute(storyboardId)             → '/storyboards/quest-01'
+  → frameRoute(storyboardId, frameId)    → '/storyboards/quest-01/frames/hook-1'
+  → projectRoute(projectId)             → '/projects/tollhouse-ledger'
 ```
 
 **Does not import from:** anything. Zero dependencies.
@@ -127,15 +184,28 @@ createStoryboardRoutes({ storyboardBasePath: '/storyboards' })
 **Owns:** The RPG product shell. Everything that is RPG-specific and not reusable across verticals.
 
 ```
-RPG canvas config (frame styles + connection styles)
-FrameInspector — reads RPG content fields (stateChanges, requiredAssets, etc.)
-Route setup    — creates routes with storyboardBasePath = '/storyboards'
-Astro pages    — [storyboardId].astro, [frameId].astro, index.astro
-Page layout    — header bar, inspector panel, legend footer
-Demo data      — imports tollhouseLedgerProject from @storyboard-os/rpg-domain
+RPG canvas config    → frame styles, connection styles, strokeWidth per type
+FrameInspector       → reads RPG content fields, shows readiness status, missing spec reasons
+ViewControls         → zoom+/-, Fit, 1:1 buttons — calls canvas ViewportHandle
+StoryboardCanvas.tsx → app adapter: wires RPG config, readiness, canvasRef, keyboard shortcuts
+Astro pages          → [storyboardId].astro, [frameId].astro, handoff.astro, templates/index.astro
+Page layout          → header bar, inspector panel, connection panel, legend footer, footer hint
+Handoff page         → SSG Markdown/JSON export with download buttons
+Template gallery     → /templates — three cards with beat-type sequences and production rationale
+Demo data            → imports tollhouseLedgerProject from @storyboard-os/rpg-domain
 ```
 
-**Thin re-exports:** `src/lib/storyboard/schema.ts`, `templates.ts`, `validate.ts`, and `routes.ts` are thin adapters that re-export from the domain and routing packages under the same names. No downstream page files needed to change during the migration.
+**Keyboard shortcuts (Phase 1E):**
+
+| Key | Action |
+|---|---|
+| `F` | Fit board to viewport |
+| `0` | Reset view (scale 1, origin) |
+| `+` / `=` | Zoom in |
+| `-` | Zoom out |
+| `Escape` | Deselect frame / connection |
+
+**Thin re-exports:** `src/lib/storyboard/schema.ts`, `templates.ts`, `validate.ts`, and `routes.ts` are thin adapters that re-export from the domain and routing packages. Downstream page files import from the app's lib layer, not directly from the packages — this keeps internal imports stable as packages evolve.
 
 ---
 
@@ -148,7 +218,7 @@ A second vertical (e.g. `apps/screenplay-storyboard`) would:
 3. Create its own frame inspector reading its domain content fields
 4. Call `createStoryboardRoutes({ storyboardBasePath: '/scenes' })` from `@storyboard-os/routing`
 
-It would not touch `@storyboard-os/rpg-domain` at all.
+It would not touch `@storyboard-os/rpg-domain` at all. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification.
 
 ---
 
@@ -163,3 +233,5 @@ It would not touch `@storyboard-os/rpg-domain` at all.
 | `apps/rpg-storyboard` | All `@storyboard-os/*` packages |
 
 Cross-package imports in the wrong direction break the isolation and must not be added.
+
+The canonical verification: `grep -r "rpg-domain\|quest\|npc_beat\|stateChange" packages/storyboard-canvas/src/` should return nothing.
