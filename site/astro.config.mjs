@@ -9,8 +9,14 @@ export default defineConfig({
   base: '/storyboard-os',
   integrations: [
     starlight({
-      title: 'storyboard-os',
+      title: 'Storyboard OS',
       description: 'Visual story-structure platform. rpg-storyboard is the first vertical.',
+      logo: {
+        src: './src/assets/logo.png',
+        alt: 'Storyboard OS',
+        href: '/storyboard-os/',
+        replacesTitle: false,
+      },
       disable404Route: true,
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/mcp-tool-shop-org/storyboard-os' },
