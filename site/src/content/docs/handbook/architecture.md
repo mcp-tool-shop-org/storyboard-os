@@ -11,7 +11,7 @@ Each package owns one concern and does not import from packages above it.
 
 The split between **domain-neutral infrastructure** and **domain-specific authoring contract** is intentional and load-bearing. The platform can grow without each new vertical inheriting another domain's vocabulary. Each vertical can evolve without being trapped inside generic library code.
 
-The marketing vertical (Phase M-0) proved this: it shipped a full campaign-implementation storyboard without modifying canvas, core, or routing.
+Three verticals have proven this architecture: RPG, marketing, and cinematic all shipped without modifying canvas, core, or routing. Core Hardening 1A then extracted generic connection types — domains now own their connection vocabularies without casts.
 
 ## Package map
 
@@ -27,6 +27,12 @@ apps/marketing-storyboard
   │     └── @storyboard-os/core
   ├── @storyboard-os/canvas
   └── @storyboard-os/routing
+
+apps/cinematic-storyboard
+  ├── @storyboard-os/cinematic-domain
+  │     └── @storyboard-os/core
+  ├── @storyboard-os/canvas
+  └── @storyboard-os/routing
 ```
 
 ## Dependency rules
@@ -38,15 +44,12 @@ apps/marketing-storyboard
 | `@storyboard-os/routing` | Nothing |
 | `@storyboard-os/rpg-domain` | `@storyboard-os/core` only |
 | `@storyboard-os/marketing-domain` | `@storyboard-os/core` only |
+| `@storyboard-os/cinematic-domain` | `@storyboard-os/core` only |
 | `apps/rpg-storyboard` | `rpg-domain`, `canvas`, `routing` |
 | `apps/marketing-storyboard` | `marketing-domain`, `canvas`, `routing` |
+| `apps/cinematic-storyboard` | `cinematic-domain`, `canvas`, `routing` |
 
-The two domain packages do not import from each other. Cross-package imports in the wrong direction break the isolation and must not be added. The canonical check:
-
-```bash
-grep -r "rpg-domain\|marketing-domain\|quest\|npc_beat\|campaign" packages/storyboard-canvas/src/
-# must return nothing
-```
+The three domain packages do not import from each other. Cross-package imports in the wrong direction break the isolation and must not be added.
 
 ---
 
@@ -56,14 +59,24 @@ Generic storyboard primitives. No domain vocabulary.
 
 ```ts
 StoryboardFrame<TFrameType, TContent, TAnnotationType>
-Storyboard<TFrame>
+StoryboardConnection<TConnectionType>   // generic — domains own their connection vocabulary
+Storyboard<TFrame, TConnection>         // generic over both frame and connection
 StoryboardProject<TStoryboard>
-StoryboardConnection
 StoryboardTemplateDefinition<TId, TStoryboard>
-validateStoryboard()  // structural rules only — no domain knowledge
+AnyStoryboardConnection                 // convenience alias: StoryboardConnection<string>
+validateStoryboard()                    // structural rules only — accepts any connection type
 ```
 
 Does not know: RPG, quest, scene, choice, encounter, consequence, stateChanges, requiredAssets, factions, or any domain concept.
+
+**Connection vocabulary pattern:** Each domain defines its own connection type union:
+
+```ts
+// RPG uses core defaults: sequence | choice | consequence | optional | fallback
+// Cinematic defines its own:
+type CinematicConnectionType = 'sequence' | 'match_cut' | 'cutaway' | 'reaction' | ...;
+type StoryboardConnection = CoreConnection<CinematicConnectionType>;
+```
 
 **Extension pattern:** Domain packages import and specialize the core generics:
 
@@ -122,11 +135,40 @@ Does not import from any app, `@storyboard-os/canvas`, `@storyboard-os/routing`,
 
 ---
 
+## `@storyboard-os/cinematic-domain`
+
+The cinematic production storyboard contract. Answers: **What makes this sequence hard to shoot, animate, edit, or hand off?**
+
+Does not import from any app, `@storyboard-os/canvas`, `@storyboard-os/routing`, or any other domain package. Imports from `@storyboard-os/core` only.
+
+**Frame types:** sequence, shot, camera_move, action, dialogue, transition, vfx, audio, edit_beat
+
+**Connection types (domain-owned):** sequence, match_cut, cutaway, reaction, transition, continuity, parallel_action, fallback
+
+**Key exports:**
+- Frame signals: `getCinematicFrameBadges()`, `getCinematicFrameSignal()`
+- Beat status: `getCinematicBeatStatus()`
+- Production signals: `getSequenceProductionSignals()` — continuity risk, VFX/audio burden, camera complexity, production health
+- Templates: trailer_flow, cutscene_sequence, explainer_video
+- Validation: `validateCinematicStoryboard()`
+- Handoff: `generateProductionBrief()`, `generateProductionMarkdown()`
+
+### What the cinematic domain is NOT
+
+| Excluded | Why |
+|---|---|
+| Scheduling / shot days | Production management belongs in PM tools |
+| Cast / crew assignment | People are not frame semantics |
+| Budget tracking | Finance is infrastructure, not domain logic |
+| Final render pipeline | Render is execution, not authoring |
+
+---
+
 ## `@storyboard-os/canvas`
 
 Konva rendering. Frames, connections, selection, drag, type badges, connection labels. All visual config and viewport control comes from the app via props and a ref handle.
 
-Does not import from `@storyboard-os/core`, `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, or any app. It renders whatever config the app passes.
+Does not import from `@storyboard-os/core`, `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, `@storyboard-os/cinematic-domain`, or any app. It renders whatever config the app passes.
 
 **Config injection:** The app provides `StoryboardCanvasConfig` with per-type styles:
 
@@ -222,11 +264,12 @@ const persistAndNotify = (updated: RpgStoryboardProject) => {
 
 A new vertical (e.g. `apps/screenplay-storyboard`) would:
 
-1. Create `packages/screenplay-domain` — its own frame types, content fields, and templates built on `@storyboard-os/core` generics
-2. Create an app that passes its own `StoryboardCanvasConfig` to `@storyboard-os/canvas`
-3. Write its own frame inspector reading its domain content fields
-4. Call `createStoryboardRoutes({ storyboardBasePath: '/scenes' })` from `@storyboard-os/routing`
+1. Create `packages/screenplay-domain` — its own frame types, content fields, connection vocabulary, and templates built on `@storyboard-os/core` generics
+2. Define its own connection type: `type ScreenplayConnectionType = 'sequence' | 'flashback' | 'montage' | ...`
+3. Create an app that passes its own `StoryboardCanvasConfig` to `@storyboard-os/canvas`
+4. Write its own frame inspector reading its domain content fields
+5. Call `createStoryboardRoutes({ storyboardBasePath: '/scenes' })` from `@storyboard-os/routing`
 
-It would not touch `@storyboard-os/rpg-domain` or `@storyboard-os/marketing-domain`. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification.
+It would not touch `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, or `@storyboard-os/cinematic-domain`. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification.
 
-The marketing vertical proved this pattern: zero infrastructure changes required for the second vertical.
+Three verticals have proven this pattern: zero infrastructure changes required for any new vertical.

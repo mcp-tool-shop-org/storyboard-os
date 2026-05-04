@@ -7,9 +7,10 @@ sidebar:
 
 Storyboard OS is a visual authoring platform for implementable structure. It turns design into implementation specs a team can build from — not just notes, but entry conditions, state changes, required assets, test criteria, and a checklist for the production pass.
 
-Two verticals ship today:
+Three verticals ship today:
 - **rpg-storyboard** — RPG quest and scene authoring for video game designers
 - **marketing-storyboard** — campaign implementation storyboard for marketing teams
+- **cinematic-storyboard** — production storyboard for trailers, cutscenes, explainers, and game cinematics
 
 ## What makes it different
 
@@ -43,6 +44,15 @@ Project boards persist across reload. No backend, no accounts, no server — eve
 
 The marketing board answers: Can this campaign ship, and what blocks it?
 
+### cinematic-storyboard
+
+| Workflow | Entry point | Purpose |
+|---|---|---|
+| **Sequence board** | `/sequences/:id` | Full cinematic canvas with production signals (health, burden, complexity) |
+| **Production brief** | `/sequences/:id/handoff` | Markdown + JSON export for production team |
+
+The cinematic board answers: What makes this sequence hard to shoot, animate, edit, or hand off?
+
 ## The handoff
 
 When the board is ready, click **Handoff →** in the header. The project handoff regenerates from live state:
@@ -58,5 +68,5 @@ Download as **Markdown** (developer-readable) or **JSON** (engine-ingestible).
 
 - [Getting Started](./getting-started/) — install and run in under two minutes
 - [Authoring Workflow](./usage/) — the full design loop from project creation to handoff
-- [Architecture](./architecture/) — package map, dependency rules, adding a second vertical
+- [Architecture](./architecture/) — package map, dependency rules, adding a new vertical
 - [Reference](./reference/) — frame types, connection types, readiness model, API

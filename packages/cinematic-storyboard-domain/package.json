@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/cinematic-domain",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Cinematic production storyboard contract — shot types, camera language, continuity, VFX/audio requirements, edit readiness, and production brief handoff.",
   "license": "MIT",
   "type": "module",

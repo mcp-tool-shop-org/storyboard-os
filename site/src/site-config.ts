@@ -9,7 +9,7 @@ export const config: SiteConfig = {
   footerText: 'MIT Licensed — built by <a href="https://mcp-tool-shop.github.io/" style="color:var(--color-muted);text-decoration:underline">MCP Tool Shop</a>',
 
   hero: {
-    badge: 'Open source · v1.0.2',
+    badge: 'Open source · v1.0.3',
     headline: 'Story structure that ships.',
     headlineAccent: 'Three verticals.',
     description: 'A visual authoring platform where every frame is an implementation spec. Three verticals — RPG quest authoring, marketing campaign implementation, and cinematic production storyboarding — share one canvas, zero cross-domain imports.',
@@ -17,7 +17,7 @@ export const config: SiteConfig = {
     secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [
       { label: 'Install', code: 'git clone mcp-tool-shop-org/storyboard-os\npnpm install && pnpm dev' },
-      { label: 'Verify', code: 'pnpm verify  # 603 tests · 54 pages · 3 apps' },
+      { label: 'Verify', code: 'pnpm verify  # 609 tests · 54 pages · 3 apps' },
       { label: 'Packages', code: '@storyboard-os/core\n@storyboard-os/rpg-domain\n@storyboard-os/marketing-domain\n@storyboard-os/cinematic-domain\n@storyboard-os/canvas\n@storyboard-os/routing' },
     ],
   },
@@ -31,7 +31,7 @@ export const config: SiteConfig = {
       features: [
         {
           title: '@storyboard-os/core',
-          desc: 'Generic storyboard primitives with no domain vocabulary — frames, connections, projects, templates, and structural validation. The foundation every vertical builds on.',
+          desc: 'Generic storyboard primitives with no domain vocabulary — frames, connections (generic over type), projects, templates, and structural validation. Domains own their connection vocabularies.',
         },
         {
           title: '@storyboard-os/rpg-domain',
@@ -54,8 +54,8 @@ export const config: SiteConfig = {
           desc: 'URL construction helpers with zero dependencies. One factory, three route builders. Each vertical passes its own base path — the canvas and domain work without modification.',
         },
         {
-          title: '603 tests, three verticals, zero cross-domain imports',
-          desc: 'The cinematic vertical proved multi-vertical architecture for the third time: zero changes to canvas, core, or routing. Each domain is tested in isolation. The boundary is verified on every commit.',
+          title: '609 tests, three verticals, zero cross-domain imports',
+          desc: 'The cinematic vertical proved multi-vertical architecture for the third time: zero changes to canvas, core, or routing. Core Hardening 1A extracted generic connection types — domains own their vocabulary without casts.',
         },
       ],
     },
@@ -122,7 +122,7 @@ export const config: SiteConfig = {
         },
         {
           title: 'Verify before ship',
-          code: '# All 603 tests + full build in one command\npnpm verify  # 6 packages · 3 apps · 54 pages',
+          code: '# All 609 tests + full build in one command\npnpm verify  # 6 packages · 3 apps · 54 pages',
         },
       ],
     },

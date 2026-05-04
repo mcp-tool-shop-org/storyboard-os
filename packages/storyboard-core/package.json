@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/core",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Generic storyboard primitives — frame, connection, annotation, template, validation. No domain-specific content.",
   "license": "MIT",
   "type": "module",

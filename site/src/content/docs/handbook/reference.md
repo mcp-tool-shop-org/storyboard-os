@@ -28,7 +28,7 @@ Seven types. Each names a specific function in a playable RPG quest or scene.
 
 ## Connection types
 
-Connections carry game-state meaning. Stroke weight distinguishes game-state branches from narrative sequence at a glance.
+### RPG connections (core defaults)
 
 | Type | Meaning | Canvas style |
 |---|---|---|
@@ -37,6 +37,32 @@ Connections carry game-state meaning. Stroke weight distinguishes game-state bra
 | `consequence` | Outcome arc — state change drives the next beat | Solid red, 2.5px |
 | `optional` | Conditional or skippable path | Dashed dark, 1.5px |
 | `fallback` | Alternate route if primary path is blocked | Dashed orange, 2px |
+
+### Marketing connections
+
+| Type | Meaning |
+|---|---|
+| `sequence` | Linear progression |
+| `choice` | Audience segment path |
+| `dependency` | Upstream deliverable required before this frame |
+| `approval` | Gate requiring sign-off |
+| `consequence` | Outcome arc |
+| `optional` | Conditional path |
+
+### Cinematic connections
+
+| Type | Meaning |
+|---|---|
+| `sequence` | Linear shot progression |
+| `match_cut` | Visual continuity cut between shots |
+| `cutaway` | Insert shot away from main action |
+| `reaction` | Response shot tied to previous action |
+| `transition` | Explicit transition effect between shots |
+| `continuity` | Continuity dependency between shots |
+| `parallel_action` | Cross-cutting / simultaneous action |
+| `fallback` | Alternate coverage if primary fails |
+
+Domains own their connection vocabulary via `StoryboardConnection<TConnectionType>`. Core validates structural integrity (broken refs, duplicates) regardless of vocabulary.
 
 ---
 
@@ -180,10 +206,10 @@ validateRpgStoryboard(storyboard)
 
 ```ts
 validateStoryboard(storyboard)
-// → ValidationResult  (structural rules only — no domain knowledge)
+// → ValidationResult  (structural rules only — accepts any connection vocabulary)
 ```
 
-Generic types: `StoryboardFrame<TFrameType, TContent, TAnnotationType>`, `Storyboard<TFrame>`, `StoryboardProject<TStoryboard>`, `StoryboardConnection`, `StoryboardTemplateDefinition<TId, TStoryboard>`
+Generic types: `StoryboardFrame<TFrameType, TContent, TAnnotationType>`, `StoryboardConnection<TConnectionType>`, `Storyboard<TFrame, TConnection>`, `StoryboardProject<TStoryboard>`, `AnyStoryboardConnection`, `StoryboardTemplateDefinition<TId, TStoryboard>`
 
 ---
 
