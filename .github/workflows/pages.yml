@@ -2,7 +2,7 @@ name: Deploy site to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
     paths:
       - 'site/**'
       - '.github/workflows/pages.yml'
@@ -23,17 +23,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
+          cache: pnpm
 
-      - name: Install site dependencies
-        working-directory: site
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build site
-        working-directory: site
-        run: npm run build
+        run: pnpm --filter site build
 
       - uses: actions/upload-pages-artifact@v3
         with:

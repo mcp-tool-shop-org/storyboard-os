@@ -26,8 +26,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages
+        run: |
+          pnpm --filter @storyboard-os/core build
+          pnpm --filter @storyboard-os/routing build
+          pnpm --filter @storyboard-os/rpg-domain build
+          pnpm --filter @storyboard-os/canvas build
+
       - name: Run tests
         run: pnpm test
 
-      - name: Build
+      - name: Build app
         run: pnpm build
