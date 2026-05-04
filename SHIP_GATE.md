@@ -56,9 +56,9 @@
 ## E. Identity (soft gate — does not block ship)
 
 - [x] `[all]` Logo in README header (2026-05-04)
-- [ ] `[all]` Translations (polyglot-mcp, 8 languages)
-- [ ] `[org]` Landing page (@mcptoolshop/site-theme)
-- [ ] `[all]` GitHub repo metadata: description, homepage, topics
+- [ ] `[all]` Translations (polyglot-mcp, 8 languages) — run locally, see commands below
+- [x] `[org]` Landing page (@mcptoolshop/site-theme) (2026-05-04) — https://mcp-tool-shop-org.github.io/storyboard-os/
+- [x] `[all]` GitHub repo metadata: description, homepage, topics (2026-05-04)
 
 ---
 
