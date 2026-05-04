@@ -1,3 +1,11 @@
+<p align="center">
+  <img src="assets/logo.png" alt="Storyboard OS — Visual Stories. Structured. Implemented." width="480" />
+</p>
+
+<p align="center"><strong>Visual stories. Structured. Implemented.</strong></p>
+
+---
+
 # Storyboard OS
 
 A visual story-structure authoring platform for interactive narrative — quests, branches, scenes, encounters, consequences, and the game-state logic that connects them.
