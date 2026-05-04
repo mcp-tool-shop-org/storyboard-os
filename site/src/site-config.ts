@@ -9,16 +9,16 @@ export const config: SiteConfig = {
   footerText: 'MIT Licensed — built by <a href="https://mcp-tool-shop.github.io/" style="color:var(--color-muted);text-decoration:underline">MCP Tool Shop</a>',
 
   hero: {
-    badge: 'Open source · v1.0.0',
+    badge: 'Open source · v1.0.1',
     headline: 'Visual stories.',
     headlineAccent: 'Structured. Implemented.',
     description: 'A board for designing implementable narrative. Every frame is a beat with entry conditions, state changes, required assets, test criteria, and an implementation checklist. The handoff is a document a developer can build from.',
-    primaryCta: { href: '/storyboard-os/handbook', label: 'Read the docs' },
-    secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
+    primaryCta: { href: '/storyboard-os/handbook/', label: 'Read the docs' },
+    secondaryCta: { href: '#features', label: 'See features' },
     previews: [
       { label: 'Start', code: 'pnpm install && pnpm dev' },
       { label: 'Verify', code: 'pnpm verify  # test + build' },
-      { label: 'Status', code: '368/368 tests · 42 pages · v1.0.0' },
+      { label: 'Status', code: '368/368 tests · 42 pages · v1.0.1' },
     ],
   },
 

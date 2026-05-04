@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/rpg-domain",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "RPG game-authoring contract — frame types, content fields, templates, validation rules, and demo data for rpg-storyboard.",
   "license": "MIT",
   "type": "module",
@@ -14,7 +14,11 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "publishConfig": {
     "access": "public"
   },

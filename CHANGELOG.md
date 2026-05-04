@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.1] — 2026-05-04
+
+### Added
+- Starlight handbook: 5 pages (index, getting-started, authoring workflow, architecture, reference) with Pagefind search
+- Translations: 35 README files across 7 languages (ja, zh, es, fr, hi, it, pt-BR) via TranslateGemma 12B
+- Landing page: handbook CTA connected, version badge updated
+
+### Fixed
+- Landing page secondaryCta restored to `#features` (was accidentally overwritten with handbook link)
+- Ollama model path updated from stale F:\AI-Models to E:\OpenWebUI\models
+
+---
+
 ## Phase 2 — Durable Local Authoring
 
 _Completed 2026-05-04_

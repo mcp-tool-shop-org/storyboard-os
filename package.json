@@ -1,7 +1,7 @@
 {
   "name": "storyboard-os",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Visual story-structure platform. rpg-storyboard is the first vertical.",
   "scripts": {
     "dev": "pnpm --filter rpg-storyboard dev",

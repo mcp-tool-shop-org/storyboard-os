@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generic storyboard primitives — frame, connection, annotation, template, validation. No domain-specific content.",
   "license": "MIT",
   "type": "module",
@@ -14,7 +14,11 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "publishConfig": {
     "access": "public"
   },
