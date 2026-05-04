@@ -44,6 +44,7 @@ jobs:
           pnpm --filter @storyboard-os/rpg-domain build
           pnpm --filter @storyboard-os/canvas build
           pnpm --filter @storyboard-os/marketing-domain build
+          pnpm --filter @storyboard-os/cinematic-domain build
 
       - name: Publish @storyboard-os/core
         run: pnpm publish --filter @storyboard-os/core --no-git-checks --access public
@@ -67,5 +68,10 @@ jobs:
 
       - name: Publish @storyboard-os/marketing-domain
         run: pnpm publish --filter @storyboard-os/marketing-domain --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @storyboard-os/cinematic-domain
+        run: pnpm publish --filter @storyboard-os/cinematic-domain --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
