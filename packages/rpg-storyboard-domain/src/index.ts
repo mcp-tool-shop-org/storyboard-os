@@ -63,3 +63,15 @@ export type {
   BeatStatus,
   StoryboardReadinessSummary,
 } from './beatStatus';
+
+export {
+  generateHandoff,
+  generateMarkdown,
+} from './handoff';
+
+export type {
+  HandoffBranch,
+  HandoffBeat,
+  HandoffReadinessSummary,
+  QuestHandoff,
+} from './handoff';

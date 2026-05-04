@@ -174,6 +174,17 @@ export default function StoryboardCanvas({ storyboard }: Props) {
             {storyboard.frames.length} frames · {storyboard.connections.length} connections
           </span>
           <ReadinessCounts summary={readinessSummary} />
+          <a
+            href={`/storyboards/${storyboard.id}/handoff`}
+            style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+              padding: '4px 10px', borderRadius: 4,
+              background: 'rgba(71,85,105,0.2)', border: '1px solid #1e293b',
+              color: '#94a3b8', textDecoration: 'none',
+            }}
+          >
+            Handoff →
+          </a>
         </div>
       </header>
 

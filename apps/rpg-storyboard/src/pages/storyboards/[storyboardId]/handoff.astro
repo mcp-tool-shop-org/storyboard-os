@@ -1,0 +1,578 @@
+---
+import { tollhouseLedgerProject } from '@storyboard-os/rpg-domain';
+import { generateHandoff, generateMarkdown } from '@storyboard-os/rpg-domain';
+import type { Storyboard } from '../../../lib/storyboard/schema';
+
+export function getStaticPaths() {
+  const project = tollhouseLedgerProject;
+  return project.storyboards.map(s => ({
+    params: { storyboardId: s.id },
+    props: { storyboard: s },
+  }));
+}
+
+interface Props { storyboard: Storyboard; }
+const { storyboard } = Astro.props;
+const { storyboardId } = Astro.params;
+
+const handoff       = generateHandoff(storyboard);
+const markdownText  = generateMarkdown(handoff);
+const jsonText      = JSON.stringify(handoff, null, 2);
+const filename      = `${storyboardId}-handoff`;
+const boardUrl      = `/storyboards/${storyboardId}`;
+const dateStr       = handoff.generatedAt.split('T')[0];
+const readyPct      = Math.round(handoff.readiness.readyFraction * 100);
+
+const STATUS_COLORS: Record<string, string> = {
+  ready:   '#22C55E',
+  partial: '#F97316',
+  draft:   '#6B7280',
+  blocked: '#EF4444',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ready:   'READY',
+  partial: 'PARTIAL',
+  draft:   'DRAFT',
+  blocked: 'BLOCKED',
+};
+
+const CONN_LABELS: Record<string, string> = {
+  sequence:    'sequence',
+  choice:      'choice branch',
+  consequence: 'consequence',
+  optional:    'optional',
+  fallback:    'fallback',
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{storyboard.title} — Handoff</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #0b1120;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* Top bar */
+    .topbar {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(11,17,32,0.97);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0 24px;
+      height: 48px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .topbar-back {
+      font-size: 12px; color: #475569; text-decoration: none;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .topbar-back:hover { color: #94a3b8; }
+    .topbar-sep { color: #1e293b; }
+    .topbar-title {
+      font-size: 13px; font-weight: 700; color: #f1f5f9;
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .topbar-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      color: #475569; text-transform: uppercase;
+    }
+    .btn-download {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      padding: 5px 12px; border-radius: 4px; border: none; cursor: pointer;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-md   { background: rgba(71,85,105,0.2); color: #94a3b8; border: 1px solid #1e293b; }
+    .btn-json { background: rgba(71,85,105,0.2); color: #94a3b8; border: 1px solid #1e293b; }
+    .btn-md:hover, .btn-json:hover { background: rgba(71,85,105,0.4); color: #f1f5f9; }
+
+    /* Page body */
+    .page { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* Hero */
+    .hero { margin-bottom: 40px; }
+    .hero-title { font-size: 28px; font-weight: 800; color: #f1f5f9; line-height: 1.2; margin-bottom: 10px; }
+    .hero-desc  { font-size: 15px; color: #94a3b8; line-height: 1.65; margin-bottom: 10px; }
+    .hero-meta  { font-size: 11px; color: #334155; font-family: ui-monospace, monospace; }
+
+    /* Section headings */
+    .section-title {
+      font-size: 11px; font-weight: 700; color: #475569;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      margin-bottom: 16px;
+      padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* Readiness summary */
+    .readiness-block { margin-bottom: 40px; }
+    .readiness-fraction {
+      font-size: 22px; font-weight: 800; color: #f1f5f9; margin-bottom: 8px;
+    }
+    .readiness-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .readiness-chip {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 3px 8px; border-radius: 3px;
+    }
+
+    /* Beat card */
+    .beat-list { display: flex; flex-direction: column; gap: 24px; }
+    .beat-card {
+      background: #0f1825;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .beat-header {
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 10; flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .beat-num  { font-size: 11px; color: #334155; font-weight: 600; flex-shrink: 0; }
+    .beat-type {
+      font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px;
+      text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0;
+    }
+    .beat-title { font-size: 16px; font-weight: 700; color: #f1f5f9; flex: 1; min-width: 0; }
+    .beat-status {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 3px;
+      letter-spacing: 0.06em; flex-shrink: 0;
+    }
+    .beat-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .beat-summary { font-size: 13px; color: #cbd5e1; line-height: 1.65; }
+
+    /* Field */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #475569;
+    }
+    .field-value { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+    .field-value.mono { font-family: ui-monospace, monospace; font-size: 11px; }
+
+    /* Lists */
+    .item-list { display: flex; flex-direction: column; gap: 4px; }
+    .item-row  { display: flex; gap: 8px; align-items: flex-start; }
+    .item-bullet { color: #334155; flex-shrink: 0; margin-top: 1px; }
+    .item-check  {
+      width: 14px; height: 14px; border-radius: 2px;
+      border: 1px solid #334155; flex-shrink: 0; margin-top: 2px;
+    }
+    .item-text { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+
+    /* Player visible */
+    .player-text {
+      background: rgba(34,197,94,0.06);
+      border-left: 2px solid #22C55E;
+      padding: 10px 14px;
+      font-size: 12px; color: #86efac; line-height: 1.65;
+      white-space: pre-wrap;
+      font-style: italic;
+    }
+
+    /* Branches */
+    .branch-list { display: flex; flex-direction: column; gap: 6px; }
+    .branch-row  { display: flex; gap: 8px; align-items: center; }
+    .branch-arrow { color: #475569; flex-shrink: 0; }
+    .branch-dest { font-size: 12px; color: #cbd5e1; font-weight: 600; }
+    .branch-type { font-size: 10px; color: #475569; }
+    .branch-label { font-size: 11px; color: #64748b; font-style: italic; }
+
+    /* Blocker warning */
+    .beat-blocker {
+      margin: 0 20px 16px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 11px; color: #fca5a5; line-height: 1.55;
+    }
+
+    /* Spec issues */
+    .issues-block { margin-top: 48px; }
+    .issues-group { margin-bottom: 24px; }
+    .issues-list  { display: flex; flex-direction: column; gap: 8px; }
+    .issue-row    { display: flex; gap: 10px; align-items: flex-start; }
+    .issue-indicator { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .issue-title  { font-size: 13px; font-weight: 600; color: #f1f5f9; }
+    .issue-id     { font-size: 11px; color: #334155; font-family: ui-monospace, monospace; }
+    .issue-detail { font-size: 11px; color: #64748b; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+  <nav class="topbar">
+    <a href={boardUrl} class="topbar-back">← Board</a>
+    <span class="topbar-sep">|</span>
+    <span class="topbar-title">{storyboard.title}</span>
+    <span class="topbar-label">Handoff</span>
+    <button id="btn-md"   class="btn-download btn-md">↓ Markdown</button>
+    <button id="btn-json" class="btn-download btn-json">↓ JSON</button>
+  </nav>
+
+  <!-- ── Page content ────────────────────────────────────────────────────── -->
+  <main class="page">
+
+    <!-- Hero -->
+    <div class="hero">
+      <h1 class="hero-title">{storyboard.title}</h1>
+      {storyboard.description && (
+        <p class="hero-desc">{storyboard.description}</p>
+      )}
+      <p class="hero-meta">Generated {dateStr} · ID: {handoff.id}</p>
+    </div>
+
+    <!-- Readiness summary -->
+    <div class="readiness-block">
+      <p class="section-title">Implementation Readiness</p>
+      <p class="readiness-fraction">
+        {handoff.readiness.ready} / {handoff.readiness.total} beats ready
+        <span style="font-size: 14px; font-weight: 400; color: #475569; margin-left: 8px;">
+          ({readyPct}%)
+        </span>
+      </p>
+      <div class="readiness-chips">
+        {handoff.readiness.ready > 0 && (
+          <span class="readiness-chip" style={`background: ${STATUS_COLORS.ready}18; border: 1px solid ${STATUS_COLORS.ready}44; color: ${STATUS_COLORS.ready}`}>
+            {handoff.readiness.ready} READY
+          </span>
+        )}
+        {handoff.readiness.partial > 0 && (
+          <span class="readiness-chip" style={`background: ${STATUS_COLORS.partial}18; border: 1px solid ${STATUS_COLORS.partial}44; color: ${STATUS_COLORS.partial}`}>
+            {handoff.readiness.partial} PARTIAL
+          </span>
+        )}
+        {handoff.readiness.blocked > 0 && (
+          <span class="readiness-chip" style={`background: ${STATUS_COLORS.blocked}18; border: 1px solid ${STATUS_COLORS.blocked}44; color: ${STATUS_COLORS.blocked}`}>
+            {handoff.readiness.blocked} BLOCKED
+          </span>
+        )}
+        {handoff.readiness.draft > 0 && (
+          <span class="readiness-chip" style={`background: ${STATUS_COLORS.draft}18; border: 1px solid ${STATUS_COLORS.draft}44; color: ${STATUS_COLORS.draft}`}>
+            {handoff.readiness.draft} DRAFT
+          </span>
+        )}
+      </div>
+    </div>
+
+    <!-- Beat list -->
+    <p class="section-title">Beats</p>
+    <div class="beat-list">
+      {handoff.beats.map((beat, i) => {
+        const typeLabel = beat.type.replace('_', ' ').toUpperCase();
+        const accentColor = STATUS_COLORS[beat.status] ?? '#475569';
+        const blockers = beat.missing.filter(r => r === 'no_state_changes' || r === 'no_entry_or_state_change');
+
+        return (
+          <div class="beat-card" id={`beat-${beat.id}`}>
+            <!-- Beat header -->
+            <div class="beat-header" style={`border-left: 3px solid ${accentColor}44`}>
+              <span class="beat-num">#{i + 1}</span>
+              <span class="beat-type" style={`background: ${accentColor}22; color: ${accentColor}; border: 1px solid ${accentColor}44`}>
+                {typeLabel}
+              </span>
+              <span class="beat-title">{beat.title}</span>
+              <span class="beat-status" style={`background: ${accentColor}18; border: 1px solid ${accentColor}44; color: ${accentColor}`}>
+                {STATUS_LABELS[beat.status] ?? beat.status.toUpperCase()}
+              </span>
+            </div>
+
+            <!-- Blocker warning -->
+            {blockers.length > 0 && (
+              <div class="beat-blocker">
+                <strong>⚠ Domain requirement missing — resolve before implementation:</strong>
+                {blockers.includes('no_state_changes') && (
+                  <div>State changes required for {beat.type} frame type</div>
+                )}
+                {blockers.includes('no_entry_or_state_change') && (
+                  <div>Entry conditions or state changes required for reveal beats</div>
+                )}
+              </div>
+            )}
+
+            <!-- Beat body -->
+            <div class="beat-body">
+
+              <p class="beat-summary">{beat.summary}</p>
+
+              <!-- Entry / exit conditions -->
+              <div class="field">
+                <span class="field-label">Entry Conditions</span>
+                {beat.entryConditions.length > 0 ? (
+                  <div class="item-list">
+                    {beat.entryConditions.map(c => (
+                      <div class="item-row">
+                        <span class="item-bullet">–</span>
+                        <span class="item-text mono">{c}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span class="field-value" style="color: #334155;">none required</span>
+                )}
+              </div>
+
+              {beat.exitConditions.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Exit Conditions</span>
+                  <div class="item-list">
+                    {beat.exitConditions.map(c => (
+                      <div class="item-row">
+                        <span class="item-bullet">–</span>
+                        <span class="item-text mono">{c}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <!-- State changes -->
+              {beat.stateChanges.length > 0 && (
+                <div class="field">
+                  <span class="field-label" style="color: #3B82F6;">State Changes</span>
+                  <div class="item-list">
+                    {beat.stateChanges.map(s => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #3B82F6;">›</span>
+                        <span class="item-text mono" style="color: #93c5fd;">{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <!-- Player-visible text -->
+              {beat.playerVisibleText && (
+                <div class="field">
+                  <span class="field-label" style="color: #22C55E;">Player-Visible Text</span>
+                  <div class="player-text">{beat.playerVisibleText}</div>
+                </div>
+              )}
+
+              <!-- Stakes -->
+              {beat.stakes && (
+                <div class="field">
+                  <span class="field-label" style="color: #F97316;">Stakes</span>
+                  <p class="field-value">{beat.stakes}</p>
+                </div>
+              )}
+
+              <!-- Characters / factions -->
+              {beat.involvedCharacters.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Characters</span>
+                  <p class="field-value">{beat.involvedCharacters.join(', ')}</p>
+                </div>
+              )}
+              {beat.involvedFactions.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Factions</span>
+                  <p class="field-value">{beat.involvedFactions.join(', ')}</p>
+                </div>
+              )}
+
+              <!-- Possible outcomes -->
+              {beat.possibleOutcomes.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Possible Outcomes</span>
+                  <div class="item-list">
+                    {beat.possibleOutcomes.map(o => (
+                      <div class="item-row">
+                        <span class="item-bullet">–</span>
+                        <span class="item-text">{o}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <!-- Required assets -->
+              {beat.requiredAssets.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Required Assets</span>
+                  <div class="item-list">
+                    {beat.requiredAssets.map(a => (
+                      <div class="item-row">
+                        <span class="item-bullet">–</span>
+                        <span class="item-text mono">{a}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <!-- Implementation checklist -->
+              {beat.implementationChecklist.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Implementation Checklist</span>
+                  <div class="item-list">
+                    {beat.implementationChecklist.map(task => (
+                      <div class="item-row">
+                        <span class="item-check" aria-hidden="true" />
+                        <span class="item-text">{task}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <!-- Test criteria -->
+              {beat.testCriteria.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Test Criteria</span>
+                  <div class="item-list">
+                    {beat.testCriteria.map(t => (
+                      <div class="item-row">
+                        <span class="item-check" aria-hidden="true" />
+                        <span class="item-text">{t}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <!-- Designer notes -->
+              {beat.designerNotes && (
+                <div class="field">
+                  <span class="field-label">Designer Notes</span>
+                  <p class="field-value" style="color: #64748b; font-style: italic;">{beat.designerNotes}</p>
+                </div>
+              )}
+
+              <!-- Outgoing branches -->
+              <div class="field">
+                <span class="field-label">Outgoing</span>
+                {beat.outgoingBranches.length === 0 ? (
+                  beat.status !== 'draft' ? (
+                    <span class="field-value" style="color: #334155;">terminal beat</span>
+                  ) : (
+                    <span class="field-value" style="color: #1e293b;">—</span>
+                  )
+                ) : (
+                  <div class="branch-list">
+                    {beat.outgoingBranches.map(branch => (
+                      <div class="branch-row">
+                        <span class="branch-arrow">→</span>
+                        <a href={`#beat-${branch.toId}`} class="branch-dest">{branch.toTitle}</a>
+                        <span class="branch-type">({CONN_LABELS[branch.type] ?? branch.type}</span>
+                        {branch.label && (
+                          <span class="branch-label">: "{branch.label}"</span>
+                        )}
+                        <span class="branch-type">)</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>{/* beat-body */}
+          </div>
+        );
+      })}
+    </div>{/* beat-list */}
+
+    <!-- Spec issues -->
+    {(handoff.blockedBeatIds.length > 0 || handoff.partialBeatIds.length > 0) && (
+      <div class="issues-block">
+        <p class="section-title">Spec Issues</p>
+
+        {handoff.blockedBeatIds.length > 0 && (
+          <div class="issues-group">
+            <p style="font-size: 13px; font-weight: 700; color: #EF4444; margin-bottom: 8px;">
+              Blocked ({handoff.blockedBeatIds.length})
+            </p>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+              Domain rule violations — must be resolved before implementation.
+            </p>
+            <div class="issues-list">
+              {handoff.blockedBeatIds.map(id => {
+                const beat = handoff.beats.find(b => b.id === id);
+                if (!beat) return null;
+                const blockers = beat.missing.filter(r =>
+                  r === 'no_state_changes' || r === 'no_entry_or_state_change',
+                );
+                return (
+                  <div class="issue-row">
+                    <span class="issue-indicator" style="background: #EF4444;" />
+                    <div>
+                      <a href={`#beat-${id}`} class="issue-title">{beat.title}</a>
+                      <span class="issue-id"> · {id}</span>
+                      {blockers.length > 0 && (
+                        <p class="issue-detail">
+                          {blockers.map(r => r.replace(/_/g, ' ')).join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {handoff.partialBeatIds.length > 0 && (
+          <div class="issues-group">
+            <p style="font-size: 13px; font-weight: 700; color: #F97316; margin-bottom: 8px;">
+              Partial ({handoff.partialBeatIds.length})
+            </p>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+              Spec is incomplete — expect rework during implementation.
+            </p>
+            <div class="issues-list">
+              {handoff.partialBeatIds.map(id => {
+                const beat = handoff.beats.find(b => b.id === id);
+                if (!beat) return null;
+                const gaps = beat.missing.filter(r =>
+                  !['no_state_changes', 'no_entry_or_state_change', 'no_stakes', 'no_possible_outcomes'].includes(r),
+                );
+                return (
+                  <div class="issue-row">
+                    <span class="issue-indicator" style="background: #F97316;" />
+                    <div>
+                      <a href={`#beat-${id}`} class="issue-title">{beat.title}</a>
+                      <span class="issue-id"> · {id}</span>
+                      {gaps.length > 0 && (
+                        <p class="issue-detail">
+                          missing: {gaps.map(r => r.replace(/^no_/, '').replace(/_/g, ' ')).join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+
+  </main>
+
+  <!-- Download buttons -->
+  <script define:vars={{ markdownText, jsonText, filename }}>
+    function download(content, name, type) {
+      const blob = new Blob([content], { type });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    document.getElementById('btn-md')?.addEventListener('click', () =>
+      download(markdownText, filename + '.md', 'text/markdown'));
+    document.getElementById('btn-json')?.addEventListener('click', () =>
+      download(jsonText, filename + '.json', 'application/json'));
+  </script>
+
+</body>
+</html>
