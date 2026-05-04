@@ -13,8 +13,8 @@ export const config: SiteConfig = {
     headline: 'Story structure that ships.',
     headlineAccent: 'Game-state first.',
     description: 'A visual authoring board where every frame is an implementation spec — entry conditions, state changes, required assets, test criteria, and a dev checklist. The handoff is a document a developer can build from, not a document a developer has to interpret.',
-    primaryCta: { href: '/storyboard-os/handbook/', label: 'Read the docs' },
-    secondaryCta: { href: '#platform', label: 'See the platform' },
+    primaryCta: { href: '#platform', label: 'See the platform' },
+    secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [
       { label: 'Install', code: 'git clone mcp-tool-shop-org/storyboard-os\npnpm install && pnpm dev' },
       { label: 'Verify', code: 'pnpm verify  # 368 tests · 42 pages' },
