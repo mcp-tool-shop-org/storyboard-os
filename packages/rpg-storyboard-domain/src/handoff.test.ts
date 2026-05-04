@@ -7,10 +7,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { generateHandoff, generateMarkdown } from './handoff';
+import { generateHandoff, generateMarkdown, generateProjectHandoff, generateProjectMarkdown } from './handoff';
 import type { Storyboard, StoryboardFrame } from './schema';
 import type { StoryboardConnection } from '@storyboard-os/core';
 import { tollhouseLedgerProject } from './demo-project';
+import {
+  createProject,
+  updateFrameBasics,
+  updateFrameContent,
+  setChecklistItemComplete,
+  setTestCriterionComplete,
+} from './project';
 
 // ─── Fixture helpers ──────────────────────────────────────────────────────────
 
@@ -467,5 +474,166 @@ describe('generateMarkdown', () => {
     expect(md.length).toBeGreaterThan(1000);
     expect(md).toContain('Tollhouse');
     expect(md).toContain('ledger');
+  });
+});
+
+// ─── generateProjectHandoff — metadata ───────────────────────────────────────
+
+describe('generateProjectHandoff — metadata', () => {
+  it('carries projectId, title, createdAt, updatedAt', () => {
+    const p = createProject({ title: 'My Quest', templateId: 'quest_flow' });
+    const h = generateProjectHandoff(p);
+    expect(h.projectId).toBe(p.id);
+    expect(h.title).toBe('My Quest');
+    expect(h.createdAt).toBe(p.createdAt);
+    expect(h.updatedAt).toBe(p.updatedAt);
+  });
+
+  it('carries sourceTemplateId', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const h = generateProjectHandoff(p);
+    expect(h.sourceTemplateId).toBe('quest_flow');
+  });
+
+  it('carries storyboardId', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const h = generateProjectHandoff(p);
+    expect(h.storyboardId).toBe(p.storyboard.id);
+  });
+
+  it('generatedAt is a valid ISO timestamp', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const h = generateProjectHandoff(p);
+    expect(new Date(h.generatedAt).toISOString()).toBe(h.generatedAt);
+  });
+
+  it('beats length matches storyboard frame count', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const h = generateProjectHandoff(p);
+    expect(h.beats).toHaveLength(p.storyboard.frames.length);
+  });
+});
+
+// ─── generateProjectHandoff — edited content ─────────────────────────────────
+
+describe('generateProjectHandoff — edited content', () => {
+  it('reflects edited designerNotes in the beat', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const edited = updateFrameContent(p, fid, { designerNotes: 'Updated notes for handoff' });
+    const h = generateProjectHandoff(edited);
+    const beat = h.beats.find(b => b.id === fid)!;
+    expect(beat.designerNotes).toBe('Updated notes for handoff');
+  });
+
+  it('reflects edited title after updateFrameBasics', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const edited = updateFrameBasics(p, fid, { title: 'Renamed Beat' });
+    const h = generateProjectHandoff(edited);
+    const beat = h.beats.find(b => b.id === fid)!;
+    expect(beat.title).toBe('Renamed Beat');
+  });
+
+  it('reflects edited stateChanges', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const edited = updateFrameContent(p, fid, { stateChanges: ['my_flag = true'] });
+    const h = generateProjectHandoff(edited);
+    const beat = h.beats.find(b => b.id === fid)!;
+    expect(beat.stateChanges).toContain('my_flag = true');
+  });
+});
+
+// ─── generateProjectHandoff — progress ───────────────────────────────────────
+
+describe('generateProjectHandoff — progress', () => {
+  it('checklistProgress items are all done=false on a fresh project', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const h = generateProjectHandoff(p);
+    const beat = h.beats.find(b => b.id === fid)!;
+    expect(beat.checklistProgress.every(i => i.done === false)).toBe(true);
+  });
+
+  it('marks a checked item as done=true without mutating spec arrays', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const specBefore = [...(p.storyboard.frames[0].content.implementationChecklist ?? [])];
+    const checked = setChecklistItemComplete(p, fid, 0, true);
+    const h = generateProjectHandoff(checked);
+    const beat = h.beats.find(b => b.id === fid)!;
+    // Progress reflects the check
+    expect(beat.checklistProgress[0].done).toBe(true);
+    // Spec text is unchanged
+    expect(checked.storyboard.frames[0].content.implementationChecklist).toEqual(specBefore);
+    // Item text matches the spec
+    expect(beat.checklistProgress[0].item).toBe(specBefore[0]);
+  });
+
+  it('marks a checked test criterion as done=true', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const checked = setTestCriterionComplete(p, fid, 0, true);
+    const h = generateProjectHandoff(checked);
+    const beat = h.beats.find(b => b.id === fid)!;
+    expect(beat.testProgress[0].done).toBe(true);
+  });
+
+  it('testProgress criterion text matches the spec', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const spec = p.storyboard.frames[0].content.testCriteria ?? [];
+    const h = generateProjectHandoff(p);
+    const beat = h.beats.find(b => b.id === fid)!;
+    beat.testProgress.forEach((tp, i) => expect(tp.criterion).toBe(spec[i]));
+  });
+
+  it('progress summary reflects checked items', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const checked = setChecklistItemComplete(p, fid, 0, true);
+    const h = generateProjectHandoff(checked);
+    expect(h.progress.doneChecklist).toBe(1);
+    expect(h.progress.totalChecklist).toBeGreaterThan(0);
+  });
+});
+
+// ─── generateProjectMarkdown ──────────────────────────────────────────────────
+
+describe('generateProjectMarkdown', () => {
+  it('renders checked checklist items as [x]', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const checked = setChecklistItemComplete(p, fid, 0, true);
+    const md = generateProjectMarkdown(generateProjectHandoff(checked));
+    expect(md).toContain('- [x]');
+  });
+
+  it('renders unchecked items as [ ]', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('- [ ]');
+  });
+
+  it('includes project ID and title', () => {
+    const p = createProject({ title: 'My Project', templateId: 'quest_flow' });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('My Project');
+    expect(md).toContain(p.id);
+  });
+
+  it('includes template provenance', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_branch' });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('quest_branch');
+  });
+
+  it('includes progress counts', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const checked = setChecklistItemComplete(p, fid, 0, true);
+    const md = generateProjectMarkdown(generateProjectHandoff(checked));
+    expect(md).toContain('1/');  // at least "1/N complete"
   });
 });

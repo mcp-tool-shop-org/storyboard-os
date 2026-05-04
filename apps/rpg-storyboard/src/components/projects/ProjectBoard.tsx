@@ -138,7 +138,7 @@ export default function ProjectBoard() {
       projectProgress={project.progress}
       progressSummary={progressSummary}
       saveStatus={saveStatus}
-      showHandoff={false}
+      handoffHref={`/projects/handoff?id=${project.id}`}
     />
   );
 }

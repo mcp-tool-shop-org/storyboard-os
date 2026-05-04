@@ -67,6 +67,8 @@ export type {
 export {
   generateHandoff,
   generateMarkdown,
+  generateProjectHandoff,
+  generateProjectMarkdown,
 } from './handoff';
 
 export type {
@@ -74,6 +76,8 @@ export type {
   HandoffBeat,
   HandoffReadinessSummary,
   QuestHandoff,
+  ProjectHandoffBeat,
+  ProjectHandoff,
 } from './handoff';
 
 export {

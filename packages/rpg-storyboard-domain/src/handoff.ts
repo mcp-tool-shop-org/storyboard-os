@@ -17,6 +17,8 @@ import type { Storyboard, StoryboardFrame, FrameContent } from './schema';
 import type { StoryboardConnection } from '@storyboard-os/core';
 import { getBeatStatus, getStoryboardReadiness } from './beatStatus';
 import type { BeatStatusLevel, MissingSpecReason } from './beatStatus';
+import type { RpgStoryboardProject, ProjectProgressSummary } from './project';
+import { getFrameProgress, getProjectProgress } from './project';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,6 +100,48 @@ export interface QuestHandoff {
   /** IDs of beats with 'blocked' status — must be resolved before implementation. */
   blockedBeatIds: string[];
   /** IDs of beats with 'partial' status — implementation can proceed but spec is incomplete. */
+  partialBeatIds: string[];
+}
+
+// ─── Project handoff types ────────────────────────────────────────────────────
+
+/**
+ * A HandoffBeat enriched with per-item completion state from the project's
+ * progress record. The spec text in `implementationChecklist` / `testCriteria`
+ * is never mutated — completion state is layered on top.
+ */
+export interface ProjectHandoffBeat extends HandoffBeat {
+  /** Each checklist item paired with its completion state. */
+  checklistProgress: Array<{ item: string; done: boolean }>;
+  /** Each test criterion paired with its completion state. */
+  testProgress: Array<{ criterion: string; done: boolean }>;
+}
+
+/**
+ * A project-aware handoff that includes identity metadata, live spec content,
+ * readiness, and checked-off implementation progress.
+ *
+ * This is the bridge between the living authoring project and the implementation pass.
+ */
+export interface ProjectHandoff {
+  /** Stable project ID (separate from the storyboard ID). */
+  projectId: string;
+  storyboardId: string;
+  title: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  /** ISO 8601 timestamp — when this handoff was generated. */
+  generatedAt: string;
+  /** Template this project was generated from. */
+  sourceTemplateId?: string;
+  /** Beat-level readiness (ready / partial / draft / blocked counts). */
+  readiness: HandoffReadinessSummary;
+  /** Aggregated checklist and test completion across all beats. */
+  progress: ProjectProgressSummary;
+  /** All beats in topological order, each with completion state. */
+  beats: ProjectHandoffBeat[];
+  blockedBeatIds: string[];
   partialBeatIds: string[];
 }
 
@@ -503,6 +547,285 @@ export function generateMarkdown(handoff: QuestHandoff): string {
         if (!beat) continue;
         const gaps = beat.missing.filter(
           r => !['no_state_changes', 'no_entry_or_state_change', 'no_stakes', 'no_possible_outcomes'].includes(r),
+        );
+        const detail = gaps.length > 0
+          ? ` — missing: ${gaps.map(r => r.replace(/^no_/, '').replace(/_/g, ' ')).join(', ')}`
+          : '';
+        sections.push(`- **${beat.title}** (\`${id}\`)${detail}`);
+      }
+    }
+  }
+
+  return sections.join('\n');
+}
+
+// ─── Project handoff generator ────────────────────────────────────────────────
+
+/**
+ * Generate a project-aware handoff from a saved RpgStoryboardProject.
+ *
+ * Reuses the storyboard-level beat ordering and spec extraction from
+ * `generateHandoff`, then layers per-beat completion state from the project's
+ * progress record on top. Spec text is never modified — completion is additive.
+ *
+ * The returned ProjectHandoff reflects the live state of the project:
+ * edited content, moved frames, checked-off tasks, all in one artifact.
+ */
+export function generateProjectHandoff(project: RpgStoryboardProject): ProjectHandoff {
+  const { storyboard } = project;
+
+  // Reuse existing beat ordering + spec extraction
+  const questHandoff = generateHandoff(storyboard);
+  const progress     = getProjectProgress(project);
+
+  const beats: ProjectHandoffBeat[] = questHandoff.beats.map(beat => {
+    const fp = getFrameProgress(project, beat.id);
+
+    const checklistProgress = beat.implementationChecklist.map((item, i) => ({
+      item,
+      done: fp.checklist[String(i)] === true,
+    }));
+
+    const testProgress = beat.testCriteria.map((criterion, i) => ({
+      criterion,
+      done: fp.testCriteria[String(i)] === true,
+    }));
+
+    return { ...beat, checklistProgress, testProgress };
+  });
+
+  return {
+    projectId:        project.id,
+    storyboardId:     storyboard.id,
+    title:            project.title,
+    description:      project.description,
+    createdAt:        project.createdAt,
+    updatedAt:        project.updatedAt,
+    generatedAt:      new Date().toISOString(),
+    sourceTemplateId: project.sourceTemplateId,
+    readiness:        questHandoff.readiness,
+    progress,
+    beats,
+    blockedBeatIds:   questHandoff.blockedBeatIds,
+    partialBeatIds:   questHandoff.partialBeatIds,
+  };
+}
+
+// ─── Project markdown renderer ────────────────────────────────────────────────
+
+function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
+  const typeLabel = beat.type.replace('_', ' ').toUpperCase();
+  const sections: string[] = [];
+
+  sections.push(`### Beat ${index + 1} — ${beat.title}`);
+  sections.push(`**Type:** ${typeLabel} · **Status:** ${STATUS_LABELS[beat.status]}`);
+  sections.push('');
+  sections.push(beat.summary);
+
+  if (beat.entryConditions.length > 0 || beat.exitConditions.length > 0) {
+    sections.push('');
+    sections.push(`**Entry Conditions:** ${beat.entryConditions.length > 0 ? '' : 'none required'}`);
+    if (beat.entryConditions.length > 0) sections.push(bulletLines(beat.entryConditions));
+    sections.push(`**Exit Conditions:** ${beat.exitConditions.length > 0 ? '' : 'none required'}`);
+    if (beat.exitConditions.length > 0) sections.push(bulletLines(beat.exitConditions));
+  }
+
+  if (beat.stateChanges.length > 0) {
+    sections.push('');
+    sections.push('**State Changes:**');
+    sections.push(bulletLines(beat.stateChanges.map(s => `\`${s}\``)));
+  }
+
+  if (beat.playerVisibleText) {
+    sections.push('');
+    sections.push('**Player-Visible Text:**');
+    sections.push(blockquote(beat.playerVisibleText));
+  }
+
+  if (beat.stakes) {
+    sections.push('');
+    sections.push(`**Stakes:** ${beat.stakes}`);
+  }
+
+  if (beat.involvedCharacters.length > 0) {
+    sections.push('');
+    sections.push(`**Characters:** ${beat.involvedCharacters.join(', ')}`);
+  }
+
+  if (beat.involvedFactions.length > 0) {
+    sections.push('');
+    sections.push(`**Factions:** ${beat.involvedFactions.join(', ')}`);
+  }
+
+  if (beat.possibleOutcomes.length > 0) {
+    sections.push('');
+    sections.push('**Possible Outcomes:**');
+    sections.push(bulletLines(beat.possibleOutcomes));
+  }
+
+  if (beat.requiredAssets.length > 0) {
+    sections.push('');
+    sections.push('**Required Assets:**');
+    sections.push(bulletLines(beat.requiredAssets));
+  }
+
+  // Implementation checklist — progress-aware: [x] for done, [ ] for undone
+  if (beat.checklistProgress.length > 0) {
+    sections.push('');
+    const doneCount = beat.checklistProgress.filter(i => i.done).length;
+    sections.push(`**Implementation Checklist** (${doneCount}/${beat.checklistProgress.length} done):`);
+    sections.push(
+      beat.checklistProgress
+        .map(i => `- [${i.done ? 'x' : ' '}] ${i.item}`)
+        .join('\n'),
+    );
+  }
+
+  // Test criteria — progress-aware
+  if (beat.testProgress.length > 0) {
+    sections.push('');
+    const doneCount = beat.testProgress.filter(i => i.done).length;
+    sections.push(`**Test Criteria** (${doneCount}/${beat.testProgress.length} verified):`);
+    sections.push(
+      beat.testProgress
+        .map(i => `- [${i.done ? 'x' : ' '}] ${i.criterion}`)
+        .join('\n'),
+    );
+  }
+
+  if (beat.designerNotes) {
+    sections.push('');
+    sections.push('**Designer Notes:**');
+    sections.push(`> ${beat.designerNotes}`);
+  }
+
+  sections.push('');
+  if (beat.outgoingBranches.length === 0) {
+    if (beat.status !== 'draft') sections.push('**Outgoing:** none — terminal beat');
+  } else if (beat.outgoingBranches.length === 1) {
+    const b = beat.outgoingBranches[0];
+    const labelPart = b.label ? ` — "${b.label}"` : '';
+    sections.push(`**Outgoing:** → ${b.toTitle} (${connTypeLabel(b.type)}${labelPart})`);
+  } else {
+    sections.push('**Outgoing Branches:**');
+    for (const b of beat.outgoingBranches) {
+      const labelPart = b.label ? `: "${b.label}"` : '';
+      sections.push(`- → ${b.toTitle} (${connTypeLabel(b.type)}${labelPart})`);
+    }
+  }
+
+  const blockers = beat.missing.filter(r =>
+    r === 'no_state_changes' || r === 'no_entry_or_state_change',
+  );
+  if (blockers.length > 0) {
+    sections.push('');
+    sections.push('> **⚠ Domain requirement missing — must resolve before implementation:**');
+    if (blockers.includes('no_state_changes')) {
+      sections.push('> - State changes required for this frame type (choice/consequence)');
+    }
+    if (blockers.includes('no_entry_or_state_change')) {
+      sections.push('> - Entry conditions or state changes required for reveal beats');
+    }
+  }
+
+  return sections.join('\n');
+}
+
+/**
+ * Render a ProjectHandoff as a Markdown document.
+ *
+ * Includes project identity, template provenance, readiness, implementation
+ * progress, and all beats with [x]/[ ] completion markers on checklist items
+ * and test criteria.
+ */
+export function generateProjectMarkdown(handoff: ProjectHandoff): string {
+  const pct = Math.round(handoff.readiness.readyFraction * 100);
+  const { ready, partial, draft, blocked, total } = handoff.readiness;
+  const { doneChecklist, totalChecklist, doneTests, totalTests } = handoff.progress;
+
+  const readinessParts: string[] = [];
+  if (ready   > 0) readinessParts.push(`**${ready} READY**`);
+  if (partial > 0) readinessParts.push(`${partial} PARTIAL`);
+  if (blocked > 0) readinessParts.push(`${blocked} BLOCKED`);
+  if (draft   > 0) readinessParts.push(`${draft} DRAFT`);
+
+  const sections: string[] = [];
+
+  sections.push(`# ${handoff.title} — Project Handoff`);
+  sections.push('');
+
+  if (handoff.description) {
+    sections.push(`> ${handoff.description}`);
+    sections.push('');
+  }
+
+  sections.push(
+    `**Project ID:** \`${handoff.projectId}\`` +
+    (handoff.sourceTemplateId ? ` · **Template:** ${handoff.sourceTemplateId}` : ''),
+  );
+  sections.push(
+    `**Created:** ${handoff.createdAt.split('T')[0]} · ` +
+    `**Updated:** ${handoff.updatedAt.split('T')[0]} · ` +
+    `**Generated:** ${handoff.generatedAt.split('T')[0]}`,
+  );
+  sections.push('');
+  sections.push('---');
+
+  // Progress
+  sections.push('');
+  sections.push('## Implementation Progress');
+  sections.push('');
+  if (totalChecklist > 0) sections.push(`**Tasks:** ${doneChecklist}/${totalChecklist} complete`);
+  if (totalTests > 0)     sections.push(`**Tests:** ${doneTests}/${totalTests} verified`);
+  sections.push('');
+  sections.push('---');
+
+  // Readiness
+  sections.push('');
+  sections.push('## Beat Readiness');
+  sections.push('');
+  sections.push(`**${ready} / ${total} beats ready** (${pct}%)`);
+  if (readinessParts.length > 0) {
+    sections.push('');
+    sections.push(readinessParts.join(' · '));
+  }
+  sections.push('');
+  sections.push('---');
+
+  // Beats
+  sections.push('');
+  sections.push('## Beats');
+  for (let i = 0; i < handoff.beats.length; i++) {
+    sections.push('');
+    sections.push(renderProjectBeat(handoff.beats[i], i));
+    sections.push('');
+    sections.push('---');
+  }
+
+  // Spec issues
+  const hasIssues = handoff.blockedBeatIds.length > 0 || handoff.partialBeatIds.length > 0;
+  if (hasIssues) {
+    sections.push('');
+    sections.push('## Spec Issues');
+    sections.push('');
+    if (handoff.blockedBeatIds.length > 0) {
+      sections.push(`### Blocked (${handoff.blockedBeatIds.length})`);
+      sections.push('');
+      for (const id of handoff.blockedBeatIds) {
+        const beat = handoff.beats.find(b => b.id === id);
+        if (!beat) continue;
+        sections.push(`- **${beat.title}** (\`${id}\`)`);
+      }
+      sections.push('');
+    }
+    if (handoff.partialBeatIds.length > 0) {
+      sections.push(`### Partial (${handoff.partialBeatIds.length})`);
+      sections.push('');
+      for (const id of handoff.partialBeatIds) {
+        const beat = handoff.beats.find(b => b.id === id);
+        if (!beat) continue;
+        const gaps = beat.missing.filter(r =>
+          !['no_state_changes', 'no_entry_or_state_change', 'no_stakes', 'no_possible_outcomes'].includes(r),
         );
         const detail = gaps.length > 0
           ? ` — missing: ${gaps.map(r => r.replace(/^no_/, '').replace(/_/g, ' ')).join(', ')}`

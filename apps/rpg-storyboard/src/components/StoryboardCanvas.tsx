@@ -118,13 +118,15 @@ interface Props {
   /** Optional save-state indicator rendered in the header. */
   saveStatus?: SaveStatus;
   /**
-   * Whether to show the "Handoff →" link in the header.
-   * Default true (template previews). Set false on project boards (storyboard IDs differ).
+   * Destination URL for the "Handoff →" link in the header.
+   * Defaults to `/storyboards/${storyboard.id}/handoff` (template previews).
+   * Project boards should pass `/projects/handoff?id=${projectId}`.
    */
-  showHandoff?: boolean;
+  handoffHref?: string;
 }
 
-export default function StoryboardCanvas({ storyboard, onFramePositionChange, onFrameContentChange, onProgressChange, projectProgress, progressSummary, saveStatus, showHandoff = true }: Props) {
+export default function StoryboardCanvas({ storyboard, onFramePositionChange, onFrameContentChange, onProgressChange, projectProgress, progressSummary, saveStatus, handoffHref }: Props) {
+  const resolvedHandoffHref = handoffHref ?? `/storyboards/${storyboard.id}/handoff`;
   const [selectedFrameId, setSelectedFrameId]           = useState<string | null>(null);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [editingFrameId, setEditingFrameId]             = useState<string | null>(null);
@@ -270,19 +272,17 @@ export default function StoryboardCanvas({ storyboard, onFramePositionChange, on
           <ReadinessCounts summary={readinessSummary} />
           {progressSummary && <ProgressCounts summary={progressSummary} />}
           {saveStatus && <SaveStatusChip status={saveStatus} />}
-          {showHandoff && (
-            <a
-              href={`/storyboards/${storyboard.id}/handoff`}
-              style={{
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
-                padding: '4px 10px', borderRadius: 4,
-                background: 'rgba(71,85,105,0.2)', border: '1px solid #1e293b',
-                color: '#94a3b8', textDecoration: 'none',
-              }}
-            >
-              Handoff →
-            </a>
-          )}
+          <a
+            href={resolvedHandoffHref}
+            style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+              padding: '4px 10px', borderRadius: 4,
+              background: 'rgba(71,85,105,0.2)', border: '1px solid #1e293b',
+              color: '#94a3b8', textDecoration: 'none',
+            }}
+          >
+            Handoff →
+          </a>
         </div>
       </header>
 

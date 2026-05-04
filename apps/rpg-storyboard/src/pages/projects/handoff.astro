@@ -1,0 +1,26 @@
+---
+// /projects/handoff?id={projectId}
+//
+// Static shell — all rendering is client-side (project data lives in localStorage).
+// The React component reads ?id=, loads the project, generates a ProjectHandoff,
+// and renders the full handoff page including beat specs, completion state,
+// and download buttons for Markdown and JSON.
+import ProjectHandoffPage from '../../components/projects/ProjectHandoffPage';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project Handoff — RPG Storyboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: #0b1120; }
+  </style>
+</head>
+<body>
+  <ProjectHandoffPage client:only="react" />
+</body>
+</html>
