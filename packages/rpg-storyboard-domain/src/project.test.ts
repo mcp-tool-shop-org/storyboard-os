@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createProject, updateFramePosition } from './project';
+import { createProject, updateFramePosition, updateFrameBasics, updateFrameContent } from './project';
 
 describe('createProject', () => {
   it('returns a project with all required fields', () => {
@@ -147,6 +147,123 @@ describe('updateFramePosition', () => {
   it('returns the project unchanged when frameId is unknown', () => {
     const p = makeProject();
     const result = updateFramePosition(p, 'no-such-frame', { x: 1, y: 1 });
+    expect(result).toBe(p);
+  });
+});
+
+describe('updateFrameBasics', () => {
+  function makeProject() {
+    return createProject({ title: 'Test', templateId: 'quest_flow' });
+  }
+
+  it('updates the frame title', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameBasics(p, fid, { title: 'New Title' });
+    expect(updated.storyboard.frames[0].title).toBe('New Title');
+  });
+
+  it('updates the frame summary', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameBasics(p, fid, { summary: 'New summary.' });
+    expect(updated.storyboard.frames[0].summary).toBe('New summary.');
+  });
+
+  it('does not mutate the original project', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const originalTitle = p.storyboard.frames[0].title;
+    updateFrameBasics(p, fid, { title: 'Changed' });
+    expect(p.storyboard.frames[0].title).toBe(originalTitle);
+  });
+
+  it('returns a new project object', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameBasics(p, fid, { title: 'X' });
+    expect(updated).not.toBe(p);
+  });
+
+  it('bumps updatedAt', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameBasics(p, fid, { title: 'X' });
+    expect(updated.updatedAt >= p.updatedAt).toBe(true);
+  });
+
+  it('returns project unchanged when frameId is unknown', () => {
+    const p = makeProject();
+    const result = updateFrameBasics(p, 'unknown', { title: 'X' });
+    expect(result).toBe(p);
+  });
+
+  it('preserves other frames', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameBasics(p, fid, { title: 'X' });
+    const others = updated.storyboard.frames.slice(1);
+    p.storyboard.frames.slice(1).forEach((f, i) => {
+      expect(others[i].title).toBe(f.title);
+    });
+  });
+});
+
+describe('updateFrameContent', () => {
+  function makeProject() {
+    return createProject({ title: 'Test', templateId: 'quest_flow' });
+  }
+
+  it('updates a string content field', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameContent(p, fid, { designerNotes: 'New notes' });
+    expect(updated.storyboard.frames[0].content.designerNotes).toBe('New notes');
+  });
+
+  it('updates an array content field', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameContent(p, fid, { stateChanges: ['flag_a = true'] });
+    expect(updated.storyboard.frames[0].content.stateChanges).toEqual(['flag_a = true']);
+  });
+
+  it('merges with existing content — does not wipe other fields', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const original = p.storyboard.frames[0].content;
+    const updated = updateFrameContent(p, fid, { designerNotes: 'Patched' });
+    const updatedContent = updated.storyboard.frames[0].content;
+    // Other fields are preserved
+    expect(updatedContent.requiredAssets).toEqual(original.requiredAssets);
+    expect(updatedContent.testCriteria).toEqual(original.testCriteria);
+  });
+
+  it('does not mutate the original project', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const originalNotes = p.storyboard.frames[0].content.designerNotes;
+    updateFrameContent(p, fid, { designerNotes: 'Changed' });
+    expect(p.storyboard.frames[0].content.designerNotes).toBe(originalNotes);
+  });
+
+  it('returns a new project object', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameContent(p, fid, { designerNotes: 'X' });
+    expect(updated).not.toBe(p);
+  });
+
+  it('bumps updatedAt', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = updateFrameContent(p, fid, { designerNotes: 'X' });
+    expect(updated.updatedAt >= p.updatedAt).toBe(true);
+  });
+
+  it('returns project unchanged when frameId is unknown', () => {
+    const p = makeProject();
+    const result = updateFrameContent(p, 'unknown', { designerNotes: 'X' });
     expect(result).toBe(p);
   });
 });

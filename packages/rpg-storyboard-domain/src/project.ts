@@ -9,7 +9,7 @@
 // Storage is not the domain's concern. The app layer persists projects.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, StoryboardTemplateId } from './schema';
+import type { Storyboard, StoryboardTemplateId, FrameContent } from './schema';
 import { createStoryboardFromTemplate } from './templates';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -78,6 +78,13 @@ export function createProject(input: CreateProjectInput): RpgStoryboardProject {
   };
 }
 
+// ─── Basics patch ────────────────────────────────────────────────────────────
+
+export interface FrameBasicsPatch {
+  title?: string;
+  summary?: string;
+}
+
 // ─── Position update ──────────────────────────────────────────────────────────
 
 /**
@@ -102,6 +109,68 @@ export function updateFramePosition(
       ...project.storyboard,
       frames: project.storyboard.frames.map(f =>
         f.id === frameId ? { ...f, position } : f,
+      ),
+    },
+  };
+}
+
+// ─── Content update ───────────────────────────────────────────────────────────
+
+/**
+ * Return a new project with a frame's title and/or summary updated.
+ *
+ * Pure function. Bumps `updatedAt`. No-op on unknown frameId.
+ * Undefined fields in the patch are ignored (they do not overwrite existing values).
+ */
+export function updateFrameBasics(
+  project: RpgStoryboardProject,
+  frameId: string,
+  patch: FrameBasicsPatch,
+): RpgStoryboardProject {
+  const frameExists = project.storyboard.frames.some(f => f.id === frameId);
+  if (!frameExists) return project;
+
+  // Filter out undefined values so they do not overwrite existing data.
+  const defined = Object.fromEntries(
+    Object.entries(patch).filter(([, v]) => v !== undefined),
+  );
+  if (Object.keys(defined).length === 0) return project;
+
+  return {
+    ...project,
+    updatedAt: new Date().toISOString(),
+    storyboard: {
+      ...project.storyboard,
+      frames: project.storyboard.frames.map(f =>
+        f.id === frameId ? { ...f, ...defined } : f,
+      ),
+    },
+  };
+}
+
+/**
+ * Return a new project with a frame's content fields partially updated.
+ *
+ * Pure function. Merges the patch into the existing content — fields not in
+ * the patch are preserved. Bumps `updatedAt`. No-op on unknown frameId.
+ */
+export function updateFrameContent(
+  project: RpgStoryboardProject,
+  frameId: string,
+  patch: Partial<FrameContent>,
+): RpgStoryboardProject {
+  const frameExists = project.storyboard.frames.some(f => f.id === frameId);
+  if (!frameExists) return project;
+
+  return {
+    ...project,
+    updatedAt: new Date().toISOString(),
+    storyboard: {
+      ...project.storyboard,
+      frames: project.storyboard.frames.map(f =>
+        f.id === frameId
+          ? { ...f, content: { ...f.content, ...patch } }
+          : f,
       ),
     },
   };

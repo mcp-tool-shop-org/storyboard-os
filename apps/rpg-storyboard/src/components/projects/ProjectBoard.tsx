@@ -7,8 +7,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { getProject, saveProject } from '../../lib/storyboard/projectStorage';
-import { updateFramePosition } from '../../lib/storyboard/project';
-import type { RpgStoryboardProject } from '@storyboard-os/rpg-domain';
+import { updateFramePosition, updateFrameBasics, updateFrameContent } from '../../lib/storyboard/project';
+import type { RpgStoryboardProject, FrameContent } from '@storyboard-os/rpg-domain';
+import type { FrameBasicsPatch } from '../../lib/storyboard/project';
 import StoryboardCanvas, { type SaveStatus } from '../StoryboardCanvas';
 
 export default function ProjectBoard() {
@@ -51,25 +52,37 @@ export default function ProjectBoard() {
     };
   }, []);
 
+  // ── Shared save helper ─────────────────────────────────────────────────────
+  const persistAndNotify = useCallback((updated: RpgStoryboardProject) => {
+    projectRef.current = updated;
+    setProject(updated);
+    saveProject(updated);
+    setSaveStatus('saved');
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = setTimeout(() => setSaveStatus(null), 2000);
+  }, []);
+
   // ── Frame position change → update project → save to localStorage ──────────
   const handlePositionChange = useCallback(
     (frameId: string, position: { x: number; y: number }) => {
       const current = projectRef.current;
       if (!current) return;
-
-      const updated = updateFramePosition(current, frameId, position);
-      projectRef.current = updated;
-      setProject(updated);
-
-      // Persist to localStorage
-      saveProject(updated);
-
-      // Show "Saved" feedback, auto-clear after 2s
-      setSaveStatus('saved');
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-      savedTimerRef.current = setTimeout(() => setSaveStatus(null), 2000);
+      persistAndNotify(updateFramePosition(current, frameId, position));
     },
-    [],
+    [persistAndNotify],
+  );
+
+  // ── Frame content change → update project → save to localStorage ───────────
+  const handleFrameContentChange = useCallback(
+    (frameId: string, basics: FrameBasicsPatch, content: Partial<FrameContent>) => {
+      const current = projectRef.current;
+      if (!current) return;
+      // Apply basics first, then content on the result
+      const afterBasics  = updateFrameBasics(current, frameId, basics);
+      const afterContent = updateFrameContent(afterBasics, frameId, content);
+      persistAndNotify(afterContent);
+    },
+    [persistAndNotify],
   );
 
   // ── Render states ──────────────────────────────────────────────────────────
@@ -98,7 +111,9 @@ export default function ProjectBoard() {
     <StoryboardCanvas
       storyboard={project.storyboard}
       onFramePositionChange={handlePositionChange}
+      onFrameContentChange={handleFrameContentChange}
       saveStatus={saveStatus}
+      showHandoff={false}
     />
   );
 }

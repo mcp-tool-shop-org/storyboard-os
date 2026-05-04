@@ -74,9 +74,11 @@ interface Props {
   frame: StoryboardFrame;
   storyboardId: string;
   onClose: () => void;
+  /** When provided, renders an "Edit Beat" button. Only passed on project boards. */
+  onEditClick?: () => void;
 }
 
-export default function FrameInspector({ frame, storyboardId, onClose }: Props) {
+export default function FrameInspector({ frame, storyboardId, onClose, onEditClick }: Props) {
   const route  = frameRoute(storyboardId, frame.id);
   const accent = TYPE_COLORS[frame.type];
   const status = getBeatStatus(frame);
@@ -232,20 +234,35 @@ export default function FrameInspector({ frame, storyboardId, onClose }: Props) 
         )}
       </div>
 
-      {/* ── Open frame page ──────────────────────────────────────────────────── */}
-      <div style={{ padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* ── Footer actions ────────────────────────────────────────────────────── */}
+      <div style={{ padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {onEditClick && (
+          <button
+            onClick={onEditClick}
+            style={{
+              display: 'block', width: '100%', padding: '10px 16px', textAlign: 'center',
+              background: accent, color: '#fff', border: 'none',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              borderRadius: 6, letterSpacing: '0.02em',
+            }}
+          >
+            Edit Beat ✎
+          </button>
+        )}
         <a
           href={route}
           style={{
             display: 'block', padding: '10px 16px', textAlign: 'center',
-            background: accent, color: '#fff',
+            background: onEditClick ? 'rgba(255,255,255,0.05)' : accent,
+            color: onEditClick ? '#94a3b8' : '#fff',
+            border: onEditClick ? '1px solid rgba(255,255,255,0.1)' : 'none',
             fontWeight: 700, fontSize: 13, textDecoration: 'none',
             borderRadius: 6, letterSpacing: '0.02em',
           }}
         >
           Open Frame Page →
         </a>
-        <p style={{ marginTop: 8, fontSize: 10, color: '#334155', textAlign: 'center', fontFamily: 'monospace' }}>
+        <p style={{ marginTop: 0, fontSize: 10, color: '#334155', textAlign: 'center', fontFamily: 'monospace' }}>
           {route}
         </p>
       </div>

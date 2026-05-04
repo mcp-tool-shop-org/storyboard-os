@@ -26,10 +26,13 @@ import {
   getChoiceBranchCount,
   getStoryboardReadiness,
   type BeatStatusLevel,
+  type FrameContent,
 } from '@storyboard-os/rpg-domain';
 import type { Storyboard } from '../lib/storyboard/schema';
+import type { FrameBasicsPatch } from '../lib/storyboard/project';
 import FrameInspector from './storyboard/FrameInspector';
 import ViewControls from './storyboard/ViewControls';
+import BeatEditPanel from './projects/BeatEditPanel';
 
 // ─── RPG canvas config ────────────────────────────────────────────────────────
 // choice and consequence connections use heavier strokes to visually distinguish
@@ -98,23 +101,54 @@ interface Props {
    * Omit on read-only boards (template previews). Provide on project boards.
    */
   onFramePositionChange?: (frameId: string, position: { x: number; y: number }) => void;
+  /**
+   * Called when the user saves edits in BeatEditPanel.
+   * Omit on read-only boards. Providing this enables the "Edit Beat" button.
+   */
+  onFrameContentChange?: (frameId: string, basics: FrameBasicsPatch, content: Partial<FrameContent>) => void;
   /** Optional save-state indicator rendered in the header. */
   saveStatus?: SaveStatus;
+  /**
+   * Whether to show the "Handoff →" link in the header.
+   * Default true (template previews). Set false on project boards (storyboard IDs differ).
+   */
+  showHandoff?: boolean;
 }
 
-export default function StoryboardCanvas({ storyboard, onFramePositionChange, saveStatus }: Props) {
+export default function StoryboardCanvas({ storyboard, onFramePositionChange, onFrameContentChange, saveStatus, showHandoff = true }: Props) {
   const [selectedFrameId, setSelectedFrameId]           = useState<string | null>(null);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
+  const [editingFrameId, setEditingFrameId]             = useState<string | null>(null);
   const [scale, setScale]                               = useState(1);
 
   const canvasRef = useRef<ViewportHandle | null>(null);
 
   const handleSelectFrame = useCallback((id: string | null) => {
     setSelectedFrameId(id);
+    // Selecting a different frame cancels any open edit
+    setEditingFrameId(null);
   }, []);
 
   const handleSelectConnection = useCallback((id: string | null) => {
     setSelectedConnectionId(id);
+  }, []);
+
+  const handleEditClick = useCallback(() => {
+    setEditingFrameId(selectedFrameId);
+  }, [selectedFrameId]);
+
+  const handleEditSave = useCallback(
+    (basics: FrameBasicsPatch, content: Partial<FrameContent>) => {
+      if (editingFrameId && onFrameContentChange) {
+        onFrameContentChange(editingFrameId, basics, content);
+      }
+      setEditingFrameId(null);
+    },
+    [editingFrameId, onFrameContentChange],
+  );
+
+  const handleEditCancel = useCallback(() => {
+    setEditingFrameId(null);
   }, []);
 
   // ── RPG badge + readiness computation ─────────────────────────────────────
@@ -220,17 +254,19 @@ export default function StoryboardCanvas({ storyboard, onFramePositionChange, sa
           </span>
           <ReadinessCounts summary={readinessSummary} />
           {saveStatus && <SaveStatusChip status={saveStatus} />}
-          <a
-            href={`/storyboards/${storyboard.id}/handoff`}
-            style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
-              padding: '4px 10px', borderRadius: 4,
-              background: 'rgba(71,85,105,0.2)', border: '1px solid #1e293b',
-              color: '#94a3b8', textDecoration: 'none',
-            }}
-          >
-            Handoff →
-          </a>
+          {showHandoff && (
+            <a
+              href={`/storyboards/${storyboard.id}/handoff`}
+              style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+                padding: '4px 10px', borderRadius: 4,
+                background: 'rgba(71,85,105,0.2)', border: '1px solid #1e293b',
+                color: '#94a3b8', textDecoration: 'none',
+              }}
+            >
+              Handoff →
+            </a>
+          )}
         </div>
       </header>
 
@@ -265,12 +301,22 @@ export default function StoryboardCanvas({ storyboard, onFramePositionChange, sa
           <ViewControls canvasRef={canvasRef} scale={scale} />
         </div>
 
-        {/* Frame inspector — shown when a frame is selected */}
-        {selectedFrame && (
+        {/* Beat edit panel — shown when editing a frame (project boards only) */}
+        {editingFrameId && selectedFrame && onFrameContentChange && (
+          <BeatEditPanel
+            frame={selectedFrame}
+            onSave={handleEditSave}
+            onCancel={handleEditCancel}
+          />
+        )}
+
+        {/* Frame inspector — shown when a frame is selected and not in edit mode */}
+        {selectedFrame && !editingFrameId && (
           <FrameInspector
             frame={selectedFrame}
             storyboardId={storyboard.id}
             onClose={() => setSelectedFrameId(null)}
+            onEditClick={onFrameContentChange ? handleEditClick : undefined}
           />
         )}
 
