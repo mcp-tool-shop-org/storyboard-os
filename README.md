@@ -37,20 +37,28 @@ If a reader could mistake this for any of those, the product has drifted.
 
 ---
 
-## What rpg-storyboard Does (Phase 1)
+## What rpg-storyboard Does (Phase 2)
 
-After Phase 1, a designer can:
+After Phase 2, a designer can author a complete project from start to handoff without leaving the browser:
 
 | Capability | What they get |
 |---|---|
+| **Project creation** | Create a named project from a template; board positions and edits persist in localStorage |
 | **Visual board** | Quest flow and game-state branch logic side by side on a Konva canvas |
+| **Beat editing** | Edit any beat's title, summary, and all implementation-spec fields directly on the board |
+| **Progress tracking** | Check off implementation checklist items and test criteria per beat; state survives reload |
 | **Game-state signal** | Per-frame badges (STATE, SPEC/PARTIAL/DRAFT) without leaving the board |
 | **Implementation readiness** | Each beat shows READY/PARTIAL/DRAFT/BLOCKED status + what's missing |
-| **Quest handoff** | One-click Markdown + JSON export ordered by topological beat sequence |
+| **Project handoff** | Regenerated from live project state — includes edited content, per-beat progress, provenance |
+| **Quest handoff** | Static Markdown + JSON export for template preview boards |
 | **Templates** | Three RPG production starting points with beat-type sequences and rationale |
 | **Board operations** | Zoom, pan, fit-to-board, reset, keyboard shortcuts — laptop-usable navigation |
 
-The board is an operating surface. The beat inspector is an implementation spec. The handoff is a document a developer can build from.
+The board is an authoring surface. The beat inspector is an editable implementation spec. The handoff is a document generated from real project state — not a static snapshot.
+
+### Phase 1 capabilities (still present)
+
+Phase 1 established the read-only preview vertical: canvas rendering, game-state signal, implementation readiness model, quest handoff export, template gallery, and board navigation. All Phase 1 capabilities are preserved and extended by Phase 2.
 
 ---
 
@@ -105,8 +113,8 @@ See [`docs/architecture.md`](docs/architecture.md) for full detail.
 ```bash
 pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
-pnpm test       # runs all package + app tests (295 tests)
-pnpm build      # builds rpg-storyboard (38 pages)
+pnpm test       # runs all package + app tests (368 tests)
+pnpm build      # builds rpg-storyboard (42 pages)
 ```
 
 Requirements: Node ≥ 20, pnpm ≥ 9.
@@ -118,9 +126,9 @@ Test scope is automatically filtered to `@storyboard-os/*` packages and `rpg-sto
 ## Status
 
 ```
-Phase 1 complete
-295/295 tests passing
-38/38 pages built
+Phase 2 complete
+368/368 tests passing
+42/42 pages built
 ```
 
 | Phase | Description | Status |
@@ -134,6 +142,12 @@ Phase 1 complete
 | 1D | Template gallery | ✅ |
 | 1E | Board operations — zoom, pan, fit, viewport controls | ✅ |
 | 1F | Release closeout — docs, changelog, architecture notes | ✅ |
+| 2A | Project creation from templates — localStorage persistence | ✅ |
+| 2B | Persistent board positions per project | ✅ |
+| 2C | Editable beat content — spec fields persist across reload | ✅ |
+| 2D | Checklist / progress persistence — separate from spec text | ✅ |
+| 2E | Project handoff — regenerated from saved project state | ✅ |
+| 2F | Release closeout — docs, changelog, architecture notes | ✅ |
 
 ---
 
@@ -149,10 +163,11 @@ Route: `/storyboards/quest-01`
 
 ## Docs
 
-- [`docs/architecture.md`](docs/architecture.md) — package separation, dependency rules, canvas viewport model, extensibility
+- [`docs/architecture.md`](docs/architecture.md) — package separation, dependency rules, canvas viewport model, project storage boundary, extensibility
 - [`docs/product-brief.md`](docs/product-brief.md) — what rpg-storyboard is, target user, drift warnings, acceptance gates
-- [`docs/rpg-storyboard.md`](docs/rpg-storyboard.md) — RPG game-authoring contract, authoring loop, readiness model, handoff export
-- [`docs/phase-0-closeout.md`](docs/phase-0-closeout.md) — Phase 0 dogfood verdict and original Phase 1 backlog
+- [`docs/rpg-storyboard.md`](docs/rpg-storyboard.md) — RPG game-authoring contract, full authoring loop (Phase 2), readiness model, handoff export
+- [`docs/phase-2-closeout.md`](docs/phase-2-closeout.md) — Phase 2 spine narrative, architecture integrity record, deliberate exclusions
 - [`docs/phase-1-closeout.md`](docs/phase-1-closeout.md) — Phase 1 spine narrative and architecture integrity record
+- [`docs/phase-0-closeout.md`](docs/phase-0-closeout.md) — Phase 0 dogfood verdict and original Phase 1 backlog
 - [`docs/monorepo-migration.md`](docs/monorepo-migration.md) — 0M migration log: what moved, why, and the resulting architecture
 - [`CHANGELOG.md`](CHANGELOG.md) — release history

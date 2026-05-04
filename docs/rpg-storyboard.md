@@ -10,23 +10,29 @@ A visual authoring tool for RPG video game narrative, quest, scene, encounter, a
 
 ---
 
-## The Authoring Loop
+## The Authoring Loop (Phase 2 — Durable Projects)
 
-After Phase 1, the complete workflow:
+After Phase 2, a designer has a complete local authoring workflow without a backend:
 
-1. **Choose a starting point** — `/templates` shows three RPG production templates with beat-type sequences and production rationale. Or open the Tollhouse Ledger demo at `/storyboards/quest-01`.
+1. **Create a project** — `/projects` → "New Project" → pick a template → name it → board opens.
 
 2. **Read the board** — the canvas shows game-state signal without opening any inspector:
    - `STATE` badge (blue) — frame modifies game flags or variables
    - `SPEC` / `PARTIAL` / `DRAFT` badge (green / orange / gray) — implementation depth at a glance
 
-3. **Inspect a beat** — click any frame to open the inspector:
+3. **Rearrange the board** — drag any frame; position saves automatically. Save status chip shows "Saved ✓" and dismisses after 2 seconds.
+
+4. **Edit a beat** — click a frame → "Edit Beat ✎" → inline form opens with all spec fields. Title, summary, designer notes, player text, conditions, state changes, assets, outcomes, checklist, test criteria. Save → panel closes, board updates, localStorage persists.
+
+5. **Inspect a beat** — click any frame to open the inspector:
    - `READY` / `PARTIAL` / `DRAFT` / `BLOCKED` status chip
    - Coverage counts: assets · tests · tasks
    - Blockers (domain violations — choice/consequence/reveal without required fields)
    - Spec gaps (missing designerNotes, assets, criteria, checklist)
 
-4. **Navigate the board** — board operations:
+6. **Track progress** — click checklist items and test criteria in the inspector to mark them done. State persists across reload. Spec text is never modified; only the completion record changes.
+
+7. **Navigate the board** — board operations:
    - `F` → fit all frames to screen
    - `0` → reset to 100%
    - `+` / `-` → zoom in/out
@@ -36,15 +42,31 @@ After Phase 1, the complete workflow:
    - Plain scroll → pan (natural trackpad)
    - ViewControls overlay (lower-right) for mouse access
 
-5. **Inspect connections** — click any arrow to open the connection panel: type, source/target, condition/result label, type description.
+8. **Inspect connections** — click any arrow to open the connection panel: type, source/target, condition/result label, type description.
 
-6. **Deep-read a beat** — click "Open" in the inspector to navigate to the full frame page at `/storyboards/[id]/frames/[frameId]`. Full implementation spec: player text, designer notes, entry/exit conditions, state changes, required assets, test criteria, checklist, annotations, connections.
+9. **Generate handoff** — click "Handoff →" in the header to open `/projects/handoff?id=...`. The project handoff:
+   - Regenerated from live project state — not a static export
+   - Shows project identity, template provenance, creation and modification dates
+   - Progress summary: checklist done/total, tests done/total across all beats
+   - All beats in topological quest order (Kahn's algorithm, cycle-safe)
+   - Each beat shows edited content, readiness status, checklist/test completion as `[x]`/`[ ]`
+   - Download as Markdown (developer-readable) or JSON (engine-ingestible)
 
-7. **Export handoff** — click "Handoff →" in the header to open `/storyboards/[id]/handoff`. The handoff page:
-   - Shows all beats in topological quest order (Kahn's algorithm, cycle-safe)
-   - Each beat: status, missing reasons, all spec fields, outgoing branches with labels
-   - Download as Markdown (developer-readable spec) or JSON (engine-ingestible)
-   - Readiness summary at the top: ready / partial / blocked / draft counts
+---
+
+## The Preview Loop (Phase 1 — Template Boards)
+
+Template preview boards (`/storyboards/*`) are read-only. No project is created.
+
+1. **Choose a starting point** — `/templates` shows three RPG production templates. Or open the Tollhouse Ledger demo at `/storyboards/quest-01`.
+
+2. **Read the board** — same canvas signal as project boards.
+
+3. **Inspect a beat** — same inspector, without edit or progress controls.
+
+4. **Deep-read a beat** — click "Open Frame Page →" in the inspector to navigate to `/storyboards/[id]/frames/[frameId]`. Full implementation spec: player text, designer notes, entry/exit conditions, state changes, required assets, test criteria, checklist, annotations, connections.
+
+5. **Export handoff** — click "Handoff →" to open `/storyboards/[id]/handoff`. Static SSG page — not regenerated from project state.
 
 ---
 
@@ -144,7 +166,7 @@ type MissingSpecReason =
 
 ---
 
-## Quest Handoff Export
+## Quest Handoff Export (Template Boards)
 
 `generateHandoff(storyboard)` returns a `QuestHandoff` object. `generateMarkdown(handoff)` converts it to a developer-readable Markdown string.
 
@@ -163,6 +185,38 @@ Every `HandoffBeat` includes:
 ### Readiness summary
 
 The handoff header shows: `total`, `ready`, `partial`, `draft`, `blocked` counts and `readyFraction`. `blockedBeatIds` and `partialBeatIds` are listed at the top so the developer knows immediately what needs attention before implementation.
+
+---
+
+## Project Handoff Export (Durable Projects)
+
+`generateProjectHandoff(project)` returns a `ProjectHandoff` — the bridge between the authoring project and the implementation pass.
+
+### What makes it different from quest handoff
+
+The project handoff layers three things on top of the quest handoff:
+
+| Layer | Source |
+|---|---|
+| Project identity | `project.id`, `project.title`, `project.sourceTemplateId`, `createdAt`/`updatedAt` |
+| Edited beat content | `project.storyboard` — beat spec after all `updateFrameBasics`/`updateFrameContent` calls |
+| Progress state | `project.progress` — checklist and test completion records, never mixed with spec text |
+
+### Progress invariant
+
+Checklist items and test criteria in the handoff are the spec strings from `implementationChecklist` and `testCriteria`. Completion state (`checklistProgress`, `testProgress` arrays of booleans) is read from `project.progress.frames[frameId]`.
+
+This means the handoff can be regenerated at any point during implementation and will accurately reflect:
+- The current authored spec (including any edits made since project creation)
+- The current completion state (without any mutation of spec strings)
+
+### `generateProjectMarkdown(handoff)`
+
+Produces a Markdown document with:
+- Project identity header (ID, title, template, dates)
+- Progress summary (X/Y checklist done, X/Y tests done)
+- Readiness summary
+- All beats with `[x]` / `[ ]` per item
 
 ---
 

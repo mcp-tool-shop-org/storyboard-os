@@ -76,6 +76,20 @@ BLOCKING_REASONS           // ReadonlySet<MissingSpecReason> for domain violatio
 generateHandoff()          // QuestHandoff: ordered beats, branches, readiness summary
 generateMarkdown()         // Markdown string for dev handoff
 
+// Project domain helpers (Phase 2)
+createProject()            // RpgStoryboardProject from CreateProjectInput
+updateFramePosition()      // pure: new project with updated frame position
+updateFrameBasics()        // pure: new project with updated title/summary (FrameBasicsPatch)
+updateFrameContent()       // pure: new project with Partial<FrameContent> merged
+setChecklistItemComplete() // pure: new project with checklist item toggled (never mutates spec)
+setTestCriterionComplete() // pure: new project with test criterion toggled (never mutates spec)
+getFrameProgress()         // FrameProgress for one frame (safe: empty if no record yet)
+getProjectProgress()       // ProjectProgressSummary: total/done counts across all frames
+
+// Project handoff (Phase 2E)
+generateProjectHandoff()   // ProjectHandoff: project identity + edited content + progress overlay
+generateProjectMarkdown()  // Markdown with [x]/[ ] per item, project header, progress summary
+
 // Demo quest
 tollhouseLedgerProject     // Tollhouse Ledger demo quest
 ```
@@ -83,6 +97,14 @@ tollhouseLedgerProject     // Tollhouse Ledger demo quest
 **Does not import from:** any app, `@storyboard-os/canvas`, or `@storyboard-os/routing`.
 
 **Imports from:** `@storyboard-os/core` only.
+
+### Project domain helpers — design rules
+
+All `update*` and `set*` functions are **pure and immutable**: they accept a project, return a new project, and bump `updatedAt`. They never mutate input.
+
+**Progress / spec separation** is enforced by type: `implementationChecklist` and `testCriteria` are spec strings — their content is never modified by progress functions. Completion state lives in `project.progress.frames[frameId]` as `Record<string, boolean>` keyed by string index. The spec and the completion record are in different locations in the data model and can only be written by different functions.
+
+**Backward compatibility:** `migrate()` in `projectStorage.ts` (app layer) backfills `progress: { frames: {} }` on projects saved before Phase 2D. Called automatically on every `readAll()`. The domain never assumes the presence of progress — `getFrameProgress` returns a safe empty record if no data exists.
 
 ---
 
@@ -186,14 +208,50 @@ createStoryboardRoutes({ storyboardBasePath: '/storyboards' })
 ```
 RPG canvas config    → frame styles, connection styles, strokeWidth per type
 FrameInspector       → reads RPG content fields, shows readiness status, missing spec reasons
+BeatEditPanel        → inline edit form for all spec fields; array fields as one-per-line textareas
 ViewControls         → zoom+/-, Fit, 1:1 buttons — calls canvas ViewportHandle
-StoryboardCanvas.tsx → app adapter: wires RPG config, readiness, canvasRef, keyboard shortcuts
+StoryboardCanvas.tsx → app adapter: wires RPG config, readiness, canvasRef, keyboard shortcuts,
+                       edit mode, progress, handoffHref
+ProjectBoard.tsx     → loads project from localStorage by ?id=; handles position, content, progress
+ProjectHandoffPage   → client-only page; reads ?id=, generates ProjectHandoff, renders + downloads
 Astro pages          → [storyboardId].astro, [frameId].astro, handoff.astro, templates/index.astro
+                       projects/index.astro, projects/board.astro, projects/handoff.astro
 Page layout          → header bar, inspector panel, connection panel, legend footer, footer hint
-Handoff page         → SSG Markdown/JSON export with download buttons
+Handoff page         → SSG Markdown/JSON export for template boards
 Template gallery     → /templates — three cards with beat-type sequences and production rationale
 Demo data            → imports tollhouseLedgerProject from @storyboard-os/rpg-domain
 ```
+
+### Project storage boundary (Phase 2)
+
+`src/lib/storyboard/projectStorage.ts` is the **only** place in the app that reads from and writes to `localStorage`. All other components receive project data as props or call these four functions:
+
+```ts
+saveProject(project)         // serialize + write to localStorage
+getProject(id)               // read + deserialize + migrate
+listProjects()               // read all + migrate
+deleteProject(id)            // remove from localStorage
+```
+
+`migrate(project)` runs inside `getProject` and `listProjects`. It is the sole backward-compatibility layer — all migration logic lives here, nowhere else.
+
+**Components do not touch localStorage directly.** `ProjectBoard` is the only component that calls `saveProject`; it does so through the `persistAndNotify` helper which updates the ref, triggers a re-render, saves, and sets save-status in one atomic sequence.
+
+### `persistAndNotify` pattern
+
+`ProjectBoard` maintains a `projectRef` (mutable ref) alongside the `project` state. All callbacks read from `projectRef.current` rather than the state to avoid stale closures. `persistAndNotify` is the single shared write path:
+
+```ts
+const persistAndNotify = (updated: RpgStoryboardProject) => {
+  projectRef.current = updated;   // keep ref current for next callback
+  setProject(updated);            // trigger re-render
+  saveProject(updated);           // persist to localStorage
+  setSaveStatus('saved');         // show chip
+  // auto-dismiss after 2 seconds
+};
+```
+
+This pattern is used by all three mutation callbacks: position change, content change, and progress change.
 
 **Keyboard shortcuts (Phase 1E):**
 

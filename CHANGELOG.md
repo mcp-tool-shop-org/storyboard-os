@@ -1,5 +1,74 @@
 # Changelog
 
+## Phase 2 — Durable Local Authoring
+
+_Completed 2026-05-04_
+
+Phase 2 turns rpg-storyboard from a read-only preview vertical into a durable local authoring workflow. Designers can create projects from templates, rearrange boards, edit beat specs, track implementation and test progress, and regenerate handoffs from saved project state.
+
+### 2E — Project Handoff from Saved State · `aff6add`
+
+Domain:
+- `generateProjectHandoff(project)` — `ProjectHandoff` with project identity, edited beat content, readiness summary, and per-beat checklist/test-criterion completion state. Delegates beat ordering and spec extraction to `generateHandoff`, overlays progress from `getFrameProgress`.
+- `generateProjectMarkdown(handoff)` — developer-readable Markdown with `[x]`/`[ ]` progress markers per item; includes project ID, template provenance, progress counts header.
+- `ProjectHandoffBeat`, `ProjectHandoff` types — extend the quest handoff shape with project metadata and progress overlays.
+- 18 new tests in `handoff.test.ts`: metadata, edited content propagation, progress without spec mutation, Markdown rendering.
+
+App:
+- `ProjectHandoffPage.tsx` — client-only React page for `/projects/handoff?id=`. Reads `?id=`, calls `getProject`, calls `generateProjectHandoff`, renders sticky topbar, hero, progress summary, readiness summary, beat cards with per-item completion visuals, and spec issues. Download buttons for Markdown and JSON.
+- `/projects/handoff` Astro shell — static wrapper for the client-only page.
+- `StoryboardCanvas.tsx` — replaced `showHandoff: boolean` with `handoffHref: string`. Template boards default to `/storyboards/${id}/handoff`; project boards pass `/projects/handoff?id=${project.id}`.
+- `ProjectBoard.tsx` — passes `handoffHref` instead of `showHandoff`.
+
+### 2D — Checklist / Progress Persistence · `7fdf39a`
+
+Domain:
+- `FrameProgress`, `ProjectProgress`, `ProjectProgressSummary` types — progress stored as `Record<string, boolean>` keyed by string index, entirely separate from spec content.
+- `setChecklistItemComplete(project, frameId, index, complete)` — returns updated project without touching `implementationChecklist` spec strings.
+- `setTestCriterionComplete(project, frameId, index, complete)` — same invariant for test criteria.
+- `getFrameProgress(project, frameId)` — returns frame completion state (safe: returns empty record if no progress yet).
+- `getProjectProgress(project)` — returns `ProjectProgressSummary` with `totalChecklist`, `doneChecklist`, `totalTests`, `doneTests` across all frames.
+- `createProject` now initializes `progress: { frames: {} }`.
+- 13 new tests in `project.test.ts`.
+
+App:
+- `projectStorage.ts` — `migrate(project)` backfills `progress: { frames: {} }` on projects saved before 2D. Called on every `readAll()`.
+- `FrameInspector.tsx` — `ProgressChecklist` component renders interactive checkboxes per item; checked items show ✓ and strikethrough; header shows X/Y count.
+- `StoryboardCanvas.tsx` — `ProgressCounts` component in header shows checklist and test completion counts. Passes `frameProgress`, `onChecklistChange`, `onTestCriterionChange` to inspector.
+- `ProjectBoard.tsx` — `handleProgressChange` calls `setChecklistItemComplete` or `setTestCriterionComplete` → `persistAndNotify`.
+
+### 2C — Editable Beat Content · `71bb708`
+
+Domain:
+- `FrameBasicsPatch` type — optional `title` and `summary` for non-destructive edits.
+- `updateFrameBasics(project, frameId, patch)` — applies title/summary patch without touching content.
+- `updateFrameContent(project, frameId, content)` — applies a `Partial<FrameContent>` patch (merge, not replace).
+- 14 new tests in `project.test.ts`.
+
+App:
+- `BeatEditPanel.tsx` — inline edit form: one textarea per content field, array fields stored as one-per-line strings, `arrToLines`/`linesToArr` helpers, Save/Cancel buttons.
+- `FrameInspector.tsx` — `onEditClick` prop; "Edit Beat ✎" button when provided; "Open Frame Page →" demotes to secondary style.
+- `StoryboardCanvas.tsx` — `editingFrameId` state; shows `BeatEditPanel` when editing, `FrameInspector` otherwise; `onFrameContentChange` prop.
+- `ProjectBoard.tsx` — `handleFrameContentChange` applies `updateFrameBasics` then `updateFrameContent` → `persistAndNotify`.
+
+### 2B — Persistent Board Positions · `689563e`
+
+- `updateFramePosition(project, frameId, position)` — pure domain helper; returns updated project with new `{x, y}`.
+- `ProjectBoard.tsx` — `handlePositionChange` wired to `onFramePositionChange`; calls `updateFramePosition` → `persistAndNotify`.
+- Save status chip ("Saved ✓", 2s auto-dismiss) in `StoryboardCanvas` header.
+- `projectRef` pattern — mutable ref mirrors latest project; stale-closure-free callbacks.
+
+### 2A — Project Creation from Templates · `d906417`
+
+- `createProject(input)` — creates `RpgStoryboardProject` with `id`, `title`, `description`, `sourceTemplateId`, `storyboard` (from template), `progress: { frames: {} }`, `createdAt`/`updatedAt`.
+- `RpgStoryboardProject`, `CreateProjectInput`, `FramePosition`, `FrameBasicsPatch`, `FrameProgress`, `ProjectProgress`, `ProjectProgressSummary` types.
+- `projectStorage.ts` — `saveProject`, `getProject`, `listProjects`, `deleteProject` over `localStorage`, with `migrate()` for backward compat.
+- `/projects` page — project list with "New Project" flow: template picker modal → `createProject` → `saveProject` → redirect to board.
+- `/projects/board` page — `ProjectBoard.tsx` loads project by `?id=`, renders `StoryboardCanvas` with project storyboard.
+- `/projects/handoff` page — client-only shell for handoff view (wired in 2E).
+
+---
+
 ## Phase 1 — RPG Storyboard Spine
 
 _Completed 2026-05-04_
