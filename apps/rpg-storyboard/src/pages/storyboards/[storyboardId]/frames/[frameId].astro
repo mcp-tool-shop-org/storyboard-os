@@ -7,10 +7,14 @@ import type {
   FrameAnnotationType,
 } from '../../../../lib/storyboard/schema';
 import { boardRoute, frameRoute } from '../../../../lib/storyboard/routes';
+import { getTemplatePreviewStoryboards } from '../../../../lib/storyboard/templatePreviews';
 
 export function getStaticPaths() {
-  const project = tollhouseLedgerProject;
-  return project.storyboards.flatMap(storyboard =>
+  const allStoryboards: Storyboard[] = [
+    ...tollhouseLedgerProject.storyboards,
+    ...getTemplatePreviewStoryboards(),
+  ];
+  return allStoryboards.flatMap(storyboard =>
     storyboard.frames.map(frame => ({
       params: { storyboardId: storyboard.id, frameId: frame.id },
       props: { storyboard, frame },

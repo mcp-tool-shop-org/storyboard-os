@@ -2,10 +2,14 @@
 import { tollhouseLedgerProject } from '@storyboard-os/rpg-domain';
 import StoryboardCanvas from '../../components/StoryboardCanvas';
 import type { Storyboard } from '../../lib/storyboard/schema';
+import { getTemplatePreviewStoryboards } from '../../lib/storyboard/templatePreviews';
 
 export function getStaticPaths() {
-  const project = tollhouseLedgerProject;
-  return project.storyboards.map(s => ({
+  const allStoryboards: Storyboard[] = [
+    ...tollhouseLedgerProject.storyboards,
+    ...getTemplatePreviewStoryboards(),
+  ];
+  return allStoryboards.map(s => ({
     params: { storyboardId: s.id },
     props: { storyboard: s },
   }));

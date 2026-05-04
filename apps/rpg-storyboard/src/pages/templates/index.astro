@@ -1,0 +1,252 @@
+---
+import { STORYBOARD_TEMPLATES } from '@storyboard-os/rpg-domain';
+import { TEMPLATE_PREVIEW_META, getTemplatePreviewStoryboards } from '../../lib/storyboard/templatePreviews';
+
+// Generate the full storyboards so we can show the beat-type sequences
+const previewStoryboards = getTemplatePreviewStoryboards();
+
+// Pair each template definition with its generated storyboard and meta
+const templates = TEMPLATE_PREVIEW_META.map((meta, i) => ({
+  meta,
+  definition: STORYBOARD_TEMPLATES[i],
+  storyboard: previewStoryboards[i],
+}));
+
+// Frame type display config
+const TYPE_COLORS: Record<string, string> = {
+  hook:        '#EAB308',
+  scene:       '#3B82F6',
+  choice:      '#8B5CF6',
+  encounter:   '#EF4444',
+  reveal:      '#F97316',
+  npc_beat:    '#22C55E',
+  consequence: '#6B7280',
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  hook:        'HOOK',
+  scene:       'SCENE',
+  choice:      'CHOICE',
+  encounter:   'ENCOUNTER',
+  reveal:      'REVEAL',
+  npc_beat:    'NPC BEAT',
+  consequence: 'CONSEQUENCE',
+};
+
+// Production-oriented descriptions for each template
+const TEMPLATE_RATIONALE: Record<string, string> = {
+  quest_flow: 'The full quest arc in one board. Use this when you are designing a quest from scratch — it forces every beat to carry state logic and the reveal connects back to the opening. Start here for any new quest.',
+  quest_branch: 'Real player agency with three paths that cost different things. Use this when the player decision should create genuinely different gameplay, not the same sequence with different paint. Each path arrives at convergence with different leverage.',
+  cutscene_beat: 'A dramatic authored moment with a mandatory player response. Use this for the beats that define the quest — the information that changes everything, the loss that matters. The response frame prevents it from collapsing into a cutscene.',
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Templates — RPG Storyboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      background: #0b1120;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top bar */
+    .topbar {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(11,17,32,0.97);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0 24px; height: 48px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .topbar-home { font-size: 11px; color: #475569; text-decoration: none; }
+    .topbar-home:hover { color: #94a3b8; }
+    .topbar-sep  { color: #1e293b; }
+    .topbar-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #475569;
+    }
+    .topbar-demo {
+      margin-left: auto; font-size: 11px; color: #334155;
+      text-decoration: none;
+    }
+    .topbar-demo:hover { color: #475569; }
+
+    /* Page */
+    .page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* Hero */
+    .hero { margin-bottom: 48px; }
+    .hero-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: #334155; margin-bottom: 12px;
+    }
+    .hero-title { font-size: 30px; font-weight: 800; color: #f1f5f9; line-height: 1.2; margin-bottom: 12px; }
+    .hero-body  { font-size: 14px; color: #64748b; line-height: 1.7; max-width: 600px; }
+
+    /* Template cards */
+    .card-list  { display: flex; flex-direction: column; gap: 24px; }
+    .card {
+      background: #0f1825;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+    }
+    .card-header-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .card-name    { font-size: 18px; font-weight: 800; color: #f1f5f9; }
+    .card-best    { font-size: 13px; color: #94a3b8; line-height: 1.55; }
+    .card-count   {
+      font-size: 11px; font-weight: 700; color: #334155;
+      padding: 4px 10px; border-radius: 20px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+      white-space: nowrap; flex-shrink: 0; align-self: flex-start;
+    }
+
+    /* Card body */
+    .card-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* Rationale */
+    .rationale { font-size: 13px; color: #64748b; line-height: 1.65; }
+
+    /* Beat sequence */
+    .sequence-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #334155; margin-bottom: 10px;
+    }
+    .sequence-row  {
+      display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+    }
+    .beat-chip {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 3px 8px; border-radius: 3px; white-space: nowrap;
+    }
+    .beat-arrow { font-size: 11px; color: #1e293b; }
+
+    /* Card footer */
+    .card-footer {
+      padding: 16px 24px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .btn {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.03em;
+      padding: 8px 16px; border-radius: 5px;
+      text-decoration: none; display: inline-block;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary {
+      background: #1e293b; color: #f1f5f9;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .btn-secondary {
+      background: transparent; color: #475569;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .btn-secondary:hover { color: #94a3b8; }
+    .card-footer-note {
+      margin-left: auto; font-size: 11px; color: #1e293b;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <a href="/" class="topbar-home">← Home</a>
+    <span class="topbar-sep">|</span>
+    <span class="topbar-label">Templates</span>
+    <a href="/storyboards/quest-01" class="topbar-demo">View demo quest →</a>
+  </nav>
+
+  <main class="page">
+
+    <div class="hero">
+      <p class="hero-label">RPG Authoring</p>
+      <h1 class="hero-title">Quest Templates</h1>
+      <p class="hero-body">
+        Three RPG authoring starting points. Each template generates a fully-specced board —
+        entry conditions, state changes, required assets, and test criteria on every beat.
+        Not decorative layouts. Production starting points.
+      </p>
+    </div>
+
+    <div class="card-list">
+      {templates.map(({ meta, definition, storyboard }) => {
+        const rationale = TEMPLATE_RATIONALE[meta.templateId] ?? definition.description;
+        const frames = storyboard.frames;
+        const boardUrl  = `/storyboards/${meta.storyboardId}`;
+        const handoffUrl = `/storyboards/${meta.storyboardId}/handoff`;
+
+        return (
+          <div class="card">
+
+            {/* Header */}
+            <div class="card-header">
+              <div class="card-header-main">
+                <span class="card-name">{meta.name}</span>
+                <span class="card-best">{meta.bestFor}</span>
+              </div>
+              <span class="card-count">{meta.frameCount} beats</span>
+            </div>
+
+            {/* Body */}
+            <div class="card-body">
+
+              <p class="rationale">{rationale}</p>
+
+              {/* Beat sequence */}
+              <div>
+                <p class="sequence-label">Beat Sequence</p>
+                <div class="sequence-row">
+                  {frames.map((frame, i) => {
+                    const color = TYPE_COLORS[frame.type] ?? '#475569';
+                    const label = TYPE_LABELS[frame.type] ?? frame.type.toUpperCase();
+                    return (
+                      <>
+                        <span
+                          class="beat-chip"
+                          title={frame.title}
+                          style={`background: ${color}1a; border: 1px solid ${color}44; color: ${color};`}
+                        >
+                          {label}
+                        </span>
+                        {i < frames.length - 1 && (
+                          <span class="beat-arrow">›</span>
+                        )}
+                      </>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer CTAs */}
+            <div class="card-footer">
+              <a href={boardUrl}   class="btn btn-primary">Preview Board →</a>
+              <a href={handoffUrl} class="btn btn-secondary">Preview Handoff →</a>
+              <span class="card-footer-note">
+                fully-specced · state logic · implementation-ready
+              </span>
+            </div>
+
+          </div>
+        );
+      })}
+    </div>
+
+  </main>
+
+</body>
+</html>

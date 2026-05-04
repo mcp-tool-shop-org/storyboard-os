@@ -1,3 +1,157 @@
 ---
-return Astro.redirect('/storyboards/quest-01');
+// Landing page — entry point for the RPG authoring tool.
 ---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RPG Storyboard — Quest Authoring Tool</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100vh; }
+    body {
+      background: #0b1120;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex; flex-direction: column;
+    }
+
+    .page {
+      flex: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 80px 24px 80px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+
+    .label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: #334155; margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 36px; font-weight: 800; color: #f1f5f9;
+      line-height: 1.15; margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 15px; color: #64748b; line-height: 1.7;
+      margin-bottom: 48px; max-width: 520px;
+    }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 500px) {
+      .entry-grid { grid-template-columns: 1fr; }
+    }
+
+    .entry-card {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 20px;
+      background: #0f1825;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      text-decoration: none;
+      transition: border-color 0.15s;
+    }
+    .entry-card:hover { border-color: rgba(255,255,255,0.18); }
+    .entry-card-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #334155;
+    }
+    .entry-card-title {
+      font-size: 15px; font-weight: 700; color: #f1f5f9;
+    }
+    .entry-card-desc {
+      font-size: 12px; color: #475569; line-height: 1.55;
+    }
+    .entry-card-cta {
+      font-size: 11px; color: #94a3b8; margin-top: 4px;
+    }
+
+    .what-is {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 32px;
+    }
+    .what-is-title {
+      font-size: 11px; font-weight: 700; color: #334155;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 14px;
+    }
+    .what-is-list {
+      display: flex; flex-direction: column; gap: 6px;
+      list-style: none;
+    }
+    .what-is-item {
+      font-size: 12px; color: #475569; line-height: 1.5;
+      display: flex; gap: 8px;
+    }
+    .what-is-bullet { color: #1e293b; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <main class="page">
+
+    <p class="label">RPG Storyboard OS</p>
+    <h1>Quest authoring<br />for implementers</h1>
+    <p class="subtitle">
+      Design RPG quest structure as a visual board. Every beat carries
+      entry conditions, state changes, required assets, and test criteria —
+      ready to hand off to an engine or dev pass.
+    </p>
+
+    <div class="entry-grid">
+      <a href="/storyboards/quest-01" class="entry-card">
+        <span class="entry-card-label">Demo Quest</span>
+        <span class="entry-card-title">The Tollhouse Ledger</span>
+        <span class="entry-card-desc">
+          Three factions, one ledger, two consequence paths.
+          Eight beats. Fully specced.
+        </span>
+        <span class="entry-card-cta">Open board →</span>
+      </a>
+
+      <a href="/templates" class="entry-card">
+        <span class="entry-card-label">Templates</span>
+        <span class="entry-card-title">Quest Templates</span>
+        <span class="entry-card-desc">
+          Three RPG authoring starting points — quest flow,
+          branching choice, and cutscene beat.
+        </span>
+        <span class="entry-card-cta">Browse templates →</span>
+      </a>
+    </div>
+
+    <div class="what-is">
+      <p class="what-is-title">What this is</p>
+      <ul class="what-is-list">
+        <li class="what-is-item">
+          <span class="what-is-bullet">–</span>
+          <span>A visual canvas that shows quest flow and game-state branch logic side by side</span>
+        </li>
+        <li class="what-is-item">
+          <span class="what-is-bullet">–</span>
+          <span>Beat pages that are implementation specs — not story notes</span>
+        </li>
+        <li class="what-is-item">
+          <span class="what-is-bullet">–</span>
+          <span>A handoff export a developer can implement from without reverse-engineering the board</span>
+        </li>
+        <li class="what-is-item">
+          <span class="what-is-bullet">–</span>
+          <span>Not a tabletop tool. Not a campaign manager. Not a GM aid.</span>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+</body>
+</html>
