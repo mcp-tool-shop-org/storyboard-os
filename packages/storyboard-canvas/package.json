@@ -9,6 +9,10 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "konva": "^9.0.0",
     "react": "^18.0.0",
@@ -16,6 +20,7 @@
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.0"
   }
 }

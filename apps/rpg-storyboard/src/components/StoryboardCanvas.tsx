@@ -5,6 +5,8 @@
 //   - RPG connection type styles (with strokeWidth for game-state branches)
 //   - Frame badge computation via @storyboard-os/rpg-domain signals
 //   - Full page layout: header, canvas area, inspector/connection panels, footer
+//   - Viewport controls (zoom, pan, fit, reset) — wired to canvas ViewportHandle
+//   - Keyboard shortcuts for viewport operations
 //
 // Uses @storyboard-os/canvas for the Konva rendering layer.
 // FrameInspector stays here because it reads RPG content fields.
@@ -12,11 +14,12 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   StoryboardCanvas as KonvaBoard,
   type StoryboardCanvasConfig,
   type CanvasFrame,
+  type ViewportHandle,
 } from '@storyboard-os/canvas';
 import {
   getFrameBadges,
@@ -26,6 +29,7 @@ import {
 } from '@storyboard-os/rpg-domain';
 import type { Storyboard } from '../lib/storyboard/schema';
 import FrameInspector from './storyboard/FrameInspector';
+import ViewControls from './storyboard/ViewControls';
 
 // ─── RPG canvas config ────────────────────────────────────────────────────────
 // choice and consequence connections use heavier strokes to visually distinguish
@@ -81,8 +85,6 @@ const LEGEND = [
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
 
-const CANVAS_WIDTH  = 2400;
-const CANVAS_HEIGHT = 840;
 const HEADER_HEIGHT = 48;
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -94,6 +96,9 @@ interface Props {
 export default function StoryboardCanvas({ storyboard }: Props) {
   const [selectedFrameId, setSelectedFrameId]           = useState<string | null>(null);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
+  const [scale, setScale]                               = useState(1);
+
+  const canvasRef = useRef<ViewportHandle | null>(null);
 
   const handleSelectFrame = useCallback((id: string | null) => {
     setSelectedFrameId(id);
@@ -104,9 +109,6 @@ export default function StoryboardCanvas({ storyboard }: Props) {
   }, []);
 
   // ── RPG badge + readiness computation ─────────────────────────────────────
-  // Map domain frames → CanvasFrame[], injecting RPG-derived badges.
-  // Compute board-level readiness summary for the header.
-  // Both memoised — only recompute when storyboard data changes.
   const canvasFrames = useMemo<CanvasFrame[]>(() => {
     return storyboard.frames.map(frame => ({
       id: frame.id,
@@ -144,6 +146,40 @@ export default function StoryboardCanvas({ storyboard }: Props) {
   const branchCount = selectedFrame
     ? getChoiceBranchCount(selectedFrame.id, storyboard.connections)
     : 0;
+
+  // ── Keyboard shortcuts ─────────────────────────────────────────────────────
+  // f → fit    0 → reset    +/= → zoom in    - → zoom out    Escape → deselect
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Don't intercept when user is typing in an input/textarea
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      switch (e.key) {
+        case 'f':
+        case 'F':
+          canvasRef.current?.fitToFrames();
+          break;
+        case '0':
+          canvasRef.current?.resetView();
+          break;
+        case '+':
+        case '=':
+          canvasRef.current?.zoomIn();
+          break;
+        case '-':
+          canvasRef.current?.zoomOut();
+          break;
+        case 'Escape':
+          setSelectedFrameId(null);
+          setSelectedConnectionId(null);
+          break;
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#0f172a' }}>
@@ -191,10 +227,10 @@ export default function StoryboardCanvas({ storyboard }: Props) {
       {/* ── Canvas + side panel row ────────────────────────────────────────── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
-        {/* Scrollable canvas */}
+        {/* Canvas area — fills all remaining space, clip overflow */}
         <div style={{
           flex: 1,
-          overflow: 'auto',
+          overflow: 'hidden',
           position: 'relative',
           backgroundImage: 'radial-gradient(circle, #1e293b 1px, transparent 1px)',
           backgroundSize: '32px 32px',
@@ -202,16 +238,20 @@ export default function StoryboardCanvas({ storyboard }: Props) {
           backgroundColor: '#0b1120',
         }}>
           <KonvaBoard
+            ref={canvasRef}
             frames={canvasFrames}
             connections={storyboard.connections}
             config={RPG_CANVAS_CONFIG}
-            width={CANVAS_WIDTH}
-            height={CANVAS_HEIGHT}
             selectedFrameId={selectedFrameId}
             onSelectFrame={handleSelectFrame}
             selectedConnectionId={selectedConnectionId}
             onSelectConnection={handleSelectConnection}
+            onViewStateChange={v => setScale(v.scale)}
+            autoFit
           />
+
+          {/* Viewport controls — absolutely positioned over canvas */}
+          <ViewControls canvasRef={canvasRef} scale={scale} />
         </div>
 
         {/* Frame inspector — shown when a frame is selected */}
@@ -257,7 +297,7 @@ export default function StoryboardCanvas({ storyboard }: Props) {
             <span style={{ fontSize: 11, color: '#475569' }}>{entry.label}</span>
           </div>
         ))}
-        {/* Badge legend */}
+        {/* Badge legend + shortcut hint */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
           {[
             { text: 'STATE', color: '#3B82F6' },
@@ -276,7 +316,7 @@ export default function StoryboardCanvas({ storyboard }: Props) {
             </span>
           ))}
           <span style={{ fontSize: 11, color: '#1e293b' }}>
-            click frame or connection · drag to reposition
+            drag to pan · scroll to pan · ctrl+scroll to zoom · F fit · 0 reset
           </span>
         </div>
       </footer>
@@ -285,8 +325,6 @@ export default function StoryboardCanvas({ storyboard }: Props) {
 }
 
 // ─── ReadinessCounts ──────────────────────────────────────────────────────────
-// Small inline header widget showing board-level implementation status counts.
-// Only shows non-zero counts to reduce noise on sparse boards.
 
 const STATUS_HEADER_COLORS: Record<BeatStatusLevel, string> = {
   ready:   '#22C55E',
@@ -328,8 +366,6 @@ function ReadinessCounts({ summary }: { summary: ReturnType<typeof getStoryboard
 }
 
 // ─── ConnectionPanel ──────────────────────────────────────────────────────────
-// Inline sub-component. Stays in this file — it reads RPG connection
-// vocabulary (type names, colors) and is not reusable across domains.
 
 interface ConnectionPanelProps {
   connection: { id: string; type: string; label?: string };
@@ -352,7 +388,6 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
       flexDirection: 'column',
       overflowY: 'auto',
     }}>
-      {/* Panel header */}
       <div style={{
         padding: '12px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -361,7 +396,6 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
         gap: 8,
         flexShrink: 0,
       }}>
-        {/* Color pill */}
         <span style={{
           display: 'inline-block',
           width: 10, height: 10,
@@ -385,10 +419,8 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
         </button>
       </div>
 
-      {/* Connection body */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* Flow path */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
             Flow
@@ -415,7 +447,6 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
           </div>
         </div>
 
-        {/* Connection label / condition */}
         {connection.label && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
@@ -433,7 +464,6 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
           </div>
         )}
 
-        {/* Type explanation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
             Connection Type
