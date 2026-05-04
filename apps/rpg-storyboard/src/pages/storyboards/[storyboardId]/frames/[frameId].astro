@@ -1,0 +1,602 @@
+---
+import { tollhouseLedgerProject } from '@storyboard-os/rpg-domain';
+import type {
+  StoryboardFrame,
+  Storyboard,
+  StoryboardFrameType,
+  FrameAnnotationType,
+} from '../../../../lib/storyboard/schema';
+import { boardRoute, frameRoute } from '../../../../lib/storyboard/routes';
+
+export function getStaticPaths() {
+  const project = tollhouseLedgerProject;
+  return project.storyboards.flatMap(storyboard =>
+    storyboard.frames.map(frame => ({
+      params: { storyboardId: storyboard.id, frameId: frame.id },
+      props: { storyboard, frame },
+    }))
+  );
+}
+
+interface Props { storyboard: Storyboard; frame: StoryboardFrame; }
+const { storyboard, frame } = Astro.props;
+
+const TYPE_COLORS: Record<StoryboardFrameType, string> = {
+  hook:        '#EAB308',
+  scene:       '#3B82F6',
+  choice:      '#8B5CF6',
+  encounter:   '#EF4444',
+  reveal:      '#F97316',
+  npc_beat:    '#22C55E',
+  consequence: '#6B7280',
+};
+
+const TYPE_LABELS: Record<StoryboardFrameType, string> = {
+  hook:        'Hook',
+  scene:       'Scene',
+  choice:      'Choice',
+  encounter:   'Encounter',
+  reveal:      'Reveal',
+  npc_beat:    'Character Beat',
+  consequence: 'Consequence',
+};
+
+const ANNOTATION_LABELS: Record<FrameAnnotationType, string> = {
+  designer_note: 'Designer Note',
+  player_visible: 'Player Visible',
+  author_only:   'Author Only',
+  danger:        'Danger',
+  timing:        'Timing',
+  branch_note:   'Branch Note',
+};
+
+const ANNOTATION_COLORS: Record<FrameAnnotationType, string> = {
+  designer_note: '#475569',
+  player_visible: '#3B82F6',
+  author_only:   '#8B5CF6',
+  danger:        '#EF4444',
+  timing:        '#F97316',
+  branch_note:   '#22C55E',
+};
+
+const accentColor = TYPE_COLORS[frame.type];
+
+// Resolve connections
+const incoming = storyboard.connections
+  .filter(c => c.toFrameId === frame.id)
+  .map(c => ({ conn: c, from: storyboard.frames.find(f => f.id === c.fromFrameId) }))
+  .filter(x => x.from);
+
+const outgoing = storyboard.connections
+  .filter(c => c.fromFrameId === frame.id)
+  .map(c => ({ conn: c, to: storyboard.frames.find(f => f.id === c.toFrameId) }))
+  .filter(x => x.to);
+
+const boardUrl = boardRoute(storyboard.id);
+const { content, annotations } = frame;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{frame.title} — {storyboard.title}</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { font-size: 16px; }
+      body {
+        background: #090e1a;
+        color: #e2e8f0;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        padding-bottom: 80px;
+      }
+
+      /* ─── Top bar ─── */
+      .topbar {
+        position: sticky; top: 0; z-index: 20;
+        display: flex; align-items: center; gap: 16px;
+        padding: 0 24px; height: 48px;
+        background: rgba(9, 14, 26, 0.97);
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+      }
+      .topbar-back {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 12px; font-weight: 600; color: #64748b;
+        text-decoration: none; letter-spacing: 0.04em;
+        transition: color 0.15s;
+      }
+      .topbar-back:hover { color: #94a3b8; }
+      .topbar-sep { color: #1e293b; }
+      .topbar-title { font-size: 13px; color: #94a3b8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      /* ─── Hero ─── */
+      .hero {
+        padding: 40px 24px 32px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        max-width: 900px;
+      }
+      .type-badge {
+        display: inline-block;
+        padding: 3px 10px; border-radius: 4px; margin-bottom: 16px;
+        font-size: 11px; font-weight: 700;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        color: #fff;
+      }
+      .hero-title {
+        font-size: 28px; font-weight: 800; color: #f8fafc;
+        line-height: 1.2; margin-bottom: 16px;
+      }
+      .hero-summary {
+        font-size: 16px; color: #94a3b8; line-height: 1.7;
+        max-width: 760px;
+      }
+
+      /* ─── Layout ─── */
+      .content-grid {
+        max-width: 900px;
+        padding: 0 24px;
+        display: flex; flex-direction: column; gap: 24px;
+        margin-top: 28px;
+      }
+
+      /* ─── Section cards ─── */
+      .section {
+        border-radius: 8px;
+        padding: 20px 22px;
+        border: 1px solid rgba(255,255,255,0.06);
+      }
+      .section-label {
+        font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+        text-transform: uppercase; margin-bottom: 12px;
+      }
+      .section-body {
+        font-size: 14px; line-height: 1.7; color: #cbd5e1;
+        white-space: pre-wrap;
+      }
+
+      /* In-game text: green tint — player-visible */
+      .section-player {
+        background: #071510;
+        border-color: rgba(34, 197, 94, 0.2);
+      }
+      .section-player .section-label { color: #22C55E; }
+      .section-player .section-body { color: #a7f3d0; font-style: italic; }
+
+      /* Designer notes: slight purple tint — author-only */
+      .section-designer {
+        background: #0e0c14;
+        border-color: rgba(148, 163, 184, 0.1);
+      }
+      .section-designer .section-label { color: #94a3b8; }
+
+      /* Author-only notes: purple, clearly not for players */
+      .section-author {
+        background: #0e0c1a;
+        border-color: rgba(139, 92, 246, 0.25);
+      }
+      .section-author .section-label { color: #8B5CF6; }
+
+      /* Stakes */
+      .section-stakes {
+        background: #110e06;
+        border-color: rgba(249, 115, 22, 0.2);
+      }
+      .section-stakes .section-label { color: #F97316; }
+      .section-stakes .section-body { color: #fed7aa; }
+
+      /* State changes: blue tint — game logic */
+      .section-state {
+        background: #080f1a;
+        border-color: rgba(59, 130, 246, 0.2);
+      }
+      .section-state .section-label { color: #3B82F6; }
+      .section-state .section-body { color: #bfdbfe; font-family: ui-monospace, monospace; font-size: 13px; }
+
+      /* Danger */
+      .section-danger {
+        background: #120707;
+        border-color: rgba(239, 68, 68, 0.25);
+      }
+
+      /* Neutral */
+      .section-neutral { background: #0c1220; }
+      .section-neutral .section-label { color: #475569; }
+
+      /* ─── Author-only badge ─── */
+      .author-badge {
+        display: inline-block;
+        padding: 1px 7px; border-radius: 3px;
+        background: rgba(139, 92, 246, 0.2); color: #a78bfa;
+        font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+        text-transform: uppercase; margin-left: 8px; vertical-align: middle;
+      }
+
+      /* ─── Author-only note items ─── */
+      .author-list { display: flex; flex-direction: column; gap: 12px; }
+      .author-item {
+        display: flex; gap: 10px; align-items: flex-start;
+        font-size: 14px; line-height: 1.65; color: #c4b5fd;
+      }
+      .author-glyph { flex-shrink: 0; font-size: 13px; margin-top: 2px; }
+
+      /* ─── Outcome / checklist lists ─── */
+      .outcome-list { display: flex; flex-direction: column; gap: 8px; }
+      .outcome-item {
+        display: flex; gap: 10px; align-items: flex-start;
+        font-size: 14px; line-height: 1.6; color: #cbd5e1;
+      }
+      .outcome-num {
+        flex-shrink: 0; width: 22px; height: 22px;
+        border-radius: 50%; background: rgba(255,255,255,0.06);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 700; color: #64748b;
+        margin-top: 2px;
+      }
+
+      .checklist { display: flex; flex-direction: column; gap: 10px; }
+      .checklist-item { display: flex; gap: 10px; align-items: flex-start; }
+      .checklist-item input[type="checkbox"] {
+        margin-top: 3px; flex-shrink: 0;
+        accent-color: var(--accent);
+        width: 15px; height: 15px; cursor: pointer;
+      }
+      .checklist-item label {
+        font-size: 14px; line-height: 1.6; color: #94a3b8; cursor: pointer;
+      }
+
+      /* ─── Tag pills ─── */
+      .tag-group { display: flex; flex-wrap: wrap; gap: 8px; }
+      .tag {
+        padding: 4px 12px; border-radius: 20px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 13px; color: #94a3b8;
+      }
+
+      /* ─── Annotations ─── */
+      .annotation-list { display: flex; flex-direction: column; gap: 10px; }
+      .annotation-item { display: flex; gap: 10px; align-items: flex-start; }
+      .annotation-badge {
+        flex-shrink: 0;
+        padding: 2px 7px; border-radius: 3px;
+        font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #fff; margin-top: 1px;
+      }
+      .annotation-text { font-size: 13px; line-height: 1.6; color: #94a3b8; }
+
+      /* ─── Connection cards ─── */
+      .conn-list { display: flex; flex-direction: column; gap: 10px; }
+      .conn-card {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 16px; border-radius: 6px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        text-decoration: none;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .conn-card:hover {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.1);
+      }
+      .conn-type-badge {
+        flex-shrink: 0; padding: 2px 8px; border-radius: 3px;
+        font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .conn-frame-type {
+        flex-shrink: 0; font-size: 10px; font-weight: 700;
+        letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8;
+      }
+      .conn-title { font-size: 13px; font-weight: 600; color: #e2e8f0; flex: 1; }
+      .conn-label { font-size: 12px; color: #475569; font-style: italic; }
+      .conn-arrow { font-size: 14px; color: #334155; flex-shrink: 0; }
+      .conn-section-label {
+        font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+        text-transform: uppercase; color: #334155; margin-bottom: 8px;
+      }
+
+      /* ─── Divider ─── */
+      .divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); }
+
+      /* ─── Two-col grid ─── */
+      .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+      /* ─── Section two-row ─── */
+      .conn-section { display: flex; flex-direction: column; gap: 20px; }
+    </style>
+  </head>
+  <body style={`--accent: ${accentColor}`}>
+
+    <!-- Top navigation bar -->
+    <nav class="topbar">
+      <a href={boardUrl} class="topbar-back">
+        ← Board
+      </a>
+      <span class="topbar-sep">|</span>
+      <span class="topbar-title">{storyboard.title}</span>
+    </nav>
+
+    <!-- Hero: type, title, summary -->
+    <div class="hero">
+      <div class="type-badge" style={`background: ${accentColor}`}>
+        {TYPE_LABELS[frame.type]}
+      </div>
+      <h1 class="hero-title">{frame.title}</h1>
+      <p class="hero-summary">{frame.summary}</p>
+    </div>
+
+    <div class="content-grid">
+
+      <!-- ═══ IMPLEMENTATION SPEC ═══════════════════════════════════════════ -->
+
+      <!-- 1. In-game text (player-visible) -->
+      {content.playerVisibleText && (
+        <div class="section section-player">
+          <div class="section-label">In-Game Text</div>
+          <div class="section-body">{content.playerVisibleText}</div>
+        </div>
+      )}
+
+      <!-- 2. Designer Notes -->
+      {content.designerNotes && (
+        <div class="section section-designer">
+          <div class="section-label">
+            Designer Notes <span class="author-badge">Author Only</span>
+          </div>
+          <div class="section-body">{content.designerNotes}</div>
+        </div>
+      )}
+
+      <!-- 3. Entry / Exit Conditions -->
+      {(content.entryConditions?.length || content.exitConditions?.length) && (
+        <div class="two-col">
+          {content.entryConditions && content.entryConditions.length > 0 && (
+            <div class="section section-neutral">
+              <div class="section-label">Entry Conditions</div>
+              <div class="section-body" style="font-family: ui-monospace, monospace; font-size: 13px; color: #94a3b8;">
+                {content.entryConditions.join('\n')}
+              </div>
+            </div>
+          )}
+          {content.exitConditions && content.exitConditions.length > 0 && (
+            <div class="section section-neutral">
+              <div class="section-label">Exit Conditions</div>
+              <div class="section-body" style="font-family: ui-monospace, monospace; font-size: 13px; color: #94a3b8;">
+                {content.exitConditions.join('\n')}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <!-- 4. State Changes -->
+      {content.stateChanges && content.stateChanges.length > 0 && (
+        <div class="section section-state">
+          <div class="section-label">State Changes</div>
+          <div class="section-body">{content.stateChanges.join('\n')}</div>
+        </div>
+      )}
+
+      <!-- 5. Required Assets -->
+      {content.requiredAssets && content.requiredAssets.length > 0 && (
+        <div class="section section-neutral">
+          <div class="section-label">Required Assets</div>
+          <div class="outcome-list">
+            {content.requiredAssets.map((asset, i) => (
+              <div class="outcome-item">
+                <span class="outcome-num">{i + 1}</span>
+                <span>{asset}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- 6. Test Criteria -->
+      {content.testCriteria && content.testCriteria.length > 0 && (
+        <div class="section section-neutral">
+          <div class="section-label">Test Criteria</div>
+          <div class="checklist">
+            {content.testCriteria.map((criterion, i) => (
+              <div class="checklist-item">
+                <input
+                  type="checkbox"
+                  id={`test-${i}`}
+                  style={`accent-color: ${accentColor}`}
+                />
+                <label for={`test-${i}`}>{criterion}</label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- 7. Implementation Checklist -->
+      {content.implementationChecklist && content.implementationChecklist.length > 0 && (
+        <div class="section section-designer">
+          <div class="section-label">
+            Implementation Checklist <span class="author-badge">Author Only</span>
+          </div>
+          <div class="checklist">
+            {content.implementationChecklist.map((item, i) => (
+              <div class="checklist-item">
+                <input
+                  type="checkbox"
+                  id={`check-${i}`}
+                  style={`accent-color: ${accentColor}`}
+                />
+                <label for={`check-${i}`}>{item}</label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- ═══ NARRATIVE CONTEXT ══════════════════════════════════════════════ -->
+
+      {(content.authorOnlyNotes?.length || content.involvedCharacters?.length ||
+        content.involvedFactions?.length || content.possibleOutcomes?.length || content.stakes) && (
+        <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 4px;">
+          <p style="font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #1e293b;">
+            Narrative Context
+          </p>
+          <div style="border-top: 1px solid rgba(255,255,255,0.04);"></div>
+        </div>
+      )}
+
+      <!-- Author-Only Notes -->
+      {content.authorOnlyNotes && content.authorOnlyNotes.length > 0 && (
+        <div class="section section-author">
+          <div class="section-label">
+            Author Notes <span class="author-badge">Author Only</span>
+          </div>
+          <div class="author-list">
+            {content.authorOnlyNotes.map(note => (
+              <div class="author-item">
+                <span class="author-glyph">🔒</span>
+                <span>{note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Characters + Factions side by side -->
+      {(content.involvedCharacters?.length || content.involvedFactions?.length) && (
+        <div class="two-col">
+          {content.involvedCharacters && content.involvedCharacters.length > 0 && (
+            <div class="section section-neutral">
+              <div class="section-label">Characters</div>
+              <div class="tag-group">
+                {content.involvedCharacters.map(c => <span class="tag">{c}</span>)}
+              </div>
+            </div>
+          )}
+          {content.involvedFactions && content.involvedFactions.length > 0 && (
+            <div class="section section-neutral">
+              <div class="section-label">Factions</div>
+              <div class="tag-group">
+                {content.involvedFactions.map(f => <span class="tag">{f}</span>)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <!-- Possible Outcomes -->
+      {content.possibleOutcomes && content.possibleOutcomes.length > 0 && (
+        <div class="section section-neutral">
+          <div class="section-label">Possible Outcomes</div>
+          <div class="outcome-list">
+            {content.possibleOutcomes.map((outcome, i) => (
+              <div class="outcome-item">
+                <span class="outcome-num">{i + 1}</span>
+                <span>{outcome}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Stakes -->
+      {content.stakes && (
+        <div class="section section-stakes">
+          <div class="section-label">Stakes</div>
+          <div class="section-body">{content.stakes}</div>
+        </div>
+      )}
+
+      <!-- ═══ ANNOTATIONS ════════════════════════════════════════════════════ -->
+
+      <!-- Annotations -->
+      {annotations.length > 0 && (
+        <div class="section section-neutral">
+          <div class="section-label">Annotations</div>
+          <div class="annotation-list">
+            {annotations.map(ann => (
+              <div class="annotation-item">
+                <span
+                  class="annotation-badge"
+                  style={`background: ${ANNOTATION_COLORS[ann.type]}33; color: ${ANNOTATION_COLORS[ann.type]}`}
+                >
+                  {ANNOTATION_LABELS[ann.type]}
+                </span>
+                <span class="annotation-text">{ann.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <hr class="divider" />
+
+      <!-- Connections -->
+      <div class="conn-section">
+        {incoming.length > 0 && (
+          <div>
+            <div class="conn-section-label">↳ Incoming</div>
+            <div class="conn-list">
+              {incoming.map(({ conn, from }) => from && (
+                <a href={frameRoute(storyboard.id, from.id)} class="conn-card">
+                  <span
+                    class="conn-frame-type"
+                    style={`color: ${TYPE_COLORS[from.type]}`}
+                  >
+                    {TYPE_LABELS[from.type]}
+                  </span>
+                  <span class="conn-title">{from.title}</span>
+                  {conn.label && <span class="conn-label">{conn.label}</span>}
+                  <span class="conn-arrow">→</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {outgoing.length > 0 && (
+          <div>
+            <div class="conn-section-label">→ Outgoing</div>
+            <div class="conn-list">
+              {outgoing.map(({ conn, to }) => to && (
+                <a href={frameRoute(storyboard.id, to.id)} class="conn-card">
+                  <span
+                    class="conn-frame-type"
+                    style={`color: ${TYPE_COLORS[to.type]}`}
+                  >
+                    {TYPE_LABELS[to.type]}
+                  </span>
+                  <span class="conn-title">{to.title}</span>
+                  {conn.label && <span class="conn-label">{conn.label}</span>}
+                  <span class="conn-arrow">→</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {incoming.length === 0 && outgoing.length === 0 && (
+          <p style="font-size: 13px; color: #334155;">No connections defined for this frame.</p>
+        )}
+      </div>
+
+      <!-- Back to board -->
+      <a
+        href={boardUrl}
+        style={`
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 10px 20px; border-radius: 6px; margin-top: 8px;
+          background: ${accentColor}; color: #fff;
+          font-size: 13px; font-weight: 700; text-decoration: none;
+          letter-spacing: 0.02em; align-self: flex-start;
+        `}
+      >
+        ← Back to Board
+      </a>
+
+    </div>
+  </body>
+</html>

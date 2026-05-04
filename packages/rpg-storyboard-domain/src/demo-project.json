@@ -1,0 +1,628 @@
+{
+  "id": "tollhouse-ledger",
+  "title": "The Tollhouse Ledger",
+  "description": "A short quest sequence — three factions want the same hidden ledger. The player decides who wins.",
+  "storyboards": [
+    {
+      "id": "quest-01",
+      "title": "Quest 01: The Ruined Tollhouse",
+      "description": "The player arrives at a war-scarred tollhouse and discovers a document that could change the region's balance of power.",
+      "templateId": "quest_flow",
+      "frames": [
+        {
+          "id": "opening-hook",
+          "type": "hook",
+          "title": "The Caravan Arrives Damaged",
+          "summary": "The road through the Ashmarrow Pass is silent. A merchant caravan sits abandoned outside a ruined tollhouse. No guards. No travelers.",
+          "position": { "x": 80, "y": 220 },
+          "size": { "width": 220, "height": 130 },
+          "content": {
+            "designerNotes": "Open with environmental storytelling: old smoke smell, wagon wheels cracked but not looted (strange detail — rewards observant players), silence where road noise should be. The caravan belongs to the Dalthor trading house — surface this through markings, not dialogue.",
+            "playerVisibleText": "The merchant road through the pass should be busy at this hour. It isn't. A caravan has stopped outside a half-collapsed tollhouse and no one is moving.",
+            "authorOnlyNotes": [
+              "The caravan wasn't attacked — the merchants fled voluntarily after one of them glimpsed the ledger inside the tollhouse and recognized what it was.",
+              "A Velthari courier is watching from the treeline. She won't act yet — do not surface her until the encounter beat."
+            ],
+            "involvedCharacters": ["Marel Dyn (fleeing merchant, will give backstory if calmed)"],
+            "involvedFactions": ["Dalthor Trading House", "Velthari Intelligence"],
+            "stakes": "Establishing atmosphere and the first hook — something is wrong here that isn't just bandits.",
+            "entryConditions": [
+              "Player has entered the Ashmarrow Pass zone",
+              "quest_tollhouse_active is not yet set"
+            ],
+            "exitConditions": [
+              "Player has entered the tollhouse interior OR spoken to Marel Dyn"
+            ],
+            "stateChanges": [
+              "Sets: quest_tollhouse_active = true",
+              "Sets: caravan_owner = dalthor (queryable by subsequent beats)"
+            ],
+            "requiredAssets": [
+              "Ashmarrow Pass approach road — war-scarred environment art",
+              "Ruined tollhouse exterior — collapsed section, smoke staining",
+              "Abandoned Dalthor caravan — wagons with house markings, cracked wheels (not looted)",
+              "Merchant NPC Marel Dyn — hiding state, calmed-state dialogue variant",
+              "Courier Savan Vreil treeline placement — invisible trigger volume, no visual",
+              "Environmental audio: road silence, distant bird, absence of traffic"
+            ],
+            "testCriteria": [
+              "quest_tollhouse_active = true is set on zone entry",
+              "Marel Dyn is discoverable and provides backstory on approach",
+              "Savan Vreil does not appear in scene visuals — only a trigger volume",
+              "Three distinct readable environmental details present in tollhouse approach area",
+              "Dalthor house markings on caravan are readable without dialogue"
+            ],
+            "possibleOutcomes": [
+              "Player investigates the tollhouse immediately",
+              "Player pursues the fled merchants first",
+              "Player notices the watcher in the trees"
+            ],
+            "implementationChecklist": [
+              "Design the tollhouse entrance with three distinct readable environmental details",
+              "Implement Marel Dyn as a discoverable NPC with two-sentence backstory dialogue",
+              "Place courier Savan in the treeline — invisible until the encounter beat triggers"
+            ]
+          },
+          "annotations": [
+            {
+              "id": "ann-hook-01",
+              "type": "designer_note",
+              "text": "Do not place bodies here. The silence is more unsettling than carnage — design for absence, not violence."
+            },
+            {
+              "id": "ann-hook-02",
+              "type": "timing",
+              "text": "Target 5–8 minutes of play time. Establish the wrongness and push toward the tollkeeper."
+            }
+          ]
+        },
+        {
+          "id": "npc-tollkeeper",
+          "type": "npc_beat",
+          "title": "The Wounded Tollkeeper",
+          "summary": "Inside the tollhouse, old Orvyn Kett is hiding under the counter with a crossbow bolt in his shoulder and a story he doesn't want to tell.",
+          "position": { "x": 360, "y": 220 },
+          "size": { "width": 220, "height": 130 },
+          "content": {
+            "designerNotes": "Orvyn is terrified but not stupid. Design his dialogue tree to close off if the player uses aggressive dialogue options. He opens up in response to calm, competent approaches — healing him, acknowledging the threat, speaking quietly. He knows what the ledger is but not the full scope of what it proves. He knows three different factions came asking for it in the last two days.",
+            "playerVisibleText": "A stout old man in toll-collector grey crouches behind the counter. He's bleeding. He's armed. He's staring at you like you might be the fourth person today come to kill him for something he found in his own cellar.",
+            "authorOnlyNotes": [
+              "Orvyn found the ledger three days ago during a repair in the cellar — it was hidden in a sealed compartment.",
+              "He tried to sell information about it to the Compact and they sent soldiers instead of coin.",
+              "He does not know that the ledger also has his own name in it — he is listed as a paid informant from twelve years ago. Surface this in the Reveal beat."
+            ],
+            "involvedCharacters": [
+              "Orvyn Kett (tollkeeper, 60s, stubborn, afraid)",
+              "Savan Vreil (Velthari courier, outside, watching)"
+            ],
+            "involvedFactions": ["The Compact", "Velthari Intelligence"],
+            "stakes": "Orvyn is the only character who can tell the player what is in the cellar and why three factions want it. If he dies or flees, the player loses critical context.",
+            "entryConditions": [
+              "Player has entered the tollhouse interior",
+              "quest_tollhouse_active = true"
+            ],
+            "exitConditions": [
+              "orvyn_trust_level is set to any value"
+            ],
+            "stateChanges": [
+              "Sets: orvyn_trust_level = [closed | partial | full] based on dialogue path taken",
+              "Sets: orvyn_healed = true (if player uses healing item or skill on Orvyn)"
+            ],
+            "requiredAssets": [
+              "Tollhouse interior — counter, cellar hatch visible in floor, records shelf",
+              "Orvyn Kett NPC — wounded state (bolt in shoulder), crossbow drawn, crouching animation",
+              "Healing interaction prompt — context-sensitive, appears when player has healing item/skill equipped",
+              "Dialogue tree — three branches: aggressive (closes off after 2 exchanges), neutral (partial info), empathetic (full info)",
+              "Orvyn wound visual: bolt in shoulder, blood staining on uniform"
+            ],
+            "testCriteria": [
+              "Aggressive dialogue path sets orvyn_trust_level = closed after 2 exchanges and ends dialogue",
+              "Healing Orvyn with a healing item increments trust toward full regardless of initial approach",
+              "orvyn_trust_level = full provides the player with all three faction names and cellar location",
+              "orvyn_trust_level = closed still allows player to find the cellar independently via exploration",
+              "Savan Vreil is not visible or audible in this beat"
+            ],
+            "possibleOutcomes": [
+              "Player earns Orvyn's trust — he tells them about the ledger and the three factions",
+              "Player gets partial information — Orvyn waits to see who they are",
+              "Player bypasses Orvyn — finds the cellar themselves without context"
+            ],
+            "implementationChecklist": [
+              "Implement three dialogue branches: aggressive (closes off), neutral (partial), empathetic (full info)",
+              "Design his wound as an interactive element — healing him shifts his trust state",
+              "Script three faction representatives who arrived before the player: Compact soldiers, Velthari courier, Dalthor merchant agent"
+            ]
+          },
+          "annotations": [
+            {
+              "id": "ann-npc-01",
+              "type": "author_only",
+              "text": "His name is in the ledger. Do not surface this in his dialogue — it lands best as the Reveal beat's key moment."
+            },
+            {
+              "id": "ann-npc-02",
+              "type": "player_visible",
+              "text": "He smells like pipe smoke and old fear. He has been here for decades. The tollhouse is his entire life."
+            }
+          ]
+        },
+        {
+          "id": "choice-trust",
+          "type": "choice",
+          "title": "Who Do You Trust?",
+          "summary": "Three factions want the ledger. Each sends a representative. The player must decide who — if anyone — to deal with, or whether to keep the ledger themselves.",
+          "position": { "x": 640, "y": 220 },
+          "size": { "width": 220, "height": 130 },
+          "content": {
+            "designerNotes": "The three factions arrive within the same short window — design this as an escalating pressure sequence, not a clean negotiation screen. Compact agent is overt and threatening. Velthari courier is measured and strategic. Dalthor factor is desperate and overpays. Player can choose none — which accelerates the encounter beat.",
+            "playerVisibleText": "Three people want what you found. One is a soldier with legal authority and a bad temper. One is a spy with coin and no emotion. One is a merchant representative who looks like they haven't slept in two days. They each say the ledger is theirs by right.",
+            "authorOnlyNotes": [
+              "The Compact agent plans to arrest Orvyn regardless of the ledger outcome — he knows about Orvyn's old informant role.",
+              "The Velthari courier is not here to recover the ledger — she wants to copy it and let the original be destroyed, to keep the blackmail value private to Velthari.",
+              "The Dalthor factor knows the ledger implicates the Dalthor house in the war crimes. She is trying to destroy it before anyone reads it fully."
+            ],
+            "involvedCharacters": [
+              "Preket (Compact military agent, aggressive, has legal backing)",
+              "Savan Vreil (Velthari intelligence courier, calm, dangerous)",
+              "Issa Dalthor (merchant house factor, desperate, hiding something)"
+            ],
+            "involvedFactions": ["The Compact", "Velthari Intelligence", "Dalthor Trading House"],
+            "stakes": "The choice here determines which faction the player is now marked by — and which ones become opponents.",
+            "entryConditions": [
+              "orvyn_trust_level is set (any value)",
+              "quest_tollhouse_active = true"
+            ],
+            "exitConditions": [
+              "ledger_recipient is set OR negotiation_timer_expired = true"
+            ],
+            "stateChanges": [
+              "Sets: ledger_recipient = [compact | velthari | dalthor | player_kept]",
+              "Sets: negotiation_timer_expired = true if player refuses all three or timer runs out",
+              "Updates: compact_faction_standing, velthari_faction_standing, dalthor_faction_standing based on choice"
+            ],
+            "requiredAssets": [
+              "Three NPC faction representatives — distinct visual designs: Compact soldier armor, Velthari intelligence dress, Dalthor merchant attire",
+              "Faction seal or insignia visuals — identifiable without prior knowledge",
+              "Pressure timer UI element (optional — recommend as ambient environmental pressure, not HUD timer)",
+              "Orvyn faction-recommendation whisper dialogue — unlocked only if orvyn_trust_level = full"
+            ],
+            "testCriteria": [
+              "ledger_recipient is set before encounter-ambush triggers — cannot skip this beat",
+              "Refusing all three factions OR negotiation_timer_expired = true triggers encounter-ambush immediately",
+              "Each faction representative has a distinct opening offer and at least one escalation line",
+              "orvyn_trust_level = full enables Orvyn to whisper a faction recommendation to player",
+              "compact_faction_standing, velthari_faction_standing, dalthor_faction_standing are all updated by the choice"
+            ],
+            "possibleOutcomes": [
+              "Player gives the ledger to the Compact",
+              "Player gives the ledger to Velthari",
+              "Player gives the ledger to Dalthor",
+              "Player keeps the ledger — triggers the encounter beat immediately"
+            ],
+            "implementationChecklist": [
+              "Implement each faction's opening offer and escalation dialogue tree",
+              "Design the pressure timer — all three factions present within a set window",
+              "Trigger the encounter beat automatically if the player refuses all three or the timer expires"
+            ]
+          },
+          "annotations": [
+            {
+              "id": "ann-choice-01",
+              "type": "branch_note",
+              "text": "All paths lead to the encounter beat — tension is already too high regardless of choice."
+            },
+            {
+              "id": "ann-choice-02",
+              "type": "danger",
+              "text": "If the player reads the ledger during this beat, skip to the Reveal beat immediately."
+            }
+          ]
+        },
+        {
+          "id": "encounter-ambush",
+          "type": "encounter",
+          "title": "Ambush at the Tollhouse",
+          "summary": "The negotiation breaks down — or was never going to hold. Compact soldiers breach the perimeter. Velthari moves to extract the ledger. Dalthor's factor tries to burn it.",
+          "position": { "x": 920, "y": 220 },
+          "size": { "width": 220, "height": 130 },
+          "content": {
+            "designerNotes": "Design this as a three-way conflict, not a binary fight. The factions are as much threats to each other as to the player. The ledger itself is the objective — control it, protect it, or escape with it. Scale the encounter to the player's current resource state. This is a tense standoff that turns violent, not a dungeon clearance.",
+            "playerVisibleText": "Boots outside. Savan breaks left toward the cellar. The Compact soldier draws steel. Issa Dalthor has a lamp and is moving toward the records shelf. The tollhouse is suddenly very small.",
+            "authorOnlyNotes": [
+              "Savan's goal is to photograph/copy the ledger — not to kill anyone. She has materials for this.",
+              "The Compact soldiers will move to arrest Orvyn on sight. Protecting him splits player attention.",
+              "Issa will attempt to burn the ledger if cornered — she has too much to lose."
+            ],
+            "involvedCharacters": [
+              "Preket + 3 Compact soldiers",
+              "Savan Vreil",
+              "Issa Dalthor",
+              "Orvyn Kett (needs protecting or will flee)"
+            ],
+            "involvedFactions": ["The Compact", "Velthari Intelligence", "Dalthor Trading House"],
+            "stakes": "Who controls the ledger when the encounter ends determines which Consequence branch the player enters.",
+            "entryConditions": [
+              "ledger_recipient is set OR negotiation_timer_expired = true",
+              "Player is in the tollhouse or exterior zone"
+            ],
+            "exitConditions": [
+              "ledger_state is set",
+              "encounter_outcome is set"
+            ],
+            "stateChanges": [
+              "Sets: ledger_state = [secured | partial_burned | burned | copied]",
+              "Sets: encounter_outcome = [clean | costly | escaped]",
+              "Sets: savan_escaped = true (default unless player specifically blocks her path)"
+            ],
+            "requiredAssets": [
+              "Tollhouse interior combat geometry — cellar hatch, front door, side window as three faction entry points",
+              "Savan Vreil scripted escape route — exit path from cellar hatch to treeline",
+              "Compact soldiers x3 spawn + Preket — combat-ready placement at front door",
+              "Issa Dalthor with lamp — fire hazard interaction trigger at records shelf",
+              "Orvyn Kett NPC protection trigger — aggros Compact soldiers if player ignores him",
+              "Ledger pickup object — physics-enabled, interactable, visually distinct"
+            ],
+            "testCriteria": [
+              "encounter_outcome is set on combat resolution regardless of which path player takes",
+              "ledger_state = burned only if Issa Dalthor reaches the records shelf AND player does not intercept within time window",
+              "Savan Vreil exits through escape route by default — only blocked if player physically intercepts the path",
+              "Orvyn Kett survives by default unless player takes no protective action and Compact soldiers reach him",
+              "ledger_state = copied only if savan_escaped = true AND player never retrieved the ledger first"
+            ],
+            "possibleOutcomes": [
+              "Player secures the ledger — all three factions back down",
+              "Ledger is partially burned — information is fragmentary but the Dalthor name survives",
+              "Velthari copies the ledger before it changes hands — both copies exist",
+              "Player flees the tollhouse with the ledger, factions in pursuit"
+            ],
+            "implementationChecklist": [
+              "Design the tollhouse combat space: cellar hatch, front door, one window — three faction entry points",
+              "Implement Savan's escape route — she should exit unless the player specifically intercepts",
+              "Scale Compact soldier count to player level or current resource state"
+            ]
+          },
+          "annotations": [
+            {
+              "id": "ann-enc-01",
+              "type": "designer_note",
+              "text": "Savan escaping with a partial copy is the setup for the Future Thread frame. Do not kill her by default."
+            },
+            {
+              "id": "ann-enc-02",
+              "type": "timing",
+              "text": "Target 15–25 minutes of play time. Keep pressure on. The Reveal lands best when the player is still catching their breath."
+            }
+          ]
+        },
+        {
+          "id": "reveal-ledger",
+          "type": "reveal",
+          "title": "What the Ledger Actually Says",
+          "summary": "The player reads the ledger. It lists payments, names, and dates spanning twelve years of a regional war — including names the player recognizes, and one name they didn't expect.",
+          "position": { "x": 1200, "y": 220 },
+          "size": { "width": 220, "height": 130 },
+          "content": {
+            "designerNotes": "Surface three specific ledger entries through an in-engine readable document — names of dead villages, payments to commanders, supply diversions. Then surface Orvyn's name. Hold on it. The ledger also contains at least one name from the player's prior quest history if applicable — implement a contextual slot for this.",
+            "playerVisibleText": "The ledger is not just accounts. It is a record of who paid whom to look the other way while three settlements burned. The Compact. The Velthari Compact's regional liaison. And the Dalthor house, who supplied the food chain that was quietly cut. And near the bottom of page eleven: the name of the old man bleeding on the floor behind you.",
+            "authorOnlyNotes": [
+              "Orvyn was a paid informant — he reported on road travelers for coin. He did not know what it was funding.",
+              "One entry is redacted. Someone already tore a page. That page named a fourth party never mentioned.",
+              "The ledger proves war crimes but cannot be used as legal evidence in the Compact's courts without the missing page."
+            ],
+            "involvedCharacters": ["Orvyn Kett"],
+            "involvedFactions": ["The Compact", "Velthari Intelligence", "Dalthor Trading House"],
+            "stakes": "The player now knows the full weight of what they are holding. Every choice from here carries moral consequence.",
+            "entryConditions": [
+              "encounter_outcome is set",
+              "ledger_state != burned"
+            ],
+            "exitConditions": [
+              "ledger_contents_known = true"
+            ],
+            "stateChanges": [
+              "Sets: ledger_contents_known = true",
+              "Sets: orvyn_name_discovered = true",
+              "Unlocks: consequence-expose and consequence-conceal (both branches now available)"
+            ],
+            "requiredAssets": [
+              "Ledger inspectable prop — in-engine readable document, page-turning interaction",
+              "Ledger layout: three named entries (village names, payment amounts, commander names) plus Orvyn's entry on page 11",
+              "Missing page visual — torn stub visible in binding, not absence of content",
+              "Orvyn reaction scripted sequence — shame response, triggered on ledger_contents_known becoming true",
+              "Reveal stinger: audio hold or cinematic pause on Orvyn's name entry",
+              "Contextual slot for prior-quest name (if applicable to campaign continuity)"
+            ],
+            "testCriteria": [
+              "Reveal beat is locked if ledger_state = burned — alternate path required",
+              "ledger_contents_known = true is set before either consequence branch unlocks",
+              "Both consequence-expose and consequence-conceal are locked until ledger_contents_known = true",
+              "Orvyn's name entry is visually distinct from others (different handwriting style, added later)",
+              "Missing page is shown as a visible torn stub — not simply absent from the page count",
+              "orvyn_name_discovered = true triggers Orvyn's shame reaction if he is alive and present"
+            ],
+            "possibleOutcomes": [
+              "Player confronts Orvyn about his entry — he breaks down and explains he didn't know",
+              "Player focuses on the missing page and begins investigating who tore it",
+              "Player decides the ledger is too dangerous and moves to destroy it",
+              "Player begins deciding who to bring this to — or whether to leverage it"
+            ],
+            "implementationChecklist": [
+              "Implement three specific ledger entries as readable in-world document text",
+              "Implement Orvyn's reaction dialogue: shame, not denial — this is character-defining",
+              "Define what the missing page would have said — this is the next quest's Reveal"
+            ]
+          },
+          "annotations": [
+            {
+              "id": "ann-rev-01",
+              "type": "author_only",
+              "text": "The missing page is the next quest's thread. Do not answer it here — leave it explicitly open."
+            },
+            {
+              "id": "ann-rev-02",
+              "type": "player_visible",
+              "text": "The ink is old. The handwriting on Orvyn's entry is different from the rest — added later, by a different hand."
+            }
+          ]
+        },
+        {
+          "id": "consequence-expose",
+          "type": "consequence",
+          "title": "Consequence A: The Ledger Goes Public",
+          "summary": "The player delivers or releases the ledger. The Compact scrambles. The Dalthor house loses its road charter. Orvyn is arrested. The region shifts.",
+          "position": { "x": 1480, "y": 80 },
+          "size": { "width": 220, "height": 130 },
+          "content": {
+            "designerNotes": "This is not a clean victory. The Compact tries to spin the ledger as a forgery. The Dalthor house collapses within the week — but the roads they ran go dark. Orvyn is taken. The region is destabilized. Velthari thanks the player quietly and files the event. Surface all of this through world-state changes in subsequent quests.",
+            "playerVisibleText": "The ledger's contents spread faster than anyone expected. By the time the Compact tries to suppress it, three town criers have already read it aloud in the Ashmarrow market. The Dalthor trade routes shut overnight. The roads are now unwatched.",
+            "authorOnlyNotes": [
+              "Velthari already had a copy thanks to Savan. The public ledger serves their interests — they encouraged its release through a third party.",
+              "The Compact's internal investigation will eventually reach the player — design this for Quest 03 or later."
+            ],
+            "involvedCharacters": ["Orvyn Kett (arrested)", "Preket (reassigned, hostile)", "Issa Dalthor (fled)"],
+            "involvedFactions": ["The Compact", "Dalthor Trading House", "Velthari Intelligence"],
+            "stakes": "The player has destabilized the region. The roads are dangerous now.",
+            "entryConditions": [
+              "ledger_contents_known = true",
+              "Player chose to expose or release the ledger"
+            ],
+            "exitConditions": [
+              "ledger_public = true",
+              "All three faction standings updated"
+            ],
+            "stateChanges": [
+              "Sets: ledger_public = true",
+              "Sets: dalthor_routes_closed = true",
+              "Decrements: compact_faction_standing by 2",
+              "Increments: velthari_faction_standing by 1",
+              "Sets: orvyn_fate = arrested"
+            ],
+            "requiredAssets": [
+              "Town crier reading sequence — 3 distinct Ashmarrow market locations",
+              "Compact denial and suppression response — scripted ambient or cutscene",
+              "Dalthor route closure world-state — Ashmarrow Pass road empty variant",
+              "Orvyn arrest sequence — cutscene or ambient event, triggerable on player return to Ashmarrow",
+              "Velthari quiet thanks delivery — coded note or Savan contact initiation"
+            ],
+            "testCriteria": [
+              "ledger_public = true and ledger_concealed remain mutually exclusive — cannot both be set",
+              "compact_faction_standing decremented by exactly 2",
+              "velthari_faction_standing incremented by exactly 1",
+              "dalthor_routes_closed = true makes Ashmarrow Pass road visually empty on return visit",
+              "orvyn_fate = arrested triggers if player returns to Ashmarrow within 3 in-game days"
+            ],
+            "possibleOutcomes": [
+              "Player is marked as enemies of the Compact — affects future quest availability",
+              "Player gains a Velthari contact — unlocks Velthari quest line",
+              "Orvyn's fate becomes a later moral weight — flag for future quest"
+            ],
+            "implementationChecklist": [
+              "Update world-state flags: ledger_public, dalthor_routes_closed",
+              "Implement faction standing changes for all three factions",
+              "Decide Orvyn's immediate in-game fate and whether the player can intervene"
+            ]
+          },
+          "annotations": [
+            {
+              "id": "ann-con-a-01",
+              "type": "branch_note",
+              "text": "Leads to Future Thread. Savan is gone with a partial copy — that thread stays open regardless."
+            }
+          ]
+        },
+        {
+          "id": "consequence-conceal",
+          "type": "consequence",
+          "title": "Consequence B: The Ledger Is Hidden or Sold",
+          "summary": "The player sells, trades, or conceals the ledger. The crimes stay buried. The factions get what they wanted. The player has made enemies of whoever didn't get it.",
+          "position": { "x": 1480, "y": 360 },
+          "size": { "width": 220, "height": 130 },
+          "content": {
+            "designerNotes": "This is a morally heavier outcome than it appears. The Compact keeps its reputation. The Dalthor routes reopen. Orvyn is quietly released. But nothing has changed — the people in the ledger are still in power. Design subsequent quests to surface this weight in a later chapter.",
+            "playerVisibleText": "The ledger disappears into the right hands. Within days, the tollhouse is quietly repaired. Orvyn is walking free. The road through Ashmarrow Pass is as busy as it always was. As if nothing happened.",
+            "authorOnlyNotes": [
+              "Savan still has her partial copy. She will use it eventually, on a timeline the designer controls.",
+              "The faction that received the ledger now has leverage over the player — they know the player can be bought."
+            ],
+            "involvedCharacters": ["Orvyn Kett (released, grateful, shamed)", "Savan Vreil (absent, watching)"],
+            "involvedFactions": ["Whichever faction received the ledger"],
+            "stakes": "The player has chosen stability over accountability. That choice has a weight that will return.",
+            "entryConditions": [
+              "ledger_contents_known = true",
+              "Player chose to bury, sell, or hand over the ledger"
+            ],
+            "exitConditions": [
+              "ledger_concealed = true",
+              "ledger_recipient faction standing updated"
+            ],
+            "stateChanges": [
+              "Sets: ledger_concealed = true",
+              "Sets: ledger_recipient = [compact | velthari | dalthor] (from choice-trust beat)",
+              "Increments: recipient_faction_standing by 2",
+              "Decrements: other two faction standings by 1 each",
+              "Sets: orvyn_fate = released"
+            ],
+            "requiredAssets": [
+              "Tollhouse repair visual variant — world-state swap after 2–3 in-game days",
+              "Orvyn release scene — brief ambient or scripted (1–2 lines, slightly uncomfortable gratitude)",
+              "Faction patron introduction — one representative makes private contact with player within 1 in-game day",
+              "Ledger handoff cutscene or interaction moment — clean transaction, no celebration",
+              "Player journal entry flagging buried knowledge — internal awareness, not visible to others"
+            ],
+            "testCriteria": [
+              "ledger_concealed = true and ledger_public remain mutually exclusive — cannot both be set",
+              "recipient_faction_standing incremented by exactly 2",
+              "Other two faction standings each decremented by exactly 1",
+              "Orvyn is alive and accessible in Ashmarrow after this consequence",
+              "Faction patron contact event fires within 1 in-game day of ledger handoff",
+              "Tollhouse repair world-state variant is visible on player return after 2–3 in-game days"
+            ],
+            "possibleOutcomes": [
+              "Player has a new faction patron — and a new obligation designed for a future quest",
+              "Player carries the knowledge of what they buried — surfaces in dialogue",
+              "Orvyn lives but the player knows his name is still in the concealed ledger"
+            ],
+            "implementationChecklist": [
+              "Update world-state flags: ledger_concealed, ledger_recipient",
+              "Implement faction standing changes based on recipient",
+              "Design a moment where Orvyn thanks the player — make it feel slightly uncomfortable"
+            ]
+          },
+          "annotations": [
+            {
+              "id": "ann-con-b-01",
+              "type": "danger",
+              "text": "Do not reward this outcome cleanly. The weight should be present in the world even if subtle."
+            }
+          ]
+        },
+        {
+          "id": "future-thread",
+          "type": "hook",
+          "title": "Savan Has a Copy",
+          "summary": "Velthari intelligence courier Savan Vreil escaped the tollhouse with a transcribed partial copy of the ledger. She will use it. The player doesn't know when.",
+          "position": { "x": 1760, "y": 220 },
+          "size": { "width": 220, "height": 130 },
+          "content": {
+            "designerNotes": "This frame closes the quest but opens the next thread. Savan is not an antagonist — she is a professional who did her job. She may contact the player again as an employer, a warning, or a source. The copy she made is incomplete (she was interrupted) but it names enough to be dangerous. Reserve this for Quest 02 or a later chapter.",
+            "playerVisibleText": "Three days after the tollhouse, a folded note arrives at wherever the player is resting. No seal. No signature. One line: 'The copy I made is incomplete. I may need what you remember. — S'",
+            "authorOnlyNotes": [
+              "Savan's copy is missing the entries for pages 7–9 — which cover the Compact's regional liaison by name.",
+              "She is not working against the player. She is working on a longer timeline.",
+              "If the player exposed the ledger, Savan is pleased. If they buried it, she is patient."
+            ],
+            "involvedCharacters": ["Savan Vreil (Velthari courier, now a recurring contact)"],
+            "involvedFactions": ["Velthari Intelligence"],
+            "stakes": "An intentionally open thread. Savan will matter in a future quest.",
+            "entryConditions": [
+              "ledger_public = true OR ledger_concealed = true",
+              "savan_escaped = true (Savan survived the encounter beat)"
+            ],
+            "exitConditions": [
+              "savan_contact_active = true",
+              "quest_02_entry_flag is set"
+            ],
+            "stateChanges": [
+              "Sets: savan_contact_active = true",
+              "Sets: quest_02_entry_flag = true (Quest 02 entry condition)"
+            ],
+            "requiredAssets": [
+              "Unsigned note prop — physical discoverable item OR journal entry, not a quest log popup",
+              "Note content variant A: references ledger exposed (Savan is pleased, tone is collegial)",
+              "Note content variant B: references ledger concealed (Savan is patient, tone is neutral)",
+              "Quest 02 unlock state: savan_contact_active queryable by Quest 02 entry check",
+              "Optional: Savan voice line for note content (VO asset for each variant)"
+            ],
+            "testCriteria": [
+              "Note only appears if savan_escaped = true — does not trigger if Savan was killed in encounter beat",
+              "savan_contact_active = true is set regardless of ledger outcome (expose or conceal)",
+              "quest_02_entry_flag = true is queryable in quest state and unlocks Quest 02 availability",
+              "Note content displays variant A if ledger_public = true, variant B if ledger_concealed = true",
+              "Note is delivered 3 in-game days after either consequence frame completes"
+            ],
+            "possibleOutcomes": [
+              "Player investigates Savan — discovers she is legitimate intelligence, not a villain",
+              "Player ignores the note — Savan resurfaces at a worse moment in a later quest",
+              "Player contacts Velthari through Savan — gains an intelligence network"
+            ],
+            "implementationChecklist": [
+              "Implement the note as a discoverable world item, not a quest log entry",
+              "Set savan_contact_active flag — this is the entry condition for Quest 02",
+              "Define what pages 7–9 contained — that is the next quest's Reveal"
+            ]
+          },
+          "annotations": [
+            {
+              "id": "ann-hook-loose-01",
+              "type": "branch_note",
+              "text": "Intentional open thread. Do not resolve in this quest — this is Quest 02 material."
+            },
+            {
+              "id": "ann-hook-loose-02",
+              "type": "timing",
+              "text": "Deliver as an epilogue beat after the consequence plays out. End on the question, not the answer."
+            }
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "id": "conn-01",
+          "fromFrameId": "opening-hook",
+          "toFrameId": "npc-tollkeeper",
+          "type": "sequence",
+          "label": "investigate tollhouse"
+        },
+        {
+          "id": "conn-02",
+          "fromFrameId": "npc-tollkeeper",
+          "toFrameId": "choice-trust",
+          "type": "sequence",
+          "label": "factions arrive"
+        },
+        {
+          "id": "conn-03",
+          "fromFrameId": "choice-trust",
+          "toFrameId": "encounter-ambush",
+          "type": "sequence",
+          "label": "tension breaks"
+        },
+        {
+          "id": "conn-04",
+          "fromFrameId": "encounter-ambush",
+          "toFrameId": "reveal-ledger",
+          "type": "sequence",
+          "label": "ledger secured"
+        },
+        {
+          "id": "conn-05",
+          "fromFrameId": "reveal-ledger",
+          "toFrameId": "consequence-expose",
+          "type": "choice",
+          "label": "expose it"
+        },
+        {
+          "id": "conn-06",
+          "fromFrameId": "reveal-ledger",
+          "toFrameId": "consequence-conceal",
+          "type": "choice",
+          "label": "bury it"
+        },
+        {
+          "id": "conn-07",
+          "fromFrameId": "consequence-expose",
+          "toFrameId": "future-thread",
+          "type": "consequence",
+          "label": "Savan is gone with a copy"
+        },
+        {
+          "id": "conn-08",
+          "fromFrameId": "consequence-conceal",
+          "toFrameId": "future-thread",
+          "type": "fallback",
+          "label": "Savan still has a copy"
+        }
+      ]
+    }
+  ]
+}
