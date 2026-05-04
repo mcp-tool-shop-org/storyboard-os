@@ -1,0 +1,116 @@
+---
+import {
+  storyboardOsLaunchTrailer,
+  CINEMATIC_TEMPLATES,
+  createCinematicStoryboard,
+} from '@storyboard-os/cinematic-domain';
+
+const sequences = [
+  storyboardOsLaunchTrailer,
+  ...CINEMATIC_TEMPLATES.map(t => createCinematicStoryboard(t.id)),
+];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cinematic Storyboard — Production Sequence Planner</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100vh; }
+    body {
+      background: #0b1120;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex; flex-direction: column;
+    }
+
+    .page {
+      flex: 1;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 80px 24px 80px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+
+    .label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: #334155; margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 36px; font-weight: 800; color: #f1f5f9;
+      line-height: 1.15; margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 15px; color: #64748b; line-height: 1.7;
+      margin-bottom: 48px; max-width: 560px;
+    }
+
+    .sequence-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .sequence-card {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 24px;
+      background: #0f1825;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      text-decoration: none;
+      transition: border-color 0.15s;
+    }
+    .sequence-card:hover { border-color: rgba(255,255,255,0.18); }
+    .sequence-card-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #334155;
+    }
+    .sequence-card-title {
+      font-size: 17px; font-weight: 700; color: #f1f5f9;
+    }
+    .sequence-card-desc {
+      font-size: 13px; color: #475569; line-height: 1.55;
+    }
+    .sequence-card-meta {
+      font-size: 11px; color: #334155; margin-top: 4px;
+      display: flex; gap: 12px;
+    }
+    .sequence-card-cta {
+      font-size: 11px; color: #94a3b8; margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <span class="label">Storyboard OS</span>
+    <h1>Cinematic Storyboard</h1>
+    <p class="subtitle">
+      Production sequence planner for trailers, cutscenes, explainer videos,
+      and game cinematics. Camera language, timing, assets, VFX/audio needs,
+      continuity, readiness, and handoff to your editor or video producer.
+    </p>
+
+    <div class="sequence-grid">
+      {sequences.map(seq => (
+        <a class="sequence-card" href={`/sequences/${seq.id}`}>
+          <span class="sequence-card-label">Sequence</span>
+          <span class="sequence-card-title">{seq.title}</span>
+          <span class="sequence-card-desc">{seq.description}</span>
+          <span class="sequence-card-meta">
+            <span>{seq.frames.length} shots</span>
+            <span>{seq.connections.length} connections</span>
+          </span>
+          <span class="sequence-card-cta">Open board →</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</body>
+</html>

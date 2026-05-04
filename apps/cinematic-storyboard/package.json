@@ -1,0 +1,28 @@
+{
+    "name": "cinematic-storyboard",
+    "type": "module",
+    "version": "0.1.0",
+    "scripts": {
+        "dev": "astro dev",
+        "build": "astro build",
+        "preview": "astro preview"
+    },
+    "dependencies": {
+        "@storyboard-os/core": "workspace:*",
+        "@storyboard-os/cinematic-domain": "workspace:*",
+        "@storyboard-os/routing": "workspace:*",
+        "@storyboard-os/canvas": "workspace:*",
+        "@astrojs/react": "^3.0.0",
+        "astro": "^4.0.0",
+        "konva": "^9.0.0",
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0",
+        "react-konva": "^18.2.10"
+    },
+    "devDependencies": {
+        "@astrojs/check": "^0.9.9",
+        "@types/react": "^18.0.0",
+        "@types/react-dom": "^18.0.0",
+        "typescript": "^5.0.0"
+    }
+}

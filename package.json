@@ -2,11 +2,11 @@
   "name": "storyboard-os",
   "private": true,
   "version": "1.0.1",
-  "description": "Visual story-structure platform. rpg-storyboard and marketing-storyboard are the two shipped verticals.",
+  "description": "Visual story-structure platform. rpg-storyboard, marketing-storyboard, and cinematic-storyboard are the three shipped verticals.",
   "scripts": {
     "dev": "pnpm --filter rpg-storyboard dev",
     "dev:marketing": "pnpm --filter marketing-storyboard dev",
-    "build": "pnpm --filter rpg-storyboard build && pnpm --filter marketing-storyboard build",
+    "build": "pnpm --filter rpg-storyboard build && pnpm --filter marketing-storyboard build && pnpm --filter cinematic-storyboard build","dev:cinematic": "pnpm --filter cinematic-storyboard dev",
     "preview": "pnpm --filter rpg-storyboard preview",
     "test": "pnpm -r test",
     "test:watch": "pnpm --filter rpg-storyboard test:watch",

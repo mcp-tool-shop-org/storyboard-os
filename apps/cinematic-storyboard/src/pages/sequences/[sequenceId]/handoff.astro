@@ -1,0 +1,434 @@
+---
+import {
+  storyboardOsLaunchTrailer,
+  CINEMATIC_TEMPLATES,
+  createCinematicStoryboard,
+  generateProductionBrief,
+  generateProductionMarkdown,
+  getSequenceReadiness,
+  type Storyboard,
+  type CinematicBeatStatusLevel,
+} from '@storyboard-os/cinematic-domain';
+
+export function getStaticPaths() {
+  const allSequences: Storyboard[] = [
+    storyboardOsLaunchTrailer,
+    ...CINEMATIC_TEMPLATES.map(t => createCinematicStoryboard(t.id)),
+  ];
+  return allSequences.map(s => ({
+    params: { sequenceId: s.id },
+    props: { storyboard: s },
+  }));
+}
+
+interface Props { storyboard: Storyboard; }
+const { storyboard } = Astro.props;
+const { sequenceId } = Astro.params;
+
+const brief = generateProductionBrief(storyboard);
+const markdownText = generateProductionMarkdown(brief);
+const jsonText = JSON.stringify(brief, null, 2);
+const filename = `${sequenceId}-production-brief`;
+const boardUrl = `/sequences/${sequenceId}`;
+const readiness = getSequenceReadiness(storyboard);
+const readyPct = readiness.total > 0 ? Math.round((readiness.ready / readiness.total) * 100) : 0;
+
+const STATUS_COLORS: Record<string, string> = {
+  ready:   '#22C55E',
+  partial: '#F97316',
+  draft:   '#6B7280',
+  blocked: '#EF4444',
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  sequence:     '#475569',
+  shot:         '#3B82F6',
+  camera_move:  '#06B6D4',
+  action:       '#F97316',
+  dialogue:     '#A855F7',
+  transition:   '#6366F1',
+  vfx:          '#EC4899',
+  audio:        '#22C55E',
+  edit_beat:    '#EAB308',
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  sequence:     'Sequence',
+  shot:         'Shot',
+  camera_move:  'Camera Move',
+  action:       'Action',
+  dialogue:     'Dialogue',
+  transition:   'Transition',
+  vfx:          'VFX',
+  audio:        'Audio',
+  edit_beat:    'Edit Beat',
+};
+
+const CONN_LABELS: Record<string, string> = {
+  sequence:        'sequence',
+  match_cut:       'match cut',
+  cutaway:         'cutaway',
+  reaction:        'reaction',
+  transition:      'transition',
+  continuity:      'continuity',
+  parallel_action: 'parallel',
+  fallback:        'fallback',
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{storyboard.title} — Production Brief</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #0b1120;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 48px 24px 120px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .page { width: 100%; max-width: 820px; }
+
+    .back-link {
+      font-size: 11px; color: #475569; text-decoration: none; margin-bottom: 32px;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .back-link:hover { color: #94a3b8; }
+
+    h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .meta { font-size: 13px; color: #475569; margin-bottom: 24px; }
+    .meta span { margin-right: 16px; }
+
+    .summary-bar {
+      display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap;
+    }
+    .summary-chip {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    .progress-bar {
+      width: 100%; height: 6px; background: #1e293b; border-radius: 3px;
+      margin-bottom: 40px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 3px; transition: width 0.3s;
+    }
+
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #334155; margin-bottom: 12px;
+      padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .shot-card {
+      background: #0f1825;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .shot-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .shot-number {
+      font-size: 10px; font-weight: 700; color: #334155; min-width: 28px;
+    }
+    .shot-type-badge {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .shot-title { font-size: 15px; font-weight: 700; flex: 1; }
+    .shot-status-badge {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .shot-field { margin-top: 10px; }
+    .shot-field-label {
+      font-size: 10px; font-weight: 600; color: #475569; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 4px;
+    }
+    .shot-field-value { font-size: 13px; color: #cbd5e1; line-height: 1.6; }
+    .shot-field-list { list-style: none; padding: 0; }
+    .shot-field-list li {
+      font-size: 12px; color: #94a3b8; padding: 2px 0;
+      padding-left: 12px; position: relative;
+    }
+    .shot-field-list li::before {
+      content: '•'; position: absolute; left: 0; color: #334155;
+    }
+
+    .conn-section { margin-top: 40px; }
+    .conn-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .conn-table th {
+      text-align: left; font-size: 10px; font-weight: 600; color: #475569;
+      text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .conn-table td {
+      padding: 8px 12px; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .conn-type-badge {
+      font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 3px;
+      letter-spacing: 0.04em;
+    }
+
+    .export-section { margin-top: 48px; }
+    .export-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .export-tab {
+      font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 4px;
+      background: #0f1825; border: 1px solid rgba(255,255,255,0.07);
+      color: #64748b; cursor: pointer; transition: border-color 0.12s;
+    }
+    .export-tab.active { border-color: #475569; color: #f1f5f9; }
+    .export-block {
+      background: #0a0e18; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px; padding: 16px; overflow-x: auto;
+      font-family: ui-monospace, monospace; font-size: 11px; color: #94a3b8;
+      line-height: 1.7; white-space: pre-wrap; max-height: 400px; overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back-link" href={boardUrl}>← Back to board</a>
+
+    <h1>{brief.title} — Production Brief</h1>
+    <div class="meta">
+      <span>{brief.totalShots} shots</span>
+      <span>Duration: {brief.totalDuration}</span>
+      <span>{readyPct}% production-ready</span>
+    </div>
+
+    <div class="summary-bar">
+      {readiness.ready > 0 && (
+        <span class="summary-chip" style={`background: ${STATUS_COLORS.ready}18; border: 1px solid ${STATUS_COLORS.ready}44; color: ${STATUS_COLORS.ready};`}>
+          {readiness.ready} READY
+        </span>
+      )}
+      {readiness.partial > 0 && (
+        <span class="summary-chip" style={`background: ${STATUS_COLORS.partial}18; border: 1px solid ${STATUS_COLORS.partial}44; color: ${STATUS_COLORS.partial};`}>
+          {readiness.partial} PARTIAL
+        </span>
+      )}
+      {readiness.draft > 0 && (
+        <span class="summary-chip" style={`background: ${STATUS_COLORS.draft}18; border: 1px solid ${STATUS_COLORS.draft}44; color: ${STATUS_COLORS.draft};`}>
+          {readiness.draft} DRAFT
+        </span>
+      )}
+      {readiness.blocked > 0 && (
+        <span class="summary-chip" style={`background: ${STATUS_COLORS.blocked}18; border: 1px solid ${STATUS_COLORS.blocked}44; color: ${STATUS_COLORS.blocked};`}>
+          {readiness.blocked} BLOCKED
+        </span>
+      )}
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" style={`width: ${readyPct}%; background: ${STATUS_COLORS.ready};`}></div>
+    </div>
+
+    <!-- Shot list -->
+    <div class="section-title">Shot List</div>
+    {brief.shots.map(shot => (
+      <div class="shot-card">
+        <div class="shot-header">
+          <span class="shot-number">#{shot.shotNumber}</span>
+          <span
+            class="shot-type-badge"
+            style={`background: ${TYPE_COLORS[shot.type] ?? '#475569'}18; border: 1px solid ${TYPE_COLORS[shot.type] ?? '#475569'}44; color: ${TYPE_COLORS[shot.type] ?? '#475569'};`}
+          >
+            {TYPE_LABELS[shot.type] ?? shot.type}
+          </span>
+          <span class="shot-title">{shot.title}</span>
+          <span
+            class="shot-status-badge"
+            style={`background: ${STATUS_COLORS[shot.status]}18; border: 1px solid ${STATUS_COLORS[shot.status]}44; color: ${STATUS_COLORS[shot.status]};`}
+          >
+            {shot.status.toUpperCase()}
+          </span>
+        </div>
+
+        {shot.intent && (
+          <div class="shot-field">
+            <div class="shot-field-label">Intent</div>
+            <div class="shot-field-value">{shot.intent}</div>
+          </div>
+        )}
+
+        {shot.visualDescription && (
+          <div class="shot-field">
+            <div class="shot-field-label">Visual</div>
+            <div class="shot-field-value">{shot.visualDescription}</div>
+          </div>
+        )}
+
+        {shot.camera && (
+          <div class="shot-field">
+            <div class="shot-field-label">Camera</div>
+            <div class="shot-field-value">{shot.camera}</div>
+          </div>
+        )}
+
+        {shot.framing && (
+          <div class="shot-field">
+            <div class="shot-field-label">Framing</div>
+            <div class="shot-field-value">{shot.framing}</div>
+          </div>
+        )}
+
+        {shot.duration && (
+          <div class="shot-field">
+            <div class="shot-field-label">Duration</div>
+            <div class="shot-field-value">{shot.duration}</div>
+          </div>
+        )}
+
+        {shot.dialogue.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">Dialogue</div>
+            <ul class="shot-field-list">
+              {shot.dialogue.map(d => <li>{d}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {shot.actionNotes.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">Action</div>
+            <ul class="shot-field-list">
+              {shot.actionNotes.map(a => <li>{a}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {shot.continuity.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">Continuity</div>
+            <ul class="shot-field-list">
+              {shot.continuity.map(c => <li>{c}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {shot.requiredAssets.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">Required Assets</div>
+            <ul class="shot-field-list">
+              {shot.requiredAssets.map(a => <li>{a}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {shot.vfx.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">VFX</div>
+            <ul class="shot-field-list">
+              {shot.vfx.map(v => <li>{v}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {shot.audio.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">Audio</div>
+            <ul class="shot-field-list">
+              {shot.audio.map(a => <li>{a}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {shot.editNotes && (
+          <div class="shot-field">
+            <div class="shot-field-label">Edit Notes</div>
+            <div class="shot-field-value">{shot.editNotes}</div>
+          </div>
+        )}
+
+        {shot.checklist.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">Checklist</div>
+            <ul class="shot-field-list">
+              {shot.checklist.map(c => <li>{c}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {shot.testCriteria.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">Test Criteria</div>
+            <ul class="shot-field-list">
+              {shot.testCriteria.map(t => <li>{t}</li>)}
+            </ul>
+          </div>
+        )}
+      </div>
+    ))}
+
+    <!-- Connections -->
+    <div class="conn-section">
+      <div class="section-title">Sequence Flow</div>
+      <table class="conn-table">
+        <thead>
+          <tr>
+            <th>From</th>
+            <th>Type</th>
+            <th>To</th>
+          </tr>
+        </thead>
+        <tbody>
+          {storyboard.connections.map(conn => {
+            const from = storyboard.frames.find(f => f.id === conn.fromFrameId);
+            const to = storyboard.frames.find(f => f.id === conn.toFrameId);
+            const connColor = TYPE_COLORS[conn.type] ?? '#475569';
+            return (
+              <tr>
+                <td>{from?.title ?? conn.fromFrameId}</td>
+                <td>
+                  <span class="conn-type-badge" style={`background: ${connColor}18; color: ${connColor};`}>
+                    {CONN_LABELS[conn.type] ?? conn.type}
+                  </span>
+                </td>
+                <td>{to?.title ?? conn.toFrameId}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Export -->
+    <div class="export-section">
+      <div class="section-title">Export</div>
+      <div class="export-tabs">
+        <span class="export-tab active" id="tab-md">Markdown</span>
+        <span class="export-tab" id="tab-json">JSON</span>
+      </div>
+      <pre class="export-block" id="export-content">{markdownText}</pre>
+    </div>
+  </div>
+
+  <script define:vars={{ markdownText, jsonText }}>
+    const tabMd = document.getElementById('tab-md');
+    const tabJson = document.getElementById('tab-json');
+    const content = document.getElementById('export-content');
+
+    tabMd?.addEventListener('click', () => {
+      tabMd.classList.add('active');
+      tabJson?.classList.remove('active');
+      if (content) content.textContent = markdownText;
+    });
+    tabJson?.addEventListener('click', () => {
+      tabJson.classList.add('active');
+      tabMd?.classList.remove('active');
+      if (content) content.textContent = jsonText;
+    });
+  </script>
+</body>
+</html>
