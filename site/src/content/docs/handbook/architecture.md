@@ -9,13 +9,21 @@ sidebar:
 
 Each package owns one concern and does not import from packages above it.
 
-The split between **domain-neutral infrastructure** and **domain-specific authoring contract** is intentional and load-bearing. The platform can grow without each new vertical inheriting RPG vocabulary. The RPG vertical can evolve without being trapped inside generic library code.
+The split between **domain-neutral infrastructure** and **domain-specific authoring contract** is intentional and load-bearing. The platform can grow without each new vertical inheriting another domain's vocabulary. Each vertical can evolve without being trapped inside generic library code.
+
+The marketing vertical (Phase M-0) proved this: it shipped a full campaign-implementation storyboard without modifying canvas, core, or routing.
 
 ## Package map
 
 ```
 apps/rpg-storyboard
   ├── @storyboard-os/rpg-domain
+  │     └── @storyboard-os/core
+  ├── @storyboard-os/canvas
+  └── @storyboard-os/routing
+
+apps/marketing-storyboard
+  ├── @storyboard-os/marketing-domain
   │     └── @storyboard-os/core
   ├── @storyboard-os/canvas
   └── @storyboard-os/routing
@@ -29,12 +37,14 @@ apps/rpg-storyboard
 | `@storyboard-os/canvas` | `react`, `react-konva`, `konva` |
 | `@storyboard-os/routing` | Nothing |
 | `@storyboard-os/rpg-domain` | `@storyboard-os/core` only |
-| `apps/rpg-storyboard` | All `@storyboard-os/*` packages |
+| `@storyboard-os/marketing-domain` | `@storyboard-os/core` only |
+| `apps/rpg-storyboard` | `rpg-domain`, `canvas`, `routing` |
+| `apps/marketing-storyboard` | `marketing-domain`, `canvas`, `routing` |
 
-Cross-package imports in the wrong direction break the isolation and must not be added. The canonical check:
+The two domain packages do not import from each other. Cross-package imports in the wrong direction break the isolation and must not be added. The canonical check:
 
 ```bash
-grep -r "rpg-domain\|quest\|npc_beat\|stateChange" packages/storyboard-canvas/src/
+grep -r "rpg-domain\|marketing-domain\|quest\|npc_beat\|campaign" packages/storyboard-canvas/src/
 # must return nothing
 ```
 
@@ -84,11 +94,39 @@ All `update*` and `set*` helpers are **pure and immutable**: they accept a proje
 
 ---
 
+## `@storyboard-os/marketing-domain`
+
+The marketing campaign-implementation contract. Answers: **Can this campaign ship, and what blocks it?**
+
+Does not import from any app, `@storyboard-os/canvas`, `@storyboard-os/routing`, or `@storyboard-os/rpg-domain`. Imports from `@storyboard-os/core` only.
+
+**Frame types:** audience, message, touchpoint, asset, approval, launch_event, conversion, follow_up, measurement
+
+**Key exports:**
+- Frame signals: `getMarketingFrameBadges()`, `getMarketingFrameSignal()`
+- Beat status: `getMarketingBeatStatus()`, `getCampaignReadiness()`
+- Launch readiness: `getCampaignLaunchReadiness()`, `getCampaignCriticalPath()`
+- Approval gates: `getApprovalGateSignals()`
+- Measurement loops: `getMeasurementLoopSignals()`
+- Templates: product_launch, brand_awareness, content_campaign
+- Handoff: `generateCampaignBrief()`, `generateCampaignMarkdown()`
+
+### What the marketing domain is NOT
+
+| Excluded | Why |
+|---|---|
+| Due dates | Execution scheduling belongs in PM tools |
+| Owner assignment | People management is not frame semantics |
+| Workflow stages | Status derives from spec completeness, not role-based gates |
+| Content calendar | Calendar is presentation, not domain logic |
+
+---
+
 ## `@storyboard-os/canvas`
 
 Konva rendering. Frames, connections, selection, drag, type badges, connection labels. All visual config and viewport control comes from the app via props and a ref handle.
 
-Does not import from `@storyboard-os/core`, `@storyboard-os/rpg-domain`, or any app. It renders whatever config the app passes.
+Does not import from `@storyboard-os/core`, `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, or any app. It renders whatever config the app passes.
 
 **Config injection:** The app provides `StoryboardCanvasConfig` with per-type styles:
 
@@ -180,13 +218,15 @@ const persistAndNotify = (updated: RpgStoryboardProject) => {
 
 ---
 
-## Adding a second vertical
+## Adding a new vertical
 
-A second vertical (e.g. `apps/screenplay-storyboard`) would:
+A new vertical (e.g. `apps/screenplay-storyboard`) would:
 
 1. Create `packages/screenplay-domain` — its own frame types, content fields, and templates built on `@storyboard-os/core` generics
 2. Create an app that passes its own `StoryboardCanvasConfig` to `@storyboard-os/canvas`
 3. Write its own frame inspector reading its domain content fields
 4. Call `createStoryboardRoutes({ storyboardBasePath: '/scenes' })` from `@storyboard-os/routing`
 
-It would not touch `@storyboard-os/rpg-domain` at all. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification.
+It would not touch `@storyboard-os/rpg-domain` or `@storyboard-os/marketing-domain`. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification.
+
+The marketing vertical proved this pattern: zero infrastructure changes required for the second vertical.

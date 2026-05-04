@@ -32,7 +32,7 @@ Open [http://localhost:4321](http://localhost:4321). The app is running.
 pnpm verify
 ```
 
-Runs all 368 tests + builds all 42 pages. This is the gate before any commit.
+Runs all 511 tests + builds all 45 pages across both apps. This is the gate before any commit.
 
 ---
 

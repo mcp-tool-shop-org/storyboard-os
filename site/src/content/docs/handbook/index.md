@@ -5,9 +5,11 @@ sidebar:
   order: 0
 ---
 
-Storyboard OS is a visual authoring tool for game narrative. It turns story structure into implementation specs a developer can build from — not just notes, but entry conditions, state changes, required assets, test criteria, and a checklist for the dev pass.
+Storyboard OS is a visual authoring platform for implementable structure. It turns design into implementation specs a team can build from — not just notes, but entry conditions, state changes, required assets, test criteria, and a checklist for the production pass.
 
-The first vertical is **rpg-storyboard**: RPG quest and scene authoring for video game designers.
+Two verticals ship today:
+- **rpg-storyboard** — RPG quest and scene authoring for video game designers
+- **marketing-storyboard** — campaign implementation storyboard for marketing teams
 
 ## What makes it different
 
@@ -23,12 +25,23 @@ A frame without those fields is a story note. Storyboard OS makes the distinctio
 
 ## Two workflows
 
+### rpg-storyboard
+
 | Workflow | Entry point | Purpose |
 |---|---|---|
 | **Project boards** (durable) | `/projects` | Design, edit, track progress, generate handoffs |
 | **Template preview** (read-only) | `/templates` | Browse production templates and demo quest |
 
 Project boards persist across reload. No backend, no accounts, no server — everything lives in localStorage.
+
+### marketing-storyboard
+
+| Workflow | Entry point | Purpose |
+|---|---|---|
+| **Campaign board** | `/campaigns/:id` | Full campaign canvas with launch readiness signals |
+| **Campaign brief** | `/campaigns/:id/handoff` | Markdown + JSON export for execution team |
+
+The marketing board answers: Can this campaign ship, and what blocks it?
 
 ## The handoff
 

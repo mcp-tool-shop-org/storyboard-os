@@ -11,14 +11,14 @@ export const config: SiteConfig = {
   hero: {
     badge: 'Open source · v1.0.1',
     headline: 'Story structure that ships.',
-    headlineAccent: 'Game-state first.',
-    description: 'A visual authoring board where every frame is an implementation spec — entry conditions, state changes, required assets, test criteria, and a dev checklist. The handoff is a document a developer can build from, not a document a developer has to interpret.',
+    headlineAccent: 'Multi-vertical.',
+    description: 'A visual authoring platform where every frame is an implementation spec. Two verticals — RPG quest authoring and marketing campaign implementation — share one canvas, zero cross-domain imports.',
     primaryCta: { href: '#platform', label: 'See the platform' },
     secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [
       { label: 'Install', code: 'git clone mcp-tool-shop-org/storyboard-os\npnpm install && pnpm dev' },
-      { label: 'Verify', code: 'pnpm verify  # 368 tests · 42 pages' },
-      { label: 'Packages', code: '@storyboard-os/core\n@storyboard-os/rpg-domain\n@storyboard-os/canvas\n@storyboard-os/routing' },
+      { label: 'Verify', code: 'pnpm verify  # 511 tests · 45 pages · 2 apps' },
+      { label: 'Packages', code: '@storyboard-os/core\n@storyboard-os/rpg-domain\n@storyboard-os/marketing-domain\n@storyboard-os/canvas\n@storyboard-os/routing' },
     ],
   },
 
@@ -27,7 +27,7 @@ export const config: SiteConfig = {
       kind: 'features',
       id: 'platform',
       title: 'A platform, not a tool',
-      subtitle: 'Four focused packages. Each owns one concern. Nothing leaks across the boundary.',
+      subtitle: 'Five focused packages. Each owns one concern. Nothing leaks across the boundary.',
       features: [
         {
           title: '@storyboard-os/core',
@@ -38,28 +38,28 @@ export const config: SiteConfig = {
           desc: 'The RPG authoring contract: 7 frame types, 13 spec fields, 3 production templates, canvas signals, a readiness model, and handoff generation. Pure TypeScript — no React, no Konva.',
         },
         {
+          title: '@storyboard-os/marketing-domain',
+          desc: 'The campaign-implementation contract: 9 frame types, launch readiness model, critical path analysis, approval gates, measurement loops, and campaign brief export. Answers: can this campaign ship?',
+        },
+        {
           title: '@storyboard-os/canvas',
-          desc: 'Konva rendering with a ViewportHandle API — zoom, pan, fit, center, drag. Accepts any StoryboardCanvasConfig. Has no knowledge of RPG vocabulary or any domain.',
+          desc: 'Konva rendering with a ViewportHandle API — zoom, pan, fit, center, drag. Accepts any StoryboardCanvasConfig. Has no knowledge of RPG or marketing vocabulary.',
         },
         {
           title: '@storyboard-os/routing',
           desc: 'URL construction helpers with zero dependencies. One factory, three route builders. Each vertical passes its own base path — the canvas and domain work without modification.',
         },
         {
-          title: 'Clean vertical boundary',
-          desc: 'A screenplay or tabletop vertical adds its own domain package and canvas config. It never touches rpg-domain. The platform stays unchanged. The isolation is architectural, not a convention.',
-        },
-        {
-          title: '368 tests, no exceptions',
-          desc: 'Domain functions tested without DOM or Konva. Viewport math tested in pure Node. Guardrail tests reject tabletop-drift terminology on every template frame at build time.',
+          title: '511 tests, two verticals, zero cross-domain imports',
+          desc: 'The marketing vertical proved multi-vertical architecture: zero changes to canvas, core, or routing. Each domain is tested in isolation. The boundary is verified on every commit.',
         },
       ],
     },
     {
       kind: 'features',
       id: 'features',
-      title: 'rpg-storyboard — the first vertical',
-      subtitle: 'A complete local authoring workflow. No backend, no accounts, no server — everything in localStorage.',
+      title: 'Two verticals, one platform',
+      subtitle: 'rpg-storyboard for quest authoring. marketing-storyboard for campaign implementation. Both run locally — no backend, no accounts, no server.',
       features: [
         {
           title: 'Game-state signal on the board',
@@ -85,6 +85,14 @@ export const config: SiteConfig = {
           title: 'Progress without spec mutation',
           desc: 'Checklist and test completion live in project.progress, never in the spec strings. The handoff regenerates from live state — edited content plus current progress, always in sync.',
         },
+        {
+          title: 'Launch readiness (marketing)',
+          desc: 'Critical path to launch, approval gate signals, measurement loop closure. The board shows "BLOCKED / AT RISK / READY" derived from spec completeness — not from human-assigned status.',
+        },
+        {
+          title: 'Campaign brief handoff (marketing)',
+          desc: 'Markdown + JSON export scoped to a campaign. Same topological sort, different domain. A campaign coordinator can read what ships, what blocks it, and what measures success.',
+        },
       ],
     },
     {
@@ -102,7 +110,7 @@ export const config: SiteConfig = {
         },
         {
           title: 'Verify before ship',
-          code: '# All 368 tests + full build in one command\npnpm verify',
+          code: '# All 511 tests + full build in one command\npnpm verify  # 5 packages · 2 apps · 45 pages',
         },
       ],
     },

@@ -2,7 +2,7 @@
   "name": "storyboard-os",
   "private": true,
   "version": "1.0.1",
-  "description": "Visual story-structure platform. rpg-storyboard is the first vertical.",
+  "description": "Visual story-structure platform. rpg-storyboard and marketing-storyboard are the two shipped verticals.",
   "scripts": {
     "dev": "pnpm --filter rpg-storyboard dev",
     "dev:marketing": "pnpm --filter marketing-storyboard dev",
