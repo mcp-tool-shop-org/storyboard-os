@@ -1,0 +1,61 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to publish (e.g. v1.0.0)"
+        required: true
+        default: "v1.0.0"
+
+jobs:
+  publish:
+    name: Build and publish @storyboard-os/*
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: |
+          pnpm --filter @storyboard-os/core build
+          pnpm --filter @storyboard-os/routing build
+          pnpm --filter @storyboard-os/rpg-domain build
+          pnpm --filter @storyboard-os/canvas build
+
+      - name: Publish @storyboard-os/core
+        run: pnpm publish --filter @storyboard-os/core --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @storyboard-os/routing
+        run: pnpm publish --filter @storyboard-os/routing --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @storyboard-os/rpg-domain
+        run: pnpm publish --filter @storyboard-os/rpg-domain --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @storyboard-os/canvas
+        run: pnpm publish --filter @storyboard-os/canvas --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
