@@ -15,8 +15,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, StoryboardFrame } from './schema';
-import type { StoryboardConnection } from '@storyboard-os/core';
+import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
 import { getCampaignBeatStatus, BLOCKING_REASONS } from './beatStatus';
 import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
 

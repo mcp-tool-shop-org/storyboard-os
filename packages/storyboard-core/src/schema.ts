@@ -25,13 +25,16 @@ export type StoryboardConnectionType =
   | 'optional'
   | 'fallback';
 
-export interface StoryboardConnection {
+export interface StoryboardConnection<TConnectionType extends string = StoryboardConnectionType> {
   id: string;
   fromFrameId: string;
   toFrameId: string;
-  type: StoryboardConnectionType;
+  type: TConnectionType;
   label?: string;
 }
+
+// Convenience alias for unspecialized connection use (e.g. in the validator).
+export type AnyStoryboardConnection = StoryboardConnection<string>;
 
 // ─── Frame ────────────────────────────────────────────────────────────────────
 // One narrative beat. Generic over frame type, content shape, and annotation type.
@@ -57,14 +60,17 @@ export type AnyStoryboardFrame = StoryboardFrame<string, unknown, string>;
 
 // ─── Storyboard ───────────────────────────────────────────────────────────────
 
-export interface Storyboard<TFrame extends AnyStoryboardFrame = AnyStoryboardFrame> {
+export interface Storyboard<
+  TFrame extends AnyStoryboardFrame = AnyStoryboardFrame,
+  TConnection extends AnyStoryboardConnection = StoryboardConnection,
+> {
   id: string;
   title: string;
   description?: string;
   /** Set by template creation; domain defines its own template ID type. */
   templateId?: string;
   frames: TFrame[];
-  connections: StoryboardConnection[];
+  connections: TConnection[];
   canvasWidth?: number;
   canvasHeight?: number;
 }
@@ -73,7 +79,7 @@ export interface Storyboard<TFrame extends AnyStoryboardFrame = AnyStoryboardFra
 // Shallow container. Not a domain database.
 
 export interface StoryboardProject<
-  TStoryboard extends Storyboard<AnyStoryboardFrame> = Storyboard,
+  TStoryboard extends Storyboard<AnyStoryboardFrame, AnyStoryboardConnection> = Storyboard,
 > {
   id: string;
   title: string;
@@ -91,7 +97,7 @@ export interface CreateStoryboardInput {
 
 export interface StoryboardTemplateDefinition<
   TId extends string = string,
-  TStoryboard extends Storyboard<AnyStoryboardFrame> = Storyboard,
+  TStoryboard extends Storyboard<AnyStoryboardFrame, AnyStoryboardConnection> = Storyboard,
 > {
   id: TId;
   name: string;

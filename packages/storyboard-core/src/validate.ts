@@ -8,7 +8,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, AnyStoryboardFrame } from './schema';
+import type { Storyboard, AnyStoryboardFrame, AnyStoryboardConnection } from './schema';
 
 export interface StoryboardValidationError {
   code: string;
@@ -25,7 +25,7 @@ export interface StoryboardValidationResult {
 const MIN_FRAME_DIMENSION = 40;
 
 export function validateStoryboard(
-  storyboard: Storyboard<AnyStoryboardFrame>,
+  storyboard: Storyboard<AnyStoryboardFrame, AnyStoryboardConnection>,
 ): StoryboardValidationResult {
   const errors: StoryboardValidationError[] = [];
 

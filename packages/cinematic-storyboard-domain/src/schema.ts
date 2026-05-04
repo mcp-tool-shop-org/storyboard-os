@@ -6,7 +6,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { StoryboardFrame as CoreFrame } from '@storyboard-os/core';
+import type { StoryboardFrame as CoreFrame, Storyboard as CoreStoryboard, StoryboardConnection as CoreConnection } from '@storyboard-os/core';
 
 // ─── Frame types ──────────────────────────────────────────────────────────────
 
@@ -66,19 +66,6 @@ export type CinematicConnectionType =
 
 export type StoryboardFrame = CoreFrame<CinematicFrameType, CinematicFrameContent, CinematicAnnotationType>;
 
-export interface StoryboardConnection {
-  id: string;
-  fromFrameId: string;
-  toFrameId: string;
-  type: CinematicConnectionType;
-  label?: string;
-}
+export type StoryboardConnection = CoreConnection<CinematicConnectionType>;
 
-export interface Storyboard {
-  id: string;
-  title: string;
-  description?: string;
-  templateId?: string;
-  frames: StoryboardFrame[];
-  connections: StoryboardConnection[];
-}
+export type Storyboard = CoreStoryboard<StoryboardFrame, StoryboardConnection>;

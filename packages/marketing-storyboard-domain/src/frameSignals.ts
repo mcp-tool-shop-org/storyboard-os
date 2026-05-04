@@ -8,8 +8,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { StoryboardFrame, MarketingFrameContent } from './schema';
-import type { StoryboardConnection } from '@storyboard-os/core';
+import type { StoryboardFrame, MarketingFrameContent, StoryboardConnection } from './schema';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

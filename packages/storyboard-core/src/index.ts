@@ -2,6 +2,7 @@ export type {
   FrameAnnotation,
   StoryboardConnectionType,
   StoryboardConnection,
+  AnyStoryboardConnection,
   StoryboardFrame,
   AnyStoryboardFrame,
   Storyboard,

@@ -14,12 +14,23 @@ import type {
     Storyboard as CoreStoryboard,
     StoryboardProject as CoreProject,
     StoryboardTemplateDefinition as CoreTemplateDefinition,
+    StoryboardConnection as CoreConnection,
 } from '@storyboard-os/core';
+
+// ─── Marketing Connection Types ───────────────────────────────────────────────
+
+export type MarketingConnectionType =
+    | 'sequence'
+    | 'choice'
+    | 'dependency'
+    | 'approval'
+    | 'consequence'
+    | 'optional';
+
+export type StoryboardConnection = CoreConnection<MarketingConnectionType>;
 
 // Re-export generic types the app uses directly (no specialization needed).
 export type {
-    StoryboardConnectionType,
-    StoryboardConnection,
     CreateStoryboardInput,
 } from '@storyboard-os/core';
 
@@ -88,6 +99,6 @@ export interface MarketingFrameContent {
 
 export type FrameAnnotation = CoreAnnotation<MarketingAnnotationType>;
 export type StoryboardFrame = CoreFrame<MarketingFrameType, MarketingFrameContent, MarketingAnnotationType>;
-export type Storyboard = CoreStoryboard<StoryboardFrame>;
+export type Storyboard = CoreStoryboard<StoryboardFrame, StoryboardConnection>;
 export type StoryboardProject = CoreProject<Storyboard>;
 export type StoryboardTemplateDefinition = CoreTemplateDefinition<MarketingTemplateId, Storyboard>;

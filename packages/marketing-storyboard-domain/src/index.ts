@@ -15,7 +15,7 @@ export type {
     Storyboard,
     StoryboardProject,
     StoryboardTemplateDefinition,
-    StoryboardConnectionType,
+    MarketingConnectionType,
     StoryboardConnection,
     CreateStoryboardInput,
 } from './schema';

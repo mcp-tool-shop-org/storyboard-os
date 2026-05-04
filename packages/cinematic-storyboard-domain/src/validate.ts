@@ -36,7 +36,7 @@ function isNonEmpty(value: unknown): boolean {
 // ─── Validate ─────────────────────────────────────────────────────────────────
 
 export function validateCinematicStoryboard(storyboard: Storyboard): CinematicValidationResult {
-  const coreResult = validateStoryboard(storyboard as any);
+  const coreResult = validateStoryboard(storyboard);
   const errors: CinematicValidationError[] = [];
 
   if (!coreResult.valid) {

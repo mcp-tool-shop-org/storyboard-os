@@ -287,7 +287,7 @@ export default function CinematicStoryboardCanvas({ storyboard }: Props) {
                     <KonvaBoard
                         ref={canvasRef}
                         frames={canvasFrames}
-                        connections={storyboard.connections as any}
+                        connections={storyboard.connections}
                         config={CINEMATIC_CANVAS_CONFIG}
                         selectedFrameId={selectedFrameId}
                         onSelectFrame={handleSelectFrame}

@@ -280,7 +280,7 @@ export const launchRpgStoryboardCampaign: Storyboard = {
     connections: [
         { id: 'conn-01', fromFrameId: 'launch-audience', toFrameId: 'launch-message', type: 'sequence' },
         { id: 'conn-02', fromFrameId: 'launch-message', toFrameId: 'launch-github-readme', type: 'sequence' },
-        { id: 'conn-03', fromFrameId: 'launch-github-readme', toFrameId: 'launch-approval', type: 'dependency' as any },
+        { id: 'conn-03', fromFrameId: 'launch-github-readme', toFrameId: 'launch-approval', type: 'dependency' },
         { id: 'conn-04', fromFrameId: 'launch-github-readme', toFrameId: 'launch-announcement', type: 'sequence' },
         { id: 'conn-05', fromFrameId: 'launch-approval', toFrameId: 'launch-announcement', type: 'consequence' },
         { id: 'conn-06', fromFrameId: 'launch-announcement', toFrameId: 'launch-conversion', type: 'sequence' },

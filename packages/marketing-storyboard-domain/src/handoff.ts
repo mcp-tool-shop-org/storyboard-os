@@ -10,8 +10,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, StoryboardFrame, MarketingFrameContent } from './schema';
-import type { StoryboardConnection } from '@storyboard-os/core';
+import type { Storyboard, StoryboardFrame, MarketingFrameContent, StoryboardConnection } from './schema';
 import { getCampaignBeatStatus, getCampaignReadiness } from './beatStatus';
 import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
 import type { MarketingStoryboardProject, ProjectProgressSummary } from './project';
