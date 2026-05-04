@@ -3,6 +3,32 @@
 ## [1.0.1] — 2026-05-04
 
 ### Added
+
+#### Marketing Phase 0 — Campaign Implementation Storyboard
+
+Second vertical proving multi-domain architecture. Zero changes to canvas, core, or routing.
+
+**M-0A — Domain Package (124 tests)**
+- `@storyboard-os/marketing-domain` — 9 frame types, full content schema, 3 templates, frame signals, beat status, validation, handoff export, demo campaign
+- Frame types: audience, message, touchpoint, asset, approval, launch_event, conversion, follow_up, measurement
+
+**M-0B — App Vertical (3 pages)**
+- `apps/marketing-storyboard` — Astro campaign board with marketing canvas config, frame inspector, campaign brief handoff
+
+**M-0C — Launch Readiness Signal Layer (19 tests)**
+- `getCampaignLaunchReadiness()` — overall launch readiness with level, critical path, and blockers
+- `getCampaignCriticalPath()` — longest path to launch_event via topological sort
+- `getApprovalGateSignals()` — per-approval: status, blocks-launch flag, requirements presence
+- `getMeasurementLoopSignals()` — per-measurement: metrics, incoming/outgoing connections, loop detection
+- App: launch readiness badge in header, CRITICAL badge on critical-path frames, launch blockers panel
+
+**M-0D — Closeout**
+- Architecture docs updated with multi-vertical proof
+- `docs/marketing-storyboard.md` — product overview
+- `docs/marketing-phase-0-closeout.md` — phase closeout with acceptance gates
+- README updated with both verticals
+
+#### Infrastructure
 - Starlight handbook: 5 pages (index, getting-started, authoring workflow, architecture, reference) with Pagefind search
 - Translations: 35 README files across 7 languages (ja, zh, es, fr, hi, it, pt-BR) via TranslateGemma 12B
 - Landing page: handbook CTA connected, version badge updated

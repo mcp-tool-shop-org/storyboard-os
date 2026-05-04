@@ -1,0 +1,40 @@
+---
+import { launchRpgStoryboardCampaign } from '@storyboard-os/marketing-domain';
+import type { Storyboard } from '@storyboard-os/marketing-domain';
+import MarketingStoryboardCanvas from '../../components/MarketingStoryboardCanvas';
+
+export function getStaticPaths() {
+  const allCampaigns: Storyboard[] = [
+    launchRpgStoryboardCampaign,
+  ];
+  return allCampaigns.map(s => ({
+    params: { campaignId: s.id },
+    props: { storyboard: s },
+  }));
+}
+
+interface Props { storyboard: Storyboard; }
+const { storyboard } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{storyboard.title} — Marketing Storyboard</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 100%; height: 100%; overflow: hidden; }
+      body {
+        background: #0f172a;
+        color: #f1f5f9;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+    </style>
+  </head>
+  <body>
+    <MarketingStoryboardCanvas storyboard={storyboard} client:only="react" />
+  </body>
+</html>

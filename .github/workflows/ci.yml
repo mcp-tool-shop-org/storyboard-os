@@ -3,8 +3,17 @@ name: CI
 on:
   push:
     branches: [master, main]
+    paths:
+      - 'packages/**'
+      - 'apps/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [master, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
@@ -32,6 +41,7 @@ jobs:
           pnpm --filter @storyboard-os/routing build
           pnpm --filter @storyboard-os/rpg-domain build
           pnpm --filter @storyboard-os/canvas build
+          pnpm --filter @storyboard-os/marketing-domain build
 
       - name: Run tests
         run: pnpm test

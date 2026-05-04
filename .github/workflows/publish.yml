@@ -10,6 +10,10 @@ on:
         required: true
         default: "v1.0.0"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   publish:
     name: Build and publish @storyboard-os/*
@@ -39,6 +43,7 @@ jobs:
           pnpm --filter @storyboard-os/routing build
           pnpm --filter @storyboard-os/rpg-domain build
           pnpm --filter @storyboard-os/canvas build
+          pnpm --filter @storyboard-os/marketing-domain build
 
       - name: Publish @storyboard-os/core
         run: pnpm publish --filter @storyboard-os/core --no-git-checks --access public
@@ -57,5 +62,10 @@ jobs:
 
       - name: Publish @storyboard-os/canvas
         run: pnpm publish --filter @storyboard-os/canvas --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @storyboard-os/marketing-domain
+        run: pnpm publish --filter @storyboard-os/marketing-domain --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

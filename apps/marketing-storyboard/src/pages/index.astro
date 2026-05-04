@@ -1,0 +1,110 @@
+---
+// Landing page — entry point for the Marketing Campaign tool.
+import { launchRpgStoryboardCampaign } from '@storyboard-os/marketing-domain';
+
+const campaigns = [launchRpgStoryboardCampaign];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Marketing Storyboard — Campaign Implementation Tool</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100vh; }
+    body {
+      background: #0b1120;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex; flex-direction: column;
+    }
+
+    .page {
+      flex: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 80px 24px 80px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+
+    .label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: #334155; margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 36px; font-weight: 800; color: #f1f5f9;
+      line-height: 1.15; margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 15px; color: #64748b; line-height: 1.7;
+      margin-bottom: 48px; max-width: 520px;
+    }
+
+    .campaign-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .campaign-card {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 24px;
+      background: #0f1825;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      text-decoration: none;
+      transition: border-color 0.15s;
+    }
+    .campaign-card:hover { border-color: rgba(255,255,255,0.18); }
+    .campaign-card-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #334155;
+    }
+    .campaign-card-title {
+      font-size: 17px; font-weight: 700; color: #f1f5f9;
+    }
+    .campaign-card-desc {
+      font-size: 13px; color: #475569; line-height: 1.55;
+    }
+    .campaign-card-meta {
+      font-size: 11px; color: #334155; margin-top: 4px;
+      display: flex; gap: 12px;
+    }
+    .campaign-card-cta {
+      font-size: 11px; color: #94a3b8; margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <span class="label">Storyboard OS</span>
+    <h1>Marketing Storyboard</h1>
+    <p class="subtitle">
+      Campaign implementation surface. See the campaign flow, spot launch blockers,
+      and hand off to the people who build assets, approvals, landing pages,
+      follow-ups, and measurement plans.
+    </p>
+
+    <div class="campaign-grid">
+      {campaigns.map(campaign => (
+        <a class="campaign-card" href={`/campaigns/${campaign.id}`}>
+          <span class="campaign-card-label">Campaign</span>
+          <span class="campaign-card-title">{campaign.title}</span>
+          <span class="campaign-card-desc">{campaign.description}</span>
+          <span class="campaign-card-meta">
+            <span>{campaign.frames.length} frames</span>
+            <span>{campaign.connections.length} connections</span>
+          </span>
+          <span class="campaign-card-cta">Open board →</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</body>
+</html>

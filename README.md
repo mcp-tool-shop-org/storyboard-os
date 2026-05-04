@@ -16,7 +16,9 @@
 
 A visual story-structure authoring platform for interactive narrative — quests, branches, scenes, encounters, consequences, and the game-state logic that connects them.
 
-**rpg-storyboard** is the first vertical: a game-authoring tool for RPG video game quest and scene design. It is not a demo or a prototype. It is the product this platform was built to run.
+**rpg-storyboard** is the first vertical: a game-authoring tool for RPG video game quest and scene design. **marketing-storyboard** is the second vertical: a campaign implementation storyboard that answers "Can this campaign ship, and what blocks it?"
+
+Both are products, not demos. Neither imports from the other.
 
 ---
 
@@ -74,6 +76,7 @@ Phase 1 established the read-only preview vertical: canvas rendering, game-state
 |---|---|
 | `@storyboard-os/core` | Generic storyboard primitives: frame, connection, annotation, template, structural validator. No domain vocabulary. |
 | `@storyboard-os/rpg-domain` | RPG game-authoring contract: frame types, content fields, templates, readiness model, handoff generator, Tollhouse Ledger demo quest. |
+| `@storyboard-os/marketing-domain` | Marketing campaign-implementation contract: frame types (audience, message, touchpoint, asset, approval, launch_event, measurement), launch readiness model, critical path, approval gates, measurement loops, campaign brief export, demo campaign. |
 | `@storyboard-os/canvas` | Konva canvas renderer: frames, connections, selection, drag, type badges, connection labels, zoom/pan viewport. Domain config passed in. |
 | `@storyboard-os/routing` | Configurable URL helpers: board and frame route generation. No dependencies. |
 
@@ -82,6 +85,7 @@ Phase 1 established the read-only preview vertical: canvas rendering, game-state
 | App | What it is |
 |---|---|
 | `rpg-storyboard` | Astro RPG game-authoring product. Owns: RPG canvas config, frame inspector, handoff pages, template gallery, route setup, page layout. |
+| `marketing-storyboard` | Astro campaign-implementation storyboard. Owns: marketing canvas config, campaign board, frame inspector, launch readiness badge, critical path emphasis, launch blockers panel, campaign brief handoff. |
 
 ---
 
@@ -91,12 +95,20 @@ The packages form a clean dependency chain:
 
 ```
 apps/rpg-storyboard
-  → @storyboard-os/rpg-domain  (RPG game-authoring contract)
-  → @storyboard-os/canvas      (Konva renderer, domain-configurable)
-  → @storyboard-os/routing     (URL helpers)
+  → @storyboard-os/rpg-domain       (RPG game-authoring contract)
+  → @storyboard-os/canvas           (Konva renderer, domain-configurable)
+  → @storyboard-os/routing          (URL helpers)
+
+apps/marketing-storyboard
+  → @storyboard-os/marketing-domain  (marketing campaign-implementation contract)
+  → @storyboard-os/canvas            (same canvas, different config)
+  → @storyboard-os/routing           (URL helpers)
 
 @storyboard-os/rpg-domain
-  → @storyboard-os/core        (generic primitives)
+  → @storyboard-os/core              (generic primitives)
+
+@storyboard-os/marketing-domain
+  → @storyboard-os/core              (generic primitives)
 
 @storyboard-os/canvas
   → (no platform deps — pure Konva + React)
@@ -108,7 +120,7 @@ apps/rpg-storyboard
   → (no deps)
 ```
 
-A second vertical (e.g. `apps/screenplay-storyboard`) would create its own domain package and reuse `@storyboard-os/core`, `@storyboard-os/canvas`, and `@storyboard-os/routing` without touching `@storyboard-os/rpg-domain`.
+A third vertical (e.g. `apps/screenplay-storyboard`) would create its own domain package and reuse `@storyboard-os/core`, `@storyboard-os/canvas`, and `@storyboard-os/routing` without touching either existing domain package. The marketing vertical proved this pattern: zero changes to canvas, core, or routing.
 
 See [`docs/architecture.md`](docs/architecture.md) for full detail.
 
@@ -119,8 +131,8 @@ See [`docs/architecture.md`](docs/architecture.md) for full detail.
 ```bash
 pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
-pnpm test       # runs all package + app tests (368 tests)
-pnpm build      # builds rpg-storyboard (42 pages)
+pnpm test       # runs all package + app tests (511 tests)
+pnpm build      # builds both apps (45 pages)
 pnpm verify     # test + build in one command (ship gate)
 ```
 
@@ -146,9 +158,10 @@ See [`SECURITY.md`](SECURITY.md) for the full trust model and vulnerability repo
 ## Status
 
 ```
-Phase 2 complete
-368/368 tests passing
-42/42 pages built
+Phase 2 complete + Marketing Phase 0 complete
+511/511 tests passing
+45/45 pages built
+5 packages · 2 apps
 ```
 
 | Phase | Description | Status |
@@ -168,6 +181,10 @@ Phase 2 complete
 | 2D | Checklist / progress persistence — separate from spec text | ✅ |
 | 2E | Project handoff — regenerated from saved project state | ✅ |
 | 2F | Release closeout — docs, changelog, architecture notes | ✅ |
+| M-0A | Marketing domain package — schema, signals, templates, validation, demo campaign | ✅ |
+| M-0B | Marketing app vertical — Astro campaign board, frame inspector, handoff | ✅ |
+| M-0C | Launch readiness signal layer — critical path, approval gates, measurement loops | ✅ |
+| M-0D | Marketing closeout — docs, changelog, architecture proof | ✅ |
 
 ---
 

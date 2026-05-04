@@ -6,6 +6,8 @@ Each package owns one concern and does not import from packages above it.
 
 The split between **domain-neutral infrastructure** and **domain-specific authoring contract** is intentional and load-bearing. The platform can grow without each new vertical inheriting RPG vocabulary. The RPG vertical can evolve without being trapped inside generic library code.
 
+The marketing vertical (Phase M-0) proved this: it shipped a full campaign-implementation storyboard without modifying canvas, core, or routing.
+
 ---
 
 ## Package Map
@@ -16,9 +18,15 @@ apps/rpg-storyboard
   │     └── @storyboard-os/core
   ├── @storyboard-os/canvas
   └── @storyboard-os/routing
+
+apps/marketing-storyboard
+  ├── @storyboard-os/marketing-domain
+  │     └── @storyboard-os/core
+  ├── @storyboard-os/canvas
+  └── @storyboard-os/routing
 ```
 
-Nothing in `@storyboard-os/core`, `@storyboard-os/canvas`, or `@storyboard-os/routing` imports from `@storyboard-os/rpg-domain` or any app. The domain and app import from the platform; the platform does not import from the domain.
+Nothing in `@storyboard-os/core`, `@storyboard-os/canvas`, or `@storyboard-os/routing` imports from `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, or any app. The domains and apps import from the platform; the platform does not import from any domain. The two domain packages do not import from each other.
 
 ---
 
@@ -105,6 +113,68 @@ All `update*` and `set*` functions are **pure and immutable**: they accept a pro
 **Progress / spec separation** is enforced by type: `implementationChecklist` and `testCriteria` are spec strings — their content is never modified by progress functions. Completion state lives in `project.progress.frames[frameId]` as `Record<string, boolean>` keyed by string index. The spec and the completion record are in different locations in the data model and can only be written by different functions.
 
 **Backward compatibility:** `migrate()` in `projectStorage.ts` (app layer) backfills `progress: { frames: {} }` on projects saved before Phase 2D. Called automatically on every `readAll()`. The domain never assumes the presence of progress — `getFrameProgress` returns a safe empty record if no data exists.
+
+---
+
+## `@storyboard-os/marketing-domain`
+
+**Owns:** The marketing campaign-implementation contract. Everything needed to answer "Can this campaign ship, and what blocks it?" — nothing that answers "Who owns this task?" or "When is it due?"
+
+```ts
+// Schema — marketing-specific frame types and content
+StoryboardFrameType     // audience | message | touchpoint | asset | approval |
+                        // launch_event | conversion | follow_up | measurement
+MarketingFrameContent   // objective, audienceSegment, customerStateBefore/After,
+                        // messageClaim, channel, requiredAssets, approvalRequirements,
+                        // metrics, testCriteria, implementationChecklist
+
+// Frame signals (M-0A)
+getMarketingFrameBadges()      // per-frame badges: STATE, GATE, SPEC
+getMarketingFrameSignal()      // readiness + signal details per frame
+
+// Beat status (M-0A)
+getMarketingBeatStatus()       // BeatStatusLevel: ready | partial | draft | blocked
+getCampaignReadiness()         // counts by level across campaign
+
+// Launch readiness (M-0C)
+getCampaignLaunchReadiness()   // LaunchReadinessSummary: level, critical path, blockers
+getCampaignCriticalPath()      // longest path to launch_event (topological sort)
+getApprovalGateSignals()       // per-approval: status, blocksLaunch, requirements
+getMeasurementLoopSignals()    // per-measurement: hasMetrics, isLoop, connections
+
+// Templates (M-0A)
+MARKETING_TEMPLATES            // product_launch | brand_awareness | content_campaign
+getMarketingTemplate()
+createMarketingStoryboard()
+
+// Validation (M-0A)
+validateMarketingStoryboard()  // domain rules on top of core structural validation
+
+// Handoff (M-0A)
+generateCampaignBrief()        // CampaignBrief: campaign-scoped handoff for execution team
+generateCampaignMarkdown()     // Markdown for campaign brief
+
+// Demo campaign
+launchRpgStoryboardCampaign    // 12-frame demo campaign with full launch-readiness spec
+```
+
+**Does not import from:** any app, `@storyboard-os/canvas`, `@storyboard-os/routing`, or `@storyboard-os/rpg-domain`.
+
+**Imports from:** `@storyboard-os/core` only.
+
+### Design boundary — what the marketing domain is NOT
+
+The marketing domain is a **campaign implementation storyboard**, not a marketing planner.
+
+| Deliberately excluded | Why |
+|---|---|
+| Due dates and timelines | Execution scheduling belongs in project management tools |
+| Owner assignment | People management is not frame semantics |
+| Workflow stages (draft → review → approved) | Status comes from spec completeness, not role-based gates |
+| Content calendar | Calendar view is presentation, not domain logic |
+| Asset file attachments | File management is infrastructure, not domain |
+
+The domain answers one question: **Is this campaign's implementation spec complete enough to ship?** The launch readiness model is derived from spec completeness and graph structure — never from human-assigned status fields.
 
 ---
 

@@ -1,0 +1,424 @@
+---
+import {
+  launchRpgStoryboardCampaign,
+  generateCampaignHandoff,
+  generateCampaignMarkdown,
+  type Storyboard,
+  type CampaignBeatStatusLevel,
+} from '@storyboard-os/marketing-domain';
+
+export function getStaticPaths() {
+  const allCampaigns: Storyboard[] = [
+    launchRpgStoryboardCampaign,
+  ];
+  return allCampaigns.map(s => ({
+    params: { campaignId: s.id },
+    props: { storyboard: s },
+  }));
+}
+
+interface Props { storyboard: Storyboard; }
+const { storyboard } = Astro.props;
+const { campaignId } = Astro.params;
+
+const handoff       = generateCampaignHandoff(storyboard);
+const markdownText  = generateCampaignMarkdown(handoff);
+const jsonText      = JSON.stringify(handoff, null, 2);
+const filename      = `${campaignId}-campaign-brief`;
+const boardUrl      = `/campaigns/${campaignId}`;
+const dateStr       = handoff.generatedAt.split('T')[0];
+const readyPct      = Math.round(handoff.readiness.readyFraction * 100);
+
+const STATUS_COLORS: Record<string, string> = {
+  ready:   '#22C55E',
+  partial: '#F97316',
+  draft:   '#6B7280',
+  blocked: '#EF4444',
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  audience:      '#3B82F6',
+  message:       '#8B5CF6',
+  touchpoint:    '#22C55E',
+  asset:         '#F97316',
+  approval:      '#EF4444',
+  launch_event:  '#EAB308',
+  conversion:    '#06B6D4',
+  follow_up:     '#6366F1',
+  measurement:   '#EC4899',
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  audience:      'Audience',
+  message:       'Message',
+  touchpoint:    'Touchpoint',
+  asset:         'Asset',
+  approval:      'Approval',
+  launch_event:  'Launch',
+  conversion:    'Conversion',
+  follow_up:     'Follow-Up',
+  measurement:   'Measurement',
+};
+
+const CONN_LABELS: Record<string, string> = {
+  sequence:    'campaign flow',
+  dependency:  'dependency',
+  approval:    'approval gate',
+  optional:    'optional',
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{storyboard.title} — Campaign Brief</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #0b1120;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(11,17,32,0.97);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0 24px;
+      height: 48px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .topbar-back { font-size: 12px; color: #475569; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .topbar-back:hover { color: #94a3b8; }
+    .topbar-sep { color: #1e293b; }
+    .topbar-title { font-size: 13px; font-weight: 700; color: #f1f5f9; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .topbar-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #475569; text-transform: uppercase; }
+    .btn-download {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      padding: 5px 12px; border-radius: 4px; border: none; cursor: pointer;
+      text-decoration: none; display: inline-block;
+      background: rgba(71,85,105,0.2); color: #94a3b8; border: 1px solid #1e293b;
+    }
+    .btn-download:hover { background: rgba(71,85,105,0.4); color: #f1f5f9; }
+
+    .page { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    .hero { margin-bottom: 40px; }
+    .hero-title { font-size: 28px; font-weight: 800; color: #f1f5f9; line-height: 1.2; margin-bottom: 10px; }
+    .hero-desc { font-size: 15px; color: #94a3b8; line-height: 1.65; margin-bottom: 10px; }
+    .hero-meta { font-size: 11px; color: #334155; font-family: ui-monospace, monospace; }
+
+    .section-title {
+      font-size: 11px; font-weight: 700; color: #475569;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      margin-bottom: 16px;
+      padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .readiness-block { margin-bottom: 40px; }
+    .readiness-fraction { font-size: 22px; font-weight: 800; color: #f1f5f9; margin-bottom: 8px; }
+    .readiness-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .readiness-chip { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 3px; }
+
+    .beat-list { display: flex; flex-direction: column; gap: 24px; }
+    .beat-card { background: #0f1825; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; overflow: hidden; }
+    .beat-header { padding: 14px 20px; display: flex; align-items: center; gap: 10; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .beat-num { font-size: 11px; color: #334155; font-weight: 600; flex-shrink: 0; }
+    .beat-type { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
+    .beat-title { font-size: 16px; font-weight: 700; color: #f1f5f9; flex: 1; min-width: 0; }
+    .beat-status { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.06em; flex-shrink: 0; }
+    .beat-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .beat-summary { font-size: 13px; color: #cbd5e1; line-height: 1.65; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #475569; }
+    .field-value { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+
+    .item-list { display: flex; flex-direction: column; gap: 4px; }
+    .item-row { display: flex; gap: 8px; align-items: flex-start; }
+    .item-bullet { color: #334155; flex-shrink: 0; margin-top: 1px; }
+    .item-text { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+
+    .branch-list { display: flex; flex-direction: column; gap: 6px; }
+    .branch-row { display: flex; gap: 8px; align-items: center; }
+    .branch-arrow { color: #475569; flex-shrink: 0; }
+    .branch-dest { font-size: 12px; color: #cbd5e1; font-weight: 600; }
+    .branch-type { font-size: 10px; color: #475569; }
+    .branch-label { font-size: 11px; color: #64748b; font-style: italic; }
+
+    .beat-blocker {
+      margin: 0 20px 16px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 11px; color: #fca5a5; line-height: 1.55;
+    }
+
+    .claim-text {
+      background: rgba(139,92,246,0.06);
+      border-left: 2px solid #8B5CF6;
+      padding: 10px 14px;
+      font-size: 12px; color: #c4b5fd; line-height: 1.65;
+      font-style: italic;
+    }
+
+    .issues-block { margin-top: 48px; }
+    .issues-group { margin-bottom: 24px; }
+    .issues-list { display: flex; flex-direction: column; gap: 8px; }
+    .issue-row { display: flex; gap: 10px; align-items: flex-start; }
+    .issue-indicator { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .issue-title { font-size: 13px; font-weight: 600; color: #f1f5f9; }
+    .issue-id { font-size: 11px; color: #334155; font-family: ui-monospace, monospace; }
+    .issue-detail { font-size: 11px; color: #64748b; }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <a href={boardUrl} class="topbar-back">← Board</a>
+    <span class="topbar-sep">|</span>
+    <span class="topbar-title">{storyboard.title}</span>
+    <span class="topbar-label">Campaign Implementation Brief</span>
+    <button id="btn-md" class="btn-download">↓ Markdown</button>
+    <button id="btn-json" class="btn-download">↓ JSON</button>
+  </nav>
+
+  <main class="page">
+
+    <div class="hero">
+      <h1 class="hero-title">{storyboard.title}</h1>
+      {storyboard.description && (
+        <p class="hero-desc">{storyboard.description}</p>
+      )}
+      <p class="hero-meta">Generated {dateStr} · Campaign ID: {handoff.id}</p>
+    </div>
+
+    <div class="readiness-block">
+      <p class="section-title">Campaign Readiness</p>
+      <p class="readiness-fraction">
+        {handoff.readiness.ready} / {handoff.readiness.total} beats ready
+        <span style="font-size: 14px; font-weight: 400; color: #475569; margin-left: 8px;">
+          ({readyPct}%)
+        </span>
+      </p>
+      <div class="readiness-chips">
+        {handoff.readiness.ready > 0 && (
+          <span class="readiness-chip" style={`background: ${STATUS_COLORS.ready}18; border: 1px solid ${STATUS_COLORS.ready}44; color: ${STATUS_COLORS.ready}`}>
+            {handoff.readiness.ready} READY
+          </span>
+        )}
+        {handoff.readiness.partial > 0 && (
+          <span class="readiness-chip" style={`background: ${STATUS_COLORS.partial}18; border: 1px solid ${STATUS_COLORS.partial}44; color: ${STATUS_COLORS.partial}`}>
+            {handoff.readiness.partial} PARTIAL
+          </span>
+        )}
+        {handoff.readiness.blocked > 0 && (
+          <span class="readiness-chip" style={`background: ${STATUS_COLORS.blocked}18; border: 1px solid ${STATUS_COLORS.blocked}44; color: ${STATUS_COLORS.blocked}`}>
+            {handoff.readiness.blocked} BLOCKED
+          </span>
+        )}
+        {handoff.readiness.draft > 0 && (
+          <span class="readiness-chip" style={`background: ${STATUS_COLORS.draft}18; border: 1px solid ${STATUS_COLORS.draft}44; color: ${STATUS_COLORS.draft}`}>
+            {handoff.readiness.draft} DRAFT
+          </span>
+        )}
+      </div>
+    </div>
+
+    <p class="section-title">Campaign Beats — Implementation Order</p>
+    <div class="beat-list">
+      {handoff.beats.map((beat, idx) => {
+        const typeColor = TYPE_COLORS[beat.type] ?? '#475569';
+        const typeLabel = TYPE_LABELS[beat.type] ?? beat.type.toUpperCase();
+        const statusColor = STATUS_COLORS[beat.status] ?? '#475569';
+        return (
+          <article class="beat-card">
+            <div class="beat-header">
+              <span class="beat-num">#{idx + 1}</span>
+              <span class="beat-type" style={`background: ${typeColor}22; color: ${typeColor}; border: 1px solid ${typeColor}44`}>
+                {typeLabel}
+              </span>
+              <span class="beat-title">{beat.title}</span>
+              <span class="beat-status" style={`background: ${statusColor}18; border: 1px solid ${statusColor}44; color: ${statusColor}`}>
+                {beat.status.toUpperCase()}
+              </span>
+            </div>
+
+            {beat.missing.length > 0 && (
+              <div class="beat-blocker">
+                <strong>⚠ Launch blockers:</strong> {beat.missing.join(', ')}
+              </div>
+            )}
+
+            <div class="beat-body">
+              <p class="beat-summary">{beat.summary}</p>
+
+              {beat.objective && (
+                <div class="field">
+                  <span class="field-label">Objective</span>
+                  <span class="field-value">{beat.objective}</span>
+                </div>
+              )}
+
+              {beat.messageClaim && (
+                <div class="field">
+                  <span class="field-label">Message Claim</span>
+                  <p class="claim-text">"{beat.messageClaim}"</p>
+                </div>
+              )}
+
+              {beat.channel && (
+                <div class="field">
+                  <span class="field-label">Channel</span>
+                  <span class="field-value">{beat.channel}</span>
+                </div>
+              )}
+
+              {beat.conversionGoal && (
+                <div class="field">
+                  <span class="field-label">Conversion Goal</span>
+                  <span class="field-value" style="color: #06B6D4">{beat.conversionGoal}</span>
+                </div>
+              )}
+
+              {beat.customerStateBefore.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Customer State — Before</span>
+                  <div class="item-list">
+                    {beat.customerStateBefore.map(s => (
+                      <div class="item-row">
+                        <span class="item-bullet">•</span>
+                        <span class="item-text">{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.customerStateAfter.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Customer State — After</span>
+                  <div class="item-list">
+                    {beat.customerStateAfter.map(s => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #22C55E">→</span>
+                        <span class="item-text" style="color: #86efac">{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.requiredAssets.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Required Assets</span>
+                  <div class="item-list">
+                    {beat.requiredAssets.map(a => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #F97316">◆</span>
+                        <span class="item-text">{a}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.approvalRequirements.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Approval Requirements</span>
+                  <div class="item-list">
+                    {beat.approvalRequirements.map(a => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #EF4444">⊘</span>
+                        <span class="item-text">{a}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.metrics.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Metrics</span>
+                  <div class="item-list">
+                    {beat.metrics.map(m => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #EC4899">◎</span>
+                        <span class="item-text">{m}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.implementationChecklist.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Implementation Checklist</span>
+                  <div class="item-list">
+                    {beat.implementationChecklist.map(item => (
+                      <div class="item-row">
+                        <span class="item-bullet">☐</span>
+                        <span class="item-text">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.testCriteria.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Test Criteria</span>
+                  <div class="item-list">
+                    {beat.testCriteria.map(t => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #3B82F6">✦</span>
+                        <span class="item-text">{t}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.outgoingBranches.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Next Steps</span>
+                  <div class="branch-list">
+                    {beat.outgoingBranches.map(b => (
+                      <div class="branch-row">
+                        <span class="branch-arrow">→</span>
+                        <span class="branch-dest">{b.toTitle}</span>
+                        <span class="branch-type">({CONN_LABELS[b.type] ?? b.type})</span>
+                        {b.label && <span class="branch-label">{b.label}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  </main>
+
+  <script define:vars={{ markdownText, jsonText, filename }}>
+    function download(content, ext, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    document.getElementById('btn-md')?.addEventListener('click', () => download(markdownText, 'md', 'text/markdown'));
+    document.getElementById('btn-json')?.addEventListener('click', () => download(jsonText, 'json', 'application/json'));
+  </script>
+</body>
+</html>
