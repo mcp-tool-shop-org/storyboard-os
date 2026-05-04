@@ -1,25 +1,48 @@
 {
   "name": "@storyboard-os/canvas",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Domain-configurable Konva canvas renderer — frames, connections, selection, drag, type badges, connection labels.",
+  "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
   },
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "private": true,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md", "LICENSE"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcp-tool-shop-org/storyboard-os.git",
+    "directory": "packages/storyboard-canvas"
+  },
+  "homepage": "https://mcp-tool-shop-org.github.io/storyboard-os/",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --external react --external react-konva --external konva",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch --external react --external react-konva --external konva",
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": {
-    "konva": "^9.0.0",
-    "react": "^18.0.0",
-    "react-konva": "^18.2.10"
+  "peerDependencies": {
+    "konva": ">=9.0.0",
+    "react": ">=18.0.0",
+    "react-konva": ">=18.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
+    "konva": "^9.0.0",
+    "react": "^18.0.0",
+    "react-konva": "^18.2.10",
     "typescript": "^5.0.0",
     "vitest": "^2.1.0"
   }

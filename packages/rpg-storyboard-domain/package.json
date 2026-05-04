@@ -1,20 +1,40 @@
 {
   "name": "@storyboard-os/rpg-domain",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "RPG game-authoring contract — frame types, content fields, templates, validation rules, and demo data for rpg-storyboard.",
+  "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
   },
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "private": true,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md", "LICENSE"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcp-tool-shop-org/storyboard-os.git",
+    "directory": "packages/rpg-storyboard-domain"
+  },
+  "homepage": "https://mcp-tool-shop-org.github.io/storyboard-os/",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --external @storyboard-os/core",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch --external @storyboard-os/core",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@storyboard-os/core": "workspace:*"
+    "@storyboard-os/core": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
