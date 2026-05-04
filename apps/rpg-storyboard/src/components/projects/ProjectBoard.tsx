@@ -7,9 +7,16 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { getProject, saveProject } from '../../lib/storyboard/projectStorage';
-import { updateFramePosition, updateFrameBasics, updateFrameContent } from '../../lib/storyboard/project';
+import {
+  updateFramePosition,
+  updateFrameBasics,
+  updateFrameContent,
+  setChecklistItemComplete,
+  setTestCriterionComplete,
+  getProjectProgress,
+} from '../../lib/storyboard/project';
 import type { RpgStoryboardProject, FrameContent } from '@storyboard-os/rpg-domain';
-import type { FrameBasicsPatch } from '../../lib/storyboard/project';
+import type { FrameBasicsPatch, ProjectProgressSummary } from '../../lib/storyboard/project';
 import StoryboardCanvas, { type SaveStatus } from '../StoryboardCanvas';
 
 export default function ProjectBoard() {
@@ -85,6 +92,19 @@ export default function ProjectBoard() {
     [persistAndNotify],
   );
 
+  // ── Progress change → update project → save to localStorage ───────────────
+  const handleProgressChange = useCallback(
+    (frameId: string, type: 'checklist' | 'test', index: number, complete: boolean) => {
+      const current = projectRef.current;
+      if (!current) return;
+      const updated = type === 'checklist'
+        ? setChecklistItemComplete(current, frameId, index, complete)
+        : setTestCriterionComplete(current, frameId, index, complete);
+      persistAndNotify(updated);
+    },
+    [persistAndNotify],
+  );
+
   // ── Render states ──────────────────────────────────────────────────────────
 
   if (loading) {
@@ -107,11 +127,16 @@ export default function ProjectBoard() {
     );
   }
 
+  const progressSummary = getProjectProgress(project);
+
   return (
     <StoryboardCanvas
       storyboard={project.storyboard}
       onFramePositionChange={handlePositionChange}
       onFrameContentChange={handleFrameContentChange}
+      onProgressChange={handleProgressChange}
+      projectProgress={project.progress}
+      progressSummary={progressSummary}
       saveStatus={saveStatus}
       showHandoff={false}
     />

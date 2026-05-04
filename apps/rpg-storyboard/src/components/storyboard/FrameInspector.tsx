@@ -17,6 +17,7 @@ import {
   type BeatStatusLevel,
   type MissingSpecReason,
 } from '@storyboard-os/rpg-domain';
+import type { FrameProgress } from '../../lib/storyboard/project';
 import { frameRoute } from '../../lib/storyboard/routes';
 
 // ─── Type display config ──────────────────────────────────────────────────────
@@ -76,9 +77,13 @@ interface Props {
   onClose: () => void;
   /** When provided, renders an "Edit Beat" button. Only passed on project boards. */
   onEditClick?: () => void;
+  /** Completion progress for this frame's checklist + test criteria. Project boards only. */
+  frameProgress?: FrameProgress;
+  onChecklistChange?: (index: number, complete: boolean) => void;
+  onTestCriterionChange?: (index: number, complete: boolean) => void;
 }
 
-export default function FrameInspector({ frame, storyboardId, onClose, onEditClick }: Props) {
+export default function FrameInspector({ frame, storyboardId, onClose, onEditClick, frameProgress, onChecklistChange, onTestCriterionChange }: Props) {
   const route  = frameRoute(storyboardId, frame.id);
   const accent = TYPE_COLORS[frame.type];
   const status = getBeatStatus(frame);
@@ -199,6 +204,36 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
         )}
       </div>
 
+      {/* ── Implementation progress ─────────────────────────────────────────── */}
+      {frameProgress && (
+        (frame.content.implementationChecklist?.length || frame.content.testCriteria?.length)
+      ) && (
+        <div style={{
+          padding: '14px 18px',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          display: 'flex', flexDirection: 'column', gap: 16,
+        }}>
+          {frame.content.implementationChecklist && frame.content.implementationChecklist.length > 0 && (
+            <ProgressChecklist
+              label="Implementation Checklist"
+              items={frame.content.implementationChecklist}
+              progress={frameProgress.checklist}
+              accentColor="#22C55E"
+              onChange={onChecklistChange}
+            />
+          )}
+          {frame.content.testCriteria && frame.content.testCriteria.length > 0 && (
+            <ProgressChecklist
+              label="Test Criteria"
+              items={frame.content.testCriteria}
+              progress={frameProgress.testCriteria}
+              accentColor="#3B82F6"
+              onChange={onTestCriterionChange}
+            />
+          )}
+        </div>
+      )}
+
       {/* ── Content fields ──────────────────────────────────────────────────── */}
       <div style={{ padding: '14px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
         {frame.content.stakes && (
@@ -266,6 +301,69 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
           {route}
         </p>
       </div>
+    </div>
+  );
+}
+
+// ─── ProgressChecklist ────────────────────────────────────────────────────────
+
+interface ProgressChecklistProps {
+  label: string;
+  items: string[];
+  progress: Record<string, boolean>;
+  accentColor: string;
+  onChange?: (index: number, complete: boolean) => void;
+}
+
+function ProgressChecklist({ label, items, progress, accentColor, onChange }: ProgressChecklistProps) {
+  const doneCount = items.filter((_, i) => progress[String(i)] === true).length;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <p style={{
+          fontSize: 10, fontWeight: 700, color: accentColor,
+          textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0,
+        }}>
+          {label}
+        </p>
+        <span style={{ fontSize: 10, color: '#475569' }}>
+          {doneCount}/{items.length}
+        </span>
+      </div>
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {items.map((item, i) => {
+          const done = progress[String(i)] === true;
+          return (
+            <li
+              key={i}
+              onClick={() => onChange?.(i, !done)}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: onChange ? 'pointer' : 'default' }}
+            >
+              {/* Checkbox */}
+              <span style={{
+                width: 14, height: 14, borderRadius: 3, flexShrink: 0, marginTop: 2,
+                border: `1.5px solid ${done ? accentColor : '#334155'}`,
+                background: done ? `${accentColor}2a` : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'border-color 0.1s',
+              }}>
+                {done && (
+                  <span style={{ fontSize: 9, color: accentColor, lineHeight: 1, fontWeight: 900 }}>✓</span>
+                )}
+              </span>
+              {/* Item text */}
+              <span style={{
+                fontSize: 12, color: done ? '#475569' : '#94a3b8',
+                lineHeight: 1.5,
+                textDecoration: done ? 'line-through' : 'none',
+              }}>
+                {item}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

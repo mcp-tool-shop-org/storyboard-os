@@ -12,6 +12,30 @@
 import type { Storyboard, StoryboardTemplateId, FrameContent } from './schema';
 import { createStoryboardFromTemplate } from './templates';
 
+// ─── Progress types ───────────────────────────────────────────────────────────
+
+/**
+ * Completion state for a single frame's checklist and test criteria.
+ * Keyed by item index (as string). Sparse — only checked entries need be stored.
+ */
+export interface FrameProgress {
+  checklist: Record<string, boolean>;
+  testCriteria: Record<string, boolean>;
+}
+
+/** Project-wide progress — one FrameProgress per frame that has any progress. */
+export interface ProjectProgress {
+  frames: Record<string, FrameProgress>;
+}
+
+/** Aggregated completion counts across all frames in a project. */
+export interface ProjectProgressSummary {
+  totalChecklist: number;
+  doneChecklist: number;
+  totalTests: number;
+  doneTests: number;
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 /** A durable user-created RPG storyboard project. */
@@ -28,6 +52,12 @@ export interface RpgStoryboardProject {
   sourceTemplateId?: StoryboardTemplateId;
   /** The generated storyboard. In Phase 2B+ this becomes editable. */
   storyboard: Storyboard;
+  /**
+   * Completion state for implementation checklists and test criteria.
+   * Stored separately from spec content — checking off a task never
+   * mutates the underlying checklist text.
+   */
+  progress: ProjectProgress;
 }
 
 export interface CreateProjectInput {
@@ -75,6 +105,7 @@ export function createProject(input: CreateProjectInput): RpgStoryboardProject {
     updatedAt: now,
     sourceTemplateId: input.templateId,
     storyboard,
+    progress: { frames: {} },
   };
 }
 
@@ -172,6 +203,107 @@ export function updateFrameContent(
           ? { ...f, content: { ...f.content, ...patch } }
           : f,
       ),
+    },
+  };
+}
+
+// ─── Progress helpers ─────────────────────────────────────────────────────────
+
+/** Internal helper — empty FrameProgress sentinel. */
+const EMPTY_FRAME_PROGRESS: FrameProgress = { checklist: {}, testCriteria: {} };
+
+/**
+ * Return the recorded progress for a specific frame.
+ * Returns an empty FrameProgress if no progress has been recorded yet.
+ */
+export function getFrameProgress(
+  project: RpgStoryboardProject,
+  frameId: string,
+): FrameProgress {
+  return project.progress.frames[frameId] ?? EMPTY_FRAME_PROGRESS;
+}
+
+/**
+ * Return aggregated completion counts across all frames in the project.
+ * Uses item indices to correlate progress keys with spec arrays.
+ */
+export function getProjectProgress(project: RpgStoryboardProject): ProjectProgressSummary {
+  let totalChecklist = 0, doneChecklist = 0;
+  let totalTests = 0,     doneTests = 0;
+
+  for (const frame of project.storyboard.frames) {
+    const checklist = frame.content.implementationChecklist ?? [];
+    const tests     = frame.content.testCriteria ?? [];
+    const fp        = project.progress.frames[frame.id] ?? EMPTY_FRAME_PROGRESS;
+
+    totalChecklist += checklist.length;
+    doneChecklist  += checklist.filter((_, i) => fp.checklist[String(i)] === true).length;
+    totalTests     += tests.length;
+    doneTests      += tests.filter((_, i) => fp.testCriteria[String(i)] === true).length;
+  }
+
+  return { totalChecklist, doneChecklist, totalTests, doneTests };
+}
+
+/**
+ * Return a new project with one implementation checklist item toggled.
+ *
+ * Pure function. Bumps `updatedAt`. No-op on unknown frameId.
+ * The spec text in `implementationChecklist` is never modified — only the
+ * progress record changes.
+ */
+export function setChecklistItemComplete(
+  project: RpgStoryboardProject,
+  frameId: string,
+  itemIndex: number,
+  complete: boolean,
+): RpgStoryboardProject {
+  const frameExists = project.storyboard.frames.some(f => f.id === frameId);
+  if (!frameExists) return project;
+
+  const existing = project.progress.frames[frameId] ?? EMPTY_FRAME_PROGRESS;
+  return {
+    ...project,
+    updatedAt: new Date().toISOString(),
+    progress: {
+      frames: {
+        ...project.progress.frames,
+        [frameId]: {
+          ...existing,
+          checklist: { ...existing.checklist, [String(itemIndex)]: complete },
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Return a new project with one test criterion toggled.
+ *
+ * Pure function. Bumps `updatedAt`. No-op on unknown frameId.
+ * The spec text in `testCriteria` is never modified — only the progress record changes.
+ */
+export function setTestCriterionComplete(
+  project: RpgStoryboardProject,
+  frameId: string,
+  itemIndex: number,
+  complete: boolean,
+): RpgStoryboardProject {
+  const frameExists = project.storyboard.frames.some(f => f.id === frameId);
+  if (!frameExists) return project;
+
+  const existing = project.progress.frames[frameId] ?? EMPTY_FRAME_PROGRESS;
+  return {
+    ...project,
+    updatedAt: new Date().toISOString(),
+    progress: {
+      frames: {
+        ...project.progress.frames,
+        [frameId]: {
+          ...existing,
+          testCriteria: { ...existing.testCriteria, [String(itemIndex)]: complete },
+        },
+      },
     },
   };
 }

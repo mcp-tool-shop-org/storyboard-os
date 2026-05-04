@@ -1,7 +1,21 @@
 import { describe, it, expect } from 'vitest';
-import { createProject, updateFramePosition, updateFrameBasics, updateFrameContent } from './project';
+import {
+  createProject,
+  updateFramePosition,
+  updateFrameBasics,
+  updateFrameContent,
+  setChecklistItemComplete,
+  setTestCriterionComplete,
+  getFrameProgress,
+  getProjectProgress,
+} from './project';
 
 describe('createProject', () => {
+  it('initializes an empty progress record', () => {
+    const p = createProject({ title: 'Test', templateId: 'quest_flow' });
+    expect(p.progress).toEqual({ frames: {} });
+  });
+
   it('returns a project with all required fields', () => {
     const p = createProject({ title: 'Test Quest', templateId: 'quest_flow' });
     expect(p.id).toBeTruthy();
@@ -265,5 +279,165 @@ describe('updateFrameContent', () => {
     const p = makeProject();
     const result = updateFrameContent(p, 'unknown', { designerNotes: 'X' });
     expect(result).toBe(p);
+  });
+});
+
+describe('setChecklistItemComplete', () => {
+  function makeProject() {
+    return createProject({ title: 'Test', templateId: 'quest_flow' });
+  }
+
+  it('marks a checklist item complete', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = setChecklistItemComplete(p, fid, 0, true);
+    expect(getFrameProgress(updated, fid).checklist['0']).toBe(true);
+  });
+
+  it('marks a checklist item incomplete', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const checked   = setChecklistItemComplete(p, fid, 0, true);
+    const unchecked = setChecklistItemComplete(checked, fid, 0, false);
+    expect(getFrameProgress(unchecked, fid).checklist['0']).toBe(false);
+  });
+
+  it('does not mutate the original project', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    setChecklistItemComplete(p, fid, 0, true);
+    expect(p.progress.frames[fid]).toBeUndefined();
+  });
+
+  it('returns a new project object', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = setChecklistItemComplete(p, fid, 0, true);
+    expect(updated).not.toBe(p);
+  });
+
+  it('bumps updatedAt', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = setChecklistItemComplete(p, fid, 0, true);
+    expect(updated.updatedAt >= p.updatedAt).toBe(true);
+  });
+
+  it('returns project unchanged when frameId is unknown', () => {
+    const p = makeProject();
+    const result = setChecklistItemComplete(p, 'no-such-frame', 0, true);
+    expect(result).toBe(p);
+  });
+
+  it('preserves progress for other frames', () => {
+    const p = makeProject();
+    const fid0 = p.storyboard.frames[0].id;
+    const fid1 = p.storyboard.frames[1].id;
+    const step1 = setChecklistItemComplete(p, fid0, 0, true);
+    const step2 = setChecklistItemComplete(step1, fid1, 1, true);
+    expect(getFrameProgress(step2, fid0).checklist['0']).toBe(true);
+    expect(getFrameProgress(step2, fid1).checklist['1']).toBe(true);
+  });
+});
+
+describe('setTestCriterionComplete', () => {
+  function makeProject() {
+    return createProject({ title: 'Test', templateId: 'quest_flow' });
+  }
+
+  it('marks a test criterion complete', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const updated = setTestCriterionComplete(p, fid, 0, true);
+    expect(getFrameProgress(updated, fid).testCriteria['0']).toBe(true);
+  });
+
+  it('marks a test criterion incomplete', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const checked   = setTestCriterionComplete(p, fid, 0, true);
+    const unchecked = setTestCriterionComplete(checked, fid, 0, false);
+    expect(getFrameProgress(unchecked, fid).testCriteria['0']).toBe(false);
+  });
+
+  it('does not mutate the original project', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    setTestCriterionComplete(p, fid, 0, true);
+    expect(p.progress.frames[fid]).toBeUndefined();
+  });
+
+  it('returns project unchanged when frameId is unknown', () => {
+    const p = makeProject();
+    const result = setTestCriterionComplete(p, 'no-such-frame', 0, true);
+    expect(result).toBe(p);
+  });
+
+  it('preserves existing checklist progress in the same frame', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const step1 = setChecklistItemComplete(p, fid, 0, true);
+    const step2 = setTestCriterionComplete(step1, fid, 0, true);
+    expect(getFrameProgress(step2, fid).checklist['0']).toBe(true);
+    expect(getFrameProgress(step2, fid).testCriteria['0']).toBe(true);
+  });
+});
+
+describe('getFrameProgress', () => {
+  it('returns empty progress for a frame with no recorded progress', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const fp = getFrameProgress(p, fid);
+    expect(fp.checklist).toEqual({});
+    expect(fp.testCriteria).toEqual({});
+  });
+
+  it('returns the recorded progress after a checklist change', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const updated = setChecklistItemComplete(p, fid, 2, true);
+    expect(getFrameProgress(updated, fid).checklist['2']).toBe(true);
+  });
+});
+
+describe('getProjectProgress', () => {
+  it('returns zero done-counts for a fresh project', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const summary = getProjectProgress(p);
+    expect(summary.doneChecklist).toBe(0);
+    expect(summary.doneTests).toBe(0);
+  });
+
+  it('totalChecklist > 0 because quest_flow frames have checklists', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const summary = getProjectProgress(p);
+    expect(summary.totalChecklist).toBeGreaterThan(0);
+    expect(summary.totalTests).toBeGreaterThan(0);
+  });
+
+  it('increments doneChecklist when an item is checked', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const updated = setChecklistItemComplete(p, fid, 0, true);
+    const summary = getProjectProgress(updated);
+    expect(summary.doneChecklist).toBe(1);
+  });
+
+  it('increments doneTests when a criterion is checked', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const updated = setTestCriterionComplete(p, fid, 0, true);
+    const summary = getProjectProgress(updated);
+    expect(summary.doneTests).toBe(1);
+  });
+
+  it('counts across multiple frames', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid0 = p.storyboard.frames[0].id;
+    const fid1 = p.storyboard.frames[1].id;
+    const step1 = setChecklistItemComplete(p, fid0, 0, true);
+    const step2 = setChecklistItemComplete(step1, fid1, 0, true);
+    const summary = getProjectProgress(step2);
+    expect(summary.doneChecklist).toBe(2);
   });
 });

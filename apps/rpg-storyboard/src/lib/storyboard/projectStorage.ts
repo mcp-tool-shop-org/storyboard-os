@@ -16,11 +16,23 @@ const STORAGE_KEY = 'rpg-sb:projects';
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
+/**
+ * Migrate a project loaded from localStorage to the current shape.
+ * Phase 2D: add `progress` field if missing (projects saved before 2D).
+ */
+function migrate(project: RpgStoryboardProject): RpgStoryboardProject {
+  if (!project.progress) {
+    return { ...project, progress: { frames: {} } };
+  }
+  return project;
+}
+
 function readAll(): RpgStoryboardProject[] {
   if (typeof localStorage === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as RpgStoryboardProject[]) : [];
+    const parsed = raw ? (JSON.parse(raw) as RpgStoryboardProject[]) : [];
+    return parsed.map(migrate);
   } catch {
     return [];
   }

@@ -29,7 +29,7 @@ import {
   type FrameContent,
 } from '@storyboard-os/rpg-domain';
 import type { Storyboard } from '../lib/storyboard/schema';
-import type { FrameBasicsPatch } from '../lib/storyboard/project';
+import type { FrameBasicsPatch, FrameProgress, ProjectProgress, ProjectProgressSummary } from '../lib/storyboard/project';
 import FrameInspector from './storyboard/FrameInspector';
 import ViewControls from './storyboard/ViewControls';
 import BeatEditPanel from './projects/BeatEditPanel';
@@ -106,6 +106,15 @@ interface Props {
    * Omit on read-only boards. Providing this enables the "Edit Beat" button.
    */
   onFrameContentChange?: (frameId: string, basics: FrameBasicsPatch, content: Partial<FrameContent>) => void;
+  /**
+   * Called when the user checks/unchecks a checklist item or test criterion.
+   * `type` is 'checklist' or 'test'. Project boards only.
+   */
+  onProgressChange?: (frameId: string, type: 'checklist' | 'test', index: number, complete: boolean) => void;
+  /** Full progress record for the project (all frames). Project boards only. */
+  projectProgress?: ProjectProgress;
+  /** Aggregated completion counts shown in the header. Project boards only. */
+  progressSummary?: ProjectProgressSummary;
   /** Optional save-state indicator rendered in the header. */
   saveStatus?: SaveStatus;
   /**
@@ -115,7 +124,7 @@ interface Props {
   showHandoff?: boolean;
 }
 
-export default function StoryboardCanvas({ storyboard, onFramePositionChange, onFrameContentChange, saveStatus, showHandoff = true }: Props) {
+export default function StoryboardCanvas({ storyboard, onFramePositionChange, onFrameContentChange, onProgressChange, projectProgress, progressSummary, saveStatus, showHandoff = true }: Props) {
   const [selectedFrameId, setSelectedFrameId]           = useState<string | null>(null);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [editingFrameId, setEditingFrameId]             = useState<string | null>(null);
@@ -190,6 +199,12 @@ export default function StoryboardCanvas({ storyboard, onFramePositionChange, on
     ? getChoiceBranchCount(selectedFrame.id, storyboard.connections)
     : 0;
 
+  // Progress for the currently selected frame
+  const EMPTY_FP: FrameProgress = { checklist: {}, testCriteria: {} };
+  const selectedFrameProgress: FrameProgress | undefined = selectedFrameId && projectProgress
+    ? (projectProgress.frames[selectedFrameId] ?? EMPTY_FP)
+    : undefined;
+
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   // f → fit    0 → reset    +/= → zoom in    - → zoom out    Escape → deselect
   useEffect(() => {
@@ -253,6 +268,7 @@ export default function StoryboardCanvas({ storyboard, onFramePositionChange, on
             {storyboard.frames.length} frames · {storyboard.connections.length} connections
           </span>
           <ReadinessCounts summary={readinessSummary} />
+          {progressSummary && <ProgressCounts summary={progressSummary} />}
           {saveStatus && <SaveStatusChip status={saveStatus} />}
           {showHandoff && (
             <a
@@ -317,6 +333,13 @@ export default function StoryboardCanvas({ storyboard, onFramePositionChange, on
             storyboardId={storyboard.id}
             onClose={() => setSelectedFrameId(null)}
             onEditClick={onFrameContentChange ? handleEditClick : undefined}
+            frameProgress={selectedFrameProgress}
+            onChecklistChange={onProgressChange && selectedFrameId
+              ? (index, complete) => onProgressChange(selectedFrameId, 'checklist', index, complete)
+              : undefined}
+            onTestCriterionChange={onProgressChange && selectedFrameId
+              ? (index, complete) => onProgressChange(selectedFrameId, 'test', index, complete)
+              : undefined}
           />
         )}
 
@@ -377,6 +400,42 @@ export default function StoryboardCanvas({ storyboard, onFramePositionChange, on
           </span>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// ─── ProgressCounts ───────────────────────────────────────────────────────────
+
+function ProgressCounts({ summary }: { summary: ProjectProgressSummary }) {
+  if (summary.totalChecklist === 0 && summary.totalTests === 0) return null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      {summary.totalChecklist > 0 && (
+        <span
+          title={`${summary.doneChecklist}/${summary.totalChecklist} tasks complete`}
+          style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+            padding: '2px 7px', borderRadius: 3,
+            background: '#22C55E18', border: '1px solid #22C55E44',
+            color: '#22C55E',
+          }}
+        >
+          ✓ {summary.doneChecklist}/{summary.totalChecklist}
+        </span>
+      )}
+      {summary.totalTests > 0 && (
+        <span
+          title={`${summary.doneTests}/${summary.totalTests} tests passed`}
+          style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+            padding: '2px 7px', borderRadius: 3,
+            background: '#3B82F618', border: '1px solid #3B82F644',
+            color: '#3B82F6',
+          }}
+        >
+          ✦ {summary.doneTests}/{summary.totalTests}
+        </span>
+      )}
     </div>
   );
 }

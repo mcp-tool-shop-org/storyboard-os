@@ -76,11 +76,23 @@ export type {
   QuestHandoff,
 } from './handoff';
 
-export { createProject, updateFramePosition, updateFrameBasics, updateFrameContent } from './project';
+export {
+  createProject,
+  updateFramePosition,
+  updateFrameBasics,
+  updateFrameContent,
+  setChecklistItemComplete,
+  setTestCriterionComplete,
+  getFrameProgress,
+  getProjectProgress,
+} from './project';
 
 export type {
   RpgStoryboardProject,
   CreateProjectInput,
   FramePosition,
   FrameBasicsPatch,
+  FrameProgress,
+  ProjectProgress,
+  ProjectProgressSummary,
 } from './project';
