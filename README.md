@@ -80,7 +80,7 @@ Phase 1 established the read-only preview vertical: canvas rendering, game-state
 
 | Package | What it owns |
 |---|---|
-| `@storyboard-os/core` | Generic storyboard primitives: frame, connection, annotation, template, structural validator. No domain vocabulary. |
+| `@storyboard-os/core` | Generic storyboard primitives: frame, connection (generic over type), annotation, template, structural validator. Domains own their connection vocabularies. |
 | `@storyboard-os/rpg-domain` | RPG game-authoring contract: frame types, content fields, templates, readiness model, handoff generator, Tollhouse Ledger demo quest. |
 | `@storyboard-os/marketing-domain` | Marketing campaign-implementation contract: frame types (audience, message, touchpoint, asset, approval, launch_event, measurement), launch readiness model, critical path, approval gates, measurement loops, campaign brief export, demo campaign. |
 | `@storyboard-os/cinematic-domain` | Cinematic production contract: 9 frame types, camera language, VFX/audio/continuity requirements, production signals (health, burden, complexity, blocked shots), production brief handoff, 3 templates, demo trailer sequence. |
@@ -147,7 +147,7 @@ See [`docs/architecture.md`](docs/architecture.md) for full detail.
 ```bash
 pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
-pnpm test       # runs all package + app tests (603 tests)
+pnpm test       # runs all package + app tests (609 tests)
 pnpm build      # builds all 3 apps (54 pages)
 pnpm verify     # test + build in one command (ship gate)
 ```
@@ -174,8 +174,8 @@ See [`SECURITY.md`](SECURITY.md) for the full trust model and vulnerability repo
 ## Status
 
 ```
-Phase 2 complete + Marketing Phase 0 complete + Cinematic Phase 0 complete
-603/603 tests passing
+Phase 2 complete + Marketing Phase 0 complete + Cinematic Phase 0 complete + Core Hardening 1A
+609/609 tests passing
 54/54 pages built
 6 packages · 3 apps
 ```
@@ -205,6 +205,7 @@ Phase 2 complete + Marketing Phase 0 complete + Cinematic Phase 0 complete
 | C-0B | Cinematic app vertical — Astro sequence board, frame inspector, production brief | ✅ |
 | C-0C | Production signal layer — health, VFX/audio burden, camera complexity, blocked shots | ✅ |
 | C-0D | Cinematic closeout — docs, changelog, architecture proof | ✅ |
+| H-1A | Core Hardening — generic connection types, domains own their vocabulary | ✅ |
 
 ---
 

@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.3] — 2026-05-04
+
+### Added
+
+#### Core Hardening 1A — Generic Connection Types
+
+Cinematic Phase 0 exposed a real pressure seam: core's `StoryboardConnectionType` was a fixed union that forced `as any` casts in domains with their own connection grammar. Core now supports domain-specific connection vocabularies as a first-class generic.
+
+- `StoryboardConnection<TConnectionType>` — generic over connection type (default: core's 5-type union)
+- `Storyboard<TFrame, TConnection>` — second generic param for domain-owned connection types
+- `AnyStoryboardConnection` convenience alias for unspecialized use
+- `validateStoryboard()` accepts any connection vocabulary — structural validation only
+- Cinematic domain: `CoreConnection<CinematicConnectionType>` — no cast
+- Marketing domain: `MarketingConnectionType` + `CoreConnection<MarketingConnectionType>` — no cast
+- RPG domain unchanged — uses core defaults
+- 6 new core tests proving custom vocabularies validate without casts
+
+### Changed
+- Total: 609 tests, 54 pages, 6 packages, 3 apps (was 603)
+- Removed `as any` casts: cinematic validate, cinematic canvas, marketing demo-campaign
+
+---
+
 ## [1.0.2] — 2026-05-04
 
 ### Added

@@ -80,6 +80,7 @@ interface FrameAnnotation<TAnnotationType extends string = string> {
 Connections are first-class entities — not buried in `frame.links`. The connection type drives visual rendering (stroke weight, dash pattern) and carries semantic meaning.
 
 ```ts
+// Core provides a default connection vocabulary for RPG use:
 type StoryboardConnectionType =
   | 'sequence'      // linear progression
   | 'choice'        // player-driven branch
@@ -87,27 +88,43 @@ type StoryboardConnectionType =
   | 'optional'      // conditional / skippable path
   | 'fallback';     // alternate route if primary is blocked
 
-interface StoryboardConnection {
+// Generic over connection type — domains own their vocabulary:
+interface StoryboardConnection<TConnectionType extends string = StoryboardConnectionType> {
   id: string;
   fromFrameId: string;
   toFrameId: string;
-  type: StoryboardConnectionType;
+  type: TConnectionType;
   label?: string;
 }
+
+// Convenience alias for unspecialized use (e.g. in the validator):
+type AnyStoryboardConnection = StoryboardConnection<string>;
+```
+
+Domains define their own connection grammar:
+```ts
+// Cinematic: match_cut | cutaway | reaction | transition | continuity | parallel_action
+type StoryboardConnection = CoreConnection<CinematicConnectionType>;
+
+// Marketing: dependency | approval | choice | consequence | optional
+type StoryboardConnection = CoreConnection<MarketingConnectionType>;
 ```
 
 ### Storyboard
 
-A collection of frames and connections with an ID and title.
+A collection of frames and connections with an ID and title. Generic over both frame and connection type.
 
 ```ts
-interface Storyboard<TFrame extends AnyStoryboardFrame = AnyStoryboardFrame> {
+interface Storyboard<
+  TFrame extends AnyStoryboardFrame = AnyStoryboardFrame,
+  TConnection extends AnyStoryboardConnection = StoryboardConnection,
+> {
   id: string;
   title: string;
   description?: string;
   templateId?: string;
   frames: TFrame[];
-  connections: StoryboardConnection[];
+  connections: TConnection[];
   canvasWidth?: number;
   canvasHeight?: number;
 }
@@ -205,7 +222,12 @@ interface ScreenplayContent {
 import type { StoryboardFrame as CoreFrame } from '@storyboard-os/core';
 type ScreenplayFrame = CoreFrame<ScreenplayFrameType, ScreenplayContent, 'note' | 'revision'>;
 
-// 4. Build your domain package — validateStoryboard handles the structural layer
+// 4. Optionally define custom connection types
+type ScreenplayConnectionType = 'sequence' | 'flashback' | 'parallel' | 'montage';
+type ScreenplayConnection = CoreConnection<ScreenplayConnectionType>;
+type ScreenplayStoryboard = CoreStoryboard<ScreenplayFrame, ScreenplayConnection>;
+
+// 5. Build your domain package — validateStoryboard handles the structural layer
 ```
 
 ---

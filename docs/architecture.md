@@ -6,7 +6,7 @@ Each package owns one concern and does not import from packages above it.
 
 The split between **domain-neutral infrastructure** and **domain-specific authoring contract** is intentional and load-bearing. The platform can grow without each new vertical inheriting RPG vocabulary. The RPG vertical can evolve without being trapped inside generic library code.
 
-Three verticals have now proven this architecture: RPG, marketing, and cinematic all shipped without modifying canvas, core, or routing.
+Three verticals have now proven this architecture: RPG, marketing, and cinematic all shipped without modifying canvas, core, or routing. Core Hardening 1A then extracted generic connection types — cinematic proved that domains need their own connection vocabularies, and core now supports this without casts.
 
 ---
 
@@ -42,14 +42,28 @@ Nothing in `@storyboard-os/core`, `@storyboard-os/canvas`, or `@storyboard-os/ro
 
 ```ts
 StoryboardFrame<TFrameType, TContent, TAnnotationType>
-Storyboard<TFrame>
+StoryboardConnection<TConnectionType>   // generic — domains own their connection vocabulary
+Storyboard<TFrame, TConnection>         // generic over both frame and connection
 StoryboardProject<TStoryboard>
-StoryboardConnection
 StoryboardTemplateDefinition<TId, TStoryboard>
-validateStoryboard()  // structural rules only
+AnyStoryboardConnection                 // convenience alias: StoryboardConnection<string>
+validateStoryboard()                    // structural rules only — accepts any connection type
 ```
 
 **Does not know:** RPG, quest, scene, choice, encounter, consequence, stateChanges, requiredAssets, factions, or any domain concept.
+
+**Connection vocabulary pattern:** Each domain defines its own connection type union and passes it to the generic. Core provides a default `StoryboardConnectionType` (`sequence | choice | consequence | optional | fallback`) that RPG uses directly. Cinematic and marketing define their own vocabularies — no casts required.
+
+```ts
+// @storyboard-os/cinematic-domain — owns cinematic connection grammar
+export type CinematicConnectionType = 'sequence' | 'match_cut' | 'cutaway' | 'reaction' | ...;
+export type StoryboardConnection = CoreConnection<CinematicConnectionType>;
+export type Storyboard = CoreStoryboard<StoryboardFrame, StoryboardConnection>;
+
+// @storyboard-os/marketing-domain — owns marketing connection grammar
+export type MarketingConnectionType = 'sequence' | 'dependency' | 'approval' | ...;
+export type StoryboardConnection = CoreConnection<MarketingConnectionType>;
+```
 
 **Extension pattern:** Domain packages import core generics and specialize them:
 ```ts
