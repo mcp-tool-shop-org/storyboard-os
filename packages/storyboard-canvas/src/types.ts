@@ -21,6 +21,21 @@ export interface CanvasFrameStyle {
 export interface CanvasConnectionStyle {
   stroke: string;
   dash?: number[];
+  /** Override the default stroke width (1.5). Use higher values for game-state branches. */
+  strokeWidth?: number;
+}
+
+// ─── Badge ────────────────────────────────────────────────────────────────────
+
+/**
+ * A small labeled chip rendered on a frame card.
+ * Domains generate these from their own signals; the canvas renders them.
+ */
+export interface CanvasBadge {
+  /** Short uppercase label, e.g. "STATE", "SPEC". */
+  text: string;
+  /** Hex color for the badge border and label text. */
+  color: string;
 }
 
 // ─── Domain config ────────────────────────────────────────────────────────────
@@ -57,6 +72,12 @@ export interface CanvasFrame {
   summary: string;
   position: { x: number; y: number };
   size: { width: number; height: number };
+  /**
+   * Optional badge chips rendered at the bottom of the card.
+   * Domains provide these; the canvas renders them without needing to know
+   * what they mean.
+   */
+  badges?: CanvasBadge[];
 }
 
 export interface CanvasConnection {

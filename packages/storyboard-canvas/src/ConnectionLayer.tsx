@@ -2,22 +2,42 @@
 //
 // Konva Group that renders all storyboard connections as labeled arrows.
 // Arrow styles come from config.connectionTypeStyles with a fallback.
+// Supports strokeWidth per connection type and optional click-to-select.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Group, Arrow, Text } from 'react-konva';
-import type { CanvasConnection, CanvasFrame, CanvasConnectionStyle, StoryboardCanvasConfig, PositionMap } from './types';
+import { Group, Arrow, Rect, Text } from 'react-konva';
+import type {
+  CanvasConnection,
+  CanvasFrame,
+  CanvasConnectionStyle,
+  StoryboardCanvasConfig,
+  PositionMap,
+} from './types';
 
 const DEFAULT_CONN_STYLE: CanvasConnectionStyle = { stroke: '#475569' };
+const DEFAULT_STROKE_WIDTH = 1.5;
+
+// Hit-area height for the invisible click target along each connection
+const HIT_AREA_HEIGHT = 12;
 
 interface Props {
   connections: CanvasConnection[];
   frames: CanvasFrame[];
   positions: PositionMap;
   config: StoryboardCanvasConfig;
+  selectedConnectionId?: string | null;
+  onSelectConnection?: (connectionId: string | null) => void;
 }
 
-export default function ConnectionLayer({ connections, frames, positions, config }: Props) {
+export default function ConnectionLayer({
+  connections,
+  frames,
+  positions,
+  config,
+  selectedConnectionId,
+  onSelectConnection,
+}: Props) {
   const frameMap = new Map(frames.map(f => [f.id, f]));
 
   function styleFor(type: string): CanvasConnectionStyle {
@@ -49,24 +69,45 @@ export default function ConnectionLayer({ connections, frames, positions, config
         const cx1 = x1 + dx;
         const cx2 = x2 - dx;
 
+        // Midpoint for label placement
         const mx = (x1 + x2) / 2;
         const my = (y1 + y2) / 2 - 12;
 
         const style = styleFor(conn.type);
+        const strokeWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH;
+        const isSelected = selectedConnectionId === conn.id;
+
+        function handleClick() {
+          onSelectConnection?.(isSelected ? null : conn.id);
+        }
 
         return (
           <Group key={conn.id}>
             <Arrow
               points={[x1, y1, cx1, y1, cx2, y2, x2, y2]}
               tension={0.4}
-              stroke={style.stroke}
-              strokeWidth={1.5}
-              fill={style.stroke}
+              stroke={isSelected ? '#f8fafc' : style.stroke}
+              strokeWidth={isSelected ? strokeWidth + 1 : strokeWidth}
+              fill={isSelected ? '#f8fafc' : style.stroke}
               dash={style.dash}
               pointerLength={9}
               pointerWidth={6}
-              opacity={0.75}
+              opacity={isSelected ? 1 : 0.75}
             />
+
+            {/* Invisible wider hit area for easier clicking */}
+            {onSelectConnection && (
+              <Rect
+                x={Math.min(x1, x2)}
+                y={my - HIT_AREA_HEIGHT / 2}
+                width={Math.abs(x2 - x1)}
+                height={HIT_AREA_HEIGHT}
+                opacity={0}
+                onClick={handleClick}
+                onTap={handleClick}
+              />
+            )}
+
             {conn.label && (
               <Text
                 x={mx - 44}
@@ -74,8 +115,10 @@ export default function ConnectionLayer({ connections, frames, positions, config
                 width={88}
                 text={conn.label}
                 fontSize={10}
-                fill="#64748b"
+                fill={isSelected ? '#cbd5e1' : '#64748b'}
                 align="center"
+                onClick={handleClick}
+                onTap={handleClick}
               />
             )}
           </Group>

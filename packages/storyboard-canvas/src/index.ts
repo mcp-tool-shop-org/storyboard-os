@@ -8,5 +8,6 @@ export type {
   StoryboardCanvasConfig,
   CanvasFrame,
   CanvasConnection,
+  CanvasBadge,
   PositionMap,
 } from './types';

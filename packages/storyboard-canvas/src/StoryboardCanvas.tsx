@@ -7,6 +7,8 @@
 //   - Renders ConnectionLayer for all connections
 //   - Manages drag-position state internally
 //   - Emits onSelectFrame when a card is clicked (or null when stage is clicked)
+//   - Emits onSelectConnection when a connection arrow/label is clicked
+//   - Clears frame selection when a connection is selected, and vice versa
 //
 // NOT responsible for:
 //   - App layout (header, footer, inspector panel)
@@ -38,6 +40,8 @@ interface Props {
   height?: number;
   selectedFrameId?: string | null;
   onSelectFrame?: (frameId: string | null) => void;
+  selectedConnectionId?: string | null;
+  onSelectConnection?: (connectionId: string | null) => void;
 }
 
 export default function StoryboardCanvas({
@@ -48,6 +52,8 @@ export default function StoryboardCanvas({
   height = 840,
   selectedFrameId,
   onSelectFrame,
+  selectedConnectionId,
+  onSelectConnection,
 }: Props) {
   const [positions, setPositions] = useState<PositionMap>(() =>
     Object.fromEntries(frames.map(f => [f.id, { ...f.position }]))
@@ -57,16 +63,28 @@ export default function StoryboardCanvas({
     (e: { target: { getType?: () => string } }) => {
       if (e.target && typeof e.target.getType === 'function' && e.target.getType() === 'Stage') {
         onSelectFrame?.(null);
+        onSelectConnection?.(null);
       }
     },
-    [onSelectFrame],
+    [onSelectFrame, onSelectConnection],
   );
 
-  const handleSelect = useCallback(
+  const handleSelectFrame = useCallback(
     (id: string) => {
+      // Selecting a frame clears the connection selection
+      onSelectConnection?.(null);
       onSelectFrame?.(selectedFrameId === id ? null : id);
     },
-    [onSelectFrame, selectedFrameId],
+    [onSelectFrame, onSelectConnection, selectedFrameId],
+  );
+
+  const handleSelectConnection = useCallback(
+    (id: string | null) => {
+      // Selecting a connection clears the frame selection
+      onSelectFrame?.(null);
+      onSelectConnection?.(id);
+    },
+    [onSelectFrame, onSelectConnection],
   );
 
   const handleDragEnd = useCallback((id: string, x: number, y: number) => {
@@ -88,13 +106,15 @@ export default function StoryboardCanvas({
       onClick={handleStageClick}
       onTap={handleStageClick}
     >
-      {/* Connections below frames */}
-      <Layer listening={false}>
+      {/* Connections below frames — interactive when onSelectConnection is provided */}
+      <Layer listening={!!onSelectConnection}>
         <ConnectionLayer
           connections={connections}
           frames={frames}
           positions={positions}
           config={config}
+          selectedConnectionId={selectedConnectionId}
+          onSelectConnection={onSelectConnection ? handleSelectConnection : undefined}
         />
       </Layer>
 
@@ -107,7 +127,7 @@ export default function StoryboardCanvas({
             position={positions[frame.id] ?? frame.position}
             style={styleFor(frame.type)}
             isSelected={selectedFrameId === frame.id}
-            onSelect={handleSelect}
+            onSelect={handleSelectFrame}
             onDragEnd={handleDragEnd}
           />
         ))}

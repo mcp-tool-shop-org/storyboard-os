@@ -38,3 +38,15 @@ export type {
 } from './validate';
 
 export { tollhouseLedgerProject } from './demo-project';
+
+export {
+  getFrameSignal,
+  getFrameBadges,
+  getChoiceBranchCount,
+} from './frameSignals';
+
+export type {
+  FrameReadiness,
+  FrameSignal,
+  FrameBadgeDescriptor,
+} from './frameSignals';
