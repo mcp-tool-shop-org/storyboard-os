@@ -1,0 +1,192 @@
+---
+title: Architecture
+description: Package map, dependency rules, and how to add a second vertical.
+sidebar:
+  order: 3
+---
+
+## Principle
+
+Each package owns one concern and does not import from packages above it.
+
+The split between **domain-neutral infrastructure** and **domain-specific authoring contract** is intentional and load-bearing. The platform can grow without each new vertical inheriting RPG vocabulary. The RPG vertical can evolve without being trapped inside generic library code.
+
+## Package map
+
+```
+apps/rpg-storyboard
+  ├── @storyboard-os/rpg-domain
+  │     └── @storyboard-os/core
+  ├── @storyboard-os/canvas
+  └── @storyboard-os/routing
+```
+
+## Dependency rules
+
+| Package | May import from |
+|---|---|
+| `@storyboard-os/core` | Nothing |
+| `@storyboard-os/canvas` | `react`, `react-konva`, `konva` |
+| `@storyboard-os/routing` | Nothing |
+| `@storyboard-os/rpg-domain` | `@storyboard-os/core` only |
+| `apps/rpg-storyboard` | All `@storyboard-os/*` packages |
+
+Cross-package imports in the wrong direction break the isolation and must not be added. The canonical check:
+
+```bash
+grep -r "rpg-domain\|quest\|npc_beat\|stateChange" packages/storyboard-canvas/src/
+# must return nothing
+```
+
+---
+
+## `@storyboard-os/core`
+
+Generic storyboard primitives. No domain vocabulary.
+
+```ts
+StoryboardFrame<TFrameType, TContent, TAnnotationType>
+Storyboard<TFrame>
+StoryboardProject<TStoryboard>
+StoryboardConnection
+StoryboardTemplateDefinition<TId, TStoryboard>
+validateStoryboard()  // structural rules only — no domain knowledge
+```
+
+Does not know: RPG, quest, scene, choice, encounter, consequence, stateChanges, requiredAssets, factions, or any domain concept.
+
+**Extension pattern:** Domain packages import and specialize the core generics:
+
+```ts
+// @storyboard-os/rpg-domain/schema.ts
+export type StoryboardFrame = CoreFrame<
+  StoryboardFrameType,
+  FrameContent,
+  FrameAnnotationType
+>;
+```
+
+---
+
+## `@storyboard-os/rpg-domain`
+
+The RPG game-authoring contract. Everything an RPG designer needs, nothing a screenplay designer would.
+
+Does not import from any app, `@storyboard-os/canvas`, or `@storyboard-os/routing`. Imports from `@storyboard-os/core` only.
+
+**Key exports:** frame types, content schema, templates, validation, canvas signals, readiness model, handoff generation, project domain helpers. See the [Reference](./reference/) page for the full API.
+
+### Project domain helpers — design rules
+
+All `update*` and `set*` helpers are **pure and immutable**: they accept a project, return a new project, and bump `updatedAt`. They never mutate input.
+
+**Progress / spec separation** is enforced by type: `implementationChecklist` and `testCriteria` are spec strings — their content is never modified by progress functions. Completion state lives in `project.progress.frames[frameId]` as `Record<string, boolean>` keyed by string index.
+
+---
+
+## `@storyboard-os/canvas`
+
+Konva rendering. Frames, connections, selection, drag, type badges, connection labels. All visual config and viewport control comes from the app via props and a ref handle.
+
+Does not import from `@storyboard-os/core`, `@storyboard-os/rpg-domain`, or any app. It renders whatever config the app passes.
+
+**Config injection:** The app provides `StoryboardCanvasConfig` with per-type styles:
+
+```ts
+const RPG_CANVAS_CONFIG: StoryboardCanvasConfig = {
+  frameTypeStyles: {
+    hook:   { bg: '#1a1500', accent: '#EAB308', label: 'HOOK' },
+    choice: { bg: '#14092e', accent: '#8B5CF6', label: 'CHOICE' },
+    // ...
+  },
+  connectionTypeStyles: {
+    sequence:    { stroke: '#475569', strokeWidth: 1.5 },
+    choice:      { stroke: '#8B5CF6', dash: [8, 4], strokeWidth: 2.5 },
+  },
+};
+```
+
+A second vertical passes its own config. The canvas renders it without knowing what the types mean.
+
+**Viewport control:** The app holds an imperative `ViewportHandle` ref:
+
+```ts
+interface ViewportHandle {
+  fitToFrames(): void;
+  resetView(): void;
+  zoomIn(): void;
+  zoomOut(): void;
+  centerOnFrame(frame: CanvasFrame): void;
+  getScale(): number;
+}
+```
+
+The canvas owns its own viewport state internally. The app drives it via this handle — not by passing zoom/pan props.
+
+---
+
+## `@storyboard-os/routing`
+
+URL construction helpers. Zero dependencies.
+
+```ts
+const routes = createStoryboardRoutes({ storyboardBasePath: '/storyboards' });
+routes.boardRoute('quest-01')           // → '/storyboards/quest-01'
+routes.frameRoute('quest-01', 'hook-1') // → '/storyboards/quest-01/frames/hook-1'
+routes.projectRoute('tollhouse-ledger') // → '/projects/tollhouse-ledger'
+```
+
+Apps pass their own base path. A second app with a different URL structure gets a different config.
+
+---
+
+## `apps/rpg-storyboard`
+
+The RPG product shell. Everything that is RPG-specific and not reusable across verticals.
+
+Key components:
+
+- **`StoryboardCanvas.tsx`** — app adapter: wires RPG config, readiness, canvasRef, keyboard shortcuts, edit mode, progress, handoffHref
+- **`ProjectBoard.tsx`** — loads project from localStorage by `?id=`; handles position, content, and progress updates via `persistAndNotify`
+- **`BeatEditPanel`** — inline edit form for all spec fields; array fields as one-per-line textareas
+- **`FrameInspector`** — reads RPG content fields, shows readiness status and missing spec reasons
+- **`ProjectHandoffPage`** — client-only page; reads `?id=`, generates `ProjectHandoff`, renders and enables download
+
+### Project storage boundary
+
+`src/lib/storyboard/projectStorage.ts` is the **only** place in the app that touches localStorage:
+
+```ts
+saveProject(project)   // serialize + write
+getProject(id)         // read + deserialize + migrate
+listProjects()         // read all + migrate
+deleteProject(id)      // remove
+```
+
+`migrate(project)` runs inside every read. It is the sole backward-compatibility layer — all migration logic lives here, nowhere else. Components do not touch localStorage directly.
+
+### `persistAndNotify` pattern
+
+`ProjectBoard` maintains a `projectRef` alongside `project` state to avoid stale closures. All write callbacks go through one shared path:
+
+```ts
+const persistAndNotify = (updated: RpgStoryboardProject) => {
+  projectRef.current = updated;  // keep ref current for next callback
+  setProject(updated);           // trigger re-render
+  saveProject(updated);          // persist to localStorage
+  setSaveStatus('saved');        // show chip, dismiss after 2 seconds
+};
+```
+
+---
+
+## Adding a second vertical
+
+A second vertical (e.g. `apps/screenplay-storyboard`) would:
+
+1. Create `packages/screenplay-domain` — its own frame types, content fields, and templates built on `@storyboard-os/core` generics
+2. Create an app that passes its own `StoryboardCanvasConfig` to `@storyboard-os/canvas`
+3. Write its own frame inspector reading its domain content fields
+4. Call `createStoryboardRoutes({ storyboardBasePath: '/scenes' })` from `@storyboard-os/routing`
+
+It would not touch `@storyboard-os/rpg-domain` at all. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification.

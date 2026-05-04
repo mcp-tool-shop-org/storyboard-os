@@ -14,7 +14,7 @@ export const config: SiteConfig = {
     headlineAccent: 'Structured. Implemented.',
     description: 'A board for designing implementable narrative. Every frame is a beat with entry conditions, state changes, required assets, test criteria, and an implementation checklist. The handoff is a document a developer can build from.',
     primaryCta: { href: '/storyboard-os/handbook', label: 'Read the docs' },
-    secondaryCta: { href: '#features', label: 'See features' },
+    secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [
       { label: 'Start', code: 'pnpm install && pnpm dev' },
       { label: 'Verify', code: 'pnpm verify  # test + build' },
