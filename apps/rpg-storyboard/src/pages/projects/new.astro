@@ -1,0 +1,49 @@
+---
+import NewProjectPage from '../../components/projects/NewProjectPage';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>New Project — RPG Storyboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      background: #0b1120;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(11,17,32,0.97);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0 24px; height: 48px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .topbar-link { font-size: 11px; color: #475569; text-decoration: none; }
+    .topbar-link:hover { color: #94a3b8; }
+    .topbar-sep  { font-size: 11px; color: #1e293b; }
+    .topbar-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <a href="/" class="topbar-link">← Home</a>
+    <span class="topbar-sep">|</span>
+    <a href="/templates" class="topbar-link">Templates</a>
+    <span class="topbar-sep">|</span>
+    <span class="topbar-label">New Project</span>
+  </nav>
+
+  <NewProjectPage client:only="react" />
+
+</body>
+</html>

@@ -72,8 +72,11 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
       font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
       text-transform: uppercase; color: #475569;
     }
+    .topbar-right-links {
+      margin-left: auto; display: flex; gap: 16px; align-items: center;
+    }
     .topbar-demo {
-      margin-left: auto; font-size: 11px; color: #334155;
+      font-size: 11px; color: #334155;
       text-decoration: none;
     }
     .topbar-demo:hover { color: #475569; }
@@ -155,6 +158,11 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
       border: 1px solid rgba(255,255,255,0.07);
     }
     .btn-secondary:hover { color: #94a3b8; }
+    .btn-create {
+      background: rgba(139,92,246,0.12); color: #8B5CF6;
+      border: 1px solid rgba(139,92,246,0.28);
+    }
+    .btn-create:hover { opacity: 0.85; }
     .card-footer-note {
       margin-left: auto; font-size: 11px; color: #1e293b;
     }
@@ -166,7 +174,10 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
     <a href="/" class="topbar-home">← Home</a>
     <span class="topbar-sep">|</span>
     <span class="topbar-label">Templates</span>
-    <a href="/storyboards/quest-01" class="topbar-demo">View demo quest →</a>
+    <div class="topbar-right-links">
+      <a href="/projects" class="topbar-demo">Projects →</a>
+      <a href="/storyboards/quest-01" class="topbar-demo">Demo quest →</a>
+    </div>
   </nav>
 
   <main class="page">
@@ -234,6 +245,7 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
 
             {/* Footer CTAs */}
             <div class="card-footer">
+              <a href={`/projects/new?templateId=${meta.templateId}`} class="btn btn-create">Create Project →</a>
               <a href={boardUrl}   class="btn btn-primary">Preview Board →</a>
               <a href={handoffUrl} class="btn btn-secondary">Preview Handoff →</a>
               <span class="card-footer-note">

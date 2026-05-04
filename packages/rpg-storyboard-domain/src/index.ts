@@ -75,3 +75,10 @@ export type {
   HandoffReadinessSummary,
   QuestHandoff,
 } from './handoff';
+
+export { createProject } from './project';
+
+export type {
+  RpgStoryboardProject,
+  CreateProjectInput,
+} from './project';

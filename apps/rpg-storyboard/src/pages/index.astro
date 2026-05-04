@@ -44,12 +44,15 @@
 
     .entry-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 12px;
       margin-bottom: 32px;
     }
 
-    @media (max-width: 500px) {
+    @media (max-width: 680px) {
+      .entry-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 440px) {
       .entry-grid { grid-template-columns: 1fr; }
     }
 
@@ -127,6 +130,16 @@
           branching choice, and cutscene beat.
         </span>
         <span class="entry-card-cta">Browse templates →</span>
+      </a>
+
+      <a href="/projects" class="entry-card">
+        <span class="entry-card-label">Projects</span>
+        <span class="entry-card-title">Your Projects</span>
+        <span class="entry-card-desc">
+          Projects created from templates. Saved in this browser,
+          ready to open and author.
+        </span>
+        <span class="entry-card-cta">Open projects →</span>
       </a>
     </div>
 
