@@ -50,3 +50,16 @@ export type {
   FrameSignal,
   FrameBadgeDescriptor,
 } from './frameSignals';
+
+export {
+  getBeatStatus,
+  getStoryboardReadiness,
+  BLOCKING_REASONS,
+} from './beatStatus';
+
+export type {
+  BeatStatusLevel,
+  MissingSpecReason,
+  BeatStatus,
+  StoryboardReadinessSummary,
+} from './beatStatus';

@@ -21,6 +21,8 @@ import {
 import {
   getFrameBadges,
   getChoiceBranchCount,
+  getStoryboardReadiness,
+  type BeatStatusLevel,
 } from '@storyboard-os/rpg-domain';
 import type { Storyboard } from '../lib/storyboard/schema';
 import FrameInspector from './storyboard/FrameInspector';
@@ -101,9 +103,10 @@ export default function StoryboardCanvas({ storyboard }: Props) {
     setSelectedConnectionId(id);
   }, []);
 
-  // ── RPG badge computation ──────────────────────────────────────────────────
+  // ── RPG badge + readiness computation ─────────────────────────────────────
   // Map domain frames → CanvasFrame[], injecting RPG-derived badges.
-  // Memoised so badges only recompute when storyboard data changes.
+  // Compute board-level readiness summary for the header.
+  // Both memoised — only recompute when storyboard data changes.
   const canvasFrames = useMemo<CanvasFrame[]>(() => {
     return storyboard.frames.map(frame => ({
       id: frame.id,
@@ -115,6 +118,11 @@ export default function StoryboardCanvas({ storyboard }: Props) {
       badges: getFrameBadges(frame),
     }));
   }, [storyboard.frames]);
+
+  const readinessSummary = useMemo(
+    () => getStoryboardReadiness(storyboard),
+    [storyboard],
+  );
 
   // ── Selected entities ──────────────────────────────────────────────────────
   const selectedFrame = selectedFrameId
@@ -161,9 +169,12 @@ export default function StoryboardCanvas({ storyboard }: Props) {
             {storyboard.description}
           </span>
         )}
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: '#334155' }}>
-          {storyboard.frames.length} frames · {storyboard.connections.length} connections
-        </span>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 11, color: '#334155' }}>
+            {storyboard.frames.length} frames · {storyboard.connections.length} connections
+          </span>
+          <ReadinessCounts summary={readinessSummary} />
+        </div>
       </header>
 
       {/* ── Canvas + side panel row ────────────────────────────────────────── */}
@@ -258,6 +269,49 @@ export default function StoryboardCanvas({ storyboard }: Props) {
           </span>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// ─── ReadinessCounts ──────────────────────────────────────────────────────────
+// Small inline header widget showing board-level implementation status counts.
+// Only shows non-zero counts to reduce noise on sparse boards.
+
+const STATUS_HEADER_COLORS: Record<BeatStatusLevel, string> = {
+  ready:   '#22C55E',
+  partial: '#F97316',
+  draft:   '#6B7280',
+  blocked: '#EF4444',
+};
+
+function ReadinessCounts({ summary }: { summary: ReturnType<typeof getStoryboardReadiness> }) {
+  const chips: Array<{ level: BeatStatusLevel; count: number }> = [
+    { level: 'ready',   count: summary.ready },
+    { level: 'partial', count: summary.partial },
+    { level: 'blocked', count: summary.blocked },
+    { level: 'draft',   count: summary.draft },
+  ].filter(c => c.count > 0);
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      {chips.map(({ level, count }) => (
+        <span
+          key={level}
+          title={`${count} ${level}`}
+          style={{
+            fontSize: 10, fontWeight: 700,
+            padding: '2px 6px', borderRadius: 3,
+            background: `${STATUS_HEADER_COLORS[level]}18`,
+            border: `1px solid ${STATUS_HEADER_COLORS[level]}44`,
+            color: STATUS_HEADER_COLORS[level],
+            letterSpacing: '0.04em',
+          }}
+        >
+          {count} {level.toUpperCase()}
+        </span>
+      ))}
     </div>
   );
 }

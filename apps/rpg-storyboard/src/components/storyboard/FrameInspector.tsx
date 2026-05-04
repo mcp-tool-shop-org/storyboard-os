@@ -1,5 +1,25 @@
+// ─── rpg-storyboard / FrameInspector.tsx ─────────────────────────────────────
+//
+// Inspector panel for a selected RPG frame.
+// Renders:
+//   - Frame type badge + title
+//   - Summary
+//   - Implementation status (from @storyboard-os/rpg-domain beatStatus)
+//   - RPG content fields (designer notes, state changes, etc.)
+//   - "Open Frame Page" link
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 import type { StoryboardFrame, StoryboardFrameType } from '../../lib/storyboard/schema';
+import {
+  getBeatStatus,
+  BLOCKING_REASONS,
+  type BeatStatusLevel,
+  type MissingSpecReason,
+} from '@storyboard-os/rpg-domain';
 import { frameRoute } from '../../lib/storyboard/routes';
+
+// ─── Type display config ──────────────────────────────────────────────────────
 
 const TYPE_LABELS: Record<StoryboardFrameType, string> = {
   hook:        'Hook',
@@ -21,6 +41,35 @@ const TYPE_COLORS: Record<StoryboardFrameType, string> = {
   consequence: '#6B7280',
 };
 
+// ─── Status display config ────────────────────────────────────────────────────
+
+const STATUS_COLORS: Record<BeatStatusLevel, string> = {
+  ready:   '#22C55E',
+  partial: '#F97316',
+  draft:   '#6B7280',
+  blocked: '#EF4444',
+};
+
+const STATUS_LABELS: Record<BeatStatusLevel, string> = {
+  ready:   'READY',
+  partial: 'PARTIAL',
+  draft:   'DRAFT',
+  blocked: 'BLOCKED',
+};
+
+const REASON_LABELS: Record<MissingSpecReason, string> = {
+  no_state_changes:             'State changes required for this frame type',
+  no_entry_or_state_change:     'Entry conditions or state changes required for reveal',
+  no_designer_notes:            'No designer notes',
+  no_required_assets:           'No required assets listed',
+  no_test_criteria:             'No test criteria defined',
+  no_implementation_checklist:  'No implementation checklist',
+  no_stakes:                    'No stakes defined',
+  no_possible_outcomes:         'No possible outcomes listed',
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 interface Props {
   frame: StoryboardFrame;
   storyboardId: string;
@@ -28,8 +77,16 @@ interface Props {
 }
 
 export default function FrameInspector({ frame, storyboardId, onClose }: Props) {
-  const route = frameRoute(storyboardId, frame.id);
+  const route  = frameRoute(storyboardId, frame.id);
   const accent = TYPE_COLORS[frame.type];
+  const status = getBeatStatus(frame);
+
+  // Separate missing reasons by severity — blockers first, then spec gaps,
+  // skip advisory from inspector view (it clutters without adding actionability)
+  const blockers = status.missing.filter(r => BLOCKING_REASONS.has(r));
+  const specGaps = status.missing.filter(
+    r => !BLOCKING_REASONS.has(r) && r !== 'no_stakes' && r !== 'no_possible_outcomes',
+  );
 
   return (
     <div style={{
@@ -39,7 +96,7 @@ export default function FrameInspector({ frame, storyboardId, onClose }: Props) 
       display: 'flex', flexDirection: 'column',
       overflowY: 'auto', zIndex: 20,
     }}>
-      {/* Header */}
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div style={{
         padding: '14px 18px',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -69,12 +126,78 @@ export default function FrameInspector({ frame, storyboardId, onClose }: Props) 
         >×</button>
       </div>
 
-      {/* Summary */}
+      {/* ── Summary ─────────────────────────────────────────────────────────── */}
       <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.65 }}>{frame.summary}</p>
       </div>
 
-      {/* Content fields */}
+      {/* ── Implementation status ────────────────────────────────────────────── */}
+      <div style={{
+        padding: '14px 18px',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex', flexDirection: 'column', gap: 10,
+      }}>
+        {/* Status badge row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            padding: '3px 9px', borderRadius: 4,
+            background: `${STATUS_COLORS[status.level]}22`,
+            border: `1px solid ${STATUS_COLORS[status.level]}55`,
+            fontSize: 10, fontWeight: 700,
+            color: STATUS_COLORS[status.level],
+            letterSpacing: '0.1em',
+          }}>
+            {STATUS_LABELS[status.level]}
+          </span>
+          {/* Coverage numbers */}
+          <span style={{ fontSize: 11, color: '#475569' }}>
+            {status.assetCount} {status.assetCount === 1 ? 'asset' : 'assets'}
+            {' · '}
+            {status.testCriteriaCount} {status.testCriteriaCount === 1 ? 'test' : 'tests'}
+            {' · '}
+            {status.checklistCount} {status.checklistCount === 1 ? 'task' : 'tasks'}
+          </span>
+        </div>
+
+        {/* Blockers */}
+        {blockers.length > 0 && (
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {blockers.map(r => (
+              <li key={r} style={{
+                fontSize: 11, color: '#EF4444',
+                display: 'flex', alignItems: 'flex-start', gap: 5,
+              }}>
+                <span style={{ flexShrink: 0, marginTop: 1 }}>⚠</span>
+                <span>{REASON_LABELS[r]}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Spec gaps */}
+        {specGaps.length > 0 && (
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {specGaps.map(r => (
+              <li key={r} style={{
+                fontSize: 11, color: '#64748b',
+                display: 'flex', alignItems: 'flex-start', gap: 5,
+              }}>
+                <span style={{ flexShrink: 0 }}>–</span>
+                <span>{REASON_LABELS[r]}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* All-clear */}
+        {status.level === 'ready' && (
+          <p style={{ fontSize: 11, color: '#22C55E', margin: 0 }}>
+            ✓ Implementation spec complete
+          </p>
+        )}
+      </div>
+
+      {/* ── Content fields ──────────────────────────────────────────────────── */}
       <div style={{ padding: '14px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
         {frame.content.stakes && (
           <Field label="Stakes" value={frame.content.stakes} color="#F97316" />
@@ -109,7 +232,7 @@ export default function FrameInspector({ frame, storyboardId, onClose }: Props) 
         )}
       </div>
 
-      {/* Open frame page */}
+      {/* ── Open frame page ──────────────────────────────────────────────────── */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
         <a
           href={route}
@@ -129,6 +252,8 @@ export default function FrameInspector({ frame, storyboardId, onClose }: Props) 
     </div>
   );
 }
+
+// ─── Field ────────────────────────────────────────────────────────────────────
 
 function Field({ label, value, color = '#94a3b8' }: { label: string; value: string; color?: string }) {
   return (
