@@ -87,6 +87,12 @@ interface Props {
    * Default: false.
    */
   autoFit?: boolean;
+  /**
+   * Called once per completed frame drag with the frame's new canvas-space position.
+   * Use this to persist layout changes (e.g. for user-created project boards).
+   * Template preview boards can omit this to remain non-persistent.
+   */
+  onFramePositionChange?: (frameId: string, position: { x: number; y: number }) => void;
 }
 
 // ─── Internal constants ───────────────────────────────────────────────────────
@@ -114,6 +120,7 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       onSelectConnection,
       onViewStateChange,
       autoFit = false,
+      onFramePositionChange,
     },
     ref,
   ) {
@@ -354,7 +361,8 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
 
     const handleDragEnd = useCallback((id: string, x: number, y: number) => {
       setPositions(prev => ({ ...prev, [id]: { x, y } }));
-    }, []);
+      onFramePositionChange?.(id, { x, y });
+    }, [onFramePositionChange]);
 
     // ── Style helper ───────────────────────────────────────────────────────
     function styleFor(type: string) {

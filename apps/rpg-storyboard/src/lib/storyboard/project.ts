@@ -4,5 +4,5 @@
 // @storyboard-os/rpg-domain, keeping internal imports stable as packages evolve.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export { createProject } from '@storyboard-os/rpg-domain';
-export type { RpgStoryboardProject, CreateProjectInput } from '@storyboard-os/rpg-domain';
+export { createProject, updateFramePosition } from '@storyboard-os/rpg-domain';
+export type { RpgStoryboardProject, CreateProjectInput, FramePosition } from '@storyboard-os/rpg-domain';

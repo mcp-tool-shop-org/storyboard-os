@@ -89,11 +89,20 @@ const HEADER_HEIGHT = 48;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+export type SaveStatus = 'saved' | 'saving' | null;
+
 interface Props {
   storyboard: Storyboard;
+  /**
+   * Called when a frame is dragged to a new position.
+   * Omit on read-only boards (template previews). Provide on project boards.
+   */
+  onFramePositionChange?: (frameId: string, position: { x: number; y: number }) => void;
+  /** Optional save-state indicator rendered in the header. */
+  saveStatus?: SaveStatus;
 }
 
-export default function StoryboardCanvas({ storyboard }: Props) {
+export default function StoryboardCanvas({ storyboard, onFramePositionChange, saveStatus }: Props) {
   const [selectedFrameId, setSelectedFrameId]           = useState<string | null>(null);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [scale, setScale]                               = useState(1);
@@ -210,6 +219,7 @@ export default function StoryboardCanvas({ storyboard }: Props) {
             {storyboard.frames.length} frames · {storyboard.connections.length} connections
           </span>
           <ReadinessCounts summary={readinessSummary} />
+          {saveStatus && <SaveStatusChip status={saveStatus} />}
           <a
             href={`/storyboards/${storyboard.id}/handoff`}
             style={{
@@ -247,6 +257,7 @@ export default function StoryboardCanvas({ storyboard }: Props) {
             selectedConnectionId={selectedConnectionId}
             onSelectConnection={handleSelectConnection}
             onViewStateChange={v => setScale(v.scale)}
+            onFramePositionChange={onFramePositionChange}
             autoFit
           />
 
@@ -321,6 +332,25 @@ export default function StoryboardCanvas({ storyboard }: Props) {
         </div>
       </footer>
     </div>
+  );
+}
+
+// ─── SaveStatusChip ───────────────────────────────────────────────────────────
+
+function SaveStatusChip({ status }: { status: SaveStatus }) {
+  if (!status) return null;
+  const label  = status === 'saving' ? 'Saving…' : 'Saved';
+  const color  = status === 'saving' ? '#F97316' : '#22C55E';
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+      padding: '2px 8px', borderRadius: 4,
+      background: `${color}18`,
+      border: `1px solid ${color}44`,
+      color,
+    }}>
+      {label}
+    </span>
   );
 }
 

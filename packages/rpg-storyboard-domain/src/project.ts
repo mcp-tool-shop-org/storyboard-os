@@ -38,6 +38,15 @@ export interface CreateProjectInput {
 
 // ─── Factory ─────────────────────────────────────────────────────────────────
 
+// ─── Position type ────────────────────────────────────────────────────────────
+
+export interface FramePosition {
+  x: number;
+  y: number;
+}
+
+// ─── Factory ─────────────────────────────────────────────────────────────────
+
 /**
  * Create a new RPG storyboard project from a template.
  *
@@ -66,5 +75,34 @@ export function createProject(input: CreateProjectInput): RpgStoryboardProject {
     updatedAt: now,
     sourceTemplateId: input.templateId,
     storyboard,
+  };
+}
+
+// ─── Position update ──────────────────────────────────────────────────────────
+
+/**
+ * Return a new project with one frame's position updated.
+ *
+ * Pure function — does not mutate the original project. Bumps `updatedAt`.
+ * If `frameId` does not exist in the project's storyboard, the project is
+ * returned unchanged (no error, no mutation).
+ */
+export function updateFramePosition(
+  project: RpgStoryboardProject,
+  frameId: string,
+  position: FramePosition,
+): RpgStoryboardProject {
+  const frameExists = project.storyboard.frames.some(f => f.id === frameId);
+  if (!frameExists) return project;
+
+  return {
+    ...project,
+    updatedAt: new Date().toISOString(),
+    storyboard: {
+      ...project.storyboard,
+      frames: project.storyboard.frames.map(f =>
+        f.id === frameId ? { ...f, position } : f,
+      ),
+    },
   };
 }
