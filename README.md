@@ -115,11 +115,25 @@ pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
 pnpm test       # runs all package + app tests (368 tests)
 pnpm build      # builds rpg-storyboard (42 pages)
+pnpm verify     # test + build in one command (ship gate)
 ```
 
 Requirements: Node ≥ 20, pnpm ≥ 9.
 
 Test scope is automatically filtered to `@storyboard-os/*` packages and `rpg-storyboard` — it does not pick up sibling workspaces in the parent directory.
+
+---
+
+## Trust Model
+
+Storyboard OS is a **local-only browser application** — no server, no accounts, no network egress.
+
+- **Data touched:** Project data (beat specs, board positions, checklist progress) in browser `localStorage` on the user's machine only.
+- **Data NOT touched:** No credentials, no payment info, no personal data beyond what the designer types into beat spec fields.
+- **No network requests at runtime.** The app is a static site. After the initial page load, zero network calls are made.
+- **No telemetry.** Nothing is collected or transmitted.
+
+See [`SECURITY.md`](SECURITY.md) for the full trust model and vulnerability reporting.
 
 ---
 
