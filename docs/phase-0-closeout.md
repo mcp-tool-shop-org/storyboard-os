@@ -3,6 +3,8 @@
 _Spike dates: Phase 0A–0F_
 _Tech: Astro 4 + TypeScript + Konva.js + react-konva_
 
+> **_Snapshot values in this doc (test count, page count, package count, app count) reflect the state at Phase 0 closeout. They are a historical record; current totals live in the root README.md._**
+
 ---
 
 ## What This Tool Is

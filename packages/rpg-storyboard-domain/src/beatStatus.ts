@@ -123,13 +123,19 @@ function specScore(content: FrameContent): number {
 /**
  * Compute the implementation status of a single RPG frame.
  *
- * Level derivation:
- * - `draft`   — spec score is 0 (no designer notes, no assets, no tests,
- *               no checklist). An empty shell regardless of frame type.
- * - `blocked` — has at least one domain rule violation AND enough content
- *               to be considered in-progress (spec score ≥ 1).
- * - `partial` — spec complete enough to be useful, but gaps remain.
+ * Level derivation (parity with marketing/cinematic, F-VR-206):
+ * - `blocked` — has at least one domain rule violation (missing type-required
+ *               field). Applies regardless of spec score, so an empty
+ *               choice/consequence/reveal frame is `blocked`, not `draft`.
+ * - `draft`   — spec score is 0 AND no blocker. An empty shell of a
+ *               non-domain-required type (hook, scene, encounter, npc_beat).
  * - `ready`   — spec score ≥ 3, all domain requirements satisfied.
+ * - `partial` — otherwise.
+ *
+ * Prior to Wave 6, empty domain-required frames returned `draft` rather than
+ * `blocked` (the "empty shell" carve-out). That diverged from marketing and
+ * cinematic, so the carve-out was removed: missing type-required fields now
+ * blocks at score 0 too.
  */
 export function getBeatStatus(frame: StoryboardFrame): BeatStatus {
   const content = frame.content as FrameContent;
@@ -170,12 +176,14 @@ export function getBeatStatus(frame: StoryboardFrame): BeatStatus {
 
   let level: BeatStatusLevel;
 
-  if (score === 0) {
-    // Empty shell — not even enough content to know it's broken
-    level = 'draft';
-  } else if (hasBlocker) {
-    // Has content but violates a domain rule
+  if (hasBlocker) {
+    // Has at least one domain rule violation — blocked regardless of spec
+    // score. Parity with marketing + cinematic (Wave 6, F-VR-206).
     level = 'blocked';
+  } else if (score === 0) {
+    // Empty shell of a non-domain-required type (hook / scene / encounter /
+    // npc_beat) — not even enough content to be in progress.
+    level = 'draft';
   } else if (score >= 3) {
     level = 'ready';
   } else {

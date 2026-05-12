@@ -26,6 +26,27 @@ import {
     type CinematicFrameType,
 } from '@storyboard-os/cinematic-domain';
 
+// F-AP-202: humanize cinematic missing-reason codes so users see "Missing visual
+// description" instead of raw `no_visualDescription`. Codes come from
+// packages/cinematic-storyboard-domain/src/beatStatus.ts (BLOCKING_FIELDS +
+// the special `no_spec` code). If a new code is added there without a label
+// here, humanizeReason() falls back to a generic-snake-case decoder.
+const REASON_LABELS: Record<string, string> = {
+    no_visualDescription: 'Visual description missing',
+    no_cameraMovement: 'Camera movement missing',
+    no_actionNotes: 'Action notes missing',
+    no_dialogue: 'Dialogue missing',
+    no_editNotes: 'Edit notes missing',
+    no_vfxRequirements: 'VFX requirements missing',
+    no_audioRequirements: 'Audio requirements missing',
+    no_durationEstimate: 'Duration estimate missing',
+    no_spec: 'No spec content yet — add at least one of: intent, framing, duration estimate, or implementation checklist',
+};
+
+function humanizeReason(code: string): string {
+    return REASON_LABELS[code] ?? code.replace(/^no_/, 'Missing ').replace(/([A-Z])/g, ' $1').toLowerCase().replace(/^./, c => c.toUpperCase());
+}
+
 // ─── Type display config ──────────────────────────────────────────────────────
 
 const TYPE_LABELS: Record<CinematicFrameType, string> = {
@@ -156,7 +177,7 @@ export default function CinematicFrameInspector({ frame, sequenceId, onClose }: 
                         {status.missingReasons.map(r => (
                             <li key={r} style={{ fontSize: 11, color: '#EF4444', display: 'flex', alignItems: 'flex-start', gap: 5 }}>
                                 <span style={{ flexShrink: 0, marginTop: 1 }}>⚠</span>
-                                <span>{r.replace('no_', 'Missing: ').replace(/_/g, ' ')}</span>
+                                <span>{humanizeReason(r)}</span>
                             </li>
                         ))}
                     </ul>

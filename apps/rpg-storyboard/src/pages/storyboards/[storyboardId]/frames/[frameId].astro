@@ -85,6 +85,7 @@ const { content, annotations } = frame;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:" />
     <title>{frame.title} — {storyboard.title}</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -96,6 +97,14 @@ const { content, annotations } = frame;
         -webkit-font-smoothing: antialiased;
         min-height: 100vh;
         padding-bottom: 80px;
+      }
+
+      /* ─── Focus polish ─── */
+      a:focus-visible, button:focus-visible,
+      [role="button"]:focus-visible, [tabindex]:focus-visible {
+        outline: 2px solid #94a3b8;
+        outline-offset: 2px;
+        border-radius: 3px;
       }
 
       /* ─── Top bar ─── */
@@ -356,7 +365,7 @@ const { content, annotations } = frame;
       )}
 
       <!-- 3. Entry / Exit Conditions -->
-      {(content.entryConditions?.length || content.exitConditions?.length) && (
+      {((content.entryConditions?.length ?? 0) > 0 || (content.exitConditions?.length ?? 0) > 0) && (
         <div class="two-col">
           {content.entryConditions && content.entryConditions.length > 0 && (
             <div class="section section-neutral">
@@ -442,8 +451,8 @@ const { content, annotations } = frame;
 
       <!-- ═══ NARRATIVE CONTEXT ══════════════════════════════════════════════ -->
 
-      {(content.authorOnlyNotes?.length || content.involvedCharacters?.length ||
-        content.involvedFactions?.length || content.possibleOutcomes?.length || content.stakes) && (
+      {((content.authorOnlyNotes?.length ?? 0) > 0 || (content.involvedCharacters?.length ?? 0) > 0 ||
+        (content.involvedFactions?.length ?? 0) > 0 || (content.possibleOutcomes?.length ?? 0) > 0 || Boolean(content.stakes)) && (
         <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 4px;">
           <p style="font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #1e293b;">
             Narrative Context
@@ -470,7 +479,7 @@ const { content, annotations } = frame;
       )}
 
       <!-- Characters + Factions side by side -->
-      {(content.involvedCharacters?.length || content.involvedFactions?.length) && (
+      {((content.involvedCharacters?.length ?? 0) > 0 || (content.involvedFactions?.length ?? 0) > 0) && (
         <div class="two-col">
           {content.involvedCharacters && content.involvedCharacters.length > 0 && (
             <div class="section section-neutral">

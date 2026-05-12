@@ -30,6 +30,8 @@ Seven types. Each names a specific function in a playable RPG quest or scene.
 
 ### RPG connections (core defaults)
 
+These five types are the core default connection vocabulary, which the RPG domain consumes directly. Other verticals (marketing, cinematic, future fourth) override this set with their own connection grammar — they do not extend it; they replace it.
+
 | Type | Meaning | Canvas style |
 |---|---|---|
 | `sequence` | Linear progression — beat A leads to beat B | Solid gray, 1.5px |
@@ -72,8 +74,8 @@ Domains own their connection vocabulary via `StoryboardConnection<TConnectionTyp
 
 | Level | Meaning |
 |---|---|
-| `ready` | All spec sections present. Spec score ≥ 3 (designerNotes, requiredAssets, testCriteria, implementationChecklist). No domain violations. |
-| `partial` | Some spec present but incomplete. Spec score 1–2. |
+| `ready` | At least 3 of the 4 spec fields completed (designerNotes, requiredAssets, testCriteria, implementationChecklist) — spec score ≥ 3 out of 4. No domain violations. |
+| `partial` | Some spec present but incomplete — 1 or 2 of the 4 spec fields completed (spec score 1–2). |
 | `draft` | No spec present (score = 0). Exists structurally but carries no implementation depth. |
 | `blocked` | Domain violation: `choice`/`consequence` missing `stateChanges`, or `reveal` missing both `entryConditions` and `stateChanges`. |
 
@@ -198,6 +200,132 @@ generateProjectMarkdown(handoff)
 validateRpgStoryboard(storyboard)
 // → ValidationResult: { valid, errors[] }
 // Runs core structural rules + RPG domain rules (stateChanges, entryConditions, tabletop-drift)
+```
+
+---
+
+## `@storyboard-os/marketing-domain` API
+
+### Frame signals
+
+```ts
+getMarketingFrameBadges(frame)
+// → per-frame badges: STATE, GATE, SPEC
+
+getMarketingFrameSignal(frame)
+// → readiness + signal details per frame
+```
+
+### Beat status
+
+```ts
+getMarketingBeatStatus(frame)
+// → BeatStatusLevel: 'ready' | 'partial' | 'draft' | 'blocked'
+
+getCampaignReadiness(storyboard)
+// → counts by level across campaign
+```
+
+### Launch readiness
+
+```ts
+getCampaignLaunchReadiness(storyboard)
+// → LaunchReadinessSummary: level, critical path, blockers
+
+getCampaignCriticalPath(storyboard)
+// → longest path to launch_event (topological sort)
+
+getApprovalGateSignals(storyboard)
+// → per-approval: status, blocksLaunch, requirements
+
+getMeasurementLoopSignals(storyboard)
+// → per-measurement: hasMetrics, isLoop, connections
+```
+
+### Templates
+
+```ts
+MARKETING_TEMPLATES
+// → product_launch | brand_awareness | content_campaign
+
+getMarketingTemplate(id)
+createMarketingStoryboard(templateId)
+```
+
+### Validation
+
+```ts
+validateMarketingStoryboard(storyboard)
+// → ValidationResult: { valid, errors[] }
+```
+
+### Handoff
+
+```ts
+generateCampaignBrief(storyboard)
+// → CampaignBrief: campaign-scoped handoff for execution team
+
+generateCampaignMarkdown(brief)
+// → Markdown for campaign brief
+```
+
+---
+
+## `@storyboard-os/cinematic-domain` API
+
+### Frame signals
+
+```ts
+getCinematicFrameBadges(frame)
+// → per-frame badges: CAM, VFX, SFX, SPEC/PARTIAL/DRAFT/BLOCKED
+
+getCinematicFrameSignal(frame)
+// → readiness + camera/VFX/audio/continuity indicators
+```
+
+### Beat status
+
+```ts
+getCinematicBeatStatus(frame)
+// → BeatStatusLevel: 'ready' | 'partial' | 'draft' | 'blocked'
+
+getSequenceReadiness(storyboard)
+// → counts by level across sequence
+```
+
+### Production signals
+
+```ts
+getSequenceProductionSignals(storyboard)
+// → ProductionSignals: health, continuity risk, VFX burden, audio burden,
+//   camera complexity, duration rollup, blocked shots, pressure summary
+```
+
+### Templates
+
+```ts
+CINEMATIC_TEMPLATES
+// → trailer_flow | cutscene_sequence | explainer_video
+
+getCinematicTemplate(id)
+createCinematicStoryboard(templateId)
+```
+
+### Validation
+
+```ts
+validateCinematicStoryboard(storyboard)
+// → ValidationResult: { valid, errors[] }
+```
+
+### Handoff
+
+```ts
+generateProductionBrief(storyboard)
+// → ProductionBrief: per-shot camera, assets, readiness
+
+generateProductionMarkdown(brief)
+// → Markdown for production brief
 ```
 
 ---

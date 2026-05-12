@@ -2,6 +2,8 @@
 
 _Completed 2026-05-04_
 
+> **_Snapshot values in this doc (test count, page count, package count, app count) reflect the state at Marketing Phase 0 closeout. They are a historical record; current totals live in the root README.md._**
+
 ---
 
 ## What Marketing Phase 0 Is

@@ -25,7 +25,7 @@ The canvas shows implementation readiness at a glance:
 | `SPEC` | Green | Full spec depth — notes, assets, tests, checklist present |
 | `PARTIAL` | Orange | Some spec but incomplete — spec score 1–2 |
 | `DRAFT` | Gray | No spec depth; exists structurally only |
-| `BLOCKED` | Red | Domain violation — see [Readiness Model](/storyboard-os/handbook/reference/#implementation-readiness) |
+| `BLOCKED` | Red | Domain violation — see [Readiness Model](./reference/#implementation-readiness) |
 
 A glance tells you which beats still need work before handoff.
 

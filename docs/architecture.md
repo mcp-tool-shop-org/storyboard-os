@@ -427,9 +427,10 @@ This pattern is used by all three mutation callbacks: position change, content c
 A fourth vertical (e.g. `apps/screenplay-storyboard`) would:
 
 1. Create `packages/screenplay-domain` implementing its own frame types, content fields, and templates on top of `@storyboard-os/core` generics
-2. Create an app that passes its own `StoryboardCanvasConfig` to `@storyboard-os/canvas`
-3. Create its own frame inspector reading its domain content fields
-4. Call `createStoryboardRoutes({ storyboardBasePath: '/scenes' })` from `@storyboard-os/routing`
+2. Define its own connection vocabulary by specializing `StoryboardConnection<TConnectionType>` — e.g. `type ScreenplayConnectionType = 'sequence' | 'flashback' | 'montage' | ...`. Verticals are not required to use the core defaults (`sequence | choice | consequence | optional | fallback`); those are the RPG floor, and other verticals override them entirely.
+3. Create an app that passes its own `StoryboardCanvasConfig` (including `connectionTypeStyles` for the vertical's connection grammar) to `@storyboard-os/canvas`
+4. Create its own frame inspector reading its domain content fields
+5. Call `createStoryboardRoutes({ storyboardBasePath: '/scenes' })` from `@storyboard-os/routing`
 
 It would not touch `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, or `@storyboard-os/cinematic-domain`. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification. Three verticals have proven this pattern.
 
@@ -442,9 +443,32 @@ It would not touch `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain
 | `@storyboard-os/core` | Nothing |
 | `@storyboard-os/canvas` | `react`, `react-konva`, `konva` |
 | `@storyboard-os/routing` | Nothing |
-| `@storyboard-os/rpg-domain` | `@storyboard-os/core` |
-| `apps/rpg-storyboard` | All `@storyboard-os/*` packages |
+| `@storyboard-os/rpg-domain` | `@storyboard-os/core` only |
+| `@storyboard-os/marketing-domain` | `@storyboard-os/core` only |
+| `@storyboard-os/cinematic-domain` | `@storyboard-os/core` only |
+| `apps/rpg-storyboard` | `rpg-domain`, `canvas`, `routing` |
+| `apps/marketing-storyboard` | `marketing-domain`, `canvas`, `routing` |
+| `apps/cinematic-storyboard` | `cinematic-domain`, `canvas`, `routing` |
 
-Cross-package imports in the wrong direction break the isolation and must not be added.
+The three domain packages do not import from each other. Cross-package imports in the wrong direction break the isolation and must not be added.
 
-The canonical verification: `grep -r "rpg-domain\|quest\|npc_beat\|stateChange" packages/storyboard-canvas/src/` should return nothing.
+### Canonical verification
+
+The canvas must remain domain-neutral; the following greps should all return nothing.
+
+**RPG vocabulary:**
+```
+grep -r "rpg-domain\|quest\|npc_beat\|stateChange" packages/storyboard-canvas/src/
+```
+
+**Marketing vocabulary:**
+```
+grep -r "marketing-domain\|audienceSegment\|approvalRequirements\|launch_event\|measurement" packages/storyboard-canvas/src/
+```
+
+**Cinematic vocabulary:**
+```
+grep -r "cinematic-domain\|cameraAngle\|cameraMovement\|vfxRequirements\|match_cut\|edit_beat" packages/storyboard-canvas/src/
+```
+
+If any of these match, the isolation has been broken and domain vocabulary has leaked into the rendering layer.

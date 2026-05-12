@@ -16,6 +16,8 @@ export {
 } from './validate';
 
 export type {
+  KnownStoryboardValidationCode,
+  StoryboardValidationCode,
   StoryboardValidationError,
   StoryboardValidationResult,
 } from './validate';

@@ -71,19 +71,32 @@ describe('getBeatStatus — level', () => {
       expect(getBeatStatus(frame).level).toBe('draft');
     });
 
-    it('is draft when choice frame has empty content — no content means draft, not blocked', () => {
+    it('is draft when encounter frame has empty content', () => {
+      const frame = makeFrame('encounter', {});
+      expect(getBeatStatus(frame).level).toBe('draft');
+    });
+
+    it('is draft when npc_beat frame has empty content', () => {
+      const frame = makeFrame('npc_beat', {});
+      expect(getBeatStatus(frame).level).toBe('draft');
+    });
+
+    // F-VR-206 parity: an empty domain-required frame (choice/consequence/reveal)
+    // is now 'blocked', not 'draft'. The old "empty shell" carve-out was a
+    // divergence from marketing and cinematic and is removed in Wave 6.
+    it('is blocked (NOT draft) when choice frame has empty content — F-VR-206 parity', () => {
       const frame = makeFrame('choice', {});
-      expect(getBeatStatus(frame).level).toBe('draft');
+      expect(getBeatStatus(frame).level).toBe('blocked');
     });
 
-    it('is draft when consequence frame has no content', () => {
+    it('is blocked (NOT draft) when consequence frame has empty content — F-VR-206 parity', () => {
       const frame = makeFrame('consequence', {});
-      expect(getBeatStatus(frame).level).toBe('draft');
+      expect(getBeatStatus(frame).level).toBe('blocked');
     });
 
-    it('is draft when reveal frame has no content', () => {
+    it('is blocked (NOT draft) when reveal frame has empty content — F-VR-206 parity', () => {
       const frame = makeFrame('reveal', {});
-      expect(getBeatStatus(frame).level).toBe('draft');
+      expect(getBeatStatus(frame).level).toBe('blocked');
     });
   });
 

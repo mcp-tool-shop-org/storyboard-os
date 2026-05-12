@@ -7,6 +7,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:" />
   <title>RPG Storyboard — Quest Authoring Tool</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,6 +18,14 @@
       font-family: ui-sans-serif, system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       display: flex; flex-direction: column;
+    }
+
+    /* ─── Focus polish ─── */
+    a:focus-visible, button:focus-visible,
+    [role="button"]:focus-visible, [tabindex]:focus-visible {
+      outline: 2px solid #94a3b8;
+      outline-offset: 2px;
+      border-radius: 3px;
     }
 
     .page {

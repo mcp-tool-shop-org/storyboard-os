@@ -92,11 +92,16 @@ describe('CINEMATIC_TEMPLATES', () => {
 describe('getCinematicTemplate', () => {
   it('returns template by id', () => {
     const t = getCinematicTemplate('trailer_flow');
-    expect(t.name).toBe('Trailer Flow');
+    expect(t).toBeDefined();
+    expect(t?.name).toBe('Trailer Flow');
   });
 
-  it('throws for unknown id', () => {
-    expect(() => getCinematicTemplate('nope' as any)).toThrow();
+  // F-VR-205 API drift fix: cinematic now matches marketing+rpg parity.
+  // getCinematicTemplate returns undefined for an unknown id; the throwing
+  // behavior moved to createCinematicStoryboard, which still throws.
+  it('returns undefined for unknown id — F-VR-205 parity', () => {
+    const t = getCinematicTemplate('nope' as any);
+    expect(t).toBeUndefined();
   });
 });
 
@@ -105,5 +110,45 @@ describe('createCinematicStoryboard', () => {
     const sb = createCinematicStoryboard('cutscene_sequence');
     expect(sb.frames.length).toBe(6);
     expect(sb.title).toContain('Cutscene');
+  });
+
+  it('throws on an unknown template id — F-VR-205', () => {
+    expect(() => createCinematicStoryboard('fake' as any)).toThrow('Unknown cinematic template');
+  });
+
+  // F-VR-204: frame ids must be unique per invocation, just like connection ids.
+  // Two calls to the same template used to produce frames with identical ids
+  // (e.g. two 'trailer-hook' frames), which would collide if both storyboards
+  // lived in the same canvas or project.
+  it('produces unique frame ids across repeated invocations — F-VR-204', () => {
+    const a = createCinematicStoryboard('trailer_flow');
+    const b = createCinematicStoryboard('trailer_flow');
+    const idsA = new Set(a.frames.map(f => f.id));
+    const idsB = new Set(b.frames.map(f => f.id));
+    for (const id of idsA) {
+      expect(idsB.has(id)).toBe(false);
+    }
+  });
+
+  it('produces unique frame ids across different templates in one process — F-VR-204', () => {
+    const trailer = createCinematicStoryboard('trailer_flow');
+    const cutscene = createCinematicStoryboard('cutscene_sequence');
+    const explainer = createCinematicStoryboard('explainer_video');
+    const all = [
+      ...trailer.frames.map(f => f.id),
+      ...cutscene.frames.map(f => f.id),
+      ...explainer.frames.map(f => f.id),
+    ];
+    expect(new Set(all).size).toBe(all.length);
+  });
+
+  it('produces unique connection ids across repeated invocations', () => {
+    const a = createCinematicStoryboard('cutscene_sequence');
+    const b = createCinematicStoryboard('cutscene_sequence');
+    const idsA = new Set(a.connections.map(c => c.id));
+    const idsB = new Set(b.connections.map(c => c.id));
+    for (const id of idsA) {
+      expect(idsB.has(id)).toBe(false);
+    }
   });
 });

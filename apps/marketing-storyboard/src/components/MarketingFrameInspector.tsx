@@ -236,7 +236,7 @@ export default function MarketingFrameInspector({ frame, campaignId, onClose }: 
                 )}
 
                 {/* Customer state before → after */}
-                {(content.customerStateBefore?.length || content.customerStateAfter?.length) && (
+                {((content.customerStateBefore?.length ?? 0) > 0 || (content.customerStateAfter?.length ?? 0) > 0) && (
                     <ContentSection title="Customer State Transition">
                         {content.customerStateBefore && content.customerStateBefore.length > 0 && (
                             <div style={{ marginBottom: 8 }}>

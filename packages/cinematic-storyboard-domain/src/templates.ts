@@ -15,20 +15,40 @@ export interface CinematicTemplateDefinition {
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
-let counter = 0;
-function uid(prefix: string): string {
-  return `${prefix}-${++counter}`;
+/**
+ * Per-invocation id factory. Each template call gets a fresh counter so that
+ * connection and frame ids never collide between two storyboards returned
+ * from the same template (or different templates) inside a single process.
+ *
+ * Frame ids combine a stable slug (`trailer-hook`) with the per-invocation
+ * counter (`f-1`), so each call produces ids like `trailer-hook-f-1` — unique
+ * across invocations, still slug-readable in URLs and logs.
+ */
+// Module-level counter so ids are unique across every invocation in the
+// process. F-VR-204: returning a fresh counter from each makeUid() call meant
+// two invocations of the same template produced identical frame ids.
+let _moduleUidCounter = 0;
+function makeUid(): (prefix: string) => string {
+  return (prefix: string) => `${prefix}-${++_moduleUidCounter}`;
 }
-
-function resetCounter() { counter = 0; }
 
 // ─── Trailer Flow ─────────────────────────────────────────────────────────────
 
 function createTrailerFlow(): Storyboard {
-  resetCounter();
+  const uid = makeUid();
+  // Per-invocation frame id factory. Two calls to createTrailerFlow() would
+  // otherwise produce two storyboards with colliding frame ids (e.g. two frames
+  // both called 'trailer-hook'). Same pattern as RPG/Marketing templates.
+  const fid = (slug: string) => `${slug}-${uid('f')}`;
+  const hook = fid('trailer-hook');
+  const establish = fid('trailer-establish');
+  const feature = fid('trailer-feature');
+  const tension = fid('trailer-tension');
+  const proof = fid('trailer-proof');
+  const cta = fid('trailer-cta');
   const frames: StoryboardFrame[] = [
     {
-      id: 'trailer-hook', type: 'shot', title: 'Hook Shot',
+      id: hook, type: 'shot', title: 'Hook Shot',
       summary: 'Opening visual that grabs attention in the first 2 seconds.',
       position: { x: 50, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -43,7 +63,7 @@ function createTrailerFlow(): Storyboard {
       annotations: [],
     },
     {
-      id: 'trailer-establish', type: 'sequence', title: 'Establishing Context',
+      id: establish, type: 'sequence', title: 'Establishing Context',
       summary: 'Set the world, product, or story context for the viewer.',
       position: { x: 320, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -59,7 +79,7 @@ function createTrailerFlow(): Storyboard {
       annotations: [],
     },
     {
-      id: 'trailer-feature', type: 'shot', title: 'Feature Reveal',
+      id: feature, type: 'shot', title: 'Feature Reveal',
       summary: 'Show the core feature, mechanic, or story premise.',
       position: { x: 590, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -75,7 +95,7 @@ function createTrailerFlow(): Storyboard {
       annotations: [],
     },
     {
-      id: 'trailer-tension', type: 'edit_beat', title: 'Tension Build',
+      id: tension, type: 'edit_beat', title: 'Tension Build',
       summary: 'Escalate pacing to create anticipation before the payoff.',
       position: { x: 860, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -90,7 +110,7 @@ function createTrailerFlow(): Storyboard {
       annotations: [],
     },
     {
-      id: 'trailer-proof', type: 'shot', title: 'Proof / Social Proof',
+      id: proof, type: 'shot', title: 'Proof / Social Proof',
       summary: 'Show evidence: reviews, stats, gameplay footage, testimonials.',
       position: { x: 1130, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -105,7 +125,7 @@ function createTrailerFlow(): Storyboard {
       annotations: [],
     },
     {
-      id: 'trailer-cta', type: 'edit_beat', title: 'CTA / Title Card',
+      id: cta, type: 'edit_beat', title: 'CTA / Title Card',
       summary: 'Final frame: title, release date, call-to-action.',
       position: { x: 1400, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -123,17 +143,18 @@ function createTrailerFlow(): Storyboard {
   ];
 
   const connections: StoryboardConnection[] = [
-    { id: uid('c'), fromFrameId: 'trailer-hook', toFrameId: 'trailer-establish', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'trailer-establish', toFrameId: 'trailer-feature', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'trailer-feature', toFrameId: 'trailer-tension', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'trailer-tension', toFrameId: 'trailer-proof', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'trailer-proof', toFrameId: 'trailer-cta', type: 'match_cut' },
+    { id: uid('c'), fromFrameId: hook, toFrameId: establish, type: 'sequence' },
+    { id: uid('c'), fromFrameId: establish, toFrameId: feature, type: 'sequence' },
+    { id: uid('c'), fromFrameId: feature, toFrameId: tension, type: 'sequence' },
+    { id: uid('c'), fromFrameId: tension, toFrameId: proof, type: 'sequence' },
+    { id: uid('c'), fromFrameId: proof, toFrameId: cta, type: 'match_cut' },
   ];
 
   return {
     id: 'template-trailer-flow',
     title: 'Trailer Flow',
     description: 'Hook → Context → Feature → Tension → Proof → CTA. Best for product/game trailers, release videos, repo promos.',
+    templateId: 'trailer_flow',
     frames,
     connections,
   };
@@ -142,10 +163,17 @@ function createTrailerFlow(): Storyboard {
 // ─── Cutscene Sequence ────────────────────────────────────────────────────────
 
 function createCutsceneSequence(): Storyboard {
-  resetCounter();
+  const uid = makeUid();
+  const fid = (slug: string) => `${slug}-${uid('f')}`;
+  const establish = fid('cutscene-establish');
+  const character = fid('cutscene-character');
+  const reveal = fid('cutscene-reveal');
+  const reaction = fid('cutscene-reaction');
+  const action = fid('cutscene-action');
+  const exit = fid('cutscene-exit');
   const frames: StoryboardFrame[] = [
     {
-      id: 'cutscene-establish', type: 'shot', title: 'Establishing Shot',
+      id: establish, type: 'shot', title: 'Establishing Shot',
       summary: 'Set location, time, mood for the cinematic.',
       position: { x: 50, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -164,7 +192,7 @@ function createCutsceneSequence(): Storyboard {
       annotations: [],
     },
     {
-      id: 'cutscene-character', type: 'dialogue', title: 'Character Beat',
+      id: character, type: 'dialogue', title: 'Character Beat',
       summary: 'Character introduction or key dialogue delivery.',
       position: { x: 320, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -183,7 +211,7 @@ function createCutsceneSequence(): Storyboard {
       annotations: [],
     },
     {
-      id: 'cutscene-reveal', type: 'camera_move', title: 'Reveal',
+      id: reveal, type: 'camera_move', title: 'Reveal',
       summary: 'Camera reveals key information, object, or twist.',
       position: { x: 590, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -202,7 +230,7 @@ function createCutsceneSequence(): Storyboard {
       annotations: [],
     },
     {
-      id: 'cutscene-reaction', type: 'shot', title: 'Reaction Shot',
+      id: reaction, type: 'shot', title: 'Reaction Shot',
       summary: 'Character or environment reacts to the reveal.',
       position: { x: 860, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -219,7 +247,7 @@ function createCutsceneSequence(): Storyboard {
       annotations: [],
     },
     {
-      id: 'cutscene-action', type: 'action', title: 'Action Shift',
+      id: action, type: 'action', title: 'Action Shift',
       summary: 'Scene shifts into action or consequence.',
       position: { x: 1130, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -238,7 +266,7 @@ function createCutsceneSequence(): Storyboard {
       annotations: [],
     },
     {
-      id: 'cutscene-exit', type: 'transition', title: 'Exit Beat',
+      id: exit, type: 'transition', title: 'Exit Beat',
       summary: 'Scene closes — transition to next sequence or black.',
       position: { x: 1400, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -256,17 +284,18 @@ function createCutsceneSequence(): Storyboard {
   ];
 
   const connections: StoryboardConnection[] = [
-    { id: uid('c'), fromFrameId: 'cutscene-establish', toFrameId: 'cutscene-character', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'cutscene-character', toFrameId: 'cutscene-reveal', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'cutscene-reveal', toFrameId: 'cutscene-reaction', type: 'reaction' },
-    { id: uid('c'), fromFrameId: 'cutscene-reaction', toFrameId: 'cutscene-action', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'cutscene-action', toFrameId: 'cutscene-exit', type: 'transition' },
+    { id: uid('c'), fromFrameId: establish, toFrameId: character, type: 'sequence' },
+    { id: uid('c'), fromFrameId: character, toFrameId: reveal, type: 'sequence' },
+    { id: uid('c'), fromFrameId: reveal, toFrameId: reaction, type: 'reaction' },
+    { id: uid('c'), fromFrameId: reaction, toFrameId: action, type: 'sequence' },
+    { id: uid('c'), fromFrameId: action, toFrameId: exit, type: 'transition' },
   ];
 
   return {
     id: 'template-cutscene-sequence',
     title: 'Cutscene Sequence',
     description: 'Establishing → Character → Reveal → Reaction → Action → Exit. Best for RPG/game cinematics.',
+    templateId: 'cutscene_sequence',
     frames,
     connections,
   };
@@ -275,10 +304,17 @@ function createCutsceneSequence(): Storyboard {
 // ─── Explainer Video ──────────────────────────────────────────────────────────
 
 function createExplainerVideo(): Storyboard {
-  resetCounter();
+  const uid = makeUid();
+  const fid = (slug: string) => `${slug}-${uid('f')}`;
+  const problem = fid('explainer-problem');
+  const metaphor = fid('explainer-metaphor');
+  const demo = fid('explainer-demo');
+  const proof = fid('explainer-proof');
+  const outcome = fid('explainer-outcome');
+  const cta = fid('explainer-cta');
   const frames: StoryboardFrame[] = [
     {
-      id: 'explainer-problem', type: 'shot', title: 'Problem',
+      id: problem, type: 'shot', title: 'Problem',
       summary: 'Show the pain point or challenge the viewer faces.',
       position: { x: 50, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -295,7 +331,7 @@ function createExplainerVideo(): Storyboard {
       annotations: [],
     },
     {
-      id: 'explainer-metaphor', type: 'vfx', title: 'Visual Metaphor',
+      id: metaphor, type: 'vfx', title: 'Visual Metaphor',
       summary: 'Abstract or visual analogy that makes the concept tangible.',
       position: { x: 320, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -311,7 +347,7 @@ function createExplainerVideo(): Storyboard {
       annotations: [],
     },
     {
-      id: 'explainer-demo', type: 'shot', title: 'Demonstration',
+      id: demo, type: 'shot', title: 'Demonstration',
       summary: 'Show the product/solution in action — not features, outcomes.',
       position: { x: 590, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -328,7 +364,7 @@ function createExplainerVideo(): Storyboard {
       annotations: [],
     },
     {
-      id: 'explainer-proof', type: 'shot', title: 'Proof',
+      id: proof, type: 'shot', title: 'Proof',
       summary: 'Evidence that the solution delivers: stats, testimonials, results.',
       position: { x: 860, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -344,7 +380,7 @@ function createExplainerVideo(): Storyboard {
       annotations: [],
     },
     {
-      id: 'explainer-outcome', type: 'sequence', title: 'Outcome',
+      id: outcome, type: 'sequence', title: 'Outcome',
       summary: 'Show the end state — what life/work looks like after adoption.',
       position: { x: 1130, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -360,7 +396,7 @@ function createExplainerVideo(): Storyboard {
       annotations: [],
     },
     {
-      id: 'explainer-cta', type: 'edit_beat', title: 'CTA',
+      id: cta, type: 'edit_beat', title: 'CTA',
       summary: 'Call-to-action: what the viewer should do next.',
       position: { x: 1400, y: 200 }, size: { width: 220, height: 140 },
       content: {
@@ -378,17 +414,18 @@ function createExplainerVideo(): Storyboard {
   ];
 
   const connections: StoryboardConnection[] = [
-    { id: uid('c'), fromFrameId: 'explainer-problem', toFrameId: 'explainer-metaphor', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'explainer-metaphor', toFrameId: 'explainer-demo', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'explainer-demo', toFrameId: 'explainer-proof', type: 'sequence' },
-    { id: uid('c'), fromFrameId: 'explainer-proof', toFrameId: 'explainer-outcome', type: 'match_cut' },
-    { id: uid('c'), fromFrameId: 'explainer-outcome', toFrameId: 'explainer-cta', type: 'sequence' },
+    { id: uid('c'), fromFrameId: problem, toFrameId: metaphor, type: 'sequence' },
+    { id: uid('c'), fromFrameId: metaphor, toFrameId: demo, type: 'sequence' },
+    { id: uid('c'), fromFrameId: demo, toFrameId: proof, type: 'sequence' },
+    { id: uid('c'), fromFrameId: proof, toFrameId: outcome, type: 'match_cut' },
+    { id: uid('c'), fromFrameId: outcome, toFrameId: cta, type: 'sequence' },
   ];
 
   return {
     id: 'template-explainer-video',
     title: 'Explainer Video',
     description: 'Problem → Metaphor → Demo → Proof → Outcome → CTA. Best for creator tools, product demos, launch assets.',
+    templateId: 'explainer_video',
     frames,
     connections,
   };
@@ -423,12 +460,24 @@ export const CINEMATIC_TEMPLATES: CinematicTemplateDefinition[] = [
   },
 ];
 
-export function getCinematicTemplate(id: CinematicTemplateId): CinematicTemplateDefinition {
-  const t = CINEMATIC_TEMPLATES.find(t => t.id === id);
-  if (!t) throw new Error(`Unknown cinematic template: ${id}`);
-  return t;
+/**
+ * Look up a cinematic template by id.
+ *
+ * Returns `undefined` for an unknown id, matching the parity contract with
+ * `getMarketingTemplate` and `getStoryboardTemplate` (RPG). The historical
+ * throwing behavior was an API drift caught in Wave 6 review (F-VR-205).
+ *
+ * Callers that want the throwing behavior should use `createCinematicStoryboard`,
+ * which validates the id and throws for an unknown template.
+ */
+export function getCinematicTemplate(id: CinematicTemplateId): CinematicTemplateDefinition | undefined {
+  return CINEMATIC_TEMPLATES.find(t => t.id === id);
 }
 
 export function createCinematicStoryboard(templateId: CinematicTemplateId): Storyboard {
-  return getCinematicTemplate(templateId).createStoryboard();
+  const template = getCinematicTemplate(templateId);
+  if (!template) {
+    throw new Error(`Unknown cinematic template: ${templateId}`);
+  }
+  return template.createStoryboard();
 }

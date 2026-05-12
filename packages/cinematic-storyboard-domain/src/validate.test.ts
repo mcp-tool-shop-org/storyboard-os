@@ -31,6 +31,7 @@ describe('validateCinematicStoryboard', () => {
       const result = validateCinematicStoryboard({ id: 'x', title: 'X', frames: [], connections: [] });
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors.some(e => e.code === 'EMPTY_STORYBOARD')).toBe(true);
     });
 
     it('reports duplicate frame IDs', () => {
@@ -40,7 +41,10 @@ describe('validateCinematicStoryboard', () => {
       ]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.toLowerCase().includes('duplicate'))).toBe(true);
+      const dup = result.errors.find(e => e.code === 'DUPLICATE_FRAME_ID');
+      expect(dup).toBeDefined();
+      expect(dup?.frameId).toBe('dup');
+      expect(dup?.message.toLowerCase()).toContain('duplicate');
     });
   });
 
@@ -49,56 +53,73 @@ describe('validateCinematicStoryboard', () => {
       const sb = makeStoryboard([makeFrame('s1', 'shot', {})]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.includes('visualDescription'))).toBe(true);
+      const err = result.errors.find(e => e.code === 'CINEMATIC_SHOT_MISSING_VISUAL_DESCRIPTION');
+      expect(err).toBeDefined();
+      expect(err?.frameId).toBe('s1');
+      expect(err?.message).toContain('visualDescription');
     });
 
     it('fails when camera_move missing cameraMovement', () => {
       const sb = makeStoryboard([makeFrame('c1', 'camera_move', {})]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.includes('cameraMovement'))).toBe(true);
+      const err = result.errors.find(e => e.code === 'CINEMATIC_CAMERA_MOVE_MISSING_MOVEMENT');
+      expect(err).toBeDefined();
+      expect(err?.frameId).toBe('c1');
     });
 
     it('fails when dialogue missing dialogue array', () => {
       const sb = makeStoryboard([makeFrame('d1', 'dialogue', {})]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.includes('dialogue'))).toBe(true);
+      const err = result.errors.find(e => e.code === 'CINEMATIC_DIALOGUE_MISSING_LINES');
+      expect(err).toBeDefined();
+      expect(err?.frameId).toBe('d1');
     });
 
     it('fails when action missing actionNotes', () => {
       const sb = makeStoryboard([makeFrame('a1', 'action', {})]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.includes('actionNotes'))).toBe(true);
+      const err = result.errors.find(e => e.code === 'CINEMATIC_ACTION_MISSING_NOTES');
+      expect(err).toBeDefined();
+      expect(err?.frameId).toBe('a1');
     });
 
     it('fails when transition missing editNotes', () => {
       const sb = makeStoryboard([makeFrame('t1', 'transition', {})]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.includes('editNotes'))).toBe(true);
+      const err = result.errors.find(e => e.code === 'CINEMATIC_TRANSITION_MISSING_EDIT_NOTES');
+      expect(err).toBeDefined();
+      expect(err?.frameId).toBe('t1');
     });
 
     it('fails when vfx missing vfxRequirements', () => {
       const sb = makeStoryboard([makeFrame('v1', 'vfx', {})]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.includes('vfxRequirements'))).toBe(true);
+      const err = result.errors.find(e => e.code === 'CINEMATIC_VFX_MISSING_REQUIREMENTS');
+      expect(err).toBeDefined();
+      expect(err?.frameId).toBe('v1');
     });
 
     it('fails when audio missing audioRequirements', () => {
       const sb = makeStoryboard([makeFrame('au1', 'audio', {})]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.includes('audioRequirements'))).toBe(true);
+      const err = result.errors.find(e => e.code === 'CINEMATIC_AUDIO_MISSING_REQUIREMENTS');
+      expect(err).toBeDefined();
+      expect(err?.frameId).toBe('au1');
     });
 
     it('fails when edit_beat missing durationEstimate', () => {
       const sb = makeStoryboard([makeFrame('e1', 'edit_beat', {})]);
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.reason.includes('durationEstimate'))).toBe(true);
+      const err = result.errors.find(e => e.code === 'CINEMATIC_EDIT_BEAT_MISSING_DURATION');
+      expect(err).toBeDefined();
+      expect(err?.frameId).toBe('e1');
     });
 
     it('passes with valid frames', () => {
@@ -116,6 +137,19 @@ describe('validateCinematicStoryboard', () => {
       const result = validateCinematicStoryboard(sb);
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
+    });
+
+    it('returns errors with the shared StoryboardValidationError shape', () => {
+      const sb = makeStoryboard([makeFrame('s1', 'shot', {})]);
+      const result = validateCinematicStoryboard(sb);
+      expect(result.valid).toBe(false);
+      // Shape parity with rpg / marketing domains: code + message + frameId.
+      const err = result.errors[0];
+      expect(typeof err.code).toBe('string');
+      expect(typeof err.message).toBe('string');
+      expect(err.frameId).toBeDefined();
+      // No legacy `reason` field.
+      expect((err as any).reason).toBeUndefined();
     });
   });
 });

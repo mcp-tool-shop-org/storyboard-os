@@ -144,6 +144,33 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
     const panStart   = useRef({ clientX: 0, clientY: 0, stageX: 0, stageY: 0 });
     const hasFitted  = useRef(false);
 
+    // ── Reconcile positions with frames prop ───────────────────────────────
+    // When the parent adds, removes, or replaces frames, prune orphaned ids
+    // and seed new ids from frame.position. Existing dragged positions for
+    // frames that still exist are preserved untouched.
+    useEffect(() => {
+      setPositions(prev => {
+        const next: PositionMap = {};
+        let changed = false;
+        const prevKeys = Object.keys(prev);
+        if (prevKeys.length !== frames.length) {
+          changed = true;
+        }
+        for (const f of frames) {
+          if (prev[f.id]) {
+            next[f.id] = prev[f.id];
+          } else {
+            next[f.id] = { ...f.position };
+            changed = true;
+          }
+        }
+        // If we wrote the same number of keys but any old key disappeared,
+        // the length check above caught it. Return prev when nothing changed
+        // to avoid an unnecessary re-render.
+        return changed ? next : prev;
+      });
+    }, [frames]);
+
     // ── Imperative apply ───────────────────────────────────────────────────
     // All viewport changes go through here. Imperatively sets the Konva Stage
     // (immediate visual update) and mirrors into React state (for controls display).

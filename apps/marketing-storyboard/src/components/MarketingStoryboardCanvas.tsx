@@ -34,6 +34,7 @@ import {
 } from '@storyboard-os/marketing-domain';
 import type { Storyboard } from '@storyboard-os/marketing-domain';
 import MarketingFrameInspector from './MarketingFrameInspector';
+import ErrorBoundary from './ErrorBoundary';
 
 // ─── Marketing canvas config ──────────────────────────────────────────────────
 
@@ -101,7 +102,10 @@ interface Props {
     storyboard: Storyboard;
 }
 
-export default function MarketingStoryboardCanvas({ storyboard }: Props) {
+// Exported as the default at the bottom of the file, wrapped in an error
+// boundary so a thrown Konva mount error renders a graceful fallback (with a
+// link to the SSG launch brief) instead of blanking the page.
+function MarketingStoryboardCanvasInner({ storyboard }: Props) {
     const handoffHref = `/campaigns/${storyboard.id}/handoff`;
     const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
     const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
@@ -704,5 +708,14 @@ function BlockerItem({ label, detail }: { label: string; detail: string }) {
             <div style={{ fontSize: 12, color: '#e2e8f0', fontWeight: 500 }}>{label}</div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{detail}</div>
         </div>
+    );
+}
+
+export default function MarketingStoryboardCanvas({ storyboard }: Props) {
+    const handoffHref = `/campaigns/${storyboard.id}/handoff`;
+    return (
+        <ErrorBoundary handoffHref={handoffHref}>
+            <MarketingStoryboardCanvasInner storyboard={storyboard} />
+        </ErrorBoundary>
     );
 }

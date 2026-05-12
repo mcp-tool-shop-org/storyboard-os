@@ -6,23 +6,41 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Git tag to publish (e.g. v1.0.0)"
+        description: "Git tag to publish (e.g. v1.0.0). REQUIRED — no default to prevent accidental re-publishes."
         required: true
-        default: "v1.0.0"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     name: Build and publish @storyboard-os/*
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
+      - name: Validate tag input
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            echo "ERROR: tag input required (got empty value)"
+            exit 1
+          fi
+          if ! echo "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-.*)?$'; then
+            echo "ERROR: tag '$TAG' does not match v[0-9]+.[0-9]+.[0-9]+(-.*)? semver pattern"
+            exit 1
+          fi
+          echo "Validated tag: $TAG"
+          echo "RESOLVED_TAG=$TAG" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          ref: ${{ env.RESOLVED_TAG }}
 
       - uses: pnpm/action-setup@v3
         with:
@@ -37,41 +55,134 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
+      - name: Verify build before publish (trust-but-verify)
         run: |
-          pnpm --filter @storyboard-os/core build
-          pnpm --filter @storyboard-os/routing build
-          pnpm --filter @storyboard-os/rpg-domain build
-          pnpm --filter @storyboard-os/canvas build
-          pnpm --filter @storyboard-os/marketing-domain build
-          pnpm --filter @storyboard-os/cinematic-domain build
+          pnpm run build:packages
+          pnpm test
+          pnpm build
+
+      - name: Tag-vs-version consistency check
+        run: |
+          CORE_VERSION=$(jq -r .version packages/storyboard-core/package.json)
+          EXPECTED="v${CORE_VERSION}"
+          if [ "$EXPECTED" != "${RESOLVED_TAG}" ]; then
+            echo "ERROR: tag ${RESOLVED_TAG} does not match packages/storyboard-core version ${CORE_VERSION} (expected ${EXPECTED})"
+            exit 1
+          fi
+          echo "Tag matches core version: ${RESOLVED_TAG}"
 
       - name: Publish @storyboard-os/core
-        run: pnpm publish --filter @storyboard-os/core --no-git-checks --access public
+        id: publish_core
+        run: |
+          PKG_VERSION=$(jq -r .version packages/storyboard-core/package.json)
+          if pnpm view @storyboard-os/core@$PKG_VERSION version 2>/dev/null; then
+            echo "@storyboard-os/core@$PKG_VERSION already published — skipping"
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+          else
+            pnpm publish --filter @storyboard-os/core --no-git-checks --access public --provenance
+            echo "status=published" >> "$GITHUB_OUTPUT"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @storyboard-os/routing
-        run: pnpm publish --filter @storyboard-os/routing --no-git-checks --access public
+        id: publish_routing
+        run: |
+          PKG_VERSION=$(jq -r .version packages/storyboard-routing/package.json)
+          if pnpm view @storyboard-os/routing@$PKG_VERSION version 2>/dev/null; then
+            echo "@storyboard-os/routing@$PKG_VERSION already published — skipping"
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+          else
+            pnpm publish --filter @storyboard-os/routing --no-git-checks --access public --provenance
+            echo "status=published" >> "$GITHUB_OUTPUT"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @storyboard-os/rpg-domain
-        run: pnpm publish --filter @storyboard-os/rpg-domain --no-git-checks --access public
+        id: publish_rpg_domain
+        run: |
+          PKG_VERSION=$(jq -r .version packages/rpg-storyboard-domain/package.json)
+          if pnpm view @storyboard-os/rpg-domain@$PKG_VERSION version 2>/dev/null; then
+            echo "@storyboard-os/rpg-domain@$PKG_VERSION already published — skipping"
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+          else
+            pnpm publish --filter @storyboard-os/rpg-domain --no-git-checks --access public --provenance
+            echo "status=published" >> "$GITHUB_OUTPUT"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @storyboard-os/canvas
-        run: pnpm publish --filter @storyboard-os/canvas --no-git-checks --access public
+        id: publish_canvas
+        run: |
+          PKG_VERSION=$(jq -r .version packages/storyboard-canvas/package.json)
+          if pnpm view @storyboard-os/canvas@$PKG_VERSION version 2>/dev/null; then
+            echo "@storyboard-os/canvas@$PKG_VERSION already published — skipping"
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+          else
+            pnpm publish --filter @storyboard-os/canvas --no-git-checks --access public --provenance
+            echo "status=published" >> "$GITHUB_OUTPUT"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @storyboard-os/marketing-domain
-        run: pnpm publish --filter @storyboard-os/marketing-domain --no-git-checks --access public
+        id: publish_marketing_domain
+        run: |
+          PKG_VERSION=$(jq -r .version packages/marketing-storyboard-domain/package.json)
+          if pnpm view @storyboard-os/marketing-domain@$PKG_VERSION version 2>/dev/null; then
+            echo "@storyboard-os/marketing-domain@$PKG_VERSION already published — skipping"
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+          else
+            pnpm publish --filter @storyboard-os/marketing-domain --no-git-checks --access public --provenance
+            echo "status=published" >> "$GITHUB_OUTPUT"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @storyboard-os/cinematic-domain
-        run: pnpm publish --filter @storyboard-os/cinematic-domain --no-git-checks --access public
+        id: publish_cinematic_domain
+        run: |
+          PKG_VERSION=$(jq -r .version packages/cinematic-storyboard-domain/package.json)
+          if pnpm view @storyboard-os/cinematic-domain@$PKG_VERSION version 2>/dev/null; then
+            echo "@storyboard-os/cinematic-domain@$PKG_VERSION already published — skipping"
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+          else
+            pnpm publish --filter @storyboard-os/cinematic-domain --no-git-checks --access public --provenance
+            echo "status=published" >> "$GITHUB_OUTPUT"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Post-publish smoke verify
+        if: always()
+        run: |
+          echo "=== Publish summary ==="
+          echo "core:               ${{ steps.publish_core.outputs.status }}"
+          echo "routing:            ${{ steps.publish_routing.outputs.status }}"
+          echo "rpg-domain:         ${{ steps.publish_rpg_domain.outputs.status }}"
+          echo "canvas:             ${{ steps.publish_canvas.outputs.status }}"
+          echo "marketing-domain:   ${{ steps.publish_marketing_domain.outputs.status }}"
+          echo "cinematic-domain:   ${{ steps.publish_cinematic_domain.outputs.status }}"
+          echo ""
+          echo "=== Smoke-verify versions live on npm ==="
+          # name => directory mapping (npm package names don't match directory layout for domain packages)
+          declare -A PKG_DIRS=(
+            ["core"]="packages/storyboard-core"
+            ["routing"]="packages/storyboard-routing"
+            ["canvas"]="packages/storyboard-canvas"
+            ["rpg-domain"]="packages/rpg-storyboard-domain"
+            ["marketing-domain"]="packages/marketing-storyboard-domain"
+            ["cinematic-domain"]="packages/cinematic-storyboard-domain"
+          )
+          for PKG in core routing canvas rpg-domain marketing-domain cinematic-domain; do
+            PKG_DIR="${PKG_DIRS[$PKG]}"
+            if [ -f "${PKG_DIR}/package.json" ]; then
+              EXPECTED=$(jq -r .version "${PKG_DIR}/package.json")
+              ACTUAL=$(pnpm view "@storyboard-os/${PKG}@${EXPECTED}" version 2>/dev/null || echo "MISSING")
+              echo "@storyboard-os/${PKG}: expected=${EXPECTED} live=${ACTUAL}"
+            else
+              echo "@storyboard-os/${PKG}: directory ${PKG_DIR} not found"
+            fi
+          done

@@ -1,4 +1,7 @@
 import type { SiteConfig } from '@mcptoolshop/site-theme';
+// Pull version from root package.json so the hero badge auto-updates on bump.
+// Vite resolves JSON imports at build time (resolveJsonModule: true in tsconfig).
+import rootPkg from '../../package.json' with { type: 'json' };
 
 export const config: SiteConfig = {
   title: 'Storyboard OS',
@@ -9,15 +12,22 @@ export const config: SiteConfig = {
   footerText: 'MIT Licensed — built by <a href="https://mcp-tool-shop.github.io/" style="color:var(--color-muted);text-decoration:underline">MCP Tool Shop</a>',
 
   hero: {
-    badge: 'Open source · v1.0.3',
+    badge: `Open source · v${rootPkg.version}`,
     headline: 'Story structure that ships.',
     headlineAccent: 'Three verticals.',
     description: 'A visual authoring platform where every frame is an implementation spec. Three verticals — RPG quest authoring, marketing campaign implementation, and cinematic production storyboarding — share one canvas, zero cross-domain imports.',
     primaryCta: { href: '#platform', label: 'See the platform' },
     secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
+    // AUTOGEN-NOTE: Snapshot values (test count, page count, app count) below are
+    // manually updated. To verify, run:
+    //   pnpm test            # total tests
+    //   pnpm -r build        # builds all apps + counts pages
+    //   ls apps/ | wc -l     # app count
+    //   ls packages/ | wc -l # package count
+    // See docs/snapshot-checklist.md for every doc location that holds these snapshots.
     previews: [
       { label: 'Install', code: 'git clone mcp-tool-shop-org/storyboard-os\npnpm install && pnpm dev' },
-      { label: 'Verify', code: 'pnpm verify  # 609 tests · 54 pages · 3 apps' },
+      { label: 'Verify', code: 'pnpm verify  # 649 tests · 54 pages · 3 apps' },
       { label: 'Packages', code: '@storyboard-os/core\n@storyboard-os/rpg-domain\n@storyboard-os/marketing-domain\n@storyboard-os/cinematic-domain\n@storyboard-os/canvas\n@storyboard-os/routing' },
     ],
   },
@@ -53,8 +63,10 @@ export const config: SiteConfig = {
           title: '@storyboard-os/routing',
           desc: 'URL construction helpers with zero dependencies. One factory, three route builders. Each vertical passes its own base path — the canvas and domain work without modification.',
         },
+        // AUTOGEN-NOTE: "649 tests" below is a manually updated snapshot.
+        // Verify with: pnpm test  (see docs/snapshot-checklist.md)
         {
-          title: '609 tests, three verticals, zero cross-domain imports',
+          title: '649 tests, three verticals, zero cross-domain imports',
           desc: 'The cinematic vertical proved multi-vertical architecture for the third time: zero changes to canvas, core, or routing. Core Hardening 1A extracted generic connection types — domains own their vocabulary without casts.',
         },
       ],
@@ -120,9 +132,13 @@ export const config: SiteConfig = {
           title: 'Use a package',
           code: 'npm install @storyboard-os/rpg-domain\n\n// Generate a quest board\nimport { createStoryboardFromTemplate } from \'@storyboard-os/rpg-domain\';\nconst board = createStoryboardFromTemplate(\'quest_flow\');',
         },
+        // AUTOGEN-NOTE: "649 tests", "6 packages", "3 apps", "54 pages" below
+        // are manually updated snapshots. Verify with:
+        //   pnpm test; pnpm -r build; ls packages/ | wc -l; ls apps/ | wc -l
+        // See docs/snapshot-checklist.md for every doc location that holds these.
         {
           title: 'Verify before ship',
-          code: '# All 609 tests + full build in one command\npnpm verify  # 6 packages · 3 apps · 54 pages',
+          code: '# All 649 tests + full build in one command\npnpm verify  # 6 packages · 3 apps · 54 pages',
         },
       ],
     },

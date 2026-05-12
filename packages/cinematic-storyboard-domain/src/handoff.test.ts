@@ -82,6 +82,55 @@ describe('generateProductionBrief', () => {
     expect(brief.totalShots).toBe(8);
     expect(brief.title).toContain('Launch Trailer');
   });
+
+  it('orders shots by graph topology, not array order', () => {
+    // Frames are intentionally listed out of flow order: B comes before A in
+    // the array but A → B in the connection graph. The production brief must
+    // walk the graph in flow order so the resulting shot list reads as it
+    // would in playback.
+    const storyboard: Storyboard = {
+      id: 'topo-test',
+      title: 'Topology Test',
+      frames: [
+        makeFrame('B', 'shot', { visualDescription: 'second shot' }),
+        makeFrame('A', 'shot', { visualDescription: 'first shot' }),
+        makeFrame('C', 'shot', { visualDescription: 'third shot' }),
+      ],
+      connections: [
+        { id: 'c1', fromFrameId: 'A', toFrameId: 'B', type: 'sequence' },
+        { id: 'c2', fromFrameId: 'B', toFrameId: 'C', type: 'sequence' },
+      ],
+    };
+
+    const brief = generateProductionBrief(storyboard);
+    expect(brief.shots.map(s => s.frameId)).toEqual(['A', 'B', 'C']);
+    expect(brief.shots[0].shotNumber).toBe(1);
+    expect(brief.shots[1].shotNumber).toBe(2);
+    expect(brief.shots[2].shotNumber).toBe(3);
+  });
+
+  it('appends cycle members at the end of the topological order', () => {
+    // Cycle: A → B → A. Neither has in-degree 0; both must still appear in
+    // the brief (no shot may be silently dropped). Cycle members are appended
+    // in original array order after the BFS-reachable frames.
+    const storyboard: Storyboard = {
+      id: 'cycle-test',
+      title: 'Cycle Test',
+      frames: [
+        makeFrame('A', 'shot', { visualDescription: 'a' }),
+        makeFrame('B', 'shot', { visualDescription: 'b' }),
+      ],
+      connections: [
+        { id: 'c1', fromFrameId: 'A', toFrameId: 'B', type: 'sequence' },
+        { id: 'c2', fromFrameId: 'B', toFrameId: 'A', type: 'sequence' },
+      ],
+    };
+
+    const brief = generateProductionBrief(storyboard);
+    expect(brief.shots).toHaveLength(2);
+    const ids = brief.shots.map(s => s.frameId).sort();
+    expect(ids).toEqual(['A', 'B']);
+  });
 });
 
 describe('generateProductionMarkdown', () => {

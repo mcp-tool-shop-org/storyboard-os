@@ -16,8 +16,8 @@ export {
 } from './beatStatus';
 export type { CinematicBeatStatus, CinematicBeatStatusLevel, CinematicReadinessSummary } from './beatStatus';
 
-export { validateCinematicStoryboard } from './validate';
-export type { CinematicValidationResult, CinematicValidationError } from './validate';
+export { validateCinematicStoryboard, validateStoryboard } from './validate';
+export type { StoryboardValidationError, StoryboardValidationResult } from './validate';
 
 export { getCinematicFrameBadges, getCinematicFrameSignal } from './frameSignals';
 export type { CinematicFrameBadge, CinematicFrameSignal } from './frameSignals';

@@ -31,7 +31,19 @@ export default function CreateProjectForm({ templateId }: Props) {
       description: description.trim() || undefined,
       templateId,
     });
-    saveProject(project);
+    // F-AP-201: don't navigate to the empty board if persistence failed —
+    // /projects/board?id=… would just render "Project not found" because the
+    // record was never written. Show the failure inline so the user can free
+    // space (or copy the title elsewhere) and retry.
+    const result = saveProject(project);
+    if (!result.ok) {
+      setSubmitting(false);
+      const prefix = result.code === 'QUOTA_EXCEEDED'
+        ? 'Storage full — '
+        : 'Save failed — ';
+      setError(`${prefix}${result.message}`);
+      return;
+    }
     window.location.href = `/projects/board?id=${project.id}`;
   }
 

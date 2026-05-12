@@ -30,6 +30,7 @@ import {
 import type { Storyboard } from '@storyboard-os/cinematic-domain';
 import CinematicFrameInspector from './CinematicFrameInspector';
 import ProductionSignalPanel from './ProductionSignalPanel';
+import ErrorBoundary from './ErrorBoundary';
 
 // ─── Cinematic canvas config ──────────────────────────────────────────────────
 
@@ -114,7 +115,10 @@ interface Props {
     storyboard: Storyboard;
 }
 
-export default function CinematicStoryboardCanvas({ storyboard }: Props) {
+// Exported as the default at the bottom of the file, wrapped in an error
+// boundary so a thrown Konva mount error renders a graceful fallback (with a
+// link to the SSG production brief) instead of blanking the page.
+function CinematicStoryboardCanvasInner({ storyboard }: Props) {
     const handoffHref = `/sequences/${storyboard.id}/handoff`;
     const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
     const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
@@ -622,5 +626,20 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
                 )}
             </div>
         </aside>
+    );
+}
+
+// ─── Public entry point — wraps the canvas in an ErrorBoundary ───────────────
+//
+// Konva mount failures or render exceptions inside the canvas tree get caught
+// here, rendering a fallback that points at the SSG'd production brief. The
+// brief is plain HTML and works without React/Konva, so the user always has
+// a path to their data even when the interactive board can't render.
+export default function CinematicStoryboardCanvas({ storyboard }: Props) {
+    const handoffHref = `/sequences/${storyboard.id}/handoff`;
+    return (
+        <ErrorBoundary handoffHref={handoffHref}>
+            <CinematicStoryboardCanvasInner storyboard={storyboard} />
+        </ErrorBoundary>
     );
 }

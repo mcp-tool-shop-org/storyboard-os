@@ -17,7 +17,9 @@ export default defineConfig({
         href: '/storyboard-os/',
         replacesTitle: false,
       },
-      disable404Route: true,
+      // Starlight's recovery 404 page renders by default — keep it so visitors
+      // hitting a stale or mistyped handbook URL get a navigable error page
+      // rather than a bare host 404.
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/mcp-tool-shop-org/storyboard-os' },
       ],

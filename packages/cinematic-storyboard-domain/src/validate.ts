@@ -1,30 +1,49 @@
 // ─── Cinematic Domain — Validation ───────────────────────────────────────────
+//
+// Cinematic domain validation. Runs the generic structural check from
+// @storyboard-os/core and adds cinematic-specific invariants:
+//
+//   • shot frames must have a visualDescription
+//   • camera_move frames must have a cameraMovement
+//   • action frames must have actionNotes
+//   • dialogue frames must have dialogue lines
+//   • transition frames must have editNotes
+//   • vfx frames must have vfxRequirements
+//   • audio frames must have audioRequirements
+//   • edit_beat frames must have a durationEstimate
+//
+// Returns the shared `StoryboardValidationError` shape from @storyboard-os/core
+// so consumers can pattern-match by `code` across all three verticals.
+//
+// ─────────────────────────────────────────────────────────────────────────────
 
-import { validateStoryboard } from '@storyboard-os/core';
+import {
+  validateStoryboard,
+  type StoryboardValidationError,
+  type StoryboardValidationResult,
+} from '@storyboard-os/core';
 import type { Storyboard, StoryboardFrame, CinematicFrameType } from './schema';
 
-export interface CinematicValidationResult {
-  valid: boolean;
-  errors: CinematicValidationError[];
-}
-
-export interface CinematicValidationError {
-  frameId: string;
-  reason: string;
-}
+export type { StoryboardValidationError, StoryboardValidationResult };
+export { validateStoryboard };
 
 // ─── Type-specific required fields ───────────────────────────────────────────
 
-const TYPE_REQUIRED_FIELDS: Record<CinematicFrameType, (keyof StoryboardFrame['content'])[]> = {
-  sequence: [],
-  shot: ['visualDescription'],
-  camera_move: ['cameraMovement'],
-  action: ['actionNotes'],
-  dialogue: ['dialogue'],
-  transition: ['editNotes'],
-  vfx: ['vfxRequirements'],
-  audio: ['audioRequirements'],
-  edit_beat: ['durationEstimate'],
+interface RequiredFieldRule {
+  field: keyof StoryboardFrame['content'];
+  code: string;
+}
+
+const TYPE_REQUIRED_FIELDS: Record<CinematicFrameType, RequiredFieldRule[]> = {
+  sequence:    [],
+  shot:        [{ field: 'visualDescription', code: 'CINEMATIC_SHOT_MISSING_VISUAL_DESCRIPTION' }],
+  camera_move: [{ field: 'cameraMovement',    code: 'CINEMATIC_CAMERA_MOVE_MISSING_MOVEMENT' }],
+  action:      [{ field: 'actionNotes',       code: 'CINEMATIC_ACTION_MISSING_NOTES' }],
+  dialogue:    [{ field: 'dialogue',          code: 'CINEMATIC_DIALOGUE_MISSING_LINES' }],
+  transition:  [{ field: 'editNotes',         code: 'CINEMATIC_TRANSITION_MISSING_EDIT_NOTES' }],
+  vfx:         [{ field: 'vfxRequirements',   code: 'CINEMATIC_VFX_MISSING_REQUIREMENTS' }],
+  audio:       [{ field: 'audioRequirements', code: 'CINEMATIC_AUDIO_MISSING_REQUIREMENTS' }],
+  edit_beat:   [{ field: 'durationEstimate',  code: 'CINEMATIC_EDIT_BEAT_MISSING_DURATION' }],
 };
 
 function isNonEmpty(value: unknown): boolean {
@@ -35,24 +54,29 @@ function isNonEmpty(value: unknown): boolean {
 
 // ─── Validate ─────────────────────────────────────────────────────────────────
 
-export function validateCinematicStoryboard(storyboard: Storyboard): CinematicValidationResult {
-  const coreResult = validateStoryboard(storyboard);
-  const errors: CinematicValidationError[] = [];
+export function validateCinematicStoryboard(
+  storyboard: Storyboard,
+): StoryboardValidationResult {
+  // Run generic structural validation first.
+  const base = validateStoryboard(storyboard);
+  const errors: StoryboardValidationError[] = [...base.errors];
 
-  if (!coreResult.valid) {
-    errors.push(...coreResult.errors.map(e => ({
-      frameId: 'frameId' in e ? (e as { frameId: string }).frameId : '',
-      reason: e.message,
-    })));
+  // Domain-specific structural validation depends on `storyboard.frames` being
+  // a proper array. If the structural validator already rejected the shape,
+  // skip the domain pass to avoid a TypeError.
+  if (!Array.isArray(storyboard?.frames)) {
+    return { valid: errors.length === 0, errors };
   }
 
   for (const frame of storyboard.frames) {
     const required = TYPE_REQUIRED_FIELDS[frame.type];
-    for (const field of required) {
+    if (!required) continue;
+    for (const { field, code } of required) {
       if (!isNonEmpty(frame.content[field])) {
         errors.push({
+          code,
+          message: `${frame.type} frame "${frame.id}" missing required field: ${field}`,
           frameId: frame.id,
-          reason: `${frame.type} frame missing required field: ${field}`,
         });
       }
     }

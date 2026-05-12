@@ -206,7 +206,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
 
       {/* ── Implementation progress ─────────────────────────────────────────── */}
       {frameProgress && (
-        (frame.content.implementationChecklist?.length || frame.content.testCriteria?.length)
+        (frame.content.implementationChecklist?.length ?? 0) > 0 || (frame.content.testCriteria?.length ?? 0) > 0
       ) && (
         <div style={{
           padding: '14px 18px',

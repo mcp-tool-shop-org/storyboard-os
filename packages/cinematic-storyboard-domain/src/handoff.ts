@@ -3,6 +3,62 @@
 import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
 import { getCinematicBeatStatus } from './beatStatus';
 
+// ─── Topological sort (Kahn's algorithm) ─────────────────────────────────────
+//
+// Shots are arranged on the canvas as a directed graph — connections describe
+// the cinematic flow (sequence, match cut, cutaway, reaction, etc.). The raw
+// `storyboard.frames` array order reflects authoring/creation order, not
+// playback/production order. The production brief must walk shots in flow
+// order so the resulting document reads like a shot list, not a creation log.
+//
+// Matches the algorithm used by RPG and Marketing domains for parity.
+
+function topologicalSort(
+  frames: StoryboardFrame[],
+  connections: StoryboardConnection[],
+): StoryboardFrame[] {
+  const frameIds = new Set(frames.map(f => f.id));
+
+  // Build adjacency and in-degree — only for connections between known frames
+  const adjacency = new Map<string, string[]>(frames.map(f => [f.id, []]));
+  const inDegree  = new Map<string, number>(frames.map(f => [f.id, 0]));
+
+  for (const conn of connections) {
+    if (!frameIds.has(conn.fromFrameId) || !frameIds.has(conn.toFrameId)) continue;
+    adjacency.get(conn.fromFrameId)!.push(conn.toFrameId);
+    inDegree.set(conn.toFrameId, (inDegree.get(conn.toFrameId) ?? 0) + 1);
+  }
+
+  const frameMap = new Map(frames.map(f => [f.id, f]));
+
+  // Start with all frames that have no incoming edges
+  // Preserve original frame order among ties (stable sort property)
+  const queue = frames.filter(f => inDegree.get(f.id) === 0);
+  const sorted: StoryboardFrame[] = [];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    sorted.push(current);
+
+    for (const nextId of adjacency.get(current.id) ?? []) {
+      const deg = (inDegree.get(nextId) ?? 0) - 1;
+      inDegree.set(nextId, deg);
+      if (deg === 0) {
+        const nextFrame = frameMap.get(nextId);
+        if (nextFrame) queue.push(nextFrame);
+      }
+    }
+  }
+
+  // Append cycle members (frames not reached by BFS) in original order
+  const sortedIds = new Set(sorted.map(f => f.id));
+  for (const frame of frames) {
+    if (!sortedIds.has(frame.id)) sorted.push(frame);
+  }
+
+  return sorted;
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ProductionBriefShot {
@@ -69,7 +125,10 @@ function formatTotalDuration(frames: StoryboardFrame[]): string {
 export function generateProductionBrief(storyboard: Storyboard): ProductionBrief {
   const summary = { ready: 0, partial: 0, draft: 0, blocked: 0 };
 
-  const shots: ProductionBriefShot[] = storyboard.frames.map((frame, i) => {
+  // Order shots by cinematic flow (graph topology), not array order.
+  const sorted = topologicalSort(storyboard.frames, storyboard.connections);
+
+  const shots: ProductionBriefShot[] = sorted.map((frame, i) => {
     const content = frame.content;
     const status = getCinematicBeatStatus(frame);
     summary[status.level]++;

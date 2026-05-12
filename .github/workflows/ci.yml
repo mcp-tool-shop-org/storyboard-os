@@ -6,7 +6,12 @@ on:
     paths:
       - 'packages/**'
       - 'apps/**'
+      - 'site/**'
       - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'tsconfig*.json'
+      - '.npmrc'
+      - 'pnpm-workspace.yaml'
       - '.github/workflows/ci.yml'
   pull_request:
     branches: [master, main]
@@ -15,10 +20,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: Test + Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -36,12 +45,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: |
-          pnpm --filter @storyboard-os/core build
-          pnpm --filter @storyboard-os/routing build
-          pnpm --filter @storyboard-os/rpg-domain build
-          pnpm --filter @storyboard-os/canvas build
-          pnpm --filter @storyboard-os/marketing-domain build
+        run: pnpm run build:packages
 
       - name: Run tests
         run: pnpm test

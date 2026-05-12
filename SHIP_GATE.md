@@ -17,16 +17,12 @@
 ### Default safety posture
 
 - [ ] `[cli|mcp|desktop]` SKIP: not a CLI, MCP server, or desktop app — browser-only static site
-- [ ] `[cli|mcp|desktop]` SKIP: not a CLI, MCP server, or desktop app — browser-only static site
-- [ ] `[mcp]` SKIP: not an MCP server
 - [ ] `[mcp]` SKIP: not an MCP server
 
 ## B. Error Handling
 
 - [x] `[all]` Errors follow the Structured Error Shape: `code`, `message`, `hint`, `cause?`, `retryable?` (2026-05-04)
 - [ ] `[cli]` SKIP: not a CLI tool
-- [ ] `[cli]` SKIP: not a CLI tool
-- [ ] `[mcp]` SKIP: not an MCP server
 - [ ] `[mcp]` SKIP: not an MCP server
 - [ ] `[desktop]` SKIP: not a desktop app — browser-only; errors surface as inline UI states (notFound, loading) rather than OS-level error dialogs
 - [ ] `[vscode]` SKIP: not a VS Code extension
@@ -36,9 +32,7 @@
 - [x] `[all]` README is current: what it does, install, usage, supported platforms + runtime versions (2026-05-04)
 - [x] `[all]` CHANGELOG.md (Keep a Changelog format) (2026-05-04)
 - [x] `[all]` LICENSE file present and repo states support status (2026-05-04)
-- [ ] `[cli]` SKIP: not a CLI tool
 - [ ] `[cli|mcp|desktop]` SKIP: not a CLI, MCP server, or desktop app
-- [ ] `[mcp]` SKIP: not an MCP server
 - [ ] `[complex]` SKIP: no background daemons or operational modes requiring HANDBOOK.md
 
 ## D. Shipping Hygiene
@@ -47,9 +41,12 @@
 - [x] `[all]` Version in manifest matches git tag (2026-05-04)
 - [x] `[all]` Dependency scanning runs in CI (ecosystem-appropriate) (2026-05-04)
 - [x] `[all]` Automated dependency update mechanism exists (2026-05-04)
-- [ ] `[npm]` SKIP: private monorepo — not published to npm
-- [ ] `[npm]` SKIP: private monorepo — not published to npm (engines.node is set in package.json)
-- [ ] `[npm]` SKIP: private monorepo — not published to npm (lockfile committed: pnpm-lock.yaml)
+- [x] `[npm]` Six `@storyboard-os/*` packages publish to npm publicly via `.github/workflows/publish.yml` on release (core, routing, rpg-domain, canvas, marketing-domain, cinematic-domain) (2026-05-12)
+- [x] `[npm]` `engines.node` is set in root and per-package `package.json` (`>=20`) (2026-05-12)
+- [x] `[npm]` Lockfile committed (`pnpm-lock.yaml`); CI installs with `--frozen-lockfile` (2026-05-12)
+- [x] `[npm]` README and LICENSE shipped inside each package tarball via `files` field (2026-05-12)
+- [x] `[npm]` npm provenance — `publish.yml` passes `--provenance` on all six `pnpm publish` steps; npm records the GitHub build attestation for every package (2026-05-12)
+- [ ] `[npm]` SBOM generation — no SBOM (CycloneDX / SPDX) is produced or attached to the GitHub release (2026-05-12)
 - [ ] `[vsix]` SKIP: not a VS Code extension
 - [ ] `[desktop]` SKIP: not a desktop app
 

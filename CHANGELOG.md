@@ -1,5 +1,83 @@
 # Changelog
 
+## [1.1.0] — 2026-05-12
+
+### Dogfood Swarm Hardening Pass
+
+10-phase parallel-agent swarm covering Stage A (bug/security), Stage B (proactive health), Stage C (humanization), and Stage D (visual polish) across all 5 domains: `core-infra`, `verticals`, `apps`, `docs-site`, `ci-tooling`. Tests: 609 → 660 (+51).
+
+### Fixed (HIGH)
+
+**core-infra**
+- `StoryboardCanvas` positions state now reconciles with the `frames` prop on change — prunes orphan positions, seeds new ids, preserves dragged positions (F-CI-001)
+- `@storyboard-os/routing` route builders URL-encode every id segment via `encodeURIComponent` — fixes path-traversal vector (`boardRoute('../admin')`) and id-collision class (F-CI-002)
+- `@storyboard-os/routing` ships its first test suite (16 tests for normalization, encoding, traversal vectors, collision class) and runtime `vitest` config (F-CI-003)
+- `validateStoryboard` is hardened against null/undefined input, missing `frame.size` / `frame.position`, NaN/Infinity dimensions and positions, duplicate connection ids, self-loops, and duplicate edges. New error codes: `INVALID_STORYBOARD_SHAPE`, `MISSING_FRAME_SIZE`, `MISSING_FRAME_POSITION`, `INVALID_FRAME_DIMENSION`, `INVALID_FRAME_POSITION`, `DUPLICATE_CONNECTION_ID`, `SELF_LOOP_CONNECTION`, `DUPLICATE_CONNECTION_EDGE` (F-CI-004, F-CI-005, F-CI-006, F-CI-013, F-CI-201)
+- `StoryboardValidationCode` exported as an open union (`KnownStoryboardValidationCode | (string & {})`) — known codes preserve autocomplete; verticals add their own prefixed codes (F-CI-203)
+- `ConnectionLayer` skips rendering connections with non-finite coordinates and emits a single `console.warn` — protects the canvas from poisoning (F-CI-208)
+
+**verticals**
+- Cinematic `handoff.ts` now topologically sorts frames before emitting (parity with RPG/Marketing) — out-of-order frame arrays no longer produce out-of-order briefs (F-VR-001)
+- Cinematic `validate.ts` returns the shared `StoryboardValidationError` shape (`{code, message, frameId?}`) instead of legacy `{frameId, reason}` — **BREAKING** for consumers of cinematic validation result (F-VR-003)
+- Cinematic `BeatStatus` extended with `assetCount`, `shotCount`, `checklistCount`, `testCriteriaCount`, `hasDomainRequirements` (parity with RPG/Marketing); `CinematicReadinessSummary` adds `byFrame: Map` and `readyFraction` (F-VR-004)
+- Cinematic level threshold lowered from `>= 4` to `>= 3` and `blocked` rule simplified — matches RPG/Marketing semantics. RPG level derivation also adjusted so empty type-required frames return `blocked` (F-VR-005, F-VR-206)
+- Cinematic templates use a module-level monotonic counter for frame + connection ids — two invocations no longer collide (F-VR-006, F-VR-204)
+- All cinematic templates set `templateId` on the returned Storyboard (F-VR-007)
+- Cinematic `getCinematicBeatStatus` tolerates unknown frame types (defensive `?? []` lookup, returns `draft` with `hasDomainRequirements: false`) (F-VR-202)
+- Marketing + RPG `validateStoryboard` guard a non-array `frames` field — return structured error instead of `TypeError` (F-VR-203)
+- `getCinematicTemplate` returns `undefined` for unknown ids (parity with RPG/Marketing); `createCinematicStoryboard` retains throw behavior (F-VR-205)
+
+**apps**
+- React falsy-zero render bug eliminated across all `?.length || ?.length` conditionals in rpg and marketing apps (F-AP-001, F-AP-008)
+- Unit-less `gap: 10` CSS replaced with `gap: 10px` in rpg + marketing handoff pages (F-AP-002, F-AP-003)
+- Marketing campaign handoff humanizes blocker enum codes (`no_message_claim` → "Message claim missing") via local `BLOCKER_LABELS` map; restructures `.beat-blocker` inside `.beat-body` (F-AP-004)
+- RPG handoff Top-Issues panel + ProjectHandoffPage humanize reason codes via `REASON_LABELS` / `REASON_SHORT_LABELS` (F-AP-101)
+- Cinematic FrameInspector humanizes missing-reason codes via `REASON_LABELS` (F-AP-202)
+- `projectStorage.writeAll` returns a structured `WriteResult` with `code: 'QUOTA_EXCEEDED' | 'WRITE_FAILED'`; save chip surfaces a red failure state with the error message instead of silently showing "Saved" (F-AP-201)
+- React error boundaries wrap each app's canvas component — Konva mount failures show a graceful fallback with a link to the SSG handoff brief instead of a blank page (F-AP-203)
+
+**docs-site**
+- `SHIP_GATE.md` corrected: npm publication status now describes the actual `publish.yml` behavior (6 packages publish publicly, provenance now enabled). Duplicate SKIP rows deduped (F-DS-008, F-DS-101, F-DS-104)
+- README + handbook test counts updated to 660. `site-config.ts` version badge now reads from root `package.json` dynamically — no future manual update needed (F-DS-102, F-DS-202)
+- Handbook `reference.md` documents marketing + cinematic API surface (was rpg-only); RPG connections table notes that core defaults are replaced by verticals (F-DS-013, F-DS-014)
+- `SECURITY.md` threat model generalized across all three verticals; new "Per-vertical considerations" subsection flags marketing PII risk (`audienceSegment`, free-text fields) and cinematic IP risk (`dialogue`, `visualDescription`) with operator practices (F-DS-015, F-DS-206)
+- `docs/architecture.md` dependency table covers all 3 domain packages + 3 apps; canonical-grep section covers all 3 vertical vocabularies; "Adding a Fourth Vertical" guide includes the connection-type extensibility step (F-DS-010, F-DS-011, F-DS-012)
+- 404 page restored (`disable404Route` removed from Starlight config) (F-DS-204)
+- New `docs/snapshot-checklist.md` indexes every location holding a snapshot value (test counts, package counts, version badge) with grep + recompute commands (F-DS-201)
+
+**ci-tooling**
+- `ci.yml` and `publish.yml` use `pnpm run build:packages` instead of explicit per-package lists — cinematic-domain no longer drifts (F-CT-001, F-DS-009)
+- `publish.yml` has workflow-level `permissions: { contents: read, id-token: write }`; every `pnpm publish` step ships `--provenance` (F-CT-002, F-CT-007)
+- `publish.yml` is now atomic + re-runnable: each step queries npm before publishing and skips if the version already exists; a summary step prints the per-package status (F-CT-201)
+- `publish.yml` validates the `tag` input against `^v[0-9]+\.[0-9]+\.[0-9]+(-.*)?$`, removes the unsafe `v1.0.0` default, and explicitly checks out the resolved tag (F-CT-202)
+- `publish.yml` runs `pnpm run build:packages && pnpm test && pnpm build` as a trust-but-verify gate before any publish step (F-CT-203)
+- `ci.yml` adds `permissions: { contents: read }`, expands `on.push.paths` to include root config files + `site/**`, sets `timeout-minutes` (F-CT-003, F-CT-005, F-CT-204, F-CT-205)
+- Dependabot now tracks the `github-actions` ecosystem (F-CT-207)
+- Tag-vs-version consistency check + post-publish smoke verify added to `publish.yml` (F-CT-212, F-CT-215)
+
+### Added (Stage D — Visual Polish)
+- `<noscript>` fallback on every canvas page in all 3 apps with a styled card linking to the JS-free handoff brief (F-AP-204)
+- CSS-only canvas loading state (per-app accent: rpg purple, marketing green, cinematic cyan) hidden once Konva hydrates (F-AP-205)
+- Content-Security-Policy meta tag on every static page across all 3 apps (F-AP-208)
+- Universal `:focus-visible` outline for keyboard navigation
+
+### Changed
+- Total: 660 tests (was 609), 54 pages, 6 packages, 3 apps
+- `StoryboardValidationCode` widened to an open union so verticals can extend with prefixed codes
+- `@storyboard-os/cinematic-domain` validation result shape is now structurally compatible with RPG/Marketing — see Breaking notes below
+
+### Breaking
+- `@storyboard-os/cinematic-domain`: `CinematicValidationError` and `CinematicValidationResult` are removed; consumers must migrate to `StoryboardValidationError` / `StoryboardValidationResult` re-exported from `@storyboard-os/core`. Codes (`error.reason`) become `error.code` (machine-readable, uppercase snake_case) + `error.message` (human-readable). Frame-id moves from `error.frameId` (unchanged field name) to the same field.
+- `@storyboard-os/cinematic-domain`: `CinematicBeatStatus` shape extended with non-optional fields (`assetCount`, `shotCount`, `checklistCount`, `testCriteriaCount`). Code that *constructs* `CinematicBeatStatus` literals (rather than calling `getCinematicBeatStatus`) requires an update; read-only consumers are unaffected.
+- `@storyboard-os/cinematic-domain`: `getCinematicTemplate(id)` now returns `undefined` for unknown ids instead of throwing. Use `createCinematicStoryboard(id)` if you want the prior throw-on-unknown behavior.
+- `@storyboard-os/core`: error code `INVALID_DIMENSIONS` renamed to `INVALID_FRAME_DIMENSION`. Consumers that switched on the old name need to update.
+
+### Notes
+- F-VR-002 (cinematic missing `project.ts`) deferred to a future release — current cinematic-storyboard app is template-only, no project-storage routes.
+- README translations refreshed via TranslateGemma 12B (zero API cost).
+
+---
+
 ## [1.0.3] — 2026-05-04
 
 ### Added

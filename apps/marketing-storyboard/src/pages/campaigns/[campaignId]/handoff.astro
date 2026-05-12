@@ -66,6 +66,30 @@ const CONN_LABELS: Record<string, string> = {
   approval:    'approval gate',
   optional:    'optional',
 };
+
+// Human-readable labels for launch-blocker / spec-gap codes emitted by
+// @storyboard-os/marketing-domain getCampaignBeatStatus(). Rendering the raw
+// enum strings (e.g., `no_message_claim`) leaks domain-internal vocabulary
+// into the handoff brief.
+const BLOCKER_LABELS: Record<string, string> = {
+  no_conversion_goal:        'Conversion goal not defined',
+  no_required_assets:        'Required assets not listed',
+  no_approval_requirements:  'Approval requirements not defined',
+  no_metrics:                'Metrics not defined',
+  no_channel:                'Channel not specified',
+  no_message_claim:          'Message claim not written',
+  no_objective:              'Objective not defined',
+  no_audience_segment:       'Audience segment not specified',
+  no_customer_state_before:  'Customer state (before) not defined',
+  no_customer_state_after:   'Customer state (after) not defined',
+  no_test_criteria:          'Test criteria not defined',
+  no_implementation_checklist: 'Implementation checklist missing',
+  no_proof_points:           'Proof points not provided',
+  no_launch_dependencies:    'Launch dependencies not noted',
+};
+function humanizeBlocker(code: string): string {
+  return BLOCKER_LABELS[code] ?? code.replace(/_/g, ' ');
+}
 ---
 
 <!DOCTYPE html>
@@ -73,6 +97,7 @@ const CONN_LABELS: Record<string, string> = {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:" />
   <title>{storyboard.title} — Campaign Brief</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -83,6 +108,14 @@ const CONN_LABELS: Record<string, string> = {
       font-family: ui-sans-serif, system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       min-height: 100vh;
+    }
+
+    /* ─── Focus polish ─── */
+    a:focus-visible, button:focus-visible,
+    [role="button"]:focus-visible, [tabindex]:focus-visible {
+      outline: 2px solid #94a3b8;
+      outline-offset: 2px;
+      border-radius: 3px;
     }
 
     .topbar {
@@ -127,7 +160,7 @@ const CONN_LABELS: Record<string, string> = {
 
     .beat-list { display: flex; flex-direction: column; gap: 24px; }
     .beat-card { background: #0f1825; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; overflow: hidden; }
-    .beat-header { padding: 14px 20px; display: flex; align-items: center; gap: 10; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .beat-header { padding: 14px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .beat-num { font-size: 11px; color: #334155; font-weight: 600; flex-shrink: 0; }
     .beat-type { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
     .beat-title { font-size: 16px; font-weight: 700; color: #f1f5f9; flex: 1; min-width: 0; }
@@ -152,13 +185,13 @@ const CONN_LABELS: Record<string, string> = {
     .branch-label { font-size: 11px; color: #64748b; font-style: italic; }
 
     .beat-blocker {
-      margin: 0 20px 16px;
       background: rgba(239,68,68,0.08);
       border: 1px solid rgba(239,68,68,0.25);
       border-radius: 6px;
       padding: 10px 14px;
       font-size: 11px; color: #fca5a5; line-height: 1.55;
     }
+    .beat-blocker ul { color: #fca5a5; }
 
     .claim-text {
       background: rgba(139,92,246,0.06);
@@ -250,13 +283,18 @@ const CONN_LABELS: Record<string, string> = {
               </span>
             </div>
 
-            {beat.missing.length > 0 && (
-              <div class="beat-blocker">
-                <strong>⚠ Launch blockers:</strong> {beat.missing.join(', ')}
-              </div>
-            )}
-
             <div class="beat-body">
+              {beat.missing.length > 0 && (
+                <div class="beat-blocker">
+                  <strong>⚠ Launch blockers:</strong>
+                  <ul style="margin: 6px 0 0 18px; padding: 0;">
+                    {beat.missing.map(code => (
+                      <li>{humanizeBlocker(code)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <p class="beat-summary">{beat.summary}</p>
 
               {beat.objective && (

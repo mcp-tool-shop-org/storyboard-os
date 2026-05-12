@@ -30,15 +30,15 @@ export function createStoryboardRoutes(
 
   return {
     boardRoute(storyboardId: string): string {
-      return `${base}/${storyboardId}`;
+      return `${base}/${encodeURIComponent(storyboardId)}`;
     },
 
     frameRoute(storyboardId: string, frameId: string): string {
-      return `${base}/${storyboardId}/frames/${frameId}`;
+      return `${base}/${encodeURIComponent(storyboardId)}/frames/${encodeURIComponent(frameId)}`;
     },
 
     projectRoute(projectId: string): string {
-      return `/projects/${projectId}`;
+      return `/projects/${encodeURIComponent(projectId)}`;
     },
   };
 }

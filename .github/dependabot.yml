@@ -8,3 +8,12 @@ updates:
       storyboard-os-deps:
         patterns:
           - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions-deps:
+        patterns:
+          - "*"

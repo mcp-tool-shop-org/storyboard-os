@@ -148,6 +148,18 @@ apps/rpg-storyboard
 
 ---
 
+## ID encoding
+
+All id segments (`storyboardId`, `frameId`, `projectId`) are passed through `encodeURIComponent` before interpolation. This means:
+
+- IDs containing `/`, `?`, `#`, spaces, unicode, or `..` are safely encoded and cannot escape the configured base path.
+- `boardRoute('../admin')` returns `/storyboards/..%2Fadmin` — not a path-traversal URL.
+- The configured `storyboardBasePath` itself is NOT encoded (it is a trusted constant from your app's config). Only the runtime id arguments are encoded.
+
+If your app round-trips ids through a router that auto-decodes path params, you will see the original id on the other side.
+
+---
+
 ## Trust model
 
 `@storyboard-os/routing` is a pure string-manipulation library. It has no runtime side effects, no I/O, no network access, and no dependencies. All functions are synchronous and referentially transparent.

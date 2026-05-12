@@ -45,6 +45,23 @@ const CONN_LABELS: Record<string, string> = {
   fallback:    'fallback',
 };
 
+// Short noun-phrase labels for the Partial-section "missing: ..." list.
+// Mirrors REASON_SHORT_LABELS in pages/storyboards/[storyboardId]/handoff.astro.
+const REASON_SHORT_LABELS: Record<string, string> = {
+  no_designer_notes:            'designer notes',
+  no_required_assets:           'required assets',
+  no_test_criteria:             'test criteria',
+  no_implementation_checklist:  'implementation checklist',
+  no_stakes:                    'stakes',
+  no_possible_outcomes:         'possible outcomes',
+  no_state_changes:             'state changes',
+  no_entry_or_state_change:     'entry conditions or state changes',
+};
+
+function humanizeReasonShort(code: string): string {
+  return REASON_SHORT_LABELS[code] ?? code.replace(/^no_/, '').replace(/_/g, ' '); // unmapped: legacy strip
+}
+
 // ─── Download helper ──────────────────────────────────────────────────────────
 
 function download(content: string, name: string, type: string) {
@@ -560,7 +577,7 @@ function IssueGroup({ title, titleColor, subtitle, ids, beats, dotColor, gapFilt
                 </span>
                 {gaps.length > 0 && (
                   <p style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                    missing: {gaps.map(r => r.replace(/^no_/, '').replace(/_/g, ' ')).join(', ')}
+                    missing: {gaps.map(r => humanizeReasonShort(r)).join(', ')}
                   </p>
                 )}
               </div>

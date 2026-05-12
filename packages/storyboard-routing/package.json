@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/routing",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Configurable URL helpers for storyboard apps — board, frame, and project route generation.",
   "license": "MIT",
   "type": "module",
@@ -33,6 +33,11 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch"
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
   }
 }

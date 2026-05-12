@@ -48,6 +48,40 @@ const CONN_LABELS: Record<string, string> = {
   optional:    'optional',
   fallback:    'fallback',
 };
+
+// Human-readable labels for blocker reason codes (full-sentence form, used in
+// the Blocked issues list). Mirrors the REASON_LABELS map in FrameInspector.tsx.
+const REASON_LABELS: Record<string, string> = {
+  no_state_changes:             'State changes required for this frame type',
+  no_entry_or_state_change:     'Entry conditions or state changes required for reveal',
+  no_designer_notes:            'No designer notes',
+  no_required_assets:           'No required assets listed',
+  no_test_criteria:             'No test criteria defined',
+  no_implementation_checklist:  'No implementation checklist',
+  no_stakes:                    'No stakes defined',
+  no_possible_outcomes:         'No possible outcomes listed',
+};
+
+// Short noun-phrase labels for the Partial-section "missing: ..." list,
+// where the surrounding "missing:" prefix already provides framing.
+const REASON_SHORT_LABELS: Record<string, string> = {
+  no_designer_notes:            'designer notes',
+  no_required_assets:           'required assets',
+  no_test_criteria:             'test criteria',
+  no_implementation_checklist:  'implementation checklist',
+  no_stakes:                    'stakes',
+  no_possible_outcomes:         'possible outcomes',
+  no_state_changes:             'state changes',
+  no_entry_or_state_change:     'entry conditions or state changes',
+};
+
+function humanizeReason(code: string): string {
+  return REASON_LABELS[code] ?? code.replace(/_/g, ' '); // unmapped: fall back to snake-case strip
+}
+
+function humanizeReasonShort(code: string): string {
+  return REASON_SHORT_LABELS[code] ?? code.replace(/^no_/, '').replace(/_/g, ' '); // unmapped: legacy strip
+}
 ---
 
 <!DOCTYPE html>
@@ -55,6 +89,7 @@ const CONN_LABELS: Record<string, string> = {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:" />
   <title>{storyboard.title} — Handoff</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -65,6 +100,14 @@ const CONN_LABELS: Record<string, string> = {
       font-family: ui-sans-serif, system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       min-height: 100vh;
+    }
+
+    /* ─── Focus polish ─── */
+    a:focus-visible, button:focus-visible,
+    [role="button"]:focus-visible, [tabindex]:focus-visible {
+      outline: 2px solid #94a3b8;
+      outline-offset: 2px;
+      border-radius: 3px;
     }
 
     /* Top bar */
@@ -137,7 +180,7 @@ const CONN_LABELS: Record<string, string> = {
     }
     .beat-header {
       padding: 14px 20px;
-      display: flex; align-items: center; gap: 10; flex-wrap: wrap;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .beat-num  { font-size: 11px; color: #334155; font-weight: 600; flex-shrink: 0; }
@@ -512,7 +555,7 @@ const CONN_LABELS: Record<string, string> = {
                       <span class="issue-id"> · {id}</span>
                       {blockers.length > 0 && (
                         <p class="issue-detail">
-                          {blockers.map(r => r.replace(/_/g, ' ')).join(', ')}
+                          {blockers.map(r => humanizeReason(r)).join(', ')}
                         </p>
                       )}
                     </div>
@@ -546,7 +589,7 @@ const CONN_LABELS: Record<string, string> = {
                       <span class="issue-id"> · {id}</span>
                       {gaps.length > 0 && (
                         <p class="issue-detail">
-                          missing: {gaps.map(r => r.replace(/^no_/, '').replace(/_/g, ' ')).join(', ')}
+                          missing: {gaps.map(r => humanizeReasonShort(r)).join(', ')}
                         </p>
                       )}
                     </div>

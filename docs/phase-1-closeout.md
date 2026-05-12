@@ -2,6 +2,8 @@
 
 _Phase 1 commits: 405c4ee → 1021cb9 → 43ccc24 → a43a612 → 170efed → (1F)_
 
+> **_Snapshot values in this doc (test count, page count, package count, app count) reflect the state at Phase 1 closeout. They are a historical record; current totals live in the root README.md._**
+
 ---
 
 ## What Phase 1 Is

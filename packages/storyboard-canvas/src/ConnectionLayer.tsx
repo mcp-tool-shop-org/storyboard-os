@@ -58,6 +58,19 @@ export default function ConnectionLayer({
         const fromPos = positions[conn.fromFrameId] ?? fromFrame.position;
         const toPos = positions[conn.toFrameId] ?? toFrame.position;
 
+        // F-CI-208: skip rendering if any coordinate is non-finite (NaN/Infinity).
+        // A poisoned frame would otherwise cascade through arrow/curve math and
+        // blank the entire canvas.
+        if (
+          !Number.isFinite(fromPos.x) || !Number.isFinite(fromPos.y) ||
+          !Number.isFinite(toPos.x) || !Number.isFinite(toPos.y) ||
+          !Number.isFinite(fromFrame.size.width) || !Number.isFinite(fromFrame.size.height) ||
+          !Number.isFinite(toFrame.size.width) || !Number.isFinite(toFrame.size.height)
+        ) {
+          console.warn(`[storyboard-canvas] Skipping connection ${conn.id} — non-finite coordinates on connected frames.`);
+          return null;
+        }
+
         // Exit right-center, enter left-center
         const x1 = fromPos.x + fromFrame.size.width;
         const y1 = fromPos.y + fromFrame.size.height / 2;

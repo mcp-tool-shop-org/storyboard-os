@@ -60,13 +60,31 @@ export default function ProjectBoard() {
   }, []);
 
   // ── Shared save helper ─────────────────────────────────────────────────────
+  //
+  // F-AP-201: saveProject returns a WriteResult. If localStorage throws
+  // (quota exceeded, Safari private-mode, serialization error), we must surface
+  // a visible failure state instead of the green "Saved" chip — otherwise the
+  // user thinks their edits landed when they didn't. We still update the
+  // in-memory project so the canvas keeps reflecting what the user did; the
+  // chip tells them the persistence step failed.
   const persistAndNotify = useCallback((updated: RpgStoryboardProject) => {
     projectRef.current = updated;
     setProject(updated);
-    saveProject(updated);
-    setSaveStatus('saved');
+    const result = saveProject(updated);
     if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-    savedTimerRef.current = setTimeout(() => setSaveStatus(null), 2000);
+    if (result.ok) {
+      setSaveStatus('saved');
+      savedTimerRef.current = setTimeout(() => setSaveStatus(null), 2000);
+    } else {
+      // Failed writes stick until the next attempt — the chip must not auto-clear
+      // back to null while data is unsaved. Pre-pending the code keeps the
+      // tooltip distinct (QUOTA vs WRITE_FAILED) without leaking enum vocabulary
+      // into the visible label.
+      const prefix = result.code === 'QUOTA_EXCEEDED'
+        ? 'Storage full — '
+        : 'Save error — ';
+      setSaveStatus({ kind: 'failed', message: `${prefix}${result.message}` });
+    }
   }, []);
 
   // ── Frame position change → update project → save to localStorage ──────────

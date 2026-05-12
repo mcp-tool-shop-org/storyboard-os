@@ -144,10 +144,14 @@ See [`docs/architecture.md`](docs/architecture.md) for full detail.
 
 ## Quick Start
 
+<!-- AUTOGEN-NOTE: Snapshot values (649 tests, 54 pages) below are manually updated.
+     Verify with: pnpm test (test count), pnpm -r build (page count).
+     See docs/snapshot-checklist.md for every location that holds these snapshots. -->
+
 ```bash
 pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
-pnpm test       # runs all package + app tests (609 tests)
+pnpm test       # runs all package + app tests (649 tests)
 pnpm build      # builds all 3 apps (54 pages)
 pnpm verify     # test + build in one command (ship gate)
 ```
@@ -173,9 +177,17 @@ See [`SECURITY.md`](SECURITY.md) for the full trust model and vulnerability repo
 
 ## Status
 
+<!-- AUTOGEN-NOTE: Snapshot values below (649 tests, 54 pages, 6 packages, 3 apps) are
+     manually updated. Verify with:
+       pnpm test                       # tests passing
+       pnpm -r build                   # pages built (count from Astro output)
+       ls packages/ | wc -l            # package count
+       ls apps/ | wc -l                # app count
+     See docs/snapshot-checklist.md for every doc location that holds these. -->
+
 ```
 Phase 2 complete + Marketing Phase 0 complete + Cinematic Phase 0 complete + Core Hardening 1A
-609/609 tests passing
+649/649 tests passing
 54/54 pages built
 6 packages · 3 apps
 ```

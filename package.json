@@ -1,7 +1,7 @@
 {
   "name": "storyboard-os",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Visual story-structure platform. rpg-storyboard, marketing-storyboard, and cinematic-storyboard are the three shipped verticals.",
   "scripts": {
     "dev": "pnpm --filter rpg-storyboard dev",

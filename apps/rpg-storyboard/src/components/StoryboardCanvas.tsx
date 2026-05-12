@@ -33,6 +33,7 @@ import type { FrameBasicsPatch, FrameProgress, ProjectProgress, ProjectProgressS
 import FrameInspector from './storyboard/FrameInspector';
 import ViewControls from './storyboard/ViewControls';
 import BeatEditPanel from './projects/BeatEditPanel';
+import ErrorBoundary from './ErrorBoundary';
 
 // ─── RPG canvas config ────────────────────────────────────────────────────────
 // choice and consequence connections use heavier strokes to visually distinguish
@@ -92,7 +93,19 @@ const HEADER_HEIGHT = 48;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export type SaveStatus = 'saved' | 'saving' | null;
+/**
+ * Authoring save-state machine for the board header chip.
+ *
+ * - `null` / `'saved'` / `'saving'` are happy-path states.
+ * - `{ kind: 'failed', message }` is shown when a localStorage write failed
+ *   (quota exceeded, Safari private-mode, serialization error). The user must
+ *   see this — a stale "Saved" chip after a failed write means silent data loss.
+ */
+export type SaveStatus =
+  | 'saved'
+  | 'saving'
+  | { kind: 'failed'; message: string }
+  | null;
 
 interface Props {
   storyboard: Storyboard;
@@ -125,7 +138,7 @@ interface Props {
   handoffHref?: string;
 }
 
-export default function StoryboardCanvas({ storyboard, onFramePositionChange, onFrameContentChange, onProgressChange, projectProgress, progressSummary, saveStatus, handoffHref }: Props) {
+function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameContentChange, onProgressChange, projectProgress, progressSummary, saveStatus, handoffHref }: Props) {
   const resolvedHandoffHref = handoffHref ?? `/storyboards/${storyboard.id}/handoff`;
   const [selectedFrameId, setSelectedFrameId]           = useState<string | null>(null);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
@@ -444,6 +457,31 @@ function ProgressCounts({ summary }: { summary: ProjectProgressSummary }) {
 
 function SaveStatusChip({ status }: { status: SaveStatus }) {
   if (!status) return null;
+
+  // Failed state — red chip with the error message as a tooltip so the user
+  // sees the chip turn red AND can hover for the underlying reason. This is
+  // the load-bearing humanization fix for F-AP-201: we must not show a green
+  // "Saved" chip after a localStorage write threw.
+  if (typeof status === 'object' && status.kind === 'failed') {
+    const color = '#EF4444';
+    return (
+      <span
+        title={status.message}
+        role="status"
+        aria-live="polite"
+        style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+          padding: '2px 8px', borderRadius: 4,
+          background: `${color}22`,
+          border: `1px solid ${color}55`,
+          color,
+        }}
+      >
+        Save failed
+      </span>
+    );
+  }
+
   const label  = status === 'saving' ? 'Saving…' : 'Saved';
   const color  = status === 'saving' ? '#F97316' : '#22C55E';
   return (
@@ -628,4 +666,13 @@ function connectionTypeDescription(type: string): string {
     default:
       return `Connection type: ${type}`;
   }
+}
+
+export default function StoryboardCanvas(props: Props) {
+  const handoffHref = props.handoffHref ?? `/storyboards/${props.storyboard.id}/handoff`;
+  return (
+    <ErrorBoundary handoffHref={handoffHref}>
+      <StoryboardCanvasInner {...props} />
+    </ErrorBoundary>
+  );
 }

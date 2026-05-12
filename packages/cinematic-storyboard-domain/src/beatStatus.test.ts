@@ -92,10 +92,34 @@ describe('getCinematicBeatStatus', () => {
       expect(status.level).toBe('blocked');
       expect(status.missingReasons).toContain('no_durationEstimate');
     });
+
+    // F-VR-005: parity with RPG/Marketing — an empty frame whose type has a
+    // blocking field must come back 'blocked', not 'draft'.
+    it('blocks empty shot frame (no spec at all) — F-VR-005 parity', () => {
+      const frame = makeFrame('shot', {});
+      const status = getCinematicBeatStatus(frame);
+      expect(status.level).toBe('blocked');
+      expect(status.missingReasons).toContain('no_visualDescription');
+    });
+
+    it('blocks empty dialogue frame (no spec at all) — F-VR-005 parity', () => {
+      const frame = makeFrame('dialogue', {});
+      const status = getCinematicBeatStatus(frame);
+      expect(status.level).toBe('blocked');
+      expect(status.missingReasons).toContain('no_dialogue');
+    });
+
+    it('blocks empty edit_beat frame (no spec at all) — F-VR-005 parity', () => {
+      const frame = makeFrame('edit_beat', {});
+      const status = getCinematicBeatStatus(frame);
+      expect(status.level).toBe('blocked');
+      expect(status.missingReasons).toContain('no_durationEstimate');
+    });
   });
 
   describe('draft detection', () => {
-    it('returns draft when no spec fields are populated', () => {
+    it('returns draft when frame has no blocker and no spec fields', () => {
+      // `sequence` has no blocking field — so an empty `sequence` is draft, not blocked.
       const frame = makeFrame('sequence', {});
       const status = getCinematicBeatStatus(frame);
       expect(status.level).toBe('draft');
@@ -103,28 +127,77 @@ describe('getCinematicBeatStatus', () => {
   });
 
   describe('partial detection', () => {
-    it('returns partial when some spec fields present but < 4', () => {
+    it('returns partial with 1-2 spec fields and no blocker', () => {
       const frame = makeFrame('shot', {
         visualDescription: 'Has visual',
         intent: 'Has intent',
-        durationEstimate: '3s',
       });
       const status = getCinematicBeatStatus(frame);
       expect(status.level).toBe('partial');
     });
   });
 
-  describe('ready detection', () => {
-    it('returns ready when >= 4 spec fields', () => {
+  describe('ready detection — F-VR-005 threshold parity', () => {
+    it('returns ready when >= 3 spec fields and no blocker', () => {
+      // Exactly 3 spec fields — must be 'ready' under the new threshold,
+      // matching RPG/Marketing.
+      const frame = makeFrame('shot', {
+        visualDescription: 'x',
+        intent: 'y',
+        cameraAngle: 'wide',
+      });
+      const status = getCinematicBeatStatus(frame);
+      expect(status.level).toBe('ready');
+    });
+
+    it('returns ready with a full spec', () => {
       const frame = makeFrame('shot', fullContent());
       const status = getCinematicBeatStatus(frame);
       expect(status.level).toBe('ready');
     });
 
-    it('sequence frames with 4+ spec fields are ready (no blockers)', () => {
+    it('sequence frames with >= 3 spec fields are ready (no blockers)', () => {
       const frame = makeFrame('sequence', fullContent());
       const status = getCinematicBeatStatus(frame);
       expect(status.level).toBe('ready');
+    });
+  });
+
+  describe('BeatStatus shape parity — F-VR-004', () => {
+    it('exposes parallel counts to RPG/Marketing BeatStatus', () => {
+      const frame = makeFrame('shot', {
+        visualDescription: 'x',
+        cameraAngle: 'wide',
+        cameraMovement: 'pan',
+        framing: 'thirds',
+        durationEstimate: '3s',
+        requiredAssets: ['set', 'prop'],
+        implementationChecklist: ['record'],
+        testCriteria: ['looks good', 'sounds good'],
+      });
+      const status = getCinematicBeatStatus(frame);
+
+      expect(status.assetCount).toBe(2);
+      expect(status.checklistCount).toBe(1);
+      expect(status.testCriteriaCount).toBe(2);
+      // shotCount covers cameraAngle/cameraMovement/framing/durationEstimate
+      expect(status.shotCount).toBe(4);
+      expect(status.hasDomainRequirements).toBe(true); // 'shot' has blocking field
+    });
+
+    it('hasDomainRequirements is false for sequence frames', () => {
+      const frame = makeFrame('sequence', { intent: 'opener' });
+      const status = getCinematicBeatStatus(frame);
+      expect(status.hasDomainRequirements).toBe(false);
+    });
+
+    it('counts default to 0 on empty content', () => {
+      const frame = makeFrame('sequence', {});
+      const status = getCinematicBeatStatus(frame);
+      expect(status.assetCount).toBe(0);
+      expect(status.shotCount).toBe(0);
+      expect(status.checklistCount).toBe(0);
+      expect(status.testCriteriaCount).toBe(0);
     });
   });
 
@@ -154,5 +227,43 @@ describe('getSequenceReadiness', () => {
     expect(summary.ready).toBe(1);
     expect(summary.draft).toBe(1);
     expect(summary.blocked).toBe(1);
+  });
+
+  it('exposes byFrame map and readyFraction — F-VR-004 parity', () => {
+    // makeFrame keys by type — use distinct types so the Map has 4 entries.
+    const storyboard: Storyboard = {
+      id: 'test',
+      title: 'Test',
+      frames: [
+        makeFrame('shot', fullContent()),
+        makeFrame('sequence', fullContent()),
+        makeFrame('dialogue', { dialogue: ['hi'], intent: 'x' }),
+        makeFrame('edit_beat', {}),
+      ],
+      connections: [],
+    };
+    const summary = getSequenceReadiness(storyboard);
+
+    expect(summary.byFrame).toBeInstanceOf(Map);
+    expect(summary.byFrame.size).toBe(4);
+    // Map keys round-trip frame ids; values are full BeatStatus records.
+    const first = summary.byFrame.get('frame-shot');
+    expect(first?.level).toBe('ready');
+    expect(typeof first?.assetCount).toBe('number');
+
+    // readyFraction = ready / total
+    expect(summary.readyFraction).toBeCloseTo(summary.ready / summary.total, 6);
+  });
+
+  it('readyFraction is 0 on empty storyboards (no division by zero)', () => {
+    const storyboard: Storyboard = {
+      id: 'empty',
+      title: 'Empty',
+      frames: [],
+      connections: [],
+    };
+    const summary = getSequenceReadiness(storyboard);
+    expect(summary.total).toBe(0);
+    expect(summary.readyFraction).toBe(0);
   });
 });

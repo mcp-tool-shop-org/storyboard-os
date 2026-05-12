@@ -187,18 +187,27 @@ if (!result.valid) {
 
 ### Error codes
 
+`StoryboardValidationCode` is exported as a TypeScript open union — known codes preserve autocomplete; vertical packages may add prefixed codes (e.g., `RPG_MISSING_STATE_CHANGES`, `CINEMATIC_SHOT_MISSING_VISUAL_DESCRIPTION`).
+
 | Code | Meaning |
 |---|---|
+| `INVALID_STORYBOARD_SHAPE` | Input is null/undefined or missing `frames`/`connections` arrays |
 | `EMPTY_STORYBOARD` | No frames in the storyboard |
 | `DUPLICATE_FRAME_ID` | Two frames share the same ID |
 | `MISSING_TITLE` | Frame has no title |
 | `MISSING_TYPE` | Frame has no type |
 | `MISSING_SUMMARY` | Frame has no summary |
-| `INVALID_DIMENSIONS` | Frame width or height below 40px minimum |
+| `MISSING_FRAME_SIZE` | Frame is missing its `size` object |
+| `MISSING_FRAME_POSITION` | Frame is missing its `position` object |
+| `INVALID_FRAME_DIMENSION` | Frame width or height is NaN/Infinity or below the 40px minimum |
+| `INVALID_FRAME_POSITION` | Frame `position.x` or `position.y` is NaN/Infinity |
+| `DUPLICATE_CONNECTION_ID` | Two connections share the same ID |
+| `SELF_LOOP_CONNECTION` | Connection's `fromFrameId` equals its `toFrameId` |
+| `DUPLICATE_CONNECTION_EDGE` | Two connections describe the same `from → to` edge |
 | `BROKEN_CONNECTION_FROM` | Connection `fromFrameId` references a non-existent frame |
 | `BROKEN_CONNECTION_TO` | Connection `toFrameId` references a non-existent frame |
 
-Domain packages call `validateStoryboard` first, then layer their own domain rules on top. `@storyboard-os/rpg-domain` exports `validateRpgStoryboard` which does exactly this.
+Domain packages call `validateStoryboard` first, then layer their own domain rules on top. `@storyboard-os/rpg-domain` exports `validateRpgStoryboard` which does exactly this — and emits additional `RPG_*` codes (e.g., `RPG_MISSING_STATE_CHANGES`).
 
 ---
 

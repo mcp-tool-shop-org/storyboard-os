@@ -40,6 +40,13 @@ export function validateRpgStoryboard(
   const base = validateStoryboard(storyboard);
   const errors: StoryboardValidationError[] = [...base.errors];
 
+  // Domain-specific structural validation depends on `storyboard.frames` being
+  // a proper array. If the structural validator already rejected the shape,
+  // skip the domain pass to avoid a TypeError. Mirrors the cinematic guard.
+  if (!Array.isArray(storyboard?.frames)) {
+    return { valid: errors.length === 0, errors };
+  }
+
   for (const frame of storyboard.frames) {
     const content = frame.content as FrameContent;
     const contentStr = JSON.stringify(content).toLowerCase();
