@@ -42,7 +42,7 @@ jobs:
         with:
           ref: ${{ env.RESOLVED_TAG }}
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@d15e628ca66d93ee5f352c71671a7bc6a97af5c9 # v6.0.8
         with:
           version: 9
 
