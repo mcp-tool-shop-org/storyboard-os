@@ -106,7 +106,8 @@ function computeContinuityRisks(storyboard: Storyboard): ContinuityRisk[] {
   }
 
   for (const frame of storyboard.frames) {
-    const reqs = frame.content.continuityRequirements;
+    // `?.` guards frames whose content is null/missing (DM-002).
+    const reqs = frame.content?.continuityRequirements;
     const links = continuityLinks.get(frame.id);
     if ((reqs && reqs.length > 0) || links) {
       risks.push({
@@ -126,7 +127,7 @@ function computeVfxBurden(storyboard: Storyboard): VfxBurdenSummary {
   let totalReqs = 0;
 
   for (const frame of storyboard.frames) {
-    const vfx = frame.content.vfxRequirements;
+    const vfx = frame.content?.vfxRequirements;
     if (vfx && vfx.length > 0) {
       shots.push({ frameId: frame.id, frameTitle: frame.title, items: vfx });
       totalReqs += vfx.length;
@@ -141,7 +142,7 @@ function computeAudioBurden(storyboard: Storyboard): AudioBurdenSummary {
   let totalReqs = 0;
 
   for (const frame of storyboard.frames) {
-    const audio = frame.content.audioRequirements;
+    const audio = frame.content?.audioRequirements;
     if (audio && audio.length > 0) {
       shots.push({ frameId: frame.id, frameTitle: frame.title, items: audio });
       totalReqs += audio.length;
@@ -156,14 +157,14 @@ function computeCameraComplexity(storyboard: Storyboard): CameraComplexitySummar
   let staticShots = 0;
 
   for (const frame of storyboard.frames) {
-    const movement = frame.content.cameraMovement;
+    const movement = frame.content?.cameraMovement;
     if (movement) {
       complexShots.push({
         frameId: frame.id,
         frameTitle: frame.title,
         movement,
-        angle: frame.content.cameraAngle,
-        framing: frame.content.framing,
+        angle: frame.content?.cameraAngle,
+        framing: frame.content?.framing,
       });
     } else {
       staticShots++;
@@ -180,7 +181,7 @@ function computeDurationRollup(storyboard: Storyboard): DurationRollup {
   let uncovered = 0;
 
   for (const frame of storyboard.frames) {
-    const range = parseDurationRange(frame.content.durationEstimate);
+    const range = parseDurationRange(frame.content?.durationEstimate);
     if (range) {
       totalLow += range[0];
       totalHigh += range[1];

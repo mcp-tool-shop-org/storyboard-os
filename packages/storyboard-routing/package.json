@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/routing",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Configurable URL helpers for storyboard apps — board, frame, and project route generation.",
   "license": "MIT",
   "type": "module",
@@ -38,6 +38,6 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "vitest": "^2.1.0"
+    "vitest": "^3.2.6"
   }
 }

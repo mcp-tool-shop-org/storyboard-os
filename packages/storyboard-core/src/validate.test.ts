@@ -339,6 +339,239 @@ describe('validateStoryboard position validity', () => {
   });
 });
 
+// ─── Non-string title/summary guards (CR-001) ─────────────────────────────────
+// Optional chaining (`frame.title?.trim()`) only guards null/undefined. A
+// number/object/array/boolean title or summary must yield a structured
+// MISSING_TITLE / MISSING_SUMMARY error — never a TypeError.
+
+describe('validateStoryboard non-string title/summary guards', () => {
+  const nonStringValues: Array<[string, unknown]> = [
+    ['number', 42],
+    ['boolean', true],
+    ['array', ['not', 'a', 'title']],
+    ['object', { text: 'nope' }],
+  ];
+
+  for (const [label, value] of nonStringValues) {
+    it(`returns MISSING_TITLE (no throw) when title is a ${label}`, () => {
+      const badFrame = { ...makeFrame('f1'), title: value };
+      const storyboard = {
+        id: 'sb',
+        title: 'Bad title type',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        frames: [badFrame as any],
+        connections: [],
+      } as Storyboard;
+      const result = validateStoryboard(storyboard);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.code === 'MISSING_TITLE' && e.frameId === 'f1')).toBe(true);
+    });
+
+    it(`returns MISSING_SUMMARY (no throw) when summary is a ${label}`, () => {
+      const badFrame = { ...makeFrame('f1'), summary: value };
+      const storyboard = {
+        id: 'sb',
+        title: 'Bad summary type',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        frames: [badFrame as any],
+        connections: [],
+      } as Storyboard;
+      const result = validateStoryboard(storyboard);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.code === 'MISSING_SUMMARY' && e.frameId === 'f1')).toBe(true);
+    });
+  }
+});
+
+// ─── Per-element shape guards (CR-002) ────────────────────────────────────────
+// A null or primitive element inside `frames` / `connections` must yield a
+// structured INVALID_STORYBOARD_SHAPE error naming the array and index —
+// never a TypeError from dereferencing the element.
+
+describe('validateStoryboard per-element shape guards', () => {
+  it('returns INVALID_STORYBOARD_SHAPE for a null element in frames', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Null frame',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [makeFrame('f1'), null as any],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(
+      result.errors.some(
+        e => e.code === 'INVALID_STORYBOARD_SHAPE' && e.message.includes('frames[1]'),
+      ),
+    ).toBe(true);
+  });
+
+  it('returns INVALID_STORYBOARD_SHAPE for a null element in connections', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Null connection',
+      frames: [makeFrame('f1')],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      connections: [null as any],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(
+      result.errors.some(
+        e => e.code === 'INVALID_STORYBOARD_SHAPE' && e.message.includes('connections[0]'),
+      ),
+    ).toBe(true);
+  });
+
+  it('returns INVALID_STORYBOARD_SHAPE for primitive elements in both arrays', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Primitive elements',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [makeFrame('f1'), 42 as any],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      connections: ['not-a-connection' as any],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(
+      result.errors.some(
+        e => e.code === 'INVALID_STORYBOARD_SHAPE' && e.message.includes('frames[1]'),
+      ),
+    ).toBe(true);
+    expect(
+      result.errors.some(
+        e => e.code === 'INVALID_STORYBOARD_SHAPE' && e.message.includes('connections[0]'),
+      ),
+    ).toBe(true);
+  });
+
+  it('still validates the healthy frames alongside a bad element', () => {
+    const badTitleFrame = { ...makeFrame('f2'), title: '   ' };
+    const storyboard = {
+      id: 'sb',
+      title: 'Mixed good and bad',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [null as any, badTitleFrame],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    // The null element gets a shape error AND the healthy-shaped sibling still
+    // gets its own field-level validation.
+    expect(
+      result.errors.some(
+        e => e.code === 'INVALID_STORYBOARD_SHAPE' && e.message.includes('frames[0]'),
+      ),
+    ).toBe(true);
+    expect(result.errors.some(e => e.code === 'MISSING_TITLE' && e.frameId === 'f2')).toBe(true);
+  });
+});
+
+// ─── Non-string id / ref guards (CR-003) ──────────────────────────────────────
+// A frame with a non-string id must never enter the frame-id set: otherwise
+// `frameIds.has(undefined)` matches a connection whose ref is also undefined
+// and the broken reference is silently masked. Non-string ids and refs must
+// produce structured errors and an invalid board.
+
+describe('validateStoryboard non-string id and ref guards', () => {
+  it('returns INVALID_FRAME_ID for a frame with an undefined id', () => {
+    const badFrame = { ...makeFrame('f1'), id: undefined };
+    const storyboard = {
+      id: 'sb',
+      title: 'Undefined frame id',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [badFrame as any],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_FRAME_ID')).toBe(true);
+  });
+
+  it('returns INVALID_FRAME_ID for a frame with a numeric id', () => {
+    const badFrame = { ...makeFrame('f1'), id: 42 };
+    const storyboard = {
+      id: 'sb',
+      title: 'Numeric frame id',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [badFrame as any],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_FRAME_ID')).toBe(true);
+  });
+
+  it('does not report a bogus DUPLICATE_FRAME_ID for two frames with undefined ids', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Two undefined ids',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [{ ...makeFrame('f1'), id: undefined } as any, { ...makeFrame('f2'), id: undefined } as any],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.filter(e => e.code === 'INVALID_FRAME_ID')).toHaveLength(2);
+    expect(result.errors.some(e => e.code === 'DUPLICATE_FRAME_ID')).toBe(false);
+  });
+
+  it('non-string frame id does not mask a broken fromFrameId ref', () => {
+    // Before the fix, the undefined frame id landed in the frame-id set, so a
+    // connection with fromFrameId: undefined "matched" and no error fired.
+    const storyboard = {
+      id: 'sb',
+      title: 'Masked broken from-ref',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [{ ...makeFrame('f1'), id: undefined } as any, makeFrame('f2')],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: 'c1', fromFrameId: undefined, toFrameId: 'f2', type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_FRAME_ID')).toBe(true);
+    expect(result.errors.some(e => e.code === 'BROKEN_CONNECTION_FROM' && e.connectionId === 'c1')).toBe(true);
+  });
+
+  it('non-string frame id does not mask a broken toFrameId ref', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Masked broken to-ref',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [makeFrame('f1'), { ...makeFrame('f2'), id: 42 } as any],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: 'c1', fromFrameId: 'f1', toFrameId: 42, type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_FRAME_ID')).toBe(true);
+    expect(result.errors.some(e => e.code === 'BROKEN_CONNECTION_TO' && e.connectionId === 'c1')).toBe(true);
+  });
+
+  it('does not report a bogus self-loop when both refs are non-string', () => {
+    // `undefined === undefined` must not read as "frame connected to itself".
+    const storyboard = {
+      id: 'sb',
+      title: 'Undefined refs are not a self-loop',
+      frames: [makeFrame('f1')],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: 'c1', fromFrameId: undefined, toFrameId: undefined, type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'SELF_LOOP_CONNECTION')).toBe(false);
+    expect(result.errors.some(e => e.code === 'BROKEN_CONNECTION_FROM' && e.connectionId === 'c1')).toBe(true);
+    expect(result.errors.some(e => e.code === 'BROKEN_CONNECTION_TO' && e.connectionId === 'c1')).toBe(true);
+  });
+});
+
 // ─── Connection invariants (F-CI-005) ─────────────────────────────────────────
 // Duplicate connection IDs, self-loops, and duplicate edges must be caught.
 

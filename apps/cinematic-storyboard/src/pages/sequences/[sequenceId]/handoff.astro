@@ -7,7 +7,6 @@ import {
   generateProductionMarkdown,
   getSequenceReadiness,
   type Storyboard,
-  type CinematicBeatStatusLevel,
 } from '@storyboard-os/cinematic-domain';
 
 export function getStaticPaths() {
@@ -258,7 +257,7 @@ const CONN_LABELS: Record<string, string> = {
           <span class="shot-title">{shot.title}</span>
           <span
             class="shot-status-badge"
-            style={`background: ${STATUS_COLORS[shot.status]}18; border: 1px solid ${STATUS_COLORS[shot.status]}44; color: ${STATUS_COLORS[shot.status]};`}
+            style={`background: ${STATUS_COLORS[shot.status] ?? '#475569'}18; border: 1px solid ${STATUS_COLORS[shot.status] ?? '#475569'}44; color: ${STATUS_COLORS[shot.status] ?? '#475569'};`}
           >
             {shot.status.toUpperCase()}
           </span>

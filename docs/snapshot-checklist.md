@@ -29,7 +29,7 @@ The list is grouped by file. For each location, the table shows what string to g
 |---|---|---|
 | Quick Start code block | `pnpm test       # runs all package` | test count |
 | Quick Start code block | `pnpm build      # builds all 3 apps` | page count, app count |
-| Status block | `649/649 tests passing` | test count |
+| Status block | `937/937 tests passing` | test count |
 | Status block | `54/54 pages built` | page count |
 | Status block | `6 packages · 3 apps` | package count, app count |
 
@@ -49,9 +49,9 @@ CHANGELOG entries are **historical** by design — they record the snapshot **at
 | Section | Grep | Values |
 |---|---|---|
 | `hero.badge` | `Open source · v` (now sourced from root `package.json`) | version |
-| `hero.previews` → Verify card | `649 tests · 54 pages · 3 apps` | test count, page count, app count |
-| `sections[0].features[last]` → title | `649 tests, three verticals` | test count |
-| `sections[2].cards` → Verify before ship | `649 tests + full build` and `6 packages · 3 apps · 54 pages` | all four |
+| `hero.previews` → Verify card | `937 tests · 54 pages · 3 apps` | test count, page count, app count |
+| `sections[0].features[last]` → title | `937 tests, three verticals` | test count |
+| `sections[2].cards` → Verify before ship | `937 tests + full build` and `6 packages · 3 apps · 54 pages` | all four |
 
 The version badge auto-reads from root `package.json` via a JSON import at build time — bump `package.json` `version` and the hero badge follows automatically. Other snapshots in this file still require manual updates; AUTOGEN-NOTE comments above each block document the verify commands.
 
@@ -59,7 +59,7 @@ The version badge auto-reads from root `package.json` via a JSON import at build
 
 | Section | Grep | Values |
 |---|---|---|
-| "Verify the build" prose | `Runs all 649 tests + builds all 54 pages` | test count, page count |
+| "Verify the build" prose | `Runs all 937 tests + builds all 54 pages` | test count, page count |
 
 ### Phase closeout docs — `docs/*-closeout.md`
 

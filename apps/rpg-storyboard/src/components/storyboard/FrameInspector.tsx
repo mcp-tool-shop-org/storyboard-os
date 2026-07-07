@@ -10,6 +10,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { useEffect, useRef } from 'react';
 import type { StoryboardFrame, StoryboardFrameType } from '../../lib/storyboard/schema';
 import {
   getBeatStatus,
@@ -17,10 +18,16 @@ import {
   type BeatStatusLevel,
   type MissingSpecReason,
 } from '@storyboard-os/rpg-domain';
+import { statusColors, statusLabels, textColors } from '@storyboard-os/core';
 import type { FrameProgress } from '../../lib/storyboard/project';
 import { frameRoute } from '../../lib/storyboard/routes';
 
 // ─── Type display config ──────────────────────────────────────────────────────
+// Accents come from the shared @storyboard-os/core token API (statusColors) so
+// the inspector, card badges, legend, and header all read from one source and
+// never drift. `hook` has no status-token equivalent — kept as a named amber.
+
+const TYPE_ACCENT_HOOK = '#EAB308';
 
 const TYPE_LABELS: Record<StoryboardFrameType, string> = {
   hook:        'Hook',
@@ -33,29 +40,29 @@ const TYPE_LABELS: Record<StoryboardFrameType, string> = {
 };
 
 const TYPE_COLORS: Record<StoryboardFrameType, string> = {
-  hook:        '#EAB308',
-  scene:       '#3B82F6',
-  choice:      '#8B5CF6',
-  encounter:   '#EF4444',
-  reveal:      '#F97316',
-  npc_beat:    '#22C55E',
-  consequence: '#6B7280',
+  hook:        TYPE_ACCENT_HOOK,
+  scene:       statusColors.state,
+  choice:      statusColors.accent,
+  encounter:   statusColors.blocked,
+  reveal:      statusColors.partial,
+  npc_beat:    statusColors.spec,
+  consequence: statusColors.draft,
 };
 
 // ─── Status display config ────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<BeatStatusLevel, string> = {
-  ready:   '#22C55E',
-  partial: '#F97316',
-  draft:   '#6B7280',
-  blocked: '#EF4444',
+  ready:   statusColors.spec,
+  partial: statusColors.partial,
+  draft:   statusColors.draft,
+  blocked: statusColors.blocked,
 };
 
 const STATUS_LABELS: Record<BeatStatusLevel, string> = {
-  ready:   'READY',
-  partial: 'PARTIAL',
-  draft:   'DRAFT',
-  blocked: 'BLOCKED',
+  ready:   statusLabels.ready,   // 'SPEC' — VP-005: match the card badge (was 'READY')
+  partial: statusLabels.partial,
+  draft:   statusLabels.draft,
+  blocked: statusLabels.blocked,
 };
 
 const REASON_LABELS: Record<MissingSpecReason, string> = {
@@ -88,6 +95,14 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
   const accent = TYPE_COLORS[frame.type];
   const status = getBeatStatus(frame);
 
+  // HU-005: move focus into the panel when it opens (or when it switches to a
+  // different frame) so keyboard + screen-reader users land inside the newly
+  // revealed content instead of being stranded on the canvas.
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    panelRef.current?.focus();
+  }, [frame.id]);
+
   // Separate missing reasons by severity — blockers first, then spec gaps,
   // skip advisory from inspector view (it clutters without adding actionability)
   const blockers = status.missing.filter(r => BLOCKING_REASONS.has(r));
@@ -96,13 +111,19 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
   );
 
   return (
-    <div style={{
-      position: 'absolute', top: 48, right: 0, bottom: 0, width: 360,
-      background: '#0c1220',
-      borderLeft: '1px solid rgba(255,255,255,0.07)',
-      display: 'flex', flexDirection: 'column',
-      overflowY: 'auto', zIndex: 20,
-    }}>
+    <div
+      ref={panelRef}
+      role="complementary"
+      aria-label={`Frame inspector: ${frame.title}`}
+      tabIndex={-1}
+      style={{
+        position: 'absolute', top: 48, right: 0, bottom: 0, width: 360,
+        background: '#0c1220',
+        borderLeft: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex', flexDirection: 'column',
+        overflowY: 'auto', zIndex: 20,
+      }}
+    >
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div style={{
         padding: '14px 18px',
@@ -125,7 +146,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
         <button
           onClick={onClose}
           style={{
-            background: 'none', border: 'none', color: '#475569',
+            background: 'none', border: 'none', color: textColors.secondary,
             cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 2px',
             flexShrink: 0,
           }}
@@ -157,7 +178,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
             {STATUS_LABELS[status.level]}
           </span>
           {/* Coverage numbers */}
-          <span style={{ fontSize: 11, color: '#475569' }}>
+          <span style={{ fontSize: 11, color: textColors.muted }}>
             {status.assetCount} {status.assetCount === 1 ? 'asset' : 'assets'}
             {' · '}
             {status.testCriteriaCount} {status.testCriteriaCount === 1 ? 'test' : 'tests'}
@@ -171,7 +192,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {blockers.map(r => (
               <li key={r} style={{
-                fontSize: 11, color: '#EF4444',
+                fontSize: 11, color: statusColors.blocked,
                 display: 'flex', alignItems: 'flex-start', gap: 5,
               }}>
                 <span style={{ flexShrink: 0, marginTop: 1 }}>⚠</span>
@@ -186,7 +207,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 3 }}>
             {specGaps.map(r => (
               <li key={r} style={{
-                fontSize: 11, color: '#64748b',
+                fontSize: 11, color: textColors.muted,
                 display: 'flex', alignItems: 'flex-start', gap: 5,
               }}>
                 <span style={{ flexShrink: 0 }}>–</span>
@@ -198,7 +219,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
 
         {/* All-clear */}
         {status.level === 'ready' && (
-          <p style={{ fontSize: 11, color: '#22C55E', margin: 0 }}>
+          <p style={{ fontSize: 11, color: statusColors.spec, margin: 0 }}>
             ✓ Implementation spec complete
           </p>
         )}
@@ -218,7 +239,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
               label="Implementation Checklist"
               items={frame.content.implementationChecklist}
               progress={frameProgress.checklist}
-              accentColor="#22C55E"
+              accentColor={statusColors.spec}
               onChange={onChecklistChange}
             />
           )}
@@ -227,7 +248,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
               label="Test Criteria"
               items={frame.content.testCriteria}
               progress={frameProgress.testCriteria}
-              accentColor="#3B82F6"
+              accentColor={statusColors.state}
               onChange={onTestCriterionChange}
             />
           )}
@@ -237,23 +258,23 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
       {/* ── Content fields ──────────────────────────────────────────────────── */}
       <div style={{ padding: '14px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
         {frame.content.stakes && (
-          <Field label="Stakes" value={frame.content.stakes} color="#F97316" />
+          <Field label="Stakes" value={frame.content.stakes} color={statusColors.partial} />
         )}
         {frame.content.designerNotes && (
           <Field label="Designer Notes" value={frame.content.designerNotes} />
         )}
         {frame.content.playerVisibleText && (
-          <Field label="In-Game Text" value={frame.content.playerVisibleText} color="#22C55E" />
+          <Field label="In-Game Text" value={frame.content.playerVisibleText} color={statusColors.spec} />
         )}
         {frame.content.authorOnlyNotes && frame.content.authorOnlyNotes.length > 0 && (
           <Field
             label="Author Notes"
             value={frame.content.authorOnlyNotes.map((s, i) => `${i + 1}. ${s}`).join('\n\n')}
-            color="#8B5CF6"
+            color={statusColors.accent}
           />
         )}
         {frame.content.stateChanges && frame.content.stateChanges.length > 0 && (
-          <Field label="State Changes" value={frame.content.stateChanges.join('\n')} color="#3B82F6" />
+          <Field label="State Changes" value={frame.content.stateChanges.join('\n')} color={statusColors.state} />
         )}
         {frame.content.involvedCharacters && frame.content.involvedCharacters.length > 0 && (
           <Field label="Characters" value={frame.content.involvedCharacters.join('\n')} />
@@ -289,7 +310,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
           style={{
             display: 'block', padding: '10px 16px', textAlign: 'center',
             background: onEditClick ? 'rgba(255,255,255,0.05)' : accent,
-            color: onEditClick ? '#94a3b8' : '#fff',
+            color: onEditClick ? textColors.secondary : '#fff',
             border: onEditClick ? '1px solid rgba(255,255,255,0.1)' : 'none',
             fontWeight: 700, fontSize: 13, textDecoration: 'none',
             borderRadius: 6, letterSpacing: '0.02em',
@@ -297,7 +318,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
         >
           Open Frame Page →
         </a>
-        <p style={{ marginTop: 0, fontSize: 10, color: '#334155', textAlign: 'center', fontFamily: 'monospace' }}>
+        <p style={{ marginTop: 0, fontSize: 10, color: textColors.muted, textAlign: 'center', fontFamily: 'monospace' }}>
           {route}
         </p>
       </div>
@@ -317,48 +338,74 @@ interface ProgressChecklistProps {
 
 function ProgressChecklist({ label, items, progress, accentColor, onChange }: ProgressChecklistProps) {
   const doneCount = items.filter((_, i) => progress[String(i)] === true).length;
+  const interactive = !!onChange;
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <p style={{
+        <p id={`checklist-${label}`} style={{
           fontSize: 10, fontWeight: 700, color: accentColor,
           textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0,
         }}>
           {label}
         </p>
-        <span style={{ fontSize: 10, color: '#475569' }}>
+        <span style={{ fontSize: 10, color: textColors.muted }}>
           {doneCount}/{items.length}
         </span>
       </div>
-      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}>
+      {/* HU-002: each row is a real role="checkbox" — focusable, keyboard-
+          operable (Enter/Space toggles), aria-checked reflects state. A
+          read-only list (no onChange) exposes state via aria-disabled instead
+          of being a dead <li onClick>. */}
+      <ul
+        role="group"
+        aria-labelledby={`checklist-${label}`}
+        style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}
+      >
         {items.map((item, i) => {
           const done = progress[String(i)] === true;
+          const toggle = () => onChange?.(i, !done);
           return (
-            <li
-              key={i}
-              onClick={() => onChange?.(i, !done)}
-              style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: onChange ? 'pointer' : 'default' }}
-            >
-              {/* Checkbox */}
-              <span style={{
-                width: 14, height: 14, borderRadius: 3, flexShrink: 0, marginTop: 2,
-                border: `1.5px solid ${done ? accentColor : '#334155'}`,
-                background: done ? `${accentColor}2a` : 'transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'border-color 0.1s',
-              }}>
-                {done && (
-                  <span style={{ fontSize: 9, color: accentColor, lineHeight: 1, fontWeight: 900 }}>✓</span>
-                )}
-              </span>
-              {/* Item text */}
-              <span style={{
-                fontSize: 12, color: done ? '#475569' : '#94a3b8',
-                lineHeight: 1.5,
-                textDecoration: done ? 'line-through' : 'none',
-              }}>
-                {item}
+            <li key={i} style={{ display: 'flex' }}>
+              <span
+                role="checkbox"
+                aria-checked={done}
+                aria-disabled={interactive ? undefined : true}
+                aria-label={item}
+                tabIndex={interactive ? 0 : -1}
+                onClick={interactive ? toggle : undefined}
+                onKeyDown={interactive ? (e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    toggle();
+                  }
+                } : undefined}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 8, flex: 1,
+                  cursor: interactive ? 'pointer' : 'default',
+                  borderRadius: 3,
+                }}
+              >
+                {/* Checkbox visual */}
+                <span aria-hidden="true" style={{
+                  width: 14, height: 14, borderRadius: 3, flexShrink: 0, marginTop: 2,
+                  border: `1.5px solid ${done ? accentColor : textColors.secondary}`,
+                  background: done ? `${accentColor}2a` : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'border-color 0.1s',
+                }}>
+                  {done && (
+                    <span style={{ fontSize: 9, color: accentColor, lineHeight: 1, fontWeight: 900 }}>✓</span>
+                  )}
+                </span>
+                {/* Item text */}
+                <span style={{
+                  fontSize: 12, color: done ? textColors.muted : textColors.secondary,
+                  lineHeight: 1.5,
+                  textDecoration: done ? 'line-through' : 'none',
+                }}>
+                  {item}
+                </span>
               </span>
             </li>
           );

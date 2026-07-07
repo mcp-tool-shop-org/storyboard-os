@@ -19,6 +19,7 @@ import {
     type StoryboardCanvasConfig,
     type CanvasFrame,
     type ViewportHandle,
+    DEFAULT_FRAME_STYLE,
 } from '@storyboard-os/canvas';
 import {
     getMarketingFrameBadges,
@@ -27,37 +28,57 @@ import {
     getCampaignCriticalPath,
     getApprovalGateSignals,
     getMeasurementLoopSignals,
+    marketingColors,
     type CampaignBeatStatusLevel,
     type LaunchReadinessLevel,
     type ApprovalGateSignal,
     type MeasurementLoopSignal,
 } from '@storyboard-os/marketing-domain';
 import type { Storyboard } from '@storyboard-os/marketing-domain';
+import { statusColors, textColors, typeScale } from '@storyboard-os/core';
+import { categorizeApprovalSignals } from '../lib/launchBlockers';
 import MarketingFrameInspector from './MarketingFrameInspector';
 import ErrorBoundary from './ErrorBoundary';
 
+// ─── Neutral connection greys ─────────────────────────────────────────────────
+// The two authored slate line colors reused across the config, legend, and
+// connection panel. No shared status token maps to them (they are chrome, not
+// status), so they stay as named locals — a single source rather than scattered
+// literals.
+
+const SLATE_LINE = '#475569';
+const SLATE_LINE_DIM = '#334155';
+
 // ─── Marketing canvas config ──────────────────────────────────────────────────
+// Accent + connection stroke colors come from the shared token API
+// (@storyboard-os/core statusColors + @storyboard-os/marketing-domain
+// marketingColors) so the card badge, legend, inspector, and header all read
+// from one source and can never drift. The per-type `bg` tints are unique dark
+// washes (not status colors), so they stay literal.
 
 const MARKETING_CANVAS_CONFIG: StoryboardCanvasConfig = {
     frameTypeStyles: {
-        audience: { bg: '#0c1a2e', accent: '#3B82F6', label: 'AUDIENCE' },
-        message: { bg: '#14092e', accent: '#8B5CF6', label: 'MESSAGE' },
-        touchpoint: { bg: '#071a0c', accent: '#22C55E', label: 'TOUCHPOINT' },
-        asset: { bg: '#1f0e00', accent: '#F97316', label: 'ASSET' },
-        approval: { bg: '#1f0808', accent: '#EF4444', label: 'APPROVAL' },
-        launch_event: { bg: '#1a1500', accent: '#EAB308', label: 'LAUNCH' },
+        audience: { bg: '#0c1a2e', accent: statusColors.state, label: 'AUDIENCE' },
+        message: { bg: '#14092e', accent: statusColors.accent, label: 'MESSAGE' },
+        touchpoint: { bg: '#071a0c', accent: statusColors.spec, label: 'TOUCHPOINT' },
+        asset: { bg: '#1f0e00', accent: statusColors.partial, label: 'ASSET' },
+        approval: { bg: '#1f0808', accent: statusColors.blocked, label: 'APPROVAL' },
+        launch_event: { bg: '#1a1500', accent: marketingColors.critical, label: 'LAUNCH' },
         conversion: { bg: '#0e1a1a', accent: '#06B6D4', label: 'CONVERSION' },
         follow_up: { bg: '#0e0e1a', accent: '#6366F1', label: 'FOLLOW-UP' },
         measurement: { bg: '#1a0e1a', accent: '#EC4899', label: 'MEASUREMENT' },
     },
     connectionTypeStyles: {
-        sequence: { stroke: '#475569', strokeWidth: 1.5 },
-        dependency: { stroke: '#EF4444', dash: [8, 4], strokeWidth: 2 },
-        approval: { stroke: '#EAB308', dash: [6, 3], strokeWidth: 2 },
-        optional: { stroke: '#334155', dash: [4, 4], strokeWidth: 1.5 },
+        sequence: { stroke: SLATE_LINE, strokeWidth: 1.5 },
+        dependency: { stroke: statusColors.blocked, dash: [8, 4], strokeWidth: 2 },
+        // The "Approval Gate" connection reads the same amber as the GATE badge.
+        approval: { stroke: marketingColors.gate, dash: [6, 3], strokeWidth: 2 },
+        optional: { stroke: SLATE_LINE_DIM, dash: [4, 4], strokeWidth: 1.5 },
     },
-    defaultFrameStyle: { bg: '#0e1018', accent: '#475569', label: 'FRAME' },
-    defaultConnectionStyle: { stroke: '#475569', strokeWidth: 1.5 },
+    // Byte-identical to the canvas package's exported fallback frame style —
+    // reuse it verbatim rather than hand-copying the literal.
+    defaultFrameStyle: DEFAULT_FRAME_STYLE,
+    defaultConnectionStyle: { stroke: SLATE_LINE, strokeWidth: 1.5 },
 };
 
 // ─── Connection type display config ──────────────────────────────────────────
@@ -70,10 +91,10 @@ const CONNECTION_TYPE_LABELS: Record<string, string> = {
 };
 
 const CONNECTION_TYPE_COLORS: Record<string, string> = {
-    sequence: '#475569',
-    dependency: '#EF4444',
-    approval: '#EAB308',
-    optional: '#334155',
+    sequence: SLATE_LINE,
+    dependency: statusColors.blocked,
+    approval: marketingColors.gate,
+    optional: SLATE_LINE_DIM,
 };
 
 const CONNECTION_EXPLANATIONS: Record<string, string> = {
@@ -86,15 +107,55 @@ const CONNECTION_EXPLANATIONS: Record<string, string> = {
 // ─── Legend ───────────────────────────────────────────────────────────────────
 
 const LEGEND = [
-    { type: 'sequence', color: '#475569', label: 'Flow', dashed: false, weight: 1.5 },
-    { type: 'dependency', color: '#EF4444', label: 'Dependency', dashed: true, weight: 2 },
-    { type: 'approval', color: '#EAB308', label: 'Approval', dashed: true, weight: 2 },
-    { type: 'optional', color: '#334155', label: 'Optional', dashed: true, weight: 1.5 },
+    { type: 'sequence', color: SLATE_LINE, label: 'Flow', dashed: false, weight: 1.5 },
+    { type: 'dependency', color: statusColors.blocked, label: 'Dependency', dashed: true, weight: 2 },
+    { type: 'approval', color: marketingColors.gate, label: 'Approval', dashed: true, weight: 2 },
+    { type: 'optional', color: SLATE_LINE_DIM, label: 'Optional', dashed: true, weight: 1.5 },
 ];
+
+// ─── Badge legend ───────────────────────────────────────────────────────────
+// The card-badge color key in the footer. VP-002: GATE reads amber
+// (marketingColors.gate) so it matches the card badge — it was hardcoded red
+// (#EF4444, the `blocked` hue), which made the legend disagree with the card.
+// VP-004: CRITICAL is present here (marketingColors.critical) — the critical-
+// path badge previously had no legend entry and collided with the launch_event
+// accent. Every swatch reads from a domain/status token; a test pins
+// GATE === marketingColors.gate so the card-vs-legend bug can't return.
+
+const BADGE_LEGEND: Array<{ text: string; color: string }> = [
+    { text: 'STATE', color: marketingColors.state },
+    { text: 'GATE', color: marketingColors.gate },
+    { text: 'CRITICAL', color: marketingColors.critical },
+    { text: 'SPEC', color: marketingColors.ready },
+];
+
+// Exported for the color-reconciliation test (mkt legend GATE === domain token).
+export { BADGE_LEGEND as MARKETING_BADGE_LEGEND };
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
 
 const HEADER_HEIGHT = 48;
+
+// ─── SO wordmark badge ────────────────────────────────────────────────────────
+// VP-014: the shared "SO" (Storyboard OS) mark in the header so all three
+// verticals + the site read as one product. Uses the shared accent hue.
+
+function SOBadge() {
+    return (
+        <span
+            aria-hidden="true"
+            style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 22, height: 22, borderRadius: 5,
+                background: `linear-gradient(135deg, ${statusColors.accent}, ${statusColors.state})`,
+                color: '#fff', fontSize: 10, fontWeight: 800, letterSpacing: '0.02em',
+                flexShrink: 0,
+            }}
+        >
+            SO
+        </span>
+    );
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -137,6 +198,13 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
         [storyboard],
     );
 
+    // Blocked vs pending approval gates (see lib/launchBlockers.ts for why
+    // "pending" is derived rather than a status level).
+    const approvalCategories = useMemo(
+        () => categorizeApprovalSignals(approvalSignals),
+        [approvalSignals],
+    );
+
     const measurementSignals = useMemo(
         () => getMeasurementLoopSignals(storyboard),
         [storyboard],
@@ -146,7 +214,7 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
         return storyboard.frames.map(frame => {
             const badges = getMarketingFrameBadges(frame);
             if (criticalPathIds.has(frame.id)) {
-                badges.push({ text: 'CRITICAL', color: '#EAB308' });
+                badges.push({ text: 'CRITICAL', color: marketingColors.critical });
             }
             return {
                 id: frame.id,
@@ -218,39 +286,56 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
         <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#0f172a' }}>
 
             {/* ── Header bar ────────────────────────────────────────────────────── */}
+            {/* VP-009: minHeight (not fixed height) + wrap so the chip cluster can
+                drop to a second row on narrow viewports (~1024–1100px) instead of
+                overflowing off the right edge. */}
             <header style={{
-                height: HEADER_HEIGHT,
-                padding: '0 20px',
+                minHeight: HEADER_HEIGHT,
+                padding: '6px 20px',
                 background: 'rgba(15,23,42,0.97)',
                 borderBottom: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex', alignItems: 'center', gap: 16,
+                display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
                 flexShrink: 0, zIndex: 30,
             }}>
-                <a href="/" style={{ fontSize: 11, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600, textDecoration: 'none' }}>
-                    Marketing Storyboard
+                <a href="/" aria-label="Storyboard OS home" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
+                    <SOBadge />
+                    <span style={{ fontSize: 11, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: typeScale.tracking.wide, fontWeight: 600 }}>
+                        Marketing Storyboard
+                    </span>
                 </a>
-                <span style={{ color: '#1e293b' }}>|</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+                <span style={{ color: SLATE_LINE_DIM }} aria-hidden="true">|</span>
+                <h1 style={{ fontSize: 14, fontWeight: 700, color: textColors.heading, margin: 0, lineHeight: 1.2 }}>
                     {storyboard.title}
-                </span>
+                </h1>
                 {storyboard.description && (
-                    <span style={{ fontSize: 12, color: '#475569', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 12, color: textColors.secondary, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {storyboard.description}
                     </span>
                 )}
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 11, color: '#334155' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <span style={{ fontSize: 11, color: textColors.muted }}>
                         {storyboard.frames.length} frames · {storyboard.connections.length} connections
                     </span>
                     <ReadinessCounts summary={readinessSummary} />
                     <LaunchReadinessBadge level={launchReadiness.level} summary={launchReadiness.summary} />
                     <a
+                        href="/handbook"
+                        style={{
+                            fontSize: 11, fontWeight: 700, letterSpacing: typeScale.tracking.label,
+                            padding: '4px 10px', borderRadius: 4,
+                            background: 'rgba(71,85,105,0.2)', border: `1px solid ${SLATE_LINE_DIM}`,
+                            color: textColors.secondary, textDecoration: 'none',
+                        }}
+                    >
+                        Handbook
+                    </a>
+                    <a
                         href={handoffHref}
                         style={{
-                            fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+                            fontSize: 11, fontWeight: 700, letterSpacing: typeScale.tracking.label,
                             padding: '4px 10px', borderRadius: 4,
-                            background: 'rgba(71,85,105,0.2)', border: '1px solid #1e293b',
-                            color: '#94a3b8', textDecoration: 'none',
+                            background: 'rgba(71,85,105,0.2)', border: `1px solid ${SLATE_LINE_DIM}`,
+                            color: textColors.secondary, textDecoration: 'none',
                         }}
                     >
                         Campaign Brief →
@@ -262,7 +347,7 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
             <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
                 {/* Canvas area */}
-                <div style={{
+                <div role="main" aria-label={`Campaign board: ${storyboard.title}`} style={{
                     flex: 1,
                     overflow: 'hidden',
                     position: 'relative',
@@ -292,15 +377,21 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
                 {selectedFrame && (
                     <MarketingFrameInspector
                         frame={selectedFrame}
-                        campaignId={storyboard.id}
                         onClose={() => setSelectedFrameId(null)}
                     />
                 )}
 
-                {/* Launch blockers panel — visible when issues exist and no frame/connection is selected */}
-                {!selectedFrame && !selectedConnection && (launchReadiness.blockedFrameIds.length > 0 || launchReadiness.missingMeasurementFrameIds.length > 0) && (
+                {/* Launch blockers panel — visible when issues exist and no frame/connection is selected.
+                    Pending approvals count as an issue: they must surface here even when
+                    nothing is hard-blocked (AP-006 #4). */}
+                {!selectedFrame && !selectedConnection && (
+                    launchReadiness.blockedFrameIds.length > 0 ||
+                    launchReadiness.missingMeasurementFrameIds.length > 0 ||
+                    approvalCategories.pending.length > 0
+                ) && (
                     <LaunchBlockersPanel
-                        approvalSignals={approvalSignals}
+                        blockedApprovals={approvalCategories.blocked}
+                        pendingApprovals={approvalCategories.pending}
                         measurementSignals={measurementSignals}
                         frames={storyboard.frames}
                     />
@@ -337,19 +428,15 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
                             />
                             <polygon points="22,2 28,5 22,8" fill={entry.color} />
                         </svg>
-                        <span style={{ fontSize: 11, color: '#475569' }}>{entry.label}</span>
+                        <span style={{ fontSize: 11, color: textColors.muted }}>{entry.label}</span>
                     </div>
                 ))}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
-                    {[
-                        { text: 'STATE', color: '#3B82F6' },
-                        { text: 'GATE', color: '#EF4444' },
-                        { text: 'SPEC', color: '#22C55E' },
-                    ].map(b => (
+                    {BADGE_LEGEND.map(b => (
                         <span
                             key={b.text}
                             style={{
-                                fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
+                                fontSize: 9, fontWeight: 700, letterSpacing: typeScale.tracking.label,
                                 padding: '1px 5px', borderRadius: 3,
                                 border: `1px solid ${b.color}55`,
                                 color: b.color, background: `${b.color}1a`,
@@ -358,7 +445,7 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
                             {b.text}
                         </span>
                     ))}
-                    <span style={{ fontSize: 11, color: '#1e293b' }}>
+                    <span style={{ fontSize: 11, color: textColors.muted }}>
                         drag to pan · scroll to pan · ctrl+scroll to zoom · F fit · 0 reset
                     </span>
                 </div>
@@ -373,7 +460,7 @@ const BTN: React.CSSProperties = {
     background: 'rgba(15,24,42,0.92)',
     border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: 5,
-    color: '#94a3b8',
+    color: textColors.secondary,
     cursor: 'pointer',
     fontSize: 15,
     fontWeight: 700,
@@ -402,7 +489,7 @@ function ViewControls({ canvasRef, scale }: { canvasRef: React.RefObject<Viewpor
             display: 'flex', gap: 4, zIndex: 20,
             alignItems: 'center',
         }}>
-            <span style={{ fontSize: 10, color: '#475569', marginRight: 4 }}>{pct}%</span>
+            <span style={{ fontSize: 10, color: textColors.muted, marginRight: 4 }}>{pct}%</span>
             <CtrlBtn label="+" title="Zoom in (=)" onClick={() => canvasRef.current?.zoomIn()} />
             <CtrlBtn label="−" title="Zoom out (-)" onClick={() => canvasRef.current?.zoomOut()} />
             <CtrlBtn label="⊡" title="Fit to frames (F)" onClick={() => canvasRef.current?.fitToFrames()} />
@@ -414,19 +501,23 @@ function ViewControls({ canvasRef, scale }: { canvasRef: React.RefObject<Viewpor
 // ─── ReadinessCounts ──────────────────────────────────────────────────────────
 
 const STATUS_HEADER_COLORS: Record<CampaignBeatStatusLevel, string> = {
-    ready: '#22C55E',
-    partial: '#F97316',
-    draft: '#6B7280',
-    blocked: '#EF4444',
+    ready: statusColors.spec,
+    partial: statusColors.partial,
+    draft: statusColors.draft,
+    blocked: statusColors.blocked,
 };
 
 function ReadinessCounts({ summary }: { summary: ReturnType<typeof getCampaignReadiness> }) {
-    const chips: Array<{ level: CampaignBeatStatusLevel; count: number }> = [
+    // Annotate the source array, not the filter result — contextual typing does
+    // not flow through .filter(), so annotating the filtered variable left the
+    // literals widened to `{ level: string }` (ts2322).
+    const allChips: Array<{ level: CampaignBeatStatusLevel; count: number }> = [
         { level: 'ready', count: summary.ready },
         { level: 'partial', count: summary.partial },
         { level: 'blocked', count: summary.blocked },
         { level: 'draft', count: summary.draft },
-    ].filter(c => c.count > 0);
+    ];
+    const chips = allChips.filter(c => c.count > 0);
 
     if (chips.length === 0) return null;
 
@@ -463,7 +554,7 @@ interface ConnectionPanelProps {
 
 function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: ConnectionPanelProps) {
     const typeLabel = CONNECTION_TYPE_LABELS[connection.type] ?? connection.type.toUpperCase();
-    const accentColor = CONNECTION_TYPE_COLORS[connection.type] ?? '#475569';
+    const accentColor = CONNECTION_TYPE_COLORS[connection.type] ?? SLATE_LINE;
     const explanation = CONNECTION_EXPLANATIONS[connection.type] ?? null;
 
     return (
@@ -499,7 +590,7 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
                     style={{
                         marginLeft: 'auto',
                         background: 'none', border: 'none', cursor: 'pointer',
-                        color: '#475569', fontSize: 18, lineHeight: 1, padding: '0 2px',
+                        color: textColors.muted, fontSize: 18, lineHeight: 1, padding: '0 2px',
                     }}
                     aria-label="Close connection panel"
                 >
@@ -511,23 +602,23 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
 
                 {/* Flow visualization */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+                    <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: typeScale.tracking.wide, fontWeight: 600 }}>
                         Campaign Flow
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{
-                            fontSize: 12, color: '#cbd5e1', background: 'rgba(255,255,255,0.05)',
+                            fontSize: 12, color: textColors.primary, background: 'rgba(255,255,255,0.05)',
                             padding: '4px 8px', borderRadius: 4, flex: 1, minWidth: 0,
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
                             {fromTitle}
                         </span>
-                        <svg width="20" height="10" style={{ flexShrink: 0 }}>
+                        <svg width="20" height="10" style={{ flexShrink: 0 }} aria-hidden="true">
                             <line x1="0" y1="5" x2="14" y2="5" stroke={accentColor} strokeWidth="1.5" />
                             <polygon points="14,2.5 20,5 14,7.5" fill={accentColor} />
                         </svg>
                         <span style={{
-                            fontSize: 12, color: '#cbd5e1', background: 'rgba(255,255,255,0.05)',
+                            fontSize: 12, color: textColors.primary, background: 'rgba(255,255,255,0.05)',
                             padding: '4px 8px', borderRadius: 4, flex: 1, minWidth: 0,
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
@@ -539,11 +630,11 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
                 {/* Flow meaning explanation */}
                 {explanation && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+                        <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: typeScale.tracking.wide, fontWeight: 600 }}>
                             What This Means
                         </span>
                         <p style={{
-                            margin: 0, fontSize: 12, color: '#94a3b8',
+                            margin: 0, fontSize: 12, color: textColors.secondary,
                             lineHeight: 1.6, padding: '8px 10px',
                             background: `${accentColor}0d`,
                             border: `1px solid ${accentColor}22`,
@@ -557,11 +648,11 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
                 {/* Connection label (condition) */}
                 {connection.label && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+                        <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: typeScale.tracking.wide, fontWeight: 600 }}>
                             Condition / Gate
                         </span>
                         <p style={{
-                            margin: 0, fontSize: 13, color: '#f1f5f9',
+                            margin: 0, fontSize: 13, color: textColors.heading,
                             background: `${accentColor}1a`,
                             border: `1px solid ${accentColor}33`,
                             borderRadius: 4, padding: '8px 10px',
@@ -579,10 +670,10 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
 // ─── LaunchReadinessBadge ─────────────────────────────────────────────────────
 
 const LAUNCH_BADGE_COLORS: Record<LaunchReadinessLevel, string> = {
-    ready: '#22C55E',
-    at_risk: '#F97316',
-    blocked: '#EF4444',
-    draft: '#6B7280',
+    ready: statusColors.spec,
+    at_risk: statusColors.partial,
+    blocked: statusColors.blocked,
+    draft: statusColors.draft,
 };
 
 const LAUNCH_BADGE_LABELS: Record<LaunchReadinessLevel, string> = {
@@ -613,16 +704,19 @@ function LaunchReadinessBadge({ level, summary }: { level: LaunchReadinessLevel;
 // ─── LaunchBlockersPanel ──────────────────────────────────────────────────────
 
 interface LaunchBlockersPanelProps {
-    approvalSignals: ApprovalGateSignal[];
+    /** Gates with no approval requirements defined — cannot pass at all. */
+    blockedApprovals: ApprovalGateSignal[];
+    /** Gates defined but not fully specced — approvals awaiting completion.
+        Categorized in lib/launchBlockers.ts; the old `status === 'pending'`
+        filter compared against a level that does not exist and hid these. */
+    pendingApprovals: ApprovalGateSignal[];
     measurementSignals: MeasurementLoopSignal[];
     frames: Array<{ id: string; title: string }>;
 }
 
-function LaunchBlockersPanel({ approvalSignals, measurementSignals, frames }: LaunchBlockersPanelProps) {
+function LaunchBlockersPanel({ blockedApprovals, pendingApprovals, measurementSignals, frames }: LaunchBlockersPanelProps) {
     const frameTitle = (id: string) => frames.find(f => f.id === id)?.title ?? id;
 
-    const blockedApprovals = approvalSignals.filter(s => s.status === 'blocked');
-    const pendingApprovals = approvalSignals.filter(s => s.status === 'pending');
     const missingMetrics = measurementSignals.filter(s => !s.hasMetrics);
     const openLoops = measurementSignals.filter(s => s.hasMetrics && !s.isLoop);
 
@@ -643,7 +737,7 @@ function LaunchBlockersPanel({ approvalSignals, measurementSignals, frames }: La
                 padding: '12px 16px',
                 borderBottom: '1px solid rgba(255,255,255,0.07)',
             }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: statusColors.blocked, textTransform: 'uppercase', letterSpacing: typeScale.tracking.wide }}>
                     Launch Blockers
                 </span>
             </div>
@@ -651,7 +745,7 @@ function LaunchBlockersPanel({ approvalSignals, measurementSignals, frames }: La
 
                 {/* Approval blockers */}
                 {blockedApprovals.length > 0 && (
-                    <BlockerSection title="Approval — Blocked" color="#EF4444">
+                    <BlockerSection title="Approval — Blocked" color={statusColors.blocked}>
                         {blockedApprovals.map(s => (
                             <BlockerItem key={s.frameId} label={frameTitle(s.frameId)} detail="Missing approval requirements" />
                         ))}
@@ -659,7 +753,7 @@ function LaunchBlockersPanel({ approvalSignals, measurementSignals, frames }: La
                 )}
 
                 {pendingApprovals.length > 0 && (
-                    <BlockerSection title="Approval — Pending" color="#EAB308">
+                    <BlockerSection title="Approval — Pending" color={marketingColors.gate}>
                         {pendingApprovals.map(s => (
                             <BlockerItem key={s.frameId} label={frameTitle(s.frameId)} detail={s.blocksLaunch ? 'Blocks launch' : 'Does not block launch'} />
                         ))}
@@ -676,7 +770,7 @@ function LaunchBlockersPanel({ approvalSignals, measurementSignals, frames }: La
                 )}
 
                 {openLoops.length > 0 && (
-                    <BlockerSection title="Measurement — Open Loop" color="#F97316">
+                    <BlockerSection title="Measurement — Open Loop" color={statusColors.partial}>
                         {openLoops.map(s => (
                             <BlockerItem key={s.frameId} label={frameTitle(s.frameId)} detail={`${s.metricsCount} metric(s) — no feedback loop`} />
                         ))}
@@ -705,8 +799,8 @@ function BlockerItem({ label, detail }: { label: string; detail: string }) {
             background: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.06)',
         }}>
-            <div style={{ fontSize: 12, color: '#e2e8f0', fontWeight: 500 }}>{label}</div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{detail}</div>
+            <div style={{ fontSize: 12, color: textColors.primary, fontWeight: 500 }}>{label}</div>
+            <div style={{ fontSize: 11, color: textColors.muted, marginTop: 2 }}>{detail}</div>
         </div>
     );
 }

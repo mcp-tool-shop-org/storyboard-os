@@ -244,10 +244,11 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
         .filter(f => f.type === 'approval')
         .map(f => f.id);
 
-    // Measurement frames missing metrics
+    // Measurement frames missing metrics.
+    // `?.` guards frames whose content is null/missing (DM-002).
     const missingMeasurementFrameIds = frames
         .filter(f => f.type === 'measurement')
-        .filter(f => !f.content.metrics || f.content.metrics.length === 0)
+        .filter(f => (f.content?.metrics?.length ?? 0) === 0)
         .map(f => f.id);
 
     // Critical path
@@ -321,7 +322,8 @@ export function getApprovalGateSignals(campaign: Storyboard): ApprovalGateSignal
                 status: status.level,
                 missing: status.missing,
                 blocksLaunch: approvalBlocksLaunch(f.id, connections, frames),
-                hasApprovalRequirements: (f.content.approvalRequirements?.length ?? 0) > 0,
+                // `?.` guards frames whose content is null/missing (DM-002).
+                hasApprovalRequirements: (f.content?.approvalRequirements?.length ?? 0) > 0,
             };
         });
 }
@@ -338,7 +340,8 @@ export function getMeasurementLoopSignals(campaign: Storyboard): MeasurementLoop
     return frames
         .filter(f => f.type === 'measurement')
         .map(f => {
-            const hasMetrics = (f.content.metrics?.length ?? 0) > 0;
+            // `?.` guards frames whose content is null/missing (DM-002).
+            const hasMetrics = (f.content?.metrics?.length ?? 0) > 0;
             const hasIncoming = (incomingMap.get(f.id)?.length ?? 0) > 0;
             const hasOutgoing = (outgoingMap.get(f.id)?.length ?? 0) > 0;
 
@@ -346,7 +349,7 @@ export function getMeasurementLoopSignals(campaign: Storyboard): MeasurementLoop
                 frameId: f.id,
                 title: f.title,
                 hasMetrics,
-                metricsCount: f.content.metrics?.length ?? 0,
+                metricsCount: f.content?.metrics?.length ?? 0,
                 hasIncomingConnection: hasIncoming,
                 hasOutgoingConnection: hasOutgoing,
                 // A loop means measurement feeds back — has both incoming AND outgoing

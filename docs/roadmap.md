@@ -97,14 +97,14 @@ Mirror `apps/rpg-storyboard/src/`:
 
 | Finding | Severity | Item | Why deferred |
 |---|---|---|---|
-| F-CT-004 / F-CT-206 | MED | SHA-pin all GitHub Actions (currently floating @v3/@v4 tags) | Dependabot github-actions ecosystem was added in v1.1.0 — let dependabot drive the SHA-pin adoption rather than a manual bulk pin |
-| F-CT-208 | MED | Astro version split: site/ on `^5.17.0`, apps/ on `^4.0.0` | Cross-domain change; needs an apps-side migration plan + visual regression check |
-| F-CT-209 | LOW | marketing-storyboard + cinematic-storyboard apps have no test script | Adding stub `vitest run` is trivial; meaningful test coverage isn't. Pair with item 1's app-side work |
-| F-CT-210 | LOW | rpg-domain uses `workspace:^`; marketing + cinematic use `workspace:*` | Cosmetic; standardize next time package.json files are touched |
+| F-CT-004 / F-CT-206 | MED | SHA-pin all GitHub Actions (currently floating @v3/@v4/@v6 tags) | Dependabot github-actions ecosystem was added in v1.1.0 — let dependabot drive the SHA-pin adoption rather than a manual bulk pin |
 | F-CT-211 | LOW | Dependabot groups all npm updates into a single PR — security PRs can stall behind major bumps | Split into patch/security/major groups |
+| Astro SSR advisories | MED | Remove the two `auditConfig.ignoreGhsas` entries in `pnpm-workspace.yaml` (`GHSA-2pvr-wf23-7pc7` host-header SSRF, `GHSA-8hv8-536x-4wqp` slot-name XSS) once the apps adopt astro 6 — both are patched there. Ignored today because both are SSR/server-island-only and structurally unreachable in static `astro build` output. | Blocked on the astro 5→6 major; revisit at that bump (this is the tracked trigger the ignore-list comment points to) |
 | Shipcheck soft gap | — | `[npm]` SBOM generation — no CycloneDX/SPDX attached to releases | Tooling decision (which SBOM generator); not a Dependabot blocker because npm `--provenance` provides comparable supply-chain signal |
 
-**Why deferred (as a group):** None blocks v1.1.0 ship. All are accumulated polish where the gap is "we don't do X yet" rather than "we do X wrong."
+**Why deferred (as a group):** None blocks ship. All are accumulated polish where the gap is "we don't do X yet" rather than "we do X wrong."
+
+> **Closed by the 2026-07 dogfood swarm** (removed from this table): F-CT-208 (astro version split — apps migrated to astro 5.18.1), F-CT-209 (marketing/cinematic test scripts — vitest rigs added), F-CT-210 (workspace-protocol drift — standardized to `workspace:^`). Dependency scanning is now enforced in CI (`pnpm audit --prod --audit-level=high`).
 
 ---
 
@@ -156,6 +156,19 @@ The v1.1.0 CHANGELOG documents these breaking changes; restating here so they're
 - `@storyboard-os/core` — error code `INVALID_DIMENSIONS` renamed to `INVALID_FRAME_DIMENSION`. The `StoryboardValidationCode` type is now an open union (`KnownStoryboardValidationCode | (string & {})`) — strict `switch`-on-code consumers should switch on `KnownStoryboardValidationCode` if exhaustiveness matters.
 
 ---
+
+## 8. Deferred visual polish from the 2026-07 dogfood swarm (Stage C/D)
+
+The 2026-07 swarm landed the correctness-bearing pre-feature work — a shared design-token layer (`@storyboard-os/core` `tokens.ts` + per-domain color consts), keyboard/screen-reader canvas navigation (`AccessibleFrameList`), localStorage schema versioning + migration ladder, enum exhaustiveness guards, handoff format versioning, checklist checkboxes, contrast fixes (rpg + marketing), and the two wrong-legend color bugs (marketing GATE amber, cinematic VFX purple) + the READY→SPEC label. These bounded polish items were scoped out (two app agents hit a usage limit mid-wave) and are safe to pick up incrementally — none is a correctness gap:
+
+- **HU-007** — remember view state across reloads (selected frame, zoom/pan, last-open project) in the rpg app. Self-contained; use a dedicated `rpg-sb:viewstate` key, guarded restore.
+- **VP-014** — carry the marketing site's `SO` wordmark + accent + a "Handbook" link into the three app headers so app and site read as one product.
+- **VP-009** — responsive header: the chip cluster overflows ~1024–1100px and the fixed 380px inspector panels don't collapse; add a breakpoint so the board stays usable at 1280px.
+- **Cinematic tokenization** — the cinematic app consumes the new tokens only for the VFX legend fix; finish repointing its remaining hardcoded status/type hex + the failing muted-text contrast colors to `cinematicColors`/`statusColors`/`textColors` (rpg + marketing already did this).
+- **Marketing color-parity test** — add a unit test asserting the marketing legend GATE color `=== marketingColors.gate` and cinematic VFX `=== cinematicColors.vfx`, so a card-vs-legend divergence can never silently return.
+- **VP-007/008** — apply the new `typeScale`/`spacing` tokens across the remaining ad-hoc letter-spacing + panel-width literals not touched this pass.
+
+**Why deferred:** all are visual/UX refinement on top of an already-green tree; the token module now exists, so each is a bounded consume-the-token change rather than net-new design.
 
 ## How this roadmap was written
 

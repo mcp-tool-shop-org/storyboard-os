@@ -28,6 +28,8 @@ import {
     type SequenceHealthLevel,
 } from '@storyboard-os/cinematic-domain';
 import type { Storyboard } from '@storyboard-os/cinematic-domain';
+import { cinematicColors } from '@storyboard-os/cinematic-domain';
+import { statusColors } from '@storyboard-os/core';
 import CinematicFrameInspector from './CinematicFrameInspector';
 import ProductionSignalPanel from './ProductionSignalPanel';
 import ErrorBoundary from './ErrorBoundary';
@@ -309,7 +311,6 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                 {selectedFrame && (
                     <CinematicFrameInspector
                         frame={selectedFrame}
-                        sequenceId={storyboard.id}
                         onClose={() => setSelectedFrameId(null)}
                     />
                 )}
@@ -358,10 +359,10 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                 ))}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
                     {[
-                        { text: 'CAM', color: '#3B82F6' },
-                        { text: 'VFX', color: '#EC4899' },
-                        { text: 'SFX', color: '#06B6D4' },
-                        { text: 'SPEC', color: '#22C55E' },
+                        { text: 'CAM', color: cinematicColors.camera },
+                        { text: 'VFX', color: cinematicColors.vfx },
+                        { text: 'SFX', color: cinematicColors.sfx },
+                        { text: 'SPEC', color: statusColors.spec },
                     ].map(b => (
                         <span
                             key={b.text}
@@ -438,12 +439,16 @@ const STATUS_HEADER_COLORS: Record<CinematicBeatStatusLevel, string> = {
 };
 
 function ReadinessCounts({ summary }: { summary: { ready: number; partial: number; draft: number; blocked: number } }) {
-    const chips: Array<{ level: CinematicBeatStatusLevel; count: number }> = [
+    // Annotate the source array, not the filter result — contextual typing does
+    // not flow through .filter(), so annotating the filtered variable left the
+    // literals widened to `{ level: string }` (ts2322).
+    const allChips: Array<{ level: CinematicBeatStatusLevel; count: number }> = [
         { level: 'ready', count: summary.ready },
         { level: 'partial', count: summary.partial },
         { level: 'blocked', count: summary.blocked },
         { level: 'draft', count: summary.draft },
-    ].filter(c => c.count > 0);
+    ];
+    const chips = allChips.filter(c => c.count > 0);
 
     if (chips.length === 0) return null;
 

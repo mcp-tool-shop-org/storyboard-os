@@ -10,7 +10,35 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { StoryboardFrame, FrameContent } from './schema';
+import { statusColors, statusLabels } from '@storyboard-os/core';
 import type { StoryboardConnection } from '@storyboard-os/core';
+
+// ─── RPG badge colors ─────────────────────────────────────────────────────────
+// RPG has no domain-specific badge colors beyond the shared status set — the
+// STATE badge is the shared `state` blue and the readiness badges are the shared
+// spec/partial/draft swatches. `rpgColors` re-exports those under the domain's
+// name so app legends/inspectors import the SAME const the badges are built from
+// and can never drift from the card. `label` maps the domain's own readiness
+// enum ('incomplete') onto the canonical DRAFT label (VP-005).
+
+export const rpgColors = {
+  state:   statusColors.state,
+  ready:   statusColors.spec,
+  partial: statusColors.partial,
+  draft:   statusColors.draft,
+} as const;
+
+const RPG_READINESS_LABEL: Record<FrameReadiness, string> = {
+  ready:      statusLabels.ready,   // 'SPEC'
+  partial:    statusLabels.partial, // 'PARTIAL'
+  incomplete: statusLabels.draft,   // 'DRAFT'
+};
+
+const RPG_READINESS_COLOR: Record<FrameReadiness, string> = {
+  ready:      rpgColors.ready,
+  partial:    rpgColors.partial,
+  incomplete: rpgColors.draft,
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -81,7 +109,9 @@ function computeReadiness(content: FrameContent): FrameReadiness {
  * without exposing the full FrameContent to the canvas.
  */
 export function getFrameSignal(frame: StoryboardFrame): FrameSignal {
-  const content = frame.content as FrameContent;
+  // Untrusted load paths can hand us a frame with null/missing content —
+  // normalize to an empty spec instead of throwing (DM-002).
+  const content = (frame.content ?? {}) as FrameContent;
   const stateChanges = content.stateChanges ?? [];
   const entryConditions = content.entryConditions ?? [];
 
@@ -127,19 +157,27 @@ export function getFrameBadges(frame: StoryboardFrame): FrameBadgeDescriptor[] {
   const badges: FrameBadgeDescriptor[] = [];
 
   if (signal.isStateful) {
-    badges.push({ text: 'STATE', color: '#3B82F6' });
+    badges.push({ text: 'STATE', color: rpgColors.state });
   }
 
   switch (signal.readiness) {
     case 'ready':
-      badges.push({ text: 'SPEC', color: '#22C55E' });
-      break;
     case 'partial':
-      badges.push({ text: 'PARTIAL', color: '#F97316' });
-      break;
     case 'incomplete':
-      badges.push({ text: 'DRAFT', color: '#6B7280' });
+      badges.push({
+        text: RPG_READINESS_LABEL[signal.readiness],
+        color: RPG_READINESS_COLOR[signal.readiness],
+      });
       break;
+    default: {
+      // Exhaustiveness guard (PR-003): if FrameReadiness grows a new arm, this
+      // is a compile error. At runtime, warn and fall back to DRAFT rather than
+      // silently dropping the badge (which would miscount readiness).
+      const _exhaustive: never = signal.readiness;
+      console.warn('[rpg] unhandled FrameReadiness value:', _exhaustive);
+      badges.push({ text: statusLabels.draft, color: rpgColors.draft });
+      break;
+    }
   }
 
   return badges;

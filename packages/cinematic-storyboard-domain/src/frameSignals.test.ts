@@ -1,7 +1,8 @@
 // ─── cinematic-domain / frameSignals.test.ts ─────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { getCinematicFrameBadges, getCinematicFrameSignal } from './frameSignals';
+import { getCinematicFrameBadges, getCinematicFrameSignal, cinematicColors } from './frameSignals';
+import { statusColors, statusLabels } from '@storyboard-os/core';
 import type { StoryboardFrame, CinematicFrameContent } from './schema';
 
 function makeFrame(
@@ -75,6 +76,47 @@ describe('getCinematicFrameBadges', () => {
     const frame = makeFrame('edit_beat', { durationEstimate: '3s', intent: 'x' });
     const badges = getCinematicFrameBadges(frame);
     expect(badges.find(b => b.text === 'CAM')).toBeUndefined();
+  });
+});
+
+// ─── cinematicColors contract (VP-001 / VP-003 refactor guard) ────────────────
+
+describe('cinematicColors', () => {
+  it('VFX is purple #A855F7 (the CARD value), NOT pink #EC4899 (VP-003)', () => {
+    expect(cinematicColors.vfx).toBe('#A855F7');
+    expect(cinematicColors.vfx).not.toBe('#EC4899');
+  });
+
+  it('camera and audio/sfx are each reconciled to one value', () => {
+    expect(cinematicColors.camera).toBe('#3B82F6');
+    expect(cinematicColors.sfx).toBe('#06B6D4');
+    expect(cinematicColors.audio).toBe(cinematicColors.sfx);
+  });
+
+  it('shared readiness swatches source from core statusColors', () => {
+    expect(cinematicColors.ready).toBe(statusColors.spec);
+    expect(cinematicColors.partial).toBe(statusColors.partial);
+    expect(cinematicColors.draft).toBe(statusColors.draft);
+    expect(cinematicColors.blocked).toBe(statusColors.blocked);
+  });
+
+  it('the VFX badge output uses the purple card value, not pink', () => {
+    const frame = makeFrame('vfx', { vfxRequirements: ['Particle system'] });
+    const vfx = getCinematicFrameBadges(frame).find(b => b.text === 'VFX');
+    expect(vfx).toBeDefined();
+    expect(vfx!.color).toBe(cinematicColors.vfx);
+    expect(vfx!.color).not.toBe('#EC4899');
+  });
+
+  it('a fully-specced frame renders the canonical SPEC label + spec color', () => {
+    const frame = makeFrame('shot', {
+      intent: 'x', visualDescription: 'v', cameraAngle: 'Wide', cameraMovement: 'Pan',
+      framing: 'thirds', durationEstimate: '5s', requiredAssets: ['a'],
+      continuityRequirements: ['m'], implementationChecklist: ['t'], testCriteria: ['c'],
+    });
+    const badge = getCinematicFrameBadges(frame).find(b => b.text === statusLabels.ready);
+    expect(badge).toBeDefined();
+    expect(badge!.color).toBe(statusColors.spec);
   });
 });
 

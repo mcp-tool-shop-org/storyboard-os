@@ -138,7 +138,9 @@ function specScore(content: FrameContent): number {
  * blocks at score 0 too.
  */
 export function getBeatStatus(frame: StoryboardFrame): BeatStatus {
-  const content = frame.content as FrameContent;
+  // Untrusted load paths can hand us a frame with null/missing content —
+  // normalize to an empty spec instead of throwing (DM-002).
+  const content = (frame.content ?? {}) as FrameContent;
   const missing: MissingSpecReason[] = [];
 
   // ── Domain rule checks ────────────────────────────────────────────────────
@@ -218,6 +220,13 @@ export function getStoryboardReadiness(storyboard: Storyboard): StoryboardReadin
       case 'partial': partial++; break;
       case 'draft':   draft++;   break;
       case 'blocked': blocked++; break;
+      default: {
+        // Exhaustiveness guard (PR-003): a new BeatStatusLevel becomes a compile
+        // error here. At runtime, warn rather than silently miscount the board.
+        const _exhaustive: never = status.level;
+        console.warn('[rpg] unhandled BeatStatusLevel value:', _exhaustive);
+        break;
+      }
     }
   }
 

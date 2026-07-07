@@ -119,6 +119,37 @@ describe('createStoryboardRoutes — projectRoute', () => {
   });
 });
 
+describe('createStoryboardRoutes — bare dot segments (CR-004)', () => {
+  // encodeURIComponent leaves `.` untouched, so a bare `.` or `..` id would
+  // survive verbatim and normalize to the current/parent path segment,
+  // escaping the configured base. Those two ids must be percent-encoded.
+  const routes = createStoryboardRoutes({ storyboardBasePath: '/storyboards' });
+
+  it('encodes a bare ".." id so it cannot normalize to the parent path', () => {
+    expect(routes.boardRoute('..')).toBe('/storyboards/%2E%2E');
+  });
+
+  it('encodes a bare "." id so it cannot normalize to the current path', () => {
+    expect(routes.boardRoute('.')).toBe('/storyboards/%2E');
+  });
+
+  it('encodes bare dot segments in both frameRoute positions', () => {
+    expect(routes.frameRoute('..', 'hook')).toBe('/storyboards/%2E%2E/frames/hook');
+    expect(routes.frameRoute('quest-01', '..')).toBe('/storyboards/quest-01/frames/%2E%2E');
+    expect(routes.frameRoute('.', '.')).toBe('/storyboards/%2E/frames/%2E');
+  });
+
+  it('encodes a bare ".." projectId', () => {
+    expect(routes.projectRoute('..')).toBe('/projects/%2E%2E');
+  });
+
+  it('leaves ids that merely contain dots untouched', () => {
+    expect(routes.boardRoute('v1.2')).toBe('/storyboards/v1.2');
+    expect(routes.boardRoute('...')).toBe('/storyboards/...');
+    expect(routes.boardRoute('.hidden')).toBe('/storyboards/.hidden');
+  });
+});
+
 describe('createStoryboardRoutes — multiple configs do not share state', () => {
   it('two factories with different base paths yield independent routes', () => {
     const rpg = createStoryboardRoutes({ storyboardBasePath: '/storyboards' });

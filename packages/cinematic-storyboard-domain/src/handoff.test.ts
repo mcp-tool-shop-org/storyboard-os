@@ -35,6 +35,11 @@ describe('generateProductionBrief', () => {
     expect(brief.readySummary.blocked).toBe(0);
   });
 
+  it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+    const brief = generateProductionBrief(createCinematicStoryboard('trailer_flow'));
+    expect(brief.formatVersion).toBe(1);
+  });
+
   it('computes total duration from frames', () => {
     const sb = createCinematicStoryboard('trailer_flow');
     const brief = generateProductionBrief(sb);
@@ -168,5 +173,91 @@ describe('generateProductionMarkdown', () => {
     const md = generateProductionMarkdown(brief);
 
     expect(md).toContain('**Continuity:**');
+  });
+});
+
+// ─── DM-004 — markdown escapes user text ──────────────────────────────────────
+
+describe('DM-004 — markdown escapes user text', () => {
+  const HOSTILE = '`code` <img src=x onerror=x> | pipe';
+
+  function makeBoardWith(frames: StoryboardFrame[], description = ''): Storyboard {
+    return { id: 'sb-1', title: 'Test Sequence', description, frames, connections: [] };
+  }
+
+  it('neutralizes backticks, raw HTML, and pipes in shot titles', () => {
+    const frame = makeFrame('f1', 'sequence', {});
+    frame.title = HOSTILE;
+    const md = generateProductionMarkdown(generateProductionBrief(makeBoardWith([frame])));
+    expect(md).not.toContain('<img');       // raw HTML inert
+    expect(md).toContain('&lt;img');
+    expect(md).not.toContain('`code`');     // backticks cannot open a code span
+    expect(md).toContain('\\`code\\`');
+    expect(md).toContain('\\|');            // pipes escaped
+  });
+
+  it('prevents heading hijack from a leading "# " in the description', () => {
+    const frame = makeFrame('f1', 'sequence', {});
+    const md = generateProductionMarkdown(
+      generateProductionBrief(makeBoardWith([frame], '# Fake Heading')),
+    );
+    expect(md).not.toMatch(/^# Fake Heading/m);
+    expect(md).toContain('\\# Fake Heading');
+  });
+
+  it('escapes the storyboard title in the document heading', () => {
+    const frame = makeFrame('f1', 'sequence', {});
+    const board = makeBoardWith([frame]);
+    board.title = 'Trailer <script>alert(1)</script>';
+    const md = generateProductionMarkdown(generateProductionBrief(board));
+    expect(md).not.toContain('<script>');
+    expect(md).toContain('&lt;script>');
+  });
+
+  it('escapes dialogue lines and visual descriptions', () => {
+    const frame = makeFrame('f1', 'shot', {
+      visualDescription: 'wide shot with `ticks`',
+      dialogue: ['<img src=x onerror=x>'],
+    });
+    const md = generateProductionMarkdown(generateProductionBrief(makeBoardWith([frame])));
+    expect(md).not.toContain('<img');
+    expect(md).toContain('&lt;img');
+    expect(md).not.toContain('`ticks`');
+  });
+});
+
+// ─── V3-001 — benign text round-trips unchanged (faithfulness) ────────────────
+//
+// The escaping tests above prove hostile input is neutralized. This guards the
+// other direction: ordinary text with NO markdown-special characters must
+// survive the render byte-for-byte — no stray backslashes, no &lt;, no mangling.
+
+describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
+  function makeBoardWith(frames: StoryboardFrame[], description = ''): Storyboard {
+    return { id: 'sb-1', title: 'Test Sequence', description, frames, connections: [] };
+  }
+
+  it('preserves an ordinary title, visual, and checklist/asset items verbatim', () => {
+    const frame = makeFrame('f1', 'shot', {
+      intent: 'Establish the tollhouse at dusk.',
+      visualDescription: 'A wide shot of the tollhouse.',
+      requiredAssets: ['assets/tollhouse-exterior.png'],
+      implementationChecklist: ['Block the establishing shot'],
+      testCriteria: ['Framing matches the boards'],
+    });
+    frame.title = 'Shot Alpha';
+    const md = generateProductionMarkdown(generateProductionBrief(makeBoardWith([frame])));
+
+    expect(md).toContain('Shot Alpha');
+    expect(md).toContain('Establish the tollhouse at dusk.');
+    expect(md).toContain('A wide shot of the tollhouse.');
+    expect(md).toContain('assets/tollhouse-exterior.png');
+    expect(md).toContain('Block the establishing shot');
+    expect(md).toContain('Framing matches the boards');
+    // Enum-derived type label is not escaped and reads plainly.
+    expect(md).toContain('**Type:** shot');
+    // No collateral damage from escaping a string that needed none.
+    expect(md).not.toContain('\\');
+    expect(md).not.toContain('&lt;');
   });
 });

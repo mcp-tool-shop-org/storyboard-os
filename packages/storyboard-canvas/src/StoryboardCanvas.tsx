@@ -49,6 +49,8 @@ import {
 } from './viewport';
 import ConnectionLayer from './ConnectionLayer';
 import FrameCard from './FrameCard';
+import AccessibleFrameList from './AccessibleFrameList';
+import { DEFAULT_FRAME_STYLE } from './defaults';
 
 // ─── Public handle exposed via ref ────────────────────────────────────────────
 
@@ -96,15 +98,30 @@ interface Props {
 }
 
 // ─── Internal constants ───────────────────────────────────────────────────────
-
-const DEFAULT_FRAME_STYLE = {
-  bg: '#0e1018',
-  accent: '#475569',
-  label: 'FRAME',
-};
+// VP-011: DEFAULT_FRAME_STYLE now lives in ./defaults (single source of truth,
+// re-exported from the package index) instead of being copied here.
 
 const ZOOM_FACTOR = 1.2;
 const WHEEL_ZOOM_FACTOR = 1.08;
+
+// HU-001: stable ids for the ARIA wiring between the canvas region and its
+// screen-reader description. Suffixed with a module-level counter so multiple
+// boards on one page don't collide on duplicate element ids.
+let boardInstanceSeq = 0;
+
+// HU-001: standard visually-hidden (screen-reader-only) style — kept in the
+// accessibility tree (unlike display:none), but off-screen and non-interfering.
+const SR_ONLY_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -171,6 +188,29 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       });
     }, [frames]);
 
+    // ── Duplicate frame id warning (F-CV-006) ──────────────────────────────
+    // Duplicate ids silently corrupt position tracking (PositionMap keys
+    // collide — the last frame wins) and break React list keys. Warn once per
+    // mount, not per render — matching the package's F-CI-208 precedent of
+    // warning on poisoned input data. (Not dev-gated: this package has no
+    // process/env typings, and F-CI-208 already warns unconditionally.)
+    const warnedDuplicateIds = useRef(false);
+    useEffect(() => {
+      if (warnedDuplicateIds.current) return;
+      const seen = new Set<string>();
+      const dupes = new Set<string>();
+      for (const f of frames) {
+        if (seen.has(f.id)) dupes.add(f.id);
+        seen.add(f.id);
+      }
+      if (dupes.size > 0) {
+        warnedDuplicateIds.current = true;
+        console.warn(
+          `[storyboard-canvas] Duplicate frame ids in frames prop: ${[...dupes].join(', ')} — position tracking and selection will misbehave for these frames.`,
+        );
+      }
+    }, [frames]);
+
     // ── Imperative apply ───────────────────────────────────────────────────
     // All viewport changes go through here. Imperatively sets the Konva Stage
     // (immediate visual update) and mirrors into React state (for controls display).
@@ -218,6 +258,22 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [containerSize.width, containerSize.height, autoFit]);
 
+    // ── Center-on-frame (shared by ref handle + keyboard activation) ─────────
+    // HU-001: extracted so the accessible frame list can center the canvas on a
+    // keyboard-activated frame using the SAME math the imperative handle uses.
+    const centerViewOnFrame = useCallback(
+      (frame: CanvasFrame) => {
+        const stage = stageRef.current;
+        if (!stage) return;
+        const currentPos = positions[frame.id] ?? frame.position;
+        const rect = { position: currentPos, size: frame.size };
+        applyView(
+          centerOnFrameMath(rect, containerSize.width, containerSize.height, stage.scaleX()),
+        );
+      },
+      [positions, containerSize.width, containerSize.height, applyView],
+    );
+
     // ── Viewport handle ────────────────────────────────────────────────────
     useImperativeHandle(ref, () => ({
       fitToFrames() {
@@ -243,18 +299,30 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
         applyView(zoomFromCenter(cur, containerSize.width, containerSize.height, 1 / ZOOM_FACTOR));
       },
       centerOnFrame(frame: CanvasFrame) {
-        const stage = stageRef.current;
-        if (!stage) return;
-        const currentPos = positions[frame.id] ?? frame.position;
-        const rect = { position: currentPos, size: frame.size };
-        applyView(
-          centerOnFrameMath(rect, containerSize.width, containerSize.height, stage.scaleX()),
-        );
+        centerViewOnFrame(frame);
       },
       getScale() {
         return stageRef.current?.scaleX() ?? viewState.scale;
       },
     }));
+
+    // ── Keyboard frame activation (HU-001) ───────────────────────────────────
+    // A frame activated from the accessible list selects it via the SAME
+    // onSelectFrame path the mouse uses AND centers the canvas on it, so a
+    // sighted keyboard user sees the selection move. Unlike the mouse handler
+    // (which toggles selection off when re-clicking the selected frame),
+    // keyboard activation always SELECTS — toggling-off on Enter is surprising
+    // for a listbox. Deselect is available via Escape (app-owned).
+    const activateFrameById = useCallback(
+      (id: string) => {
+        const frame = frames.find(f => f.id === id);
+        if (!frame) return;
+        onSelectConnection?.(null);
+        onSelectFrame?.(id);
+        centerViewOnFrame(frame);
+      },
+      [frames, onSelectFrame, onSelectConnection, centerViewOnFrame],
+    );
 
     // ── Mouse pan ──────────────────────────────────────────────────────────
     // Pan only activates when the mousedown target IS the Stage (background),
@@ -356,12 +424,12 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
 
     // ── Stage click (deselect on background click) ─────────────────────────
     const handleStageClick = useCallback(
-      (e: { target: { getType?: () => string } }) => {
-        if (
-          e.target &&
-          typeof e.target.getType === 'function' &&
-          e.target.getType() === 'Stage'
-        ) {
+      (e: Konva.KonvaEventObject<MouseEvent>) => {
+        // F-CV-003: proper Konva event type + Stage-identity comparison,
+        // consistent with handleStageMouseDown above (replaces the old ad-hoc
+        // structural `getType?()` shape). Deselect only when the click landed
+        // on the Stage background itself, not on a frame or connection.
+        if (e.target === e.target.getStage()) {
           onSelectFrame?.(null);
           onSelectConnection?.(null);
         }
@@ -400,12 +468,41 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       );
     }
 
+    // ── ARIA ids (stable per instance) ───────────────────────────────────────
+    // Assigned once per mount; kept in a ref so re-renders don't re-seed them.
+    const idBaseRef = useRef<string | null>(null);
+    if (idBaseRef.current === null) {
+      idBaseRef.current = `storyboard-canvas-${boardInstanceSeq++}`;
+    }
+    const descId = `${idBaseRef.current}-desc`;
+
     // ── Render ─────────────────────────────────────────────────────────────
     return (
       <div
         ref={containerRef}
-        style={{ width: '100%', height: '100%' }}
+        // position:relative so the accessible frame-list overlay can be
+        // absolutely positioned within the canvas area.
+        style={{ width: '100%', height: '100%', position: 'relative' }}
       >
+        {/* HU-001: screen-reader description of the canvas + its keyboard model.
+            Referenced by the interactive regions via aria-describedby. Visually
+            hidden but present in the accessibility tree (not display:none). */}
+        <span id={descId} style={SR_ONLY_STYLE}>
+          Interactive storyboard canvas. Use the frames list to move between
+          frames with the arrow keys; press Enter or Space to open a frame and
+          center it. Fit, zoom, reset, and pan are available from the toolbar.
+        </span>
+
+        {/* HU-001: accessible frame list — a real focusable HTML element tree
+            (canvas pixels cannot hold focus). Co-located with the Stage so all
+            consuming apps inherit keyboard + screen-reader access for free. */}
+        <AccessibleFrameList
+          frames={frames}
+          selectedFrameId={selectedFrameId ?? null}
+          onActivateFrame={activateFrameById}
+          describedById={descId}
+        />
+
         <Stage
           ref={stageRef}
           width={containerSize.width}

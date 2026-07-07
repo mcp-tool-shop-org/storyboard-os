@@ -16,6 +16,23 @@ import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
 import type { MarketingStoryboardProject, ProjectProgressSummary } from './project';
 import { getFrameProgress, getProjectProgress } from './project';
 
+// ─── Markdown escaping (DM-004) ───────────────────────────────────────────────
+//
+// Neutralize markdown-structural characters in INLINE user text:
+// - backticks → escaped so user text cannot open/close code spans
+// - pipes     → escaped so user text cannot add/split table cells
+// - `<`       → `&lt;` so stray inline HTML stays inert
+// - a leading `#` / `>` / `-` (per line) → escaped so user text cannot
+//   introduce headings, blockquotes, or list items
+
+function escapeMarkdownInline(text: string): string {
+    return text
+        .replace(/`/g, '\\`')
+        .replace(/\|/g, '\\|')
+        .replace(/</g, '&lt;')
+        .replace(/^([#>-])/gm, '\\$1');
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface HandoffBranch {
@@ -72,7 +89,16 @@ export interface CampaignHandoffReadiness {
     readyFraction: number;
 }
 
+/**
+ * Current handoff artifact schema version. Bump when the shape changes in a way
+ * a downstream importer must branch on. Stamped onto every generated handoff so
+ * future consumers have a discriminator (PR-004).
+ */
+export const HANDOFF_FORMAT_VERSION = 1;
+
 export interface CampaignHandoff {
+    /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
+    formatVersion: 1;
     id: string;
     title: string;
     description?: string;
@@ -88,6 +114,8 @@ export interface ProjectCampaignHandoffBeat extends CampaignHandoffBeat {
 }
 
 export interface ProjectCampaignHandoff {
+    /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
+    formatVersion: 1;
     projectId: string;
     projectTitle: string;
     sourceTemplateId?: string;
@@ -151,7 +179,8 @@ function buildBeat(
     connections: StoryboardConnection[],
     allFrames: StoryboardFrame[],
 ): CampaignHandoffBeat {
-    const content = frame.content;
+    // Normalize null/missing content to an empty spec (DM-002).
+    const content = (frame.content ?? {}) as MarketingFrameContent;
     const status = getCampaignBeatStatus(frame);
     const frameMap = new Map(allFrames.map(f => [f.id, f]));
 
@@ -205,6 +234,7 @@ export function generateCampaignHandoff(storyboard: Storyboard): CampaignHandoff
     const blockedIds = beats.filter(b => b.status === 'blocked').map(b => b.id);
 
     return {
+        formatVersion: HANDOFF_FORMAT_VERSION,
         id: storyboard.id,
         title: storyboard.title,
         description: storyboard.description,
@@ -223,12 +253,13 @@ export function generateCampaignHandoff(storyboard: Storyboard): CampaignHandoff
 }
 
 export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
+    const esc = escapeMarkdownInline;
     const lines: string[] = [];
 
-    lines.push(`# Campaign Implementation Brief: ${handoff.title}`);
+    lines.push(`# Campaign Implementation Brief: ${esc(handoff.title)}`);
     lines.push('');
     if (handoff.description) {
-        lines.push(handoff.description);
+        lines.push(esc(handoff.description));
         lines.push('');
     }
     lines.push(`Generated: ${handoff.generatedAt}`);
@@ -251,7 +282,7 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
         lines.push('');
         for (const id of handoff.blockedIds) {
             const beat = handoff.beats.find(b => b.id === id);
-            if (beat) lines.push(`- **${beat.title}** — missing: ${beat.missing.join(', ')}`);
+            if (beat) lines.push(`- **${esc(beat.title)}** — missing: ${beat.missing.join(', ')}`);
         }
         lines.push('');
     }
@@ -263,90 +294,90 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
     lines.push('');
 
     for (const beat of handoff.beats) {
-        lines.push(`### ${beat.title}`);
+        lines.push(`### ${esc(beat.title)}`);
         lines.push('');
         lines.push(`**Type:** ${beat.type} | **Status:** ${beat.status}`);
         lines.push('');
-        lines.push(beat.summary);
+        lines.push(esc(beat.summary));
         lines.push('');
 
         if (beat.objective) {
-            lines.push(`**Objective:** ${beat.objective}`);
+            lines.push(`**Objective:** ${esc(beat.objective)}`);
             lines.push('');
         }
 
         if (beat.audienceSegment) {
-            lines.push(`**Audience:** ${beat.audienceSegment}`);
+            lines.push(`**Audience:** ${esc(beat.audienceSegment)}`);
             lines.push('');
         }
 
         if (beat.channel) {
-            lines.push(`**Channel:** ${beat.channel}`);
+            lines.push(`**Channel:** ${esc(beat.channel)}`);
             lines.push('');
         }
 
         if (beat.messageClaim) {
-            lines.push(`**Message:** ${beat.messageClaim}`);
+            lines.push(`**Message:** ${esc(beat.messageClaim)}`);
             lines.push('');
         }
 
         if (beat.conversionGoal) {
-            lines.push(`**Conversion Goal:** ${beat.conversionGoal}`);
+            lines.push(`**Conversion Goal:** ${esc(beat.conversionGoal)}`);
             lines.push('');
         }
 
         if (beat.customerStateBefore.length > 0) {
             lines.push('**Customer State Before:**');
-            for (const s of beat.customerStateBefore) lines.push(`- ${s}`);
+            for (const s of beat.customerStateBefore) lines.push(`- ${esc(s)}`);
             lines.push('');
         }
 
         if (beat.customerStateAfter.length > 0) {
             lines.push('**Customer State After:**');
-            for (const s of beat.customerStateAfter) lines.push(`- ${s}`);
+            for (const s of beat.customerStateAfter) lines.push(`- ${esc(s)}`);
             lines.push('');
         }
 
         if (beat.requiredAssets.length > 0) {
             lines.push('**Required Assets:**');
-            for (const a of beat.requiredAssets) lines.push(`- ${a}`);
+            for (const a of beat.requiredAssets) lines.push(`- ${esc(a)}`);
             lines.push('');
         }
 
         if (beat.approvalRequirements.length > 0) {
             lines.push('**Approval Requirements:**');
-            for (const a of beat.approvalRequirements) lines.push(`- ${a}`);
+            for (const a of beat.approvalRequirements) lines.push(`- ${esc(a)}`);
             lines.push('');
         }
 
         if (beat.launchDependencies.length > 0) {
             lines.push('**Launch Dependencies:**');
-            for (const d of beat.launchDependencies) lines.push(`- ${d}`);
+            for (const d of beat.launchDependencies) lines.push(`- ${esc(d)}`);
             lines.push('');
         }
 
         if (beat.metrics.length > 0) {
             lines.push('**Metrics:**');
-            for (const m of beat.metrics) lines.push(`- ${m}`);
+            for (const m of beat.metrics) lines.push(`- ${esc(m)}`);
             lines.push('');
         }
 
         if (beat.testCriteria.length > 0) {
             lines.push('**Test Criteria:**');
-            for (const t of beat.testCriteria) lines.push(`- ${t}`);
+            for (const t of beat.testCriteria) lines.push(`- ${esc(t)}`);
             lines.push('');
         }
 
         if (beat.implementationChecklist.length > 0) {
             lines.push('**Implementation Checklist:**');
-            for (const c of beat.implementationChecklist) lines.push(`- [ ] ${c}`);
+            for (const c of beat.implementationChecklist) lines.push(`- [ ] ${esc(c)}`);
             lines.push('');
         }
 
         if (beat.outgoingBranches.length > 0) {
             lines.push('**Next:**');
             for (const b of beat.outgoingBranches) {
-                lines.push(`- → ${b.toTitle} (${b.type}${b.label ? ': ' + b.label : ''})`);
+                lines.push(`- → ${esc(b.toTitle)} (${b.type}${b.label ? ': ' + esc(b.label) : ''})`);
             }
             lines.push('');
         }
@@ -376,6 +407,7 @@ export function generateProjectCampaignHandoff(
     });
 
     return {
+        formatVersion: HANDOFF_FORMAT_VERSION,
         projectId: project.id,
         projectTitle: project.title,
         sourceTemplateId: project.sourceTemplateId,
@@ -388,9 +420,10 @@ export function generateProjectCampaignHandoff(
 }
 
 export function generateProjectCampaignMarkdown(handoff: ProjectCampaignHandoff): string {
+    const esc = escapeMarkdownInline;
     const lines: string[] = [];
 
-    lines.push(`# Campaign Implementation Brief: ${handoff.projectTitle}`);
+    lines.push(`# Campaign Implementation Brief: ${esc(handoff.projectTitle)}`);
     lines.push('');
     lines.push(`Project ID: ${handoff.projectId}`);
     if (handoff.sourceTemplateId) lines.push(`Template: ${handoff.sourceTemplateId}`);
@@ -423,15 +456,15 @@ export function generateProjectCampaignMarkdown(handoff: ProjectCampaignHandoff)
     lines.push('');
 
     for (const beat of handoff.beats) {
-        lines.push(`### ${beat.title}`);
+        lines.push(`### ${esc(beat.title)}`);
         lines.push('');
         lines.push(`**Type:** ${beat.type} | **Status:** ${beat.status}`);
         lines.push('');
-        lines.push(beat.summary);
+        lines.push(esc(beat.summary));
         lines.push('');
 
         if (beat.objective) {
-            lines.push(`**Objective:** ${beat.objective}`);
+            lines.push(`**Objective:** ${esc(beat.objective)}`);
             lines.push('');
         }
 
@@ -439,7 +472,7 @@ export function generateProjectCampaignMarkdown(handoff: ProjectCampaignHandoff)
             lines.push('**Implementation Checklist:**');
             for (let i = 0; i < beat.implementationChecklist.length; i++) {
                 const done = beat.checklistProgress[String(i)] === true;
-                lines.push(`- [${done ? 'x' : ' '}] ${beat.implementationChecklist[i]}`);
+                lines.push(`- [${done ? 'x' : ' '}] ${esc(beat.implementationChecklist[i])}`);
             }
             lines.push('');
         }
@@ -448,7 +481,7 @@ export function generateProjectCampaignMarkdown(handoff: ProjectCampaignHandoff)
             lines.push('**Test Criteria:**');
             for (let i = 0; i < beat.testCriteria.length; i++) {
                 const done = beat.testCriteriaProgress[String(i)] === true;
-                lines.push(`- [${done ? 'x' : ' '}] ${beat.testCriteria[i]}`);
+                lines.push(`- [${done ? 'x' : ' '}] ${esc(beat.testCriteria[i])}`);
             }
             lines.push('');
         }

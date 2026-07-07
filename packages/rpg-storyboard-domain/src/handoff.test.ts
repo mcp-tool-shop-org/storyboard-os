@@ -55,6 +55,11 @@ function makeBoard(frames: StoryboardFrame[], connections: StoryboardConnection[
 // ─── generateHandoff — metadata ───────────────────────────────────────────────
 
 describe('generateHandoff — metadata', () => {
+  it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+    const handoff = generateHandoff(makeBoard([]));
+    expect(handoff.formatVersion).toBe(1);
+  });
+
   it('carries the storyboard id and title', () => {
     const board = makeBoard([], []);
     board.id = 'quest-01';
@@ -480,6 +485,12 @@ describe('generateMarkdown', () => {
 // ─── generateProjectHandoff — metadata ───────────────────────────────────────
 
 describe('generateProjectHandoff — metadata', () => {
+  it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const h = generateProjectHandoff(p);
+    expect(h.formatVersion).toBe(1);
+  });
+
   it('carries projectId, title, createdAt, updatedAt', () => {
     const p = createProject({ title: 'My Quest', templateId: 'quest_flow' });
     const h = generateProjectHandoff(p);
@@ -635,5 +646,134 @@ describe('generateProjectMarkdown', () => {
     const checked = setChecklistItemComplete(p, fid, 0, true);
     const md = generateProjectMarkdown(generateProjectHandoff(checked));
     expect(md).toContain('1/');  // at least "1/N complete"
+  });
+});
+
+// ─── DM-001 (e) — project markdown after checklist reorder ────────────────────
+
+describe('generateProjectMarkdown — progress follows item text (DM-001)', () => {
+  it('renders [x] on the correct item text after a checklist reorder', () => {
+    let p = createProject({ title: 'Reorder Quest', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameContent(p, fid, {
+      implementationChecklist: ['first task', 'second task'],
+    });
+    p = setChecklistItemComplete(p, fid, 1, true); // 'second task' done
+    p = updateFrameContent(p, fid, {
+      implementationChecklist: ['second task', 'first task'], // reorder
+    });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('- [x] second task');
+    expect(md).toContain('- [ ] first task');
+    expect(md).not.toContain('- [x] first task');
+  });
+});
+
+// ─── DM-004 — markdown escapes user text ──────────────────────────────────────
+
+describe('DM-004 — markdown escapes user text', () => {
+  const HOSTILE = '`code` <img src=x onerror=x> | pipe';
+
+  it('neutralizes backticks, raw HTML, and pipes in frame titles', () => {
+    const board = makeBoard([makeFrame('f1', 'scene', {}, HOSTILE)]);
+    const md = generateMarkdown(generateHandoff(board));
+    expect(md).not.toContain('<img');       // raw HTML inert
+    expect(md).toContain('&lt;img');
+    expect(md).not.toContain('`code`');     // backticks cannot open a code span
+    expect(md).toContain('\\`code\\`');
+    expect(md).toContain('\\|');            // pipes escaped
+  });
+
+  it('prevents heading hijack from a leading "# " in summaries', () => {
+    const frame = makeFrame('f1', 'scene', {});
+    frame.summary = '# Fake Heading';
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    expect(md).not.toMatch(/^# Fake Heading/m);
+    expect(md).toContain('\\# Fake Heading');
+  });
+
+  it('escapes the storyboard title in the document heading', () => {
+    const board = makeBoard([makeFrame('f1', 'scene', {})]);
+    board.title = 'Quest <script>alert(1)</script>';
+    const md = generateMarkdown(generateHandoff(board));
+    expect(md).not.toContain('<script>');
+    expect(md).toContain('&lt;script>');
+  });
+
+  it('keeps state changes inside an intact code span when they contain backticks', () => {
+    const frame = makeFrame('f1', 'choice', { stateChanges: ['set `flag` = true'] });
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    // Backslash escapes do not work inside code spans, so embedded backticks
+    // are substituted — the span must stay intact.
+    expect(md).toContain("`set 'flag' = true`");
+    expect(md).not.toContain('`set `flag` = true`');
+  });
+
+  it('escapes connection labels', () => {
+    const a = makeFrame('a', 'scene', {});
+    const b = makeFrame('b', 'scene', {});
+    const conn = makeConn('a', 'b', 'choice', 'evil | `label`');
+    const md = generateMarkdown(generateHandoff(makeBoard([a, b], [conn])));
+    expect(md).not.toContain('evil | `label`');
+    expect(md).toContain('evil \\| \\`label\\`');
+  });
+
+  it('escapes user text in the project markdown too', () => {
+    let p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameBasics(p, fid, { title: HOSTILE });
+    p = updateFrameContent(p, fid, { implementationChecklist: ['<img src=x onerror=x>'] });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).not.toContain('<img');
+    expect(md).toContain('&lt;img');
+  });
+});
+
+// ─── V3-001 — benign text round-trips unchanged (faithfulness) ────────────────
+//
+// The escaping tests above prove hostile input is neutralized. This guards the
+// other direction: ordinary text with NO markdown-special characters must
+// survive the render byte-for-byte — no stray backslashes, no &lt;, no mangling.
+// Without this, a future over-escaping regression would silently corrupt every
+// benign handoff.
+
+describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
+  it('preserves an ordinary title, summary, and checklist/asset items verbatim', () => {
+    const frame = makeFrame('a', 'scene', {
+      requiredAssets: ['assets/ui-hud.png'],
+      implementationChecklist: ['Wire the tollhouse trigger'],
+      testCriteria: ['Ledger flag sets on confirm'],
+    }, 'Quest Alpha');
+    frame.summary = 'Player enters the tollhouse.';
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+
+    // Exact substrings appear verbatim.
+    expect(md).toContain('Quest Alpha');
+    expect(md).toContain('Player enters the tollhouse.');
+    expect(md).toContain('assets/ui-hud.png');
+    expect(md).toContain('Wire the tollhouse trigger');
+    expect(md).toContain('Ledger flag sets on confirm');
+    // Enum-derived type label is not escaped and reads plainly.
+    expect(md).toContain('**Type:** SCENE');
+    // No collateral damage from escaping a string that needed none.
+    expect(md).not.toContain('\\');
+    expect(md).not.toContain('&lt;');
+  });
+
+  it('preserves benign text in the project markdown too', () => {
+    let p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameBasics(p, fid, { title: 'Quest Alpha', summary: 'Player enters the tollhouse.' });
+    p = updateFrameContent(p, fid, {
+      requiredAssets: ['assets/ui-hud.png'],
+      implementationChecklist: ['Wire the tollhouse trigger'],
+    });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('Quest Alpha');
+    expect(md).toContain('Player enters the tollhouse.');
+    expect(md).toContain('assets/ui-hud.png');
+    expect(md).toContain('Wire the tollhouse trigger');
+    expect(md).not.toContain('\\');
+    expect(md).not.toContain('&lt;');
   });
 });

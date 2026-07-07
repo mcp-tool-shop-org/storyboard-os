@@ -20,14 +20,16 @@ import {
   type StoryboardCanvasConfig,
   type CanvasFrame,
   type ViewportHandle,
+  DEFAULT_CONNECTION_STYLE,
 } from '@storyboard-os/canvas';
 import {
   getFrameBadges,
-  getChoiceBranchCount,
   getStoryboardReadiness,
+  rpgColors,
   type BeatStatusLevel,
   type FrameContent,
 } from '@storyboard-os/rpg-domain';
+import { statusColors, surfaces, textColors, typeScale, spacing } from '@storyboard-os/core';
 import type { Storyboard } from '../lib/storyboard/schema';
 import type { FrameBasicsPatch, FrameProgress, ProjectProgress, ProjectProgressSummary } from '../lib/storyboard/project';
 import FrameInspector from './storyboard/FrameInspector';
@@ -38,26 +40,39 @@ import ErrorBoundary from './ErrorBoundary';
 // ─── RPG canvas config ────────────────────────────────────────────────────────
 // choice and consequence connections use heavier strokes to visually distinguish
 // game-state branches from plain narrative sequence.
+//
+// Accent + stroke colors come from the shared @storyboard-os/core token API
+// (statusColors) so the card badge, legend, inspector, and header all read from
+// one source and can never drift. `hook` has no status-token equivalent — it's
+// the one authored amber accent, kept as a named local. The per-type `bg` tints
+// are unique dark washes, not status colors, so they stay literal.
+// `SLATE_LINE` / `SLATE_LINE_DIM` are the neutral connection greys reused across
+// the config, legend, and connection panel.
+
+const TYPE_ACCENT_HOOK = '#EAB308'; // amber — no shared status token maps to it
+const SLATE_LINE     = '#475569';
+const SLATE_LINE_DIM = '#334155';
 
 const RPG_CANVAS_CONFIG: StoryboardCanvasConfig = {
   frameTypeStyles: {
-    hook:        { bg: '#1a1500', accent: '#EAB308', label: 'HOOK' },
-    scene:       { bg: '#0c1a2e', accent: '#3B82F6', label: 'SCENE' },
-    choice:      { bg: '#14092e', accent: '#8B5CF6', label: 'CHOICE' },
-    encounter:   { bg: '#1f0808', accent: '#EF4444', label: 'ENCOUNTER' },
-    reveal:      { bg: '#1f0e00', accent: '#F97316', label: 'REVEAL' },
-    npc_beat:    { bg: '#071a0c', accent: '#22C55E', label: 'NPC BEAT' },
-    consequence: { bg: '#0e1018', accent: '#6B7280', label: 'CONSEQUENCE' },
+    hook:        { bg: '#1a1500', accent: TYPE_ACCENT_HOOK,   label: 'HOOK' },
+    scene:       { bg: '#0c1a2e', accent: statusColors.state, label: 'SCENE' },
+    choice:      { bg: '#14092e', accent: statusColors.accent, label: 'CHOICE' },
+    encounter:   { bg: '#1f0808', accent: statusColors.blocked, label: 'ENCOUNTER' },
+    reveal:      { bg: '#1f0e00', accent: statusColors.partial, label: 'REVEAL' },
+    npc_beat:    { bg: '#071a0c', accent: rpgColors.ready,     label: 'NPC BEAT' },
+    consequence: { bg: '#0e1018', accent: statusColors.draft,  label: 'CONSEQUENCE' },
   },
   connectionTypeStyles: {
-    sequence:    { stroke: '#475569',                strokeWidth: 1.5 },
-    choice:      { stroke: '#8B5CF6', dash: [8, 4],  strokeWidth: 2.5 },
-    consequence: { stroke: '#EF4444',                strokeWidth: 2.5 },
-    optional:    { stroke: '#334155', dash: [4, 4],  strokeWidth: 1.5 },
-    fallback:    { stroke: '#F97316', dash: [6, 3],  strokeWidth: 2 },
+    sequence:    { stroke: SLATE_LINE,                        strokeWidth: 1.5 },
+    choice:      { stroke: statusColors.accent,  dash: [8, 4], strokeWidth: 2.5 },
+    consequence: { stroke: statusColors.blocked,             strokeWidth: 2.5 },
+    optional:    { stroke: SLATE_LINE_DIM,       dash: [4, 4], strokeWidth: 1.5 },
+    fallback:    { stroke: statusColors.partial, dash: [6, 3], strokeWidth: 2 },
   },
-  defaultFrameStyle:      { bg: '#0e1018', accent: '#475569', label: 'FRAME' },
-  defaultConnectionStyle: { stroke: '#475569', strokeWidth: 1.5 },
+  defaultFrameStyle:      { bg: '#0e1018', accent: SLATE_LINE, label: 'FRAME' },
+  // Byte-identical to the canvas package's exported fallback — reuse it verbatim.
+  defaultConnectionStyle: DEFAULT_CONNECTION_STYLE,
 };
 
 // ─── Connection type display config ──────────────────────────────────────────
@@ -71,20 +86,20 @@ const CONNECTION_TYPE_LABELS: Record<string, string> = {
 };
 
 const CONNECTION_TYPE_COLORS: Record<string, string> = {
-  sequence:    '#475569',
-  choice:      '#8B5CF6',
-  consequence: '#EF4444',
-  optional:    '#334155',
-  fallback:    '#F97316',
+  sequence:    SLATE_LINE,
+  choice:      statusColors.accent,
+  consequence: statusColors.blocked,
+  optional:    SLATE_LINE_DIM,
+  fallback:    statusColors.partial,
 };
 
 // ─── Legend ───────────────────────────────────────────────────────────────────
 
 const LEGEND = [
-  { type: 'sequence',    color: '#475569', label: 'Sequence',    dashed: false, weight: 1.5 },
-  { type: 'choice',      color: '#8B5CF6', label: 'Choice',      dashed: true,  weight: 2.5 },
-  { type: 'consequence', color: '#EF4444', label: 'Consequence', dashed: false, weight: 2.5 },
-  { type: 'fallback',    color: '#F97316', label: 'Fallback',    dashed: true,  weight: 2 },
+  { type: 'sequence',    color: SLATE_LINE,          label: 'Sequence',    dashed: false, weight: 1.5 },
+  { type: 'choice',      color: statusColors.accent,  label: 'Choice',      dashed: true,  weight: 2.5 },
+  { type: 'consequence', color: statusColors.blocked, label: 'Consequence', dashed: false, weight: 2.5 },
+  { type: 'fallback',    color: statusColors.partial, label: 'Fallback',    dashed: true,  weight: 2 },
 ];
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
@@ -210,10 +225,6 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
     ? storyboard.frames.find(f => f.id === selectedConnection.toFrameId)
     : null;
 
-  const branchCount = selectedFrame
-    ? getChoiceBranchCount(selectedFrame.id, storyboard.connections)
-    : 0;
-
   // Progress for the currently selected frame
   const EMPTY_FP: FrameProgress = { checklist: {}, testCriteria: {} };
   const selectedFrameProgress: FrameProgress | undefined = selectedFrameId && projectProgress
@@ -255,43 +266,77 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
   }, []);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#0f172a' }}>
+    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: surfaces.bgChrome }}>
 
       {/* ── Header bar ────────────────────────────────────────────────────── */}
       <header style={{
-        height: HEADER_HEIGHT,
-        padding: '0 20px',
+        minHeight: HEADER_HEIGHT,
+        padding: `0 ${spacing.lg}`,
         background: 'rgba(15,23,42,0.97)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex', alignItems: 'center', gap: 16,
+        borderBottom: `1px solid ${surfaces.border}`,
+        display: 'flex', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap',
         flexShrink: 0, zIndex: 30,
       }}>
-        <span style={{ fontSize: 11, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>
-          RPG Storyboard
-        </span>
-        <span style={{ color: '#1e293b' }}>|</span>
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+        {/* Brand — SO wordmark badge ties the app to the marketing site (VP-014) */}
+        <a
+          href="/"
+          aria-label="Storyboard OS home"
+          style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, textDecoration: 'none', flexShrink: 0 }}
+        >
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 24, height: 24, borderRadius: 6,
+            background: statusColors.accent, color: textColors.onError,
+            fontSize: typeScale.xs, fontWeight: 800, letterSpacing: typeScale.tracking.wide,
+          }}>
+            SO
+          </span>
+          <span style={{
+            fontSize: typeScale.xs, color: textColors.secondary,
+            textTransform: 'uppercase', letterSpacing: typeScale.tracking.label, fontWeight: 600,
+          }}>
+            RPG Storyboard
+          </span>
+        </a>
+        <span aria-hidden="true" style={{ color: textColors.muted }}>|</span>
+        <h1 style={{
+          fontSize: typeScale.md, fontWeight: 700, color: textColors.heading,
+          margin: 0, lineHeight: 1.3,
+        }}>
           {storyboard.title}
-        </span>
+        </h1>
         {storyboard.description && (
-          <span style={{ fontSize: 12, color: '#475569', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: typeScale.sm, color: textColors.secondary, flex: 1, minWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {storyboard.description}
           </span>
         )}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 11, color: '#334155' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <span style={{ fontSize: typeScale.xs, color: textColors.muted }}>
             {storyboard.frames.length} frames · {storyboard.connections.length} connections
           </span>
           <ReadinessCounts summary={readinessSummary} />
           {progressSummary && <ProgressCounts summary={progressSummary} />}
           {saveStatus && <SaveStatusChip status={saveStatus} />}
           <a
+            href="https://mcp-tool-shop-org.github.io/storyboard-os/"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontSize: typeScale.xs, fontWeight: 700, letterSpacing: typeScale.tracking.label,
+              padding: `${spacing.xs} ${spacing.sm}`, borderRadius: 4,
+              border: `1px solid ${surfaces.border}`,
+              color: textColors.secondary, textDecoration: 'none',
+            }}
+          >
+            Handbook ↗
+          </a>
+          <a
             href={resolvedHandoffHref}
             style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
-              padding: '4px 10px', borderRadius: 4,
-              background: 'rgba(71,85,105,0.2)', border: '1px solid #1e293b',
-              color: '#94a3b8', textDecoration: 'none',
+              fontSize: typeScale.xs, fontWeight: 700, letterSpacing: typeScale.tracking.label,
+              padding: `${spacing.xs} ${spacing.sm}`, borderRadius: 4,
+              background: 'rgba(71,85,105,0.2)', border: `1px solid ${surfaces.border}`,
+              color: textColors.secondary, textDecoration: 'none',
             }}
           >
             Handoff →
@@ -300,7 +345,7 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
       </header>
 
       {/* ── Canvas + side panel row ────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+      <main style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
         {/* Canvas area — fills all remaining space, clip overflow */}
         <div style={{
@@ -310,7 +355,7 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
           backgroundImage: 'radial-gradient(circle, #1e293b 1px, transparent 1px)',
           backgroundSize: '32px 32px',
           backgroundPosition: '0 0',
-          backgroundColor: '#0b1120',
+          backgroundColor: surfaces.bgPage,
         }}>
           <KonvaBoard
             ref={canvasRef}
@@ -365,19 +410,19 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
             onClose={() => setSelectedConnectionId(null)}
           />
         )}
-      </div>
+      </main>
 
       {/* ── Legend footer ─────────────────────────────────────────────────── */}
       <footer style={{
         height: 36,
-        padding: '0 20px',
+        padding: `0 ${spacing.lg}`,
         background: 'rgba(15,23,42,0.97)',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', gap: 20,
+        borderTop: `1px solid ${surfaces.border}`,
+        display: 'flex', alignItems: 'center', gap: spacing.xl,
         flexShrink: 0,
       }}>
         {LEGEND.map(entry => (
-          <div key={entry.type} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div key={entry.type} style={{ display: 'flex', alignItems: 'center', gap: spacing.xs }}>
             <svg width="28" height="10">
               <line
                 x1="0" y1="5" x2="22" y2="5"
@@ -387,19 +432,21 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
               />
               <polygon points="22,2 28,5 22,8" fill={entry.color} />
             </svg>
-            <span style={{ fontSize: 11, color: '#475569' }}>{entry.label}</span>
+            <span style={{ fontSize: typeScale.xs, color: textColors.secondary }}>{entry.label}</span>
           </div>
         ))}
-        {/* Badge legend + shortcut hint */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+        {/* Badge legend + shortcut hint. STATE/SPEC colors come from the SAME
+            rpgColors source getFrameBadges() uses for the card badges, so the
+            footer key and the on-card chips can never drift. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, marginLeft: 'auto' }}>
           {[
-            { text: 'STATE', color: '#3B82F6' },
-            { text: 'SPEC',  color: '#22C55E' },
+            { text: 'STATE', color: rpgColors.state },
+            { text: 'SPEC',  color: rpgColors.ready },
           ].map(b => (
             <span
               key={b.text}
               style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
+                fontSize: 9, fontWeight: 700, letterSpacing: typeScale.tracking.label,
                 padding: '1px 5px', borderRadius: 3,
                 border: `1px solid ${b.color}55`,
                 color: b.color, background: `${b.color}1a`,
@@ -408,7 +455,7 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
               {b.text}
             </span>
           ))}
-          <span style={{ fontSize: 11, color: '#1e293b' }}>
+          <span style={{ fontSize: typeScale.xs, color: textColors.muted }}>
             drag to pan · scroll to pan · ctrl+scroll to zoom · F fit · 0 reset
           </span>
         </div>
@@ -500,19 +547,23 @@ function SaveStatusChip({ status }: { status: SaveStatus }) {
 // ─── ReadinessCounts ──────────────────────────────────────────────────────────
 
 const STATUS_HEADER_COLORS: Record<BeatStatusLevel, string> = {
-  ready:   '#22C55E',
-  partial: '#F97316',
-  draft:   '#6B7280',
-  blocked: '#EF4444',
+  ready:   statusColors.spec,
+  partial: statusColors.partial,
+  draft:   statusColors.draft,
+  blocked: statusColors.blocked,
 };
 
 function ReadinessCounts({ summary }: { summary: ReturnType<typeof getStoryboardReadiness> }) {
-  const chips: Array<{ level: BeatStatusLevel; count: number }> = [
+  // Annotate the source array, not the filter result — contextual typing does
+  // not flow through .filter(), so annotating the filtered variable left the
+  // literals widened to `{ level: string }` (ts2322).
+  const allChips: Array<{ level: BeatStatusLevel; count: number }> = [
     { level: 'ready',   count: summary.ready },
     { level: 'partial', count: summary.partial },
     { level: 'blocked', count: summary.blocked },
     { level: 'draft',   count: summary.draft },
-  ].filter(c => c.count > 0);
+  ];
+  const chips = allChips.filter(c => c.count > 0);
 
   if (chips.length === 0) return null;
 
@@ -549,18 +600,22 @@ interface ConnectionPanelProps {
 
 function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: ConnectionPanelProps) {
   const typeLabel   = CONNECTION_TYPE_LABELS[connection.type]   ?? connection.type.toUpperCase();
-  const accentColor = CONNECTION_TYPE_COLORS[connection.type] ?? '#475569';
+  const accentColor = CONNECTION_TYPE_COLORS[connection.type] ?? SLATE_LINE;
 
   return (
-    <aside style={{
-      width: 280,
-      flexShrink: 0,
-      background: '#0f1825',
-      borderLeft: '1px solid rgba(255,255,255,0.07)',
-      display: 'flex',
-      flexDirection: 'column',
-      overflowY: 'auto',
-    }}>
+    <aside
+      role="complementary"
+      aria-label={`Connection details: ${typeLabel}`}
+      style={{
+        width: 280,
+        flexShrink: 0,
+        background: '#0f1825',
+        borderLeft: `1px solid ${surfaces.border}`,
+        display: 'flex',
+        flexDirection: 'column',
+        overflowY: 'auto',
+      }}
+    >
       <div style={{
         padding: '12px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -584,7 +639,7 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
           style={{
             marginLeft: 'auto',
             background: 'none', border: 'none', cursor: 'pointer',
-            color: '#475569', fontSize: 18, lineHeight: 1, padding: '0 2px',
+            color: textColors.secondary, fontSize: 18, lineHeight: 1, padding: '0 2px',
           }}
           aria-label="Close connection panel"
         >
@@ -595,7 +650,7 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+          <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
             Flow
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -622,7 +677,7 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
 
         {connection.label && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+            <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
               Condition / Result
             </span>
             <p style={{
@@ -638,10 +693,10 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+          <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
             Connection Type
           </span>
-          <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: 12, color: textColors.muted, lineHeight: 1.5 }}>
             {connectionTypeDescription(connection.type)}
           </p>
         </div>

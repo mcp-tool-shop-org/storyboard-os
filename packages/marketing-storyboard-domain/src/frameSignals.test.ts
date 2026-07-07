@@ -1,7 +1,8 @@
 // ─── marketing-domain / frameSignals.test.ts ─────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { getMarketingFrameSignal, getMarketingFrameBadges, getSegmentPathCount } from './frameSignals';
+import { getMarketingFrameSignal, getMarketingFrameBadges, getSegmentPathCount, marketingColors } from './frameSignals';
+import { statusColors, statusLabels } from '@storyboard-os/core';
 import type { StoryboardFrame, MarketingFrameContent } from './schema';
 
 function makeFrame(
@@ -84,13 +85,13 @@ describe('getMarketingFrameSignal', () => {
 describe('getMarketingFrameBadges', () => {
     it('includes STATE badge when customerStateAfter present', () => {
         const frame = makeFrame('audience', { customerStateAfter: ['Aware'] });
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'STATE')).toBe(true);
     });
 
     it('includes GATE badge when approvalRequirements present', () => {
         const frame = makeFrame('approval', { approvalRequirements: ['Legal sign-off'] });
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'GATE')).toBe(true);
     });
 
@@ -101,20 +102,61 @@ describe('getMarketingFrameBadges', () => {
             requiredAssets: ['Asset'],
             testCriteria: ['Criterion'],
         });
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'SPEC')).toBe(true);
     });
 
     it('includes PARTIAL badge when partial', () => {
         const frame = makeFrame('audience', { objective: 'Test' });
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'PARTIAL')).toBe(true);
     });
 
     it('includes DRAFT badge when incomplete', () => {
         const frame = makeFrame('audience', {});
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'DRAFT')).toBe(true);
+    });
+});
+
+// ─── marketingColors contract (VP-001 / VP-002 refactor guard) ────────────────
+
+describe('marketingColors', () => {
+    it('GATE is amber #F59E0B, NOT red (VP-002 — red is reserved for blocked)', () => {
+        expect(marketingColors.gate).toBe('#F59E0B');
+        expect(marketingColors.gate).not.toBe(statusColors.blocked);
+        expect(marketingColors.gate).not.toBe('#EF4444');
+    });
+
+    it('critical is #EAB308', () => {
+        expect(marketingColors.critical).toBe('#EAB308');
+    });
+
+    it('shared swatches source from core statusColors', () => {
+        expect(marketingColors.state).toBe(statusColors.state);
+        expect(marketingColors.ready).toBe(statusColors.spec);
+        expect(marketingColors.partial).toBe(statusColors.partial);
+        expect(marketingColors.draft).toBe(statusColors.draft);
+    });
+
+    it('the GATE badge output uses the amber gate color, not red', () => {
+        const frame = makeFrame('approval', { approvalRequirements: ['Legal sign-off'] });
+        const gate = getMarketingFrameBadges(frame).find(b => b.text === 'GATE');
+        expect(gate).toBeDefined();
+        expect(gate!.color).toBe(marketingColors.gate);
+        expect(gate!.color).not.toBe(statusColors.blocked);
+    });
+
+    it('a ready frame renders the canonical SPEC label + spec color', () => {
+        const frame = makeFrame('audience', {
+            objective: 'x',
+            implementationChecklist: ['t'],
+            requiredAssets: ['a'],
+            testCriteria: ['c'],
+        });
+        const badge = getMarketingFrameBadges(frame).find(b => b.text === statusLabels.ready);
+        expect(badge).toBeDefined();
+        expect(badge!.color).toBe(statusColors.spec);
     });
 });
 

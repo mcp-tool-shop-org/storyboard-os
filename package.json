@@ -1,7 +1,7 @@
 {
   "name": "storyboard-os",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Visual story-structure platform. rpg-storyboard, marketing-storyboard, and cinematic-storyboard are the three shipped verticals.",
   "scripts": {
     "dev": "pnpm --filter rpg-storyboard dev",
@@ -13,20 +13,14 @@
     "test:watch": "pnpm --filter rpg-storyboard test:watch",
     "build:all": "pnpm -r build",
     "build:packages": "pnpm --filter @storyboard-os/core build && pnpm --filter @storyboard-os/routing build && pnpm --filter @storyboard-os/rpg-domain build && pnpm --filter @storyboard-os/canvas build && pnpm --filter @storyboard-os/marketing-domain build && pnpm --filter @storyboard-os/cinematic-domain build",
-    "verify": "pnpm run build:packages && pnpm test && pnpm build"
+    "check:packages": "pnpm --filter \"@storyboard-os/*\" exec tsc --noEmit",
+    "check:apps": "pnpm --filter rpg-storyboard exec astro check && pnpm --filter marketing-storyboard exec astro check && pnpm --filter cinematic-storyboard exec astro check",
+    "check": "pnpm run check:packages && pnpm run check:apps",
+    "verify": "pnpm run build:packages && pnpm run check && pnpm test && pnpm build"
   },
   "engines": {
     "node": ">=20",
-    "pnpm": ">=9"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp"
-    ],
-    "overrides": {
-      "fast-uri": "^3.1.2"
-    }
+    "pnpm": ">=10"
   },
   "devDependencies": {
     "tsup": "^8.5.1"

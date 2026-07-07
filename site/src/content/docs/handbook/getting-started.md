@@ -32,11 +32,11 @@ Open [http://localhost:4321](http://localhost:4321). The app is running.
 pnpm verify
 ```
 
-<!-- AUTOGEN-NOTE: Snapshot values (649 tests, 54 pages) below are manually updated.
+<!-- AUTOGEN-NOTE: Snapshot values (937 tests, 54 pages) below are manually updated.
      Verify with: pnpm test (test count), pnpm -r build (page count).
      See docs/snapshot-checklist.md for every doc location that holds these snapshots. -->
 
-Runs all 649 tests + builds all 54 pages across all three apps. This is the gate before any commit.
+Runs all 937 tests + builds all 54 pages across all three apps. This is the gate before any commit.
 
 ---
 

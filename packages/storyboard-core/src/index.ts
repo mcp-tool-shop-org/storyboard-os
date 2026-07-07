@@ -21,3 +21,19 @@ export type {
   StoryboardValidationError,
   StoryboardValidationResult,
 } from './validate';
+
+export {
+  statusColors,
+  statusLabels,
+  surfaces,
+  textColors,
+  typeScale,
+  spacing,
+} from './tokens';
+
+export type {
+  StatusColorName,
+  StatusLabelKey,
+  SurfaceName,
+  TextColorName,
+} from './tokens';
