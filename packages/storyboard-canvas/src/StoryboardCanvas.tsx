@@ -171,6 +171,29 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       });
     }, [frames]);
 
+    // ── Duplicate frame id warning (F-CV-006) ──────────────────────────────
+    // Duplicate ids silently corrupt position tracking (PositionMap keys
+    // collide — the last frame wins) and break React list keys. Warn once per
+    // mount, not per render — matching the package's F-CI-208 precedent of
+    // warning on poisoned input data. (Not dev-gated: this package has no
+    // process/env typings, and F-CI-208 already warns unconditionally.)
+    const warnedDuplicateIds = useRef(false);
+    useEffect(() => {
+      if (warnedDuplicateIds.current) return;
+      const seen = new Set<string>();
+      const dupes = new Set<string>();
+      for (const f of frames) {
+        if (seen.has(f.id)) dupes.add(f.id);
+        seen.add(f.id);
+      }
+      if (dupes.size > 0) {
+        warnedDuplicateIds.current = true;
+        console.warn(
+          `[storyboard-canvas] Duplicate frame ids in frames prop: ${[...dupes].join(', ')} — position tracking and selection will misbehave for these frames.`,
+        );
+      }
+    }, [frames]);
+
     // ── Imperative apply ───────────────────────────────────────────────────
     // All viewport changes go through here. Imperatively sets the Konva Stage
     // (immediate visual update) and mirrors into React state (for controls display).
@@ -356,12 +379,12 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
 
     // ── Stage click (deselect on background click) ─────────────────────────
     const handleStageClick = useCallback(
-      (e: { target: { getType?: () => string } }) => {
-        if (
-          e.target &&
-          typeof e.target.getType === 'function' &&
-          e.target.getType() === 'Stage'
-        ) {
+      (e: Konva.KonvaEventObject<MouseEvent>) => {
+        // F-CV-003: proper Konva event type + Stage-identity comparison,
+        // consistent with handleStageMouseDown above (replaces the old ad-hoc
+        // structural `getType?()` shape). Deselect only when the click landed
+        // on the Stage background itself, not on a frame or connection.
+        if (e.target === e.target.getStage()) {
           onSelectFrame?.(null);
           onSelectConnection?.(null);
         }

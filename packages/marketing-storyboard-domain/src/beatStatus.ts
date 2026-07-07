@@ -75,7 +75,9 @@ export interface CampaignReadinessSummary {
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 function getMissing(frame: StoryboardFrame): MissingSpecReason[] {
-    const content = frame.content;
+    // Untrusted load paths can hand us a frame with null/missing content —
+    // normalize to an empty spec instead of throwing (DM-002).
+    const content = (frame.content ?? {}) as MarketingFrameContent;
     const missing: MissingSpecReason[] = [];
 
     // Blocking rules — type-specific
@@ -131,7 +133,8 @@ function computeLevel(missing: MissingSpecReason[]): CampaignBeatStatusLevel {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function getCampaignBeatStatus(frame: StoryboardFrame): CampaignBeatStatus {
-    const content = frame.content;
+    // Normalize null/missing content to an empty spec (DM-002).
+    const content = (frame.content ?? {}) as MarketingFrameContent;
     const missing = getMissing(frame);
     const level = computeLevel(missing);
 

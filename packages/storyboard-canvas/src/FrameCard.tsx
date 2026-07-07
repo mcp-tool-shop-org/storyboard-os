@@ -56,9 +56,11 @@ export default function FrameCard({
   const badges = frame.badges ?? [];
   const hasBadges = badges.length > 0;
 
-  // Reserve space at the bottom for the badge row
+  // Reserve space at the bottom for the badge row.
+  // F-CV-004: clamp to 0 — a short frame (height < SUMMARY_Y + badge row + 8)
+  // would otherwise pass a negative height to the Konva Text node.
   const badgeRowHeight = hasBadges ? BADGE_HEIGHT + BADGE_BOTTOM_MARGIN : 0;
-  const summaryMaxHeight = height - SUMMARY_Y - badgeRowHeight - 8;
+  const summaryMaxHeight = Math.max(0, height - SUMMARY_Y - badgeRowHeight - 8);
 
   function handleDragEnd(e: KonvaEventObject<DragEvent>) {
     onDragEnd(frame.id, e.target.x(), e.target.y());

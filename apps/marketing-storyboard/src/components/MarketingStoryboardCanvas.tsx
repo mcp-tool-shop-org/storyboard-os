@@ -33,6 +33,7 @@ import {
     type MeasurementLoopSignal,
 } from '@storyboard-os/marketing-domain';
 import type { Storyboard } from '@storyboard-os/marketing-domain';
+import { categorizeApprovalSignals } from '../lib/launchBlockers';
 import MarketingFrameInspector from './MarketingFrameInspector';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -135,6 +136,13 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
     const approvalSignals = useMemo(
         () => getApprovalGateSignals(storyboard),
         [storyboard],
+    );
+
+    // Blocked vs pending approval gates (see lib/launchBlockers.ts for why
+    // "pending" is derived rather than a status level).
+    const approvalCategories = useMemo(
+        () => categorizeApprovalSignals(approvalSignals),
+        [approvalSignals],
     );
 
     const measurementSignals = useMemo(
@@ -292,15 +300,21 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
                 {selectedFrame && (
                     <MarketingFrameInspector
                         frame={selectedFrame}
-                        campaignId={storyboard.id}
                         onClose={() => setSelectedFrameId(null)}
                     />
                 )}
 
-                {/* Launch blockers panel — visible when issues exist and no frame/connection is selected */}
-                {!selectedFrame && !selectedConnection && (launchReadiness.blockedFrameIds.length > 0 || launchReadiness.missingMeasurementFrameIds.length > 0) && (
+                {/* Launch blockers panel — visible when issues exist and no frame/connection is selected.
+                    Pending approvals count as an issue: they must surface here even when
+                    nothing is hard-blocked (AP-006 #4). */}
+                {!selectedFrame && !selectedConnection && (
+                    launchReadiness.blockedFrameIds.length > 0 ||
+                    launchReadiness.missingMeasurementFrameIds.length > 0 ||
+                    approvalCategories.pending.length > 0
+                ) && (
                     <LaunchBlockersPanel
-                        approvalSignals={approvalSignals}
+                        blockedApprovals={approvalCategories.blocked}
+                        pendingApprovals={approvalCategories.pending}
                         measurementSignals={measurementSignals}
                         frames={storyboard.frames}
                     />
@@ -421,12 +435,16 @@ const STATUS_HEADER_COLORS: Record<CampaignBeatStatusLevel, string> = {
 };
 
 function ReadinessCounts({ summary }: { summary: ReturnType<typeof getCampaignReadiness> }) {
-    const chips: Array<{ level: CampaignBeatStatusLevel; count: number }> = [
+    // Annotate the source array, not the filter result — contextual typing does
+    // not flow through .filter(), so annotating the filtered variable left the
+    // literals widened to `{ level: string }` (ts2322).
+    const allChips: Array<{ level: CampaignBeatStatusLevel; count: number }> = [
         { level: 'ready', count: summary.ready },
         { level: 'partial', count: summary.partial },
         { level: 'blocked', count: summary.blocked },
         { level: 'draft', count: summary.draft },
-    ].filter(c => c.count > 0);
+    ];
+    const chips = allChips.filter(c => c.count > 0);
 
     if (chips.length === 0) return null;
 
@@ -613,16 +631,19 @@ function LaunchReadinessBadge({ level, summary }: { level: LaunchReadinessLevel;
 // ─── LaunchBlockersPanel ──────────────────────────────────────────────────────
 
 interface LaunchBlockersPanelProps {
-    approvalSignals: ApprovalGateSignal[];
+    /** Gates with no approval requirements defined — cannot pass at all. */
+    blockedApprovals: ApprovalGateSignal[];
+    /** Gates defined but not fully specced — approvals awaiting completion.
+        Categorized in lib/launchBlockers.ts; the old `status === 'pending'`
+        filter compared against a level that does not exist and hid these. */
+    pendingApprovals: ApprovalGateSignal[];
     measurementSignals: MeasurementLoopSignal[];
     frames: Array<{ id: string; title: string }>;
 }
 
-function LaunchBlockersPanel({ approvalSignals, measurementSignals, frames }: LaunchBlockersPanelProps) {
+function LaunchBlockersPanel({ blockedApprovals, pendingApprovals, measurementSignals, frames }: LaunchBlockersPanelProps) {
     const frameTitle = (id: string) => frames.find(f => f.id === id)?.title ?? id;
 
-    const blockedApprovals = approvalSignals.filter(s => s.status === 'blocked');
-    const pendingApprovals = approvalSignals.filter(s => s.status === 'pending');
     const missingMetrics = measurementSignals.filter(s => !s.hasMetrics);
     const openLoops = measurementSignals.filter(s => s.hasMetrics && !s.isLoop);
 

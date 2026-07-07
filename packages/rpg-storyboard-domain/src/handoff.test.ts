@@ -637,3 +637,83 @@ describe('generateProjectMarkdown', () => {
     expect(md).toContain('1/');  // at least "1/N complete"
   });
 });
+
+// ─── DM-001 (e) — project markdown after checklist reorder ────────────────────
+
+describe('generateProjectMarkdown — progress follows item text (DM-001)', () => {
+  it('renders [x] on the correct item text after a checklist reorder', () => {
+    let p = createProject({ title: 'Reorder Quest', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameContent(p, fid, {
+      implementationChecklist: ['first task', 'second task'],
+    });
+    p = setChecklistItemComplete(p, fid, 1, true); // 'second task' done
+    p = updateFrameContent(p, fid, {
+      implementationChecklist: ['second task', 'first task'], // reorder
+    });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('- [x] second task');
+    expect(md).toContain('- [ ] first task');
+    expect(md).not.toContain('- [x] first task');
+  });
+});
+
+// ─── DM-004 — markdown escapes user text ──────────────────────────────────────
+
+describe('DM-004 — markdown escapes user text', () => {
+  const HOSTILE = '`code` <img src=x onerror=x> | pipe';
+
+  it('neutralizes backticks, raw HTML, and pipes in frame titles', () => {
+    const board = makeBoard([makeFrame('f1', 'scene', {}, HOSTILE)]);
+    const md = generateMarkdown(generateHandoff(board));
+    expect(md).not.toContain('<img');       // raw HTML inert
+    expect(md).toContain('&lt;img');
+    expect(md).not.toContain('`code`');     // backticks cannot open a code span
+    expect(md).toContain('\\`code\\`');
+    expect(md).toContain('\\|');            // pipes escaped
+  });
+
+  it('prevents heading hijack from a leading "# " in summaries', () => {
+    const frame = makeFrame('f1', 'scene', {});
+    frame.summary = '# Fake Heading';
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    expect(md).not.toMatch(/^# Fake Heading/m);
+    expect(md).toContain('\\# Fake Heading');
+  });
+
+  it('escapes the storyboard title in the document heading', () => {
+    const board = makeBoard([makeFrame('f1', 'scene', {})]);
+    board.title = 'Quest <script>alert(1)</script>';
+    const md = generateMarkdown(generateHandoff(board));
+    expect(md).not.toContain('<script>');
+    expect(md).toContain('&lt;script>');
+  });
+
+  it('keeps state changes inside an intact code span when they contain backticks', () => {
+    const frame = makeFrame('f1', 'choice', { stateChanges: ['set `flag` = true'] });
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    // Backslash escapes do not work inside code spans, so embedded backticks
+    // are substituted — the span must stay intact.
+    expect(md).toContain("`set 'flag' = true`");
+    expect(md).not.toContain('`set `flag` = true`');
+  });
+
+  it('escapes connection labels', () => {
+    const a = makeFrame('a', 'scene', {});
+    const b = makeFrame('b', 'scene', {});
+    const conn = makeConn('a', 'b', 'choice', 'evil | `label`');
+    const md = generateMarkdown(generateHandoff(makeBoard([a, b], [conn])));
+    expect(md).not.toContain('evil | `label`');
+    expect(md).toContain('evil \\| \\`label\\`');
+  });
+
+  it('escapes user text in the project markdown too', () => {
+    let p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameBasics(p, fid, { title: HOSTILE });
+    p = updateFrameContent(p, fid, { implementationChecklist: ['<img src=x onerror=x>'] });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).not.toContain('<img');
+    expect(md).toContain('&lt;img');
+  });
+});

@@ -82,11 +82,10 @@ const REASON_LABELS: Record<MissingSpecReason, string> = {
 
 interface Props {
     frame: StoryboardFrame;
-    campaignId: string;
     onClose: () => void;
 }
 
-export default function MarketingFrameInspector({ frame, campaignId, onClose }: Props) {
+export default function MarketingFrameInspector({ frame, onClose }: Props) {
     const accent = TYPE_COLORS[frame.type];
     const status = getCampaignBeatStatus(frame);
     const content = frame.content;

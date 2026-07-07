@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { listProjects } from '../../lib/storyboard/projectStorage';
+import { listProjects, getLastReadWarning, type ReadWarning } from '../../lib/storyboard/projectStorage';
 import type { RpgStoryboardProject } from '@storyboard-os/rpg-domain';
+import ErrorBoundary from '../ErrorBoundary';
 
 const TEMPLATE_LABELS: Record<string, string> = {
   quest_flow:    'Quest Flow',
@@ -16,12 +17,17 @@ function formatDate(iso: string): string {
   });
 }
 
-export default function ProjectList() {
+function ProjectListInner() {
   const [projects, setProjects] = useState<RpgStoryboardProject[]>([]);
+  const [readWarning, setReadWarning] = useState<ReadWarning | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setProjects(listProjects());
+    // AP-003: if corrupt records were skipped (or the whole store was
+    // unreadable), say so — an unexplained shorter/empty list looks like
+    // silent data loss even when the data is still sitting in storage.
+    setReadWarning(getLastReadWarning());
     setLoaded(true);
   }, []);
 
@@ -31,6 +37,18 @@ export default function ProjectList() {
 
   return (
     <div style={styles.root}>
+
+      {/* ── Storage read warning ── */}
+      {readWarning && (
+        <div role="alert" style={styles.readWarning}>
+          <span style={styles.readWarningTitle}>
+            {readWarning.code === 'STORE_UNREADABLE'
+              ? 'Saved projects could not be read'
+              : `${readWarning.dropped} saved ${readWarning.dropped === 1 ? 'project' : 'projects'} skipped`}
+          </span>
+          <span style={styles.readWarningBody}>{readWarning.message}</span>
+        </div>
+      )}
 
       {/* ── Header ── */}
       <div style={styles.header}>
@@ -87,6 +105,17 @@ export default function ProjectList() {
   );
 }
 
+// AP-002: the list island mounts `client:only` with no boundary above it —
+// a render throw (e.g. a corrupt project slipping past validation) would
+// blank the whole page. The boundary keeps the failure visible and recoverable.
+export default function ProjectList() {
+  return (
+    <ErrorBoundary fallbackTitle="Project list failed to load">
+      <ProjectListInner />
+    </ErrorBoundary>
+  );
+}
+
 const styles: Record<string, React.CSSProperties> = {
   root: {
     maxWidth: 800,
@@ -97,6 +126,26 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#475569',
     fontSize: 14,
     padding: 40,
+  },
+  readWarning: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    padding: '12px 16px',
+    marginBottom: 24,
+    background: 'rgba(249,115,22,0.08)',
+    border: '1px solid rgba(249,115,22,0.28)',
+    borderRadius: 8,
+  },
+  readWarningTitle: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#fdba74',
+  },
+  readWarningBody: {
+    fontSize: 12,
+    color: '#94a3b8',
+    lineHeight: 1.5,
   },
   header: {
     display: 'flex',

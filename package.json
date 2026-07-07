@@ -13,20 +13,12 @@
     "test:watch": "pnpm --filter rpg-storyboard test:watch",
     "build:all": "pnpm -r build",
     "build:packages": "pnpm --filter @storyboard-os/core build && pnpm --filter @storyboard-os/routing build && pnpm --filter @storyboard-os/rpg-domain build && pnpm --filter @storyboard-os/canvas build && pnpm --filter @storyboard-os/marketing-domain build && pnpm --filter @storyboard-os/cinematic-domain build",
-    "verify": "pnpm run build:packages && pnpm test && pnpm build"
+    "check": "pnpm --filter rpg-storyboard exec astro check && pnpm --filter marketing-storyboard exec astro check && pnpm --filter cinematic-storyboard exec astro check",
+    "verify": "pnpm run build:packages && pnpm run check && pnpm test && pnpm build"
   },
   "engines": {
     "node": ">=20",
-    "pnpm": ">=9"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp"
-    ],
-    "overrides": {
-      "fast-uri": "^3.1.2"
-    }
+    "pnpm": ">=10"
   },
   "devDependencies": {
     "tsup": "^8.5.1"

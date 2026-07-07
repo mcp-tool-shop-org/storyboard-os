@@ -441,3 +441,114 @@ describe('getProjectProgress', () => {
     expect(summary.doneChecklist).toBe(2);
   });
 });
+
+// ─── DM-001 — progress reconciliation on checklist/testCriteria edits ─────────
+//
+// updateFrameContent replaces spec arrays wholesale while progress is keyed by
+// index. Without reconciliation, done marks silently attach to different item
+// texts after a reorder/insert/delete. These tests pin ✓-to-text attachment.
+
+describe('updateFrameContent — progress reconciliation (DM-001)', () => {
+  /** Project whose first frame has a known checklist, with given texts done. */
+  function seedChecklist(items: string[], doneTexts: string[]) {
+    let p = createProject({ title: 'Test', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameContent(p, fid, { implementationChecklist: items });
+    for (const text of doneTexts) {
+      p = setChecklistItemComplete(p, fid, items.indexOf(text), true);
+    }
+    return { p, fid };
+  }
+
+  it('(a) reorder preserves which TEXTS are done', () => {
+    const { p, fid } = seedChecklist(['alpha', 'beta', 'gamma'], ['beta']);
+    const reordered = updateFrameContent(p, fid, {
+      implementationChecklist: ['gamma', 'alpha', 'beta'],
+    });
+    const fp = getFrameProgress(reordered, fid);
+    // 'beta' moved from index 1 to index 2 — the done mark must follow the text.
+    expect(fp.checklist['2']).toBe(true);
+    expect(fp.checklist['0']).not.toBe(true);
+    expect(fp.checklist['1']).not.toBe(true);
+  });
+
+  it('(b) insert-before shifts done marks to the new index', () => {
+    const { p, fid } = seedChecklist(['alpha', 'beta'], ['beta']);
+    const inserted = updateFrameContent(p, fid, {
+      implementationChecklist: ['new first task', 'alpha', 'beta'],
+    });
+    const fp = getFrameProgress(inserted, fid);
+    expect(fp.checklist['2']).toBe(true); // beta: 1 → 2
+    expect(fp.checklist['0']).not.toBe(true); // inserted item is not done
+    expect(fp.checklist['1']).not.toBe(true);
+  });
+
+  it('(c) delete of a done item drops only that mark', () => {
+    const { p, fid } = seedChecklist(['alpha', 'beta', 'gamma'], ['alpha', 'gamma']);
+    const deleted = updateFrameContent(p, fid, {
+      implementationChecklist: ['beta', 'gamma'], // alpha (done) removed
+    });
+    const fp = getFrameProgress(deleted, fid);
+    expect(fp.checklist['1']).toBe(true); // gamma still done at its new index
+    expect(fp.checklist['0']).not.toBe(true); // beta was never done
+    expect(Object.values(fp.checklist).filter(v => v === true)).toHaveLength(1);
+  });
+
+  it('(d) unchanged arrays leave progress untouched', () => {
+    const { p, fid } = seedChecklist(['alpha', 'beta'], ['beta']);
+    const before = getFrameProgress(p, fid);
+    const same = updateFrameContent(p, fid, {
+      implementationChecklist: ['alpha', 'beta'],
+    });
+    expect(getFrameProgress(same, fid)).toEqual(before);
+  });
+
+  it('patching an unrelated field leaves progress untouched', () => {
+    const { p, fid } = seedChecklist(['alpha', 'beta'], ['beta']);
+    const before = getFrameProgress(p, fid);
+    const patched = updateFrameContent(p, fid, { designerNotes: 'notes' });
+    expect(getFrameProgress(patched, fid)).toEqual(before);
+  });
+
+  it('duplicate texts claim matches in order (stable)', () => {
+    const { p, fid } = seedChecklist(['dup', 'dup', 'other'], ['dup']);
+    // First 'dup' (index 0) is done. Remove one 'dup'.
+    const edited = updateFrameContent(p, fid, {
+      implementationChecklist: ['dup', 'other'],
+    });
+    const fp = getFrameProgress(edited, fid);
+    expect(fp.checklist['0']).toBe(true); // one dup remains done
+    expect(Object.values(fp.checklist).filter(v => v === true)).toHaveLength(1);
+  });
+
+  it('drops all marks when every done text is removed', () => {
+    const { p, fid } = seedChecklist(['alpha', 'beta'], ['alpha', 'beta']);
+    const replaced = updateFrameContent(p, fid, {
+      implementationChecklist: ['entirely', 'new', 'items'],
+    });
+    const fp = getFrameProgress(replaced, fid);
+    expect(Object.values(fp.checklist).filter(v => v === true)).toHaveLength(0);
+  });
+
+  it('reconciles testCriteria progress the same way', () => {
+    let p = createProject({ title: 'Test', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameContent(p, fid, { testCriteria: ['t-one', 't-two'] });
+    p = setTestCriterionComplete(p, fid, 1, true); // 't-two' done
+    const reordered = updateFrameContent(p, fid, { testCriteria: ['t-two', 't-one'] });
+    const fp = getFrameProgress(reordered, fid);
+    expect(fp.testCriteria['0']).toBe(true); // t-two followed to index 0
+    expect(fp.testCriteria['1']).not.toBe(true);
+  });
+
+  it('getProjectProgress counts stay attached to texts after a reorder', () => {
+    const { p, fid } = seedChecklist(['alpha', 'beta', 'gamma'], ['beta']);
+    const reordered = updateFrameContent(p, fid, {
+      implementationChecklist: ['beta', 'gamma', 'alpha'],
+    });
+    const summary = getProjectProgress(reordered);
+    expect(summary.doneChecklist).toBe(1); // still exactly one done item
+    const fp = getFrameProgress(reordered, fid);
+    expect(fp.checklist['0']).toBe(true); // and it is 'beta'
+  });
+});

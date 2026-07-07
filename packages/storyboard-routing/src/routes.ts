@@ -23,6 +23,17 @@ export interface StoryboardRoutes {
   projectRoute(projectId: string): string;
 }
 
+// Shared encode path for every id segment. encodeURIComponent leaves `.`
+// untouched, so a bare `.` or `..` id would survive verbatim and normalize to
+// the current/parent path segment — escaping the configured base. Percent-
+// encode the dots for exactly those two ids; everything else (including ids
+// that merely contain dots, like `v1.2`) goes through encodeURIComponent.
+function encodeSegment(id: string): string {
+  if (id === '.') return '%2E';
+  if (id === '..') return '%2E%2E';
+  return encodeURIComponent(id);
+}
+
 export function createStoryboardRoutes(
   config: StoryboardRouteConfig,
 ): StoryboardRoutes {
@@ -30,15 +41,15 @@ export function createStoryboardRoutes(
 
   return {
     boardRoute(storyboardId: string): string {
-      return `${base}/${encodeURIComponent(storyboardId)}`;
+      return `${base}/${encodeSegment(storyboardId)}`;
     },
 
     frameRoute(storyboardId: string, frameId: string): string {
-      return `${base}/${encodeURIComponent(storyboardId)}/frames/${encodeURIComponent(frameId)}`;
+      return `${base}/${encodeSegment(storyboardId)}/frames/${encodeSegment(frameId)}`;
     },
 
     projectRoute(projectId: string): string {
-      return `/projects/${encodeURIComponent(projectId)}`;
+      return `/projects/${encodeSegment(projectId)}`;
     },
   };
 }

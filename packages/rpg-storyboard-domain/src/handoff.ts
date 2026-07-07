@@ -200,7 +200,8 @@ function buildBeat(
   connections: StoryboardConnection[],
   frameMap: Map<string, StoryboardFrame>,
 ): HandoffBeat {
-  const content = frame.content as FrameContent;
+  // Normalize null/missing content to an empty spec (DM-002).
+  const content = (frame.content ?? {}) as FrameContent;
   const status  = getBeatStatus(frame);
 
   const outgoingBranches: HandoffBranch[] = connections
@@ -307,6 +308,39 @@ function connTypeLabel(type: string): string {
   return CONNECTION_TYPE_LABELS[type] ?? type;
 }
 
+// ─── Markdown escaping (DM-004) ───────────────────────────────────────────────
+//
+// Handoff markdown interpolates user-authored text (titles, summaries, notes,
+// labels, list items). In-app rendering is JSX-escaped; this is defense-in-depth
+// for handoffs pasted into external markdown renderers, and it keeps user text
+// from hijacking the document structure (headings, quotes, list markers, code
+// spans, tables). The generator's own structural markdown is never escaped.
+
+/**
+ * Neutralize markdown-structural characters in INLINE user text:
+ * - backticks → escaped so user text cannot open/close code spans
+ * - pipes     → escaped so user text cannot add/split table cells
+ * - `<`       → `&lt;` so stray inline HTML stays inert
+ * - a leading `#` / `>` / `-` (per line) → escaped so user text cannot
+ *   introduce headings, blockquotes, or list items
+ */
+function escapeMarkdownInline(text: string): string {
+  return text
+    .replace(/`/g, '\\`')
+    .replace(/\|/g, '\\|')
+    .replace(/</g, '&lt;')
+    .replace(/^([#>-])/gm, '\\$1');
+}
+
+/**
+ * Render user text inside a single-backtick code span. CommonMark does not
+ * process backslash escapes inside code spans, so embedded backticks are
+ * substituted with apostrophes to keep the span intact.
+ */
+function codeSpan(text: string): string {
+  return '`' + text.replace(/`/g, "'") + '`';
+}
+
 function lines(...parts: Array<string | null | false>): string {
   return parts.filter(Boolean).join('\n');
 }
@@ -327,13 +361,14 @@ function blockquote(text: string): string {
 }
 
 function renderBeat(beat: HandoffBeat, index: number): string {
+  const esc = escapeMarkdownInline;
   const typeLabel = beat.type.replace('_', ' ').toUpperCase();
   const sections: string[] = [];
 
-  sections.push(`### Beat ${index + 1} — ${beat.title}`);
-  sections.push(`**Type:** ${typeLabel} · **Status:** ${STATUS_LABELS[beat.status]}`);
+  sections.push(`### Beat ${index + 1} — ${esc(beat.title)}`);
+  sections.push(`**Type:** ${esc(typeLabel)} · **Status:** ${STATUS_LABELS[beat.status]}`);
   sections.push('');
-  sections.push(beat.summary);
+  sections.push(esc(beat.summary));
 
   // Entry / exit conditions
   sections.push('');
@@ -341,79 +376,79 @@ function renderBeat(beat: HandoffBeat, index: number): string {
     `**Entry Conditions:** ${beat.entryConditions.length > 0 ? '' : 'none required'}`,
   );
   if (beat.entryConditions.length > 0) {
-    sections.push(bulletLines(beat.entryConditions));
+    sections.push(bulletLines(beat.entryConditions.map(esc)));
   }
 
   sections.push(
     `**Exit Conditions:** ${beat.exitConditions.length > 0 ? '' : 'none required'}`,
   );
   if (beat.exitConditions.length > 0) {
-    sections.push(bulletLines(beat.exitConditions));
+    sections.push(bulletLines(beat.exitConditions.map(esc)));
   }
 
   // State changes
   if (beat.stateChanges.length > 0) {
     sections.push('');
     sections.push('**State Changes:**');
-    sections.push(bulletLines(beat.stateChanges.map(s => `\`${s}\``)));
+    sections.push(bulletLines(beat.stateChanges.map(codeSpan)));
   }
 
   // Player-visible text
   if (beat.playerVisibleText) {
     sections.push('');
     sections.push('**Player-Visible Text:**');
-    sections.push(blockquote(beat.playerVisibleText));
+    sections.push(blockquote(esc(beat.playerVisibleText)));
   }
 
   // Stakes
   if (beat.stakes) {
     sections.push('');
-    sections.push(`**Stakes:** ${beat.stakes}`);
+    sections.push(`**Stakes:** ${esc(beat.stakes)}`);
   }
 
   // Involved characters / factions
   if (beat.involvedCharacters.length > 0) {
     sections.push('');
-    sections.push(`**Characters:** ${beat.involvedCharacters.join(', ')}`);
+    sections.push(`**Characters:** ${beat.involvedCharacters.map(esc).join(', ')}`);
   }
   if (beat.involvedFactions.length > 0) {
     sections.push('');
-    sections.push(`**Factions:** ${beat.involvedFactions.join(', ')}`);
+    sections.push(`**Factions:** ${beat.involvedFactions.map(esc).join(', ')}`);
   }
 
   // Possible outcomes
   if (beat.possibleOutcomes.length > 0) {
     sections.push('');
     sections.push('**Possible Outcomes:**');
-    sections.push(bulletLines(beat.possibleOutcomes));
+    sections.push(bulletLines(beat.possibleOutcomes.map(esc)));
   }
 
   // Required assets
   if (beat.requiredAssets.length > 0) {
     sections.push('');
     sections.push('**Required Assets:**');
-    sections.push(bulletLines(beat.requiredAssets));
+    sections.push(bulletLines(beat.requiredAssets.map(esc)));
   }
 
   // Implementation checklist
   if (beat.implementationChecklist.length > 0) {
     sections.push('');
     sections.push('**Implementation Checklist:**');
-    sections.push(checklistLines(beat.implementationChecklist));
+    sections.push(checklistLines(beat.implementationChecklist.map(esc)));
   }
 
   // Test criteria
   if (beat.testCriteria.length > 0) {
     sections.push('');
     sections.push('**Test Criteria:**');
-    sections.push(checklistLines(beat.testCriteria));
+    sections.push(checklistLines(beat.testCriteria.map(esc)));
   }
 
   // Designer notes (last — implementation-facing readers can skip)
   if (beat.designerNotes) {
     sections.push('');
     sections.push('**Designer Notes:**');
-    sections.push(`> ${beat.designerNotes}`);
+    sections.push(`> ${esc(beat.designerNotes)}`);
   }
 
   // Outgoing branches
@@ -426,13 +461,13 @@ function renderBeat(beat: HandoffBeat, index: number): string {
     }
   } else if (beat.outgoingBranches.length === 1) {
     const b = beat.outgoingBranches[0];
-    const labelPart = b.label ? ` — "${b.label}"` : '';
-    sections.push(`**Outgoing:** → ${b.toTitle} (${connTypeLabel(b.type)}${labelPart})`);
+    const labelPart = b.label ? ` — "${esc(b.label)}"` : '';
+    sections.push(`**Outgoing:** → ${esc(b.toTitle)} (${connTypeLabel(b.type)}${labelPart})`);
   } else {
     sections.push('**Outgoing Branches:**');
     for (const b of beat.outgoingBranches) {
-      const labelPart = b.label ? `: "${b.label}"` : '';
-      sections.push(`- → ${b.toTitle} (${connTypeLabel(b.type)}${labelPart})`);
+      const labelPart = b.label ? `: "${esc(b.label)}"` : '';
+      sections.push(`- → ${esc(b.toTitle)} (${connTypeLabel(b.type)}${labelPart})`);
     }
   }
 
@@ -474,11 +509,11 @@ export function generateMarkdown(handoff: QuestHandoff): string {
   const sections: string[] = [];
 
   // ── Header ────────────────────────────────────────────────────────────────
-  sections.push(`# ${handoff.title} — Quest Handoff`);
+  sections.push(`# ${escapeMarkdownInline(handoff.title)} — Quest Handoff`);
   sections.push('');
 
   if (handoff.description) {
-    sections.push(`> ${handoff.description}`);
+    sections.push(`> ${escapeMarkdownInline(handoff.description)}`);
     sections.push('');
   }
 
@@ -532,7 +567,7 @@ export function generateMarkdown(handoff: QuestHandoff): string {
         const detail = blockers.length > 0
           ? ` — ${blockers.map(r => r.replace(/_/g, ' ')).join(', ')}`
           : '';
-        sections.push(`- **${beat.title}** (\`${id}\`)${detail}`);
+        sections.push(`- **${escapeMarkdownInline(beat.title)}** (\`${id}\`)${detail}`);
       }
       sections.push('');
     }
@@ -551,7 +586,7 @@ export function generateMarkdown(handoff: QuestHandoff): string {
         const detail = gaps.length > 0
           ? ` — missing: ${gaps.map(r => r.replace(/^no_/, '').replace(/_/g, ' ')).join(', ')}`
           : '';
-        sections.push(`- **${beat.title}** (\`${id}\`)${detail}`);
+        sections.push(`- **${escapeMarkdownInline(beat.title)}** (\`${id}\`)${detail}`);
       }
     }
   }
@@ -614,59 +649,60 @@ export function generateProjectHandoff(project: RpgStoryboardProject): ProjectHa
 // ─── Project markdown renderer ────────────────────────────────────────────────
 
 function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
+  const esc = escapeMarkdownInline;
   const typeLabel = beat.type.replace('_', ' ').toUpperCase();
   const sections: string[] = [];
 
-  sections.push(`### Beat ${index + 1} — ${beat.title}`);
-  sections.push(`**Type:** ${typeLabel} · **Status:** ${STATUS_LABELS[beat.status]}`);
+  sections.push(`### Beat ${index + 1} — ${esc(beat.title)}`);
+  sections.push(`**Type:** ${esc(typeLabel)} · **Status:** ${STATUS_LABELS[beat.status]}`);
   sections.push('');
-  sections.push(beat.summary);
+  sections.push(esc(beat.summary));
 
   if (beat.entryConditions.length > 0 || beat.exitConditions.length > 0) {
     sections.push('');
     sections.push(`**Entry Conditions:** ${beat.entryConditions.length > 0 ? '' : 'none required'}`);
-    if (beat.entryConditions.length > 0) sections.push(bulletLines(beat.entryConditions));
+    if (beat.entryConditions.length > 0) sections.push(bulletLines(beat.entryConditions.map(esc)));
     sections.push(`**Exit Conditions:** ${beat.exitConditions.length > 0 ? '' : 'none required'}`);
-    if (beat.exitConditions.length > 0) sections.push(bulletLines(beat.exitConditions));
+    if (beat.exitConditions.length > 0) sections.push(bulletLines(beat.exitConditions.map(esc)));
   }
 
   if (beat.stateChanges.length > 0) {
     sections.push('');
     sections.push('**State Changes:**');
-    sections.push(bulletLines(beat.stateChanges.map(s => `\`${s}\``)));
+    sections.push(bulletLines(beat.stateChanges.map(codeSpan)));
   }
 
   if (beat.playerVisibleText) {
     sections.push('');
     sections.push('**Player-Visible Text:**');
-    sections.push(blockquote(beat.playerVisibleText));
+    sections.push(blockquote(esc(beat.playerVisibleText)));
   }
 
   if (beat.stakes) {
     sections.push('');
-    sections.push(`**Stakes:** ${beat.stakes}`);
+    sections.push(`**Stakes:** ${esc(beat.stakes)}`);
   }
 
   if (beat.involvedCharacters.length > 0) {
     sections.push('');
-    sections.push(`**Characters:** ${beat.involvedCharacters.join(', ')}`);
+    sections.push(`**Characters:** ${beat.involvedCharacters.map(esc).join(', ')}`);
   }
 
   if (beat.involvedFactions.length > 0) {
     sections.push('');
-    sections.push(`**Factions:** ${beat.involvedFactions.join(', ')}`);
+    sections.push(`**Factions:** ${beat.involvedFactions.map(esc).join(', ')}`);
   }
 
   if (beat.possibleOutcomes.length > 0) {
     sections.push('');
     sections.push('**Possible Outcomes:**');
-    sections.push(bulletLines(beat.possibleOutcomes));
+    sections.push(bulletLines(beat.possibleOutcomes.map(esc)));
   }
 
   if (beat.requiredAssets.length > 0) {
     sections.push('');
     sections.push('**Required Assets:**');
-    sections.push(bulletLines(beat.requiredAssets));
+    sections.push(bulletLines(beat.requiredAssets.map(esc)));
   }
 
   // Implementation checklist — progress-aware: [x] for done, [ ] for undone
@@ -676,7 +712,7 @@ function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
     sections.push(`**Implementation Checklist** (${doneCount}/${beat.checklistProgress.length} done):`);
     sections.push(
       beat.checklistProgress
-        .map(i => `- [${i.done ? 'x' : ' '}] ${i.item}`)
+        .map(i => `- [${i.done ? 'x' : ' '}] ${esc(i.item)}`)
         .join('\n'),
     );
   }
@@ -688,7 +724,7 @@ function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
     sections.push(`**Test Criteria** (${doneCount}/${beat.testProgress.length} verified):`);
     sections.push(
       beat.testProgress
-        .map(i => `- [${i.done ? 'x' : ' '}] ${i.criterion}`)
+        .map(i => `- [${i.done ? 'x' : ' '}] ${esc(i.criterion)}`)
         .join('\n'),
     );
   }
@@ -696,7 +732,7 @@ function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
   if (beat.designerNotes) {
     sections.push('');
     sections.push('**Designer Notes:**');
-    sections.push(`> ${beat.designerNotes}`);
+    sections.push(`> ${esc(beat.designerNotes)}`);
   }
 
   sections.push('');
@@ -704,13 +740,13 @@ function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
     if (beat.status !== 'draft') sections.push('**Outgoing:** none — terminal beat');
   } else if (beat.outgoingBranches.length === 1) {
     const b = beat.outgoingBranches[0];
-    const labelPart = b.label ? ` — "${b.label}"` : '';
-    sections.push(`**Outgoing:** → ${b.toTitle} (${connTypeLabel(b.type)}${labelPart})`);
+    const labelPart = b.label ? ` — "${esc(b.label)}"` : '';
+    sections.push(`**Outgoing:** → ${esc(b.toTitle)} (${connTypeLabel(b.type)}${labelPart})`);
   } else {
     sections.push('**Outgoing Branches:**');
     for (const b of beat.outgoingBranches) {
-      const labelPart = b.label ? `: "${b.label}"` : '';
-      sections.push(`- → ${b.toTitle} (${connTypeLabel(b.type)}${labelPart})`);
+      const labelPart = b.label ? `: "${esc(b.label)}"` : '';
+      sections.push(`- → ${esc(b.toTitle)} (${connTypeLabel(b.type)}${labelPart})`);
     }
   }
 
@@ -751,11 +787,11 @@ export function generateProjectMarkdown(handoff: ProjectHandoff): string {
 
   const sections: string[] = [];
 
-  sections.push(`# ${handoff.title} — Project Handoff`);
+  sections.push(`# ${escapeMarkdownInline(handoff.title)} — Project Handoff`);
   sections.push('');
 
   if (handoff.description) {
-    sections.push(`> ${handoff.description}`);
+    sections.push(`> ${escapeMarkdownInline(handoff.description)}`);
     sections.push('');
   }
 
@@ -814,7 +850,7 @@ export function generateProjectMarkdown(handoff: ProjectHandoff): string {
       for (const id of handoff.blockedBeatIds) {
         const beat = handoff.beats.find(b => b.id === id);
         if (!beat) continue;
-        sections.push(`- **${beat.title}** (\`${id}\`)`);
+        sections.push(`- **${escapeMarkdownInline(beat.title)}** (\`${id}\`)`);
       }
       sections.push('');
     }
@@ -830,7 +866,7 @@ export function generateProjectMarkdown(handoff: ProjectHandoff): string {
         const detail = gaps.length > 0
           ? ` — missing: ${gaps.map(r => r.replace(/^no_/, '').replace(/_/g, ' ')).join(', ')}`
           : '';
-        sections.push(`- **${beat.title}** (\`${id}\`)${detail}`);
+        sections.push(`- **${escapeMarkdownInline(beat.title)}** (\`${id}\`)${detail}`);
       }
     }
   }

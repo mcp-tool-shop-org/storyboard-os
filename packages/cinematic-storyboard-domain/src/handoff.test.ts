@@ -170,3 +170,53 @@ describe('generateProductionMarkdown', () => {
     expect(md).toContain('**Continuity:**');
   });
 });
+
+// ─── DM-004 — markdown escapes user text ──────────────────────────────────────
+
+describe('DM-004 — markdown escapes user text', () => {
+  const HOSTILE = '`code` <img src=x onerror=x> | pipe';
+
+  function makeBoardWith(frames: StoryboardFrame[], description = ''): Storyboard {
+    return { id: 'sb-1', title: 'Test Sequence', description, frames, connections: [] };
+  }
+
+  it('neutralizes backticks, raw HTML, and pipes in shot titles', () => {
+    const frame = makeFrame('f1', 'sequence', {});
+    frame.title = HOSTILE;
+    const md = generateProductionMarkdown(generateProductionBrief(makeBoardWith([frame])));
+    expect(md).not.toContain('<img');       // raw HTML inert
+    expect(md).toContain('&lt;img');
+    expect(md).not.toContain('`code`');     // backticks cannot open a code span
+    expect(md).toContain('\\`code\\`');
+    expect(md).toContain('\\|');            // pipes escaped
+  });
+
+  it('prevents heading hijack from a leading "# " in the description', () => {
+    const frame = makeFrame('f1', 'sequence', {});
+    const md = generateProductionMarkdown(
+      generateProductionBrief(makeBoardWith([frame], '# Fake Heading')),
+    );
+    expect(md).not.toMatch(/^# Fake Heading/m);
+    expect(md).toContain('\\# Fake Heading');
+  });
+
+  it('escapes the storyboard title in the document heading', () => {
+    const frame = makeFrame('f1', 'sequence', {});
+    const board = makeBoardWith([frame]);
+    board.title = 'Trailer <script>alert(1)</script>';
+    const md = generateProductionMarkdown(generateProductionBrief(board));
+    expect(md).not.toContain('<script>');
+    expect(md).toContain('&lt;script>');
+  });
+
+  it('escapes dialogue lines and visual descriptions', () => {
+    const frame = makeFrame('f1', 'shot', {
+      visualDescription: 'wide shot with `ticks`',
+      dialogue: ['<img src=x onerror=x>'],
+    });
+    const md = generateProductionMarkdown(generateProductionBrief(makeBoardWith([frame])));
+    expect(md).not.toContain('<img');
+    expect(md).toContain('&lt;img');
+    expect(md).not.toContain('`ticks`');
+  });
+});

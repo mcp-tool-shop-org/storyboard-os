@@ -34,7 +34,9 @@ function isNonEmpty(value: unknown): boolean {
 
 export function getCinematicFrameBadges(frame: StoryboardFrame): CinematicFrameBadge[] {
   const badges: CinematicFrameBadge[] = [];
-  const content = frame.content;
+  // Untrusted load paths can hand us a frame with null/missing content —
+  // normalize to an empty spec instead of throwing (DM-002).
+  const content = (frame.content ?? {}) as StoryboardFrame['content'];
 
   // Camera badge — frame has camera language defined
   if (isNonEmpty(content.cameraAngle) || isNonEmpty(content.cameraMovement) || isNonEmpty(content.framing)) {
@@ -71,7 +73,8 @@ export interface CinematicFrameSignal {
 }
 
 export function getCinematicFrameSignal(frame: StoryboardFrame): CinematicFrameSignal {
-  const content = frame.content;
+  // Normalize null/missing content to an empty spec (DM-002).
+  const content = (frame.content ?? {}) as StoryboardFrame['content'];
   const parts: string[] = [];
   if (content.cameraAngle) parts.push(content.cameraAngle);
   if (content.cameraMovement) parts.push(content.cameraMovement);

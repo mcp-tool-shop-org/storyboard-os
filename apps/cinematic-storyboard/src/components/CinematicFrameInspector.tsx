@@ -93,11 +93,10 @@ const STATUS_LABELS: Record<CinematicBeatStatusLevel, string> = {
 
 interface Props {
     frame: StoryboardFrame;
-    sequenceId: string;
     onClose: () => void;
 }
 
-export default function CinematicFrameInspector({ frame, sequenceId, onClose }: Props) {
+export default function CinematicFrameInspector({ frame, onClose }: Props) {
     const accent = TYPE_COLORS[frame.type];
     const status = getCinematicBeatStatus(frame);
     const signal = getCinematicFrameSignal(frame);

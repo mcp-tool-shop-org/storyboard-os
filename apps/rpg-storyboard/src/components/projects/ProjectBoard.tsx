@@ -16,10 +16,11 @@ import {
   getProjectProgress,
 } from '../../lib/storyboard/project';
 import type { RpgStoryboardProject, FrameContent } from '@storyboard-os/rpg-domain';
-import type { FrameBasicsPatch, ProjectProgressSummary } from '../../lib/storyboard/project';
+import type { FrameBasicsPatch } from '../../lib/storyboard/project';
 import StoryboardCanvas, { type SaveStatus } from '../StoryboardCanvas';
+import ErrorBoundary from '../ErrorBoundary';
 
-export default function ProjectBoard() {
+function ProjectBoardInner() {
   const [project, setProject]   = useState<RpgStoryboardProject | null>(null);
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -158,6 +159,24 @@ export default function ProjectBoard() {
       saveStatus={saveStatus}
       handoffHref={`/projects/handoff?id=${project.id}`}
     />
+  );
+}
+
+// AP-001: board.astro mounts this island `client:only` — a render throw above
+// StoryboardCanvas's internal boundary (e.g. getProjectProgress on a corrupt
+// project) would silently unmount the island and blank the page. Wrapping the
+// WHOLE island here means any throw shows the boundary fallback instead.
+export default function ProjectBoard() {
+  const projectId = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('id')
+    : null;
+  return (
+    <ErrorBoundary
+      fallbackTitle="Board failed to load"
+      handoffHref={projectId ? `/projects/handoff?id=${projectId}` : undefined}
+    >
+      <ProjectBoardInner />
+    </ErrorBoundary>
   );
 }
 

@@ -243,6 +243,150 @@ describe('zoomAtPoint', () => {
   });
 });
 
+// ─── Non-finite input hardening (F-CV-001) ────────────────────────────────────
+// A single NaN/Infinity reaching stage.scale() / stage.position() blanks the
+// entire Stage. These tests pin the recovery semantics for every exported
+// viewport function so no caller can emit a non-finite ViewState.
+
+describe('clampScale — non-finite input (F-CV-001)', () => {
+  it('maps NaN to min (conservative "show everything" recovery)', () => {
+    expect(clampScale(NaN)).toBe(MIN_SCALE);
+  });
+
+  it('maps NaN to the custom min when bounds are provided', () => {
+    expect(clampScale(NaN, 0.5, 2)).toBe(0.5);
+  });
+
+  it('maps -Infinity to min', () => {
+    expect(clampScale(-Infinity)).toBe(MIN_SCALE);
+  });
+
+  it('maps +Infinity to max (natural clamp semantics: "too big")', () => {
+    expect(clampScale(Infinity)).toBe(MAX_SCALE);
+  });
+});
+
+describe('fitViewToFrames — poisoned frames (F-CV-001)', () => {
+  const valid = [
+    { position: { x: 0, y: 0 }, size: { width: 200, height: 100 } },
+    { position: { x: 400, y: 50 }, size: { width: 200, height: 100 } },
+  ];
+
+  it('ignores a frame with NaN position and fits the valid frames', () => {
+    const poisoned = { position: { x: NaN, y: 0 }, size: { width: 200, height: 100 } };
+    const result = fitViewToFrames([...valid, poisoned], 1000, 800, 40);
+
+    expect(result).toEqual(fitViewToFrames(valid, 1000, 800, 40));
+    expect(Number.isFinite(result.scale)).toBe(true);
+    expect(Number.isFinite(result.x)).toBe(true);
+    expect(Number.isFinite(result.y)).toBe(true);
+  });
+
+  it('ignores a frame with Infinity size and fits the valid frames', () => {
+    const poisoned = { position: { x: 0, y: 0 }, size: { width: Infinity, height: 100 } };
+    const result = fitViewToFrames([poisoned, ...valid], 1000, 800, 40);
+
+    expect(result).toEqual(fitViewToFrames(valid, 1000, 800, 40));
+  });
+
+  it('returns DEFAULT_VIEW_STATE when every frame is poisoned', () => {
+    const frames = [
+      { position: { x: NaN, y: NaN }, size: { width: NaN, height: NaN } },
+      { position: { x: 0, y: 0 }, size: { width: 100, height: -Infinity } },
+    ];
+    expect(fitViewToFrames(frames, 1000, 800)).toEqual(DEFAULT_VIEW_STATE);
+  });
+
+  it('returns DEFAULT_VIEW_STATE for non-finite container dimensions', () => {
+    const frame = { position: { x: 0, y: 0 }, size: { width: 200, height: 100 } };
+    expect(fitViewToFrames([frame], NaN, 800)).toEqual(DEFAULT_VIEW_STATE);
+    expect(fitViewToFrames([frame], 1000, Infinity)).toEqual(DEFAULT_VIEW_STATE);
+  });
+});
+
+describe('centerOnFrame — poisoned inputs (F-CV-001)', () => {
+  const validFrame = { position: { x: 100, y: 50 }, size: { width: 200, height: 100 } };
+
+  it('returns DEFAULT_VIEW_STATE for a frame with non-finite geometry', () => {
+    const frame = { position: { x: NaN, y: 50 }, size: { width: 200, height: 100 } };
+    expect(centerOnFrame(frame, 800, 600, 1)).toEqual(DEFAULT_VIEW_STATE);
+  });
+
+  it('returns DEFAULT_VIEW_STATE for non-finite container dimensions', () => {
+    expect(centerOnFrame(validFrame, NaN, 600, 1)).toEqual(DEFAULT_VIEW_STATE);
+    expect(centerOnFrame(validFrame, 800, Infinity, 1)).toEqual(DEFAULT_VIEW_STATE);
+  });
+
+  it('recovers a NaN scale via clampScale and stays finite', () => {
+    const result = centerOnFrame(validFrame, 800, 600, NaN);
+
+    expect(result.scale).toBe(MIN_SCALE);
+    expect(Number.isFinite(result.x)).toBe(true);
+    expect(Number.isFinite(result.y)).toBe(true);
+  });
+
+  it('preserves a finite scale exactly (no clamping of valid input)', () => {
+    expect(centerOnFrame(validFrame, 800, 600, 2).scale).toBe(2);
+  });
+});
+
+describe('zoomAtPoint — poisoned inputs (F-CV-001)', () => {
+  const validCurrent: ViewState = { scale: 1.5, x: -100, y: -50 };
+
+  it('recovers to DEFAULT_VIEW_STATE when current.scale is NaN', () => {
+    expect(zoomAtPoint({ scale: NaN, x: 0, y: 0 }, 100, 100, 1.2)).toEqual(DEFAULT_VIEW_STATE);
+  });
+
+  it('recovers to DEFAULT_VIEW_STATE when current.scale is 0 (division guard)', () => {
+    expect(zoomAtPoint({ scale: 0, x: 0, y: 0 }, 100, 100, 1.2)).toEqual(DEFAULT_VIEW_STATE);
+  });
+
+  it('recovers to DEFAULT_VIEW_STATE when current.x / current.y are non-finite', () => {
+    expect(zoomAtPoint({ scale: 1, x: NaN, y: 0 }, 100, 100, 1.2)).toEqual(DEFAULT_VIEW_STATE);
+    expect(zoomAtPoint({ scale: 1, x: 0, y: Infinity }, 100, 100, 1.2)).toEqual(DEFAULT_VIEW_STATE);
+  });
+
+  it('ignores the gesture (returns current unchanged) for a NaN pointer', () => {
+    expect(zoomAtPoint(validCurrent, NaN, 100, 1.2)).toEqual(validCurrent);
+    expect(zoomAtPoint(validCurrent, 100, NaN, 1.2)).toEqual(validCurrent);
+  });
+
+  it('ignores the gesture (returns current unchanged) for a non-finite factor', () => {
+    expect(zoomAtPoint(validCurrent, 100, 100, NaN)).toEqual(validCurrent);
+    expect(zoomAtPoint(validCurrent, 100, 100, Infinity)).toEqual(validCurrent);
+  });
+
+  it('never returns non-finite fields for any poisoned input combination', () => {
+    const poisons = [NaN, Infinity, -Infinity];
+    for (const p of poisons) {
+      const results = [
+        zoomAtPoint({ scale: p, x: 0, y: 0 }, 100, 100, 1.2),
+        zoomAtPoint({ scale: 1, x: p, y: 0 }, 100, 100, 1.2),
+        zoomAtPoint({ scale: 1, x: 0, y: p }, 100, 100, 1.2),
+        zoomAtPoint(validCurrent, p, 100, 1.2),
+        zoomAtPoint(validCurrent, 100, p, 1.2),
+        zoomAtPoint(validCurrent, 100, 100, p),
+      ];
+      for (const r of results) {
+        expect(Number.isFinite(r.scale)).toBe(true);
+        expect(Number.isFinite(r.x)).toBe(true);
+        expect(Number.isFinite(r.y)).toBe(true);
+      }
+    }
+  });
+});
+
+describe('zoomFromCenter — poisoned inputs (F-CV-001, inherited via zoomAtPoint)', () => {
+  it('recovers to DEFAULT_VIEW_STATE when current state is poisoned', () => {
+    expect(zoomFromCenter({ scale: NaN, x: 0, y: 0 }, 800, 600, 1.2)).toEqual(DEFAULT_VIEW_STATE);
+  });
+
+  it('ignores the gesture when container dimensions are non-finite', () => {
+    const current: ViewState = { scale: 1.5, x: -100, y: -50 };
+    expect(zoomFromCenter(current, NaN, 600, 1.2)).toEqual(current);
+  });
+});
+
 // ─── zoomFromCenter ───────────────────────────────────────────────────────────
 
 describe('zoomFromCenter', () => {

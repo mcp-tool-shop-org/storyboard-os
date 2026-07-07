@@ -42,9 +42,9 @@ jobs:
         with:
           ref: ${{ env.RESOLVED_TAG }}
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: 11
 
       - uses: actions/setup-node@v4
         with:

@@ -84,13 +84,13 @@ describe('getMarketingFrameSignal', () => {
 describe('getMarketingFrameBadges', () => {
     it('includes STATE badge when customerStateAfter present', () => {
         const frame = makeFrame('audience', { customerStateAfter: ['Aware'] });
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'STATE')).toBe(true);
     });
 
     it('includes GATE badge when approvalRequirements present', () => {
         const frame = makeFrame('approval', { approvalRequirements: ['Legal sign-off'] });
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'GATE')).toBe(true);
     });
 
@@ -101,19 +101,19 @@ describe('getMarketingFrameBadges', () => {
             requiredAssets: ['Asset'],
             testCriteria: ['Criterion'],
         });
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'SPEC')).toBe(true);
     });
 
     it('includes PARTIAL badge when partial', () => {
         const frame = makeFrame('audience', { objective: 'Test' });
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'PARTIAL')).toBe(true);
     });
 
     it('includes DRAFT badge when incomplete', () => {
         const frame = makeFrame('audience', {});
-        const badges = getMarketingFrameBadges(frame, []);
+        const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'DRAFT')).toBe(true);
     });
 });

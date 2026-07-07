@@ -105,7 +105,9 @@ function isNonEmpty(value: unknown): boolean {
  * throws on untrusted input.
  */
 export function getCinematicBeatStatus(frame: StoryboardFrame): CinematicBeatStatus {
-  const content = frame.content;
+  // Untrusted load paths can hand us a frame with null/missing content —
+  // normalize to an empty spec instead of throwing (DM-002).
+  const content = (frame.content ?? {}) as StoryboardFrame['content'];
   const missingReasons: string[] = [];
 
   // Check type-specific blocking fields. Defensive fallback to [] keeps

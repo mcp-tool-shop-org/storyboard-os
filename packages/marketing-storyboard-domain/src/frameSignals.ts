@@ -48,7 +48,9 @@ function computeReadiness(content: MarketingFrameContent): FrameReadiness {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function getMarketingFrameSignal(frame: StoryboardFrame): MarketingFrameSignal {
-    const content = frame.content;
+    // Untrusted load paths can hand us a frame with null/missing content —
+    // normalize to an empty spec instead of throwing (DM-002).
+    const content = (frame.content ?? {}) as MarketingFrameContent;
 
     const customerStateSummary =
         content.customerStateAfter && content.customerStateAfter.length > 0
@@ -71,9 +73,9 @@ export function getMarketingFrameSignal(frame: StoryboardFrame): MarketingFrameS
 
 export function getMarketingFrameBadges(
     frame: StoryboardFrame,
-    connections: StoryboardConnection[],
 ): FrameBadgeDescriptor[] {
-    const content = frame.content;
+    // Normalize null/missing content to an empty spec (DM-002).
+    const content = (frame.content ?? {}) as MarketingFrameContent;
     const badges: FrameBadgeDescriptor[] = [];
 
     // STATE badge — frame carries customer state transition

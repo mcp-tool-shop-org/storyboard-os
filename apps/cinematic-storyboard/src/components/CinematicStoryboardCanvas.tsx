@@ -309,7 +309,6 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                 {selectedFrame && (
                     <CinematicFrameInspector
                         frame={selectedFrame}
-                        sequenceId={storyboard.id}
                         onClose={() => setSelectedFrameId(null)}
                     />
                 )}
@@ -438,12 +437,16 @@ const STATUS_HEADER_COLORS: Record<CinematicBeatStatusLevel, string> = {
 };
 
 function ReadinessCounts({ summary }: { summary: { ready: number; partial: number; draft: number; blocked: number } }) {
-    const chips: Array<{ level: CinematicBeatStatusLevel; count: number }> = [
+    // Annotate the source array, not the filter result — contextual typing does
+    // not flow through .filter(), so annotating the filtered variable left the
+    // literals widened to `{ level: string }` (ts2322).
+    const allChips: Array<{ level: CinematicBeatStatusLevel; count: number }> = [
         { level: 'ready', count: summary.ready },
         { level: 'partial', count: summary.partial },
         { level: 'blocked', count: summary.blocked },
         { level: 'draft', count: summary.draft },
-    ].filter(c => c.count > 0);
+    ];
+    const chips = allChips.filter(c => c.count > 0);
 
     if (chips.length === 0) return null;
 

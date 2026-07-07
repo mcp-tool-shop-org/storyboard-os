@@ -63,7 +63,10 @@ const ANNOTATION_COLORS: Record<FrameAnnotationType, string> = {
   branch_note:   '#22C55E',
 };
 
-const accentColor = TYPE_COLORS[frame.type];
+// Defensive fallback: TYPE_COLORS is total over the current union, but frame
+// data flows in from domain fixtures — an unmapped type must degrade to the
+// neutral accent, not interpolate `undefined` into every style below.
+const accentColor = TYPE_COLORS[frame.type] ?? '#475569';
 
 // Resolve connections
 const incoming = storyboard.connections

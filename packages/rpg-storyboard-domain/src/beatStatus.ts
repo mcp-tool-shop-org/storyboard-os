@@ -138,7 +138,9 @@ function specScore(content: FrameContent): number {
  * blocks at score 0 too.
  */
 export function getBeatStatus(frame: StoryboardFrame): BeatStatus {
-  const content = frame.content as FrameContent;
+  // Untrusted load paths can hand us a frame with null/missing content —
+  // normalize to an empty spec instead of throwing (DM-002).
+  const content = (frame.content ?? {}) as FrameContent;
   const missing: MissingSpecReason[] = [];
 
   // ── Domain rule checks ────────────────────────────────────────────────────

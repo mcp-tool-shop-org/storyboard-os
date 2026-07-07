@@ -20,6 +20,7 @@ import {
   type BeatStatusLevel,
 } from '@storyboard-os/rpg-domain';
 import { getProject } from '../../lib/storyboard/projectStorage';
+import ErrorBoundary from '../ErrorBoundary';
 
 // ─── Const display maps ───────────────────────────────────────────────────────
 
@@ -76,23 +77,35 @@ function download(content: string, name: string, type: string) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ProjectHandoffPage() {
+function ProjectHandoffPageInner() {
   const [handoff,   setHandoff]   = useState<ProjectHandoff | null>(null);
   const [loading,   setLoading]   = useState(true);
   const [notFound,  setNotFound]  = useState(false);
   const [boardHref, setBoardHref] = useState('/projects');
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    if (!id) { setNotFound(true); setLoading(false); return; }
+    // AP-004: getProject + generateProjectHandoff run over localStorage data.
+    // An unexpected throw here used to leave the page permanently on the
+    // loading spinner (the effect died, no state transition ever happened).
+    // Route ANY failure to the existing not-found state instead.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      if (!id) { setNotFound(true); setLoading(false); return; }
 
-    const project = getProject(id);
-    if (!project) { setNotFound(true); setLoading(false); return; }
+      const project = getProject(id);
+      if (!project) { setNotFound(true); setLoading(false); return; }
 
-    setBoardHref(`/projects/board?id=${id}`);
-    setHandoff(generateProjectHandoff(project));
-    setLoading(false);
+      setBoardHref(`/projects/board?id=${id}`);
+      setHandoff(generateProjectHandoff(project));
+      setLoading(false);
+    } catch (err) {
+      if (typeof console !== 'undefined') {
+        console.error('[ProjectHandoffPage] failed to generate handoff:', err);
+      }
+      setNotFound(true);
+      setLoading(false);
+    }
   }, []);
 
   const handleDownloadMd = useCallback(() => {
@@ -254,6 +267,17 @@ export default function ProjectHandoffPage() {
 
       </main>
     </div>
+  );
+}
+
+// AP-004: handoff.astro mounts this island `client:only` with nothing above
+// it — a render throw would blank the page. The boundary turns that into a
+// visible fallback with a route back to the projects list.
+export default function ProjectHandoffPage() {
+  return (
+    <ErrorBoundary fallbackTitle="Handoff failed to render">
+      <ProjectHandoffPageInner />
+    </ErrorBoundary>
   );
 }
 

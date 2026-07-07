@@ -69,6 +69,22 @@ export function validateCinematicStoryboard(
   }
 
   for (const frame of storyboard.frames) {
+    // Null/non-object frame elements are already reported by the structural
+    // validator (INVALID_STORYBOARD_SHAPE) — skip them here.
+    if (frame == null || typeof frame !== 'object' || Array.isArray(frame)) continue;
+
+    // Null / missing / non-object content: structured error, never a throw (DM-003).
+    const rawContent: unknown = frame.content;
+    if (rawContent == null || typeof rawContent !== 'object' || Array.isArray(rawContent)) {
+      const frameId = typeof frame.id === 'string' ? frame.id : undefined;
+      errors.push({
+        code: 'CINEMATIC_MISSING_CONTENT',
+        message: `Frame "${frameId ?? '(unknown id)'}" has null or non-object content.`,
+        frameId,
+      });
+      continue;
+    }
+
     const required = TYPE_REQUIRED_FIELDS[frame.type];
     if (!required) continue;
     for (const { field, code } of required) {

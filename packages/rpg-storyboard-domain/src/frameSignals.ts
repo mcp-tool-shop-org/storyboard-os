@@ -81,7 +81,9 @@ function computeReadiness(content: FrameContent): FrameReadiness {
  * without exposing the full FrameContent to the canvas.
  */
 export function getFrameSignal(frame: StoryboardFrame): FrameSignal {
-  const content = frame.content as FrameContent;
+  // Untrusted load paths can hand us a frame with null/missing content —
+  // normalize to an empty spec instead of throwing (DM-002).
+  const content = (frame.content ?? {}) as FrameContent;
   const stateChanges = content.stateChanges ?? [];
   const entryConditions = content.entryConditions ?? [];
 

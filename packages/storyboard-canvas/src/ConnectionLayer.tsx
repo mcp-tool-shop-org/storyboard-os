@@ -6,6 +6,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { memo, useMemo } from 'react';
 import { Group, Arrow, Rect, Text } from 'react-konva';
 import type {
   CanvasConnection,
@@ -30,7 +31,7 @@ interface Props {
   onSelectConnection?: (connectionId: string | null) => void;
 }
 
-export default function ConnectionLayer({
+function ConnectionLayer({
   connections,
   frames,
   positions,
@@ -38,7 +39,12 @@ export default function ConnectionLayer({
   selectedConnectionId,
   onSelectConnection,
 }: Props) {
-  const frameMap = new Map(frames.map(f => [f.id, f]));
+  // F-CV-002: this projection ran on every parent render — wheel-pan mirrors
+  // viewState into React state, so every pan/zoom tick rebuilt the Map and
+  // re-projected all connections. Memoize on `frames`; live frame drags are
+  // imperative Konva moves that only commit `positions` on drag-end, so prop
+  // identity is a correct invalidation signal here (see React.memo below).
+  const frameMap = useMemo(() => new Map(frames.map(f => [f.id, f])), [frames]);
 
   function styleFor(type: string): CanvasConnectionStyle {
     return (
@@ -140,3 +146,9 @@ export default function ConnectionLayer({
     </Group>
   );
 }
+
+// F-CV-002: memo() skips re-rendering the whole connection set when props are
+// identical — the common case during wheel pan/zoom, where StoryboardCanvas
+// re-renders for viewState mirroring but connections/frames/positions/config
+// are untouched. onSelectConnection is useCallback-stable in StoryboardCanvas.
+export default memo(ConnectionLayer);

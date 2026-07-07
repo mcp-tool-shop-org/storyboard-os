@@ -3,6 +3,23 @@
 import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
 import { getCinematicBeatStatus } from './beatStatus';
 
+// ─── Markdown escaping (DM-004) ───────────────────────────────────────────────
+//
+// Neutralize markdown-structural characters in INLINE user text:
+// - backticks → escaped so user text cannot open/close code spans
+// - pipes     → escaped so user text cannot add/split table cells
+// - `<`       → `&lt;` so stray inline HTML stays inert
+// - a leading `#` / `>` / `-` (per line) → escaped so user text cannot
+//   introduce headings, blockquotes, or list items
+
+function escapeMarkdownInline(text: string): string {
+  return text
+    .replace(/`/g, '\\`')
+    .replace(/\|/g, '\\|')
+    .replace(/</g, '&lt;')
+    .replace(/^([#>-])/gm, '\\$1');
+}
+
 // ─── Topological sort (Kahn's algorithm) ─────────────────────────────────────
 //
 // Shots are arranged on the canvas as a directed graph — connections describe
@@ -108,7 +125,8 @@ function formatTotalDuration(frames: StoryboardFrame[]): string {
   let totalLow = 0;
   let totalHigh = 0;
   for (const f of frames) {
-    const est = f.content.durationEstimate;
+    // `?.` guards frames whose content is null/missing (DM-002).
+    const est = f.content?.durationEstimate;
     if (!est) continue;
     const match = est.match(/(\d+)(?:\s*-\s*(\d+))?\s*s/i);
     if (!match) continue;
@@ -129,7 +147,8 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
   const sorted = topologicalSort(storyboard.frames, storyboard.connections);
 
   const shots: ProductionBriefShot[] = sorted.map((frame, i) => {
-    const content = frame.content;
+    // Normalize null/missing content to an empty spec (DM-002).
+    const content = (frame.content ?? {}) as StoryboardFrame['content'];
     const status = getCinematicBeatStatus(frame);
     summary[status.level]++;
 
@@ -173,12 +192,13 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
 // ─── Markdown export ──────────────────────────────────────────────────────────
 
 export function generateProductionMarkdown(brief: ProductionBrief): string {
+  const esc = escapeMarkdownInline;
   const lines: string[] = [];
 
-  lines.push(`# ${brief.title} — Production Brief`);
+  lines.push(`# ${esc(brief.title)} — Production Brief`);
   lines.push('');
   if (brief.description) {
-    lines.push(brief.description);
+    lines.push(esc(brief.description));
     lines.push('');
   }
   lines.push(`**Total shots:** ${brief.totalShots}  `);
@@ -189,77 +209,77 @@ export function generateProductionMarkdown(brief: ProductionBrief): string {
   lines.push('');
 
   for (const shot of brief.shots) {
-    lines.push(`## Shot ${shot.shotNumber}: ${shot.title}`);
+    lines.push(`## Shot ${shot.shotNumber}: ${esc(shot.title)}`);
     lines.push('');
-    lines.push(`**Type:** ${shot.type} · **Status:** ${shot.status}${shot.duration ? ` · **Duration:** ${shot.duration}` : ''}`);
+    lines.push(`**Type:** ${shot.type} · **Status:** ${shot.status}${shot.duration ? ` · **Duration:** ${esc(shot.duration)}` : ''}`);
     lines.push('');
 
     if (shot.intent) {
-      lines.push(`**Intent:** ${shot.intent}`);
+      lines.push(`**Intent:** ${esc(shot.intent)}`);
       lines.push('');
     }
 
     if (shot.visualDescription) {
-      lines.push(`**Visual:** ${shot.visualDescription}`);
+      lines.push(`**Visual:** ${esc(shot.visualDescription)}`);
       lines.push('');
     }
 
     if (shot.camera) {
-      lines.push(`**Camera:** ${shot.camera}`);
-      if (shot.framing) lines.push(`  **Framing:** ${shot.framing}`);
+      lines.push(`**Camera:** ${esc(shot.camera)}`);
+      if (shot.framing) lines.push(`  **Framing:** ${esc(shot.framing)}`);
       lines.push('');
     }
 
     if (shot.dialogue.length > 0) {
       lines.push('**Dialogue:**');
-      for (const d of shot.dialogue) lines.push(`- ${d}`);
+      for (const d of shot.dialogue) lines.push(`- ${esc(d)}`);
       lines.push('');
     }
 
     if (shot.actionNotes.length > 0) {
       lines.push('**Action:**');
-      for (const a of shot.actionNotes) lines.push(`- ${a}`);
+      for (const a of shot.actionNotes) lines.push(`- ${esc(a)}`);
       lines.push('');
     }
 
     if (shot.continuity.length > 0) {
       lines.push('**Continuity:**');
-      for (const c of shot.continuity) lines.push(`- ${c}`);
+      for (const c of shot.continuity) lines.push(`- ${esc(c)}`);
       lines.push('');
     }
 
     if (shot.requiredAssets.length > 0) {
       lines.push('**Required assets:**');
-      for (const a of shot.requiredAssets) lines.push(`- ${a}`);
+      for (const a of shot.requiredAssets) lines.push(`- ${esc(a)}`);
       lines.push('');
     }
 
     if (shot.vfx.length > 0) {
       lines.push('**VFX:**');
-      for (const v of shot.vfx) lines.push(`- ${v}`);
+      for (const v of shot.vfx) lines.push(`- ${esc(v)}`);
       lines.push('');
     }
 
     if (shot.audio.length > 0) {
       lines.push('**Audio:**');
-      for (const a of shot.audio) lines.push(`- ${a}`);
+      for (const a of shot.audio) lines.push(`- ${esc(a)}`);
       lines.push('');
     }
 
     if (shot.editNotes) {
-      lines.push(`**Edit notes:** ${shot.editNotes}`);
+      lines.push(`**Edit notes:** ${esc(shot.editNotes)}`);
       lines.push('');
     }
 
     if (shot.checklist.length > 0) {
       lines.push('**Checklist:**');
-      for (const item of shot.checklist) lines.push(`- [ ] ${item}`);
+      for (const item of shot.checklist) lines.push(`- [ ] ${esc(item)}`);
       lines.push('');
     }
 
     if (shot.testCriteria.length > 0) {
       lines.push('**Test criteria:**');
-      for (const t of shot.testCriteria) lines.push(`- [ ] ${t}`);
+      for (const t of shot.testCriteria) lines.push(`- [ ] ${esc(t)}`);
       lines.push('');
     }
 

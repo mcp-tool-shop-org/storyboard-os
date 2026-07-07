@@ -32,9 +32,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: 11
 
       - uses: actions/setup-node@v4
         with:
@@ -46,6 +46,9 @@ jobs:
 
       - name: Build packages
         run: pnpm run build:packages
+
+      - name: Typecheck apps
+        run: pnpm run check
 
       - name: Run tests
         run: pnpm test
