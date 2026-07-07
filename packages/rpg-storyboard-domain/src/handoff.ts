@@ -366,7 +366,8 @@ function renderBeat(beat: HandoffBeat, index: number): string {
   const sections: string[] = [];
 
   sections.push(`### Beat ${index + 1} — ${esc(beat.title)}`);
-  sections.push(`**Type:** ${esc(typeLabel)} · **Status:** ${STATUS_LABELS[beat.status]}`);
+  // typeLabel is enum-derived (frame.type), not user text — no escaping needed.
+  sections.push(`**Type:** ${typeLabel} · **Status:** ${STATUS_LABELS[beat.status]}`);
   sections.push('');
   sections.push(esc(beat.summary));
 
@@ -654,7 +655,8 @@ function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
   const sections: string[] = [];
 
   sections.push(`### Beat ${index + 1} — ${esc(beat.title)}`);
-  sections.push(`**Type:** ${esc(typeLabel)} · **Status:** ${STATUS_LABELS[beat.status]}`);
+  // typeLabel is enum-derived (frame.type), not user text — no escaping needed.
+  sections.push(`**Type:** ${typeLabel} · **Status:** ${STATUS_LABELS[beat.status]}`);
   sections.push('');
   sections.push(esc(beat.summary));
 

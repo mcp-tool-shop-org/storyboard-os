@@ -11,6 +11,7 @@ import {
     getFrameProgress,
     getProjectProgress,
 } from './project';
+import { generateProjectCampaignMarkdown, generateProjectCampaignHandoff } from './handoff';
 
 describe('createCampaignProject', () => {
     it('creates a project with a UUID', () => {
@@ -275,5 +276,60 @@ describe('updateFrameContent — progress reconciliation (DM-001)', () => {
         expect(summary.doneChecklist).toBe(1); // still exactly one done item
         const fp = getFrameProgress(reordered, fid);
         expect(fp.checklist['0']).toBe(true); // and it is 'beta'
+    });
+});
+
+// ─── V3-003 — DM-001 verified THROUGH the handoff, not just the progress map ──
+//
+// The reconciliation tests above assert the progress KEY moved to the right
+// index. These assert the [x]/[ ] marker lands on the CORRECT item TEXT in the
+// rendered campaign brief after insert / delete / duplicate.
+
+describe('DM-001 through-render — insert / delete / duplicate (V3-003)', () => {
+    /** Project whose first frame has a known checklist, with given texts done. */
+    function seedChecklist(items: string[], doneTexts: string[]) {
+        let p = createCampaignProject({ title: 'Test', templateId: 'product_launch' });
+        const fid = p.storyboard.frames[0].id;
+        p = updateFrameContent(p, fid, { implementationChecklist: items });
+        for (const text of doneTexts) {
+            p = setChecklistItemComplete(p, fid, items.indexOf(text), true);
+        }
+        return { p, fid };
+    }
+
+    it('(a) insert-before-a-done-item keeps [x] on the done text, [ ] on the new one', () => {
+        const { p, fid } = seedChecklist(['alpha', 'beta'], ['beta']);
+        const inserted = updateFrameContent(p, fid, {
+            implementationChecklist: ['new first task', 'alpha', 'beta'],
+        });
+        const md = generateProjectCampaignMarkdown(generateProjectCampaignHandoff(inserted));
+        expect(md).toContain('- [x] beta');            // done mark followed its text
+        expect(md).toContain('- [ ] new first task');  // inserted item is undone
+        expect(md).toContain('- [ ] alpha');
+        expect(md).not.toContain('- [x] new first task');
+        expect(md).not.toContain('- [x] alpha');
+    });
+
+    it('(b) delete-a-done-item drops only that marker; siblings render correctly', () => {
+        const { p, fid } = seedChecklist(['alpha', 'beta', 'gamma'], ['alpha', 'gamma']);
+        const deleted = updateFrameContent(p, fid, {
+            implementationChecklist: ['beta', 'gamma'], // alpha (done) removed
+        });
+        const md = generateProjectCampaignMarkdown(generateProjectCampaignHandoff(deleted));
+        expect(md).toContain('- [x] gamma');   // surviving done text keeps its mark
+        expect(md).toContain('- [ ] beta');    // never done
+        expect(md).not.toContain('alpha');     // removed item is gone entirely
+    });
+
+    it('(c) duplicate text — the mark lands on ONE instance, not double-claimed', () => {
+        const { p, fid } = seedChecklist(['dup', 'dup'], ['dup']);
+        const grown = updateFrameContent(p, fid, {
+            implementationChecklist: ['dup', 'dup', 'dup'],
+        });
+        const md = generateProjectCampaignMarkdown(generateProjectCampaignHandoff(grown));
+        const doneLines = md.split('\n').filter(l => l === '- [x] dup');
+        const undoneLines = md.split('\n').filter(l => l === '- [ ] dup');
+        expect(doneLines).toHaveLength(1);   // exactly one 'dup' claimed
+        expect(undoneLines).toHaveLength(2); // the other two are undone
     });
 });

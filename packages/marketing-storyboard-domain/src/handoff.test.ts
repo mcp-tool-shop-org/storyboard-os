@@ -260,3 +260,53 @@ describe('DM-004 — markdown escapes user text', () => {
         expect(md).toContain('&lt;img');
     });
 });
+
+// ─── V3-001 — benign text round-trips unchanged (faithfulness) ────────────────
+//
+// The escaping tests above prove hostile input is neutralized. This guards the
+// other direction: ordinary text with NO markdown-special characters must
+// survive the render byte-for-byte — no stray backslashes, no &lt;, no mangling.
+
+describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
+    function makeBoardWith(frame: StoryboardFrame): Storyboard {
+        return { id: 'test-sb', title: 'Test Campaign', frames: [frame], connections: [] };
+    }
+
+    it('preserves an ordinary title, message, and checklist/asset items verbatim', () => {
+        const frame = makeFrame('f1', 'message', {
+            messageClaim: 'Ships in minutes, not weeks.',
+            requiredAssets: ['assets/hero-banner.png'],
+            implementationChecklist: ['Draft the launch email'],
+            testCriteria: ['CTA fires the signup event'],
+        });
+        frame.title = 'Campaign Alpha';
+        frame.summary = 'Announce the launch to warm leads.';
+        const md = generateCampaignMarkdown(generateCampaignHandoff(makeBoardWith(frame)));
+
+        expect(md).toContain('Campaign Alpha');
+        expect(md).toContain('Announce the launch to warm leads.');
+        expect(md).toContain('Ships in minutes, not weeks.');
+        expect(md).toContain('assets/hero-banner.png');
+        expect(md).toContain('Draft the launch email');
+        expect(md).toContain('CTA fires the signup event');
+        // Enum-derived type label is not escaped and reads plainly.
+        expect(md).toContain('**Type:** message');
+        // No collateral damage from escaping a string that needed none.
+        expect(md).not.toContain('\\');
+        expect(md).not.toContain('&lt;');
+    });
+
+    it('preserves benign checklist text verbatim in the project markdown', () => {
+        let project = createCampaignProject({ title: 'Campaign Alpha', templateId: 'product_launch' });
+        const fid = project.storyboard.frames[0].id;
+        project = updateFrameContent(project, fid, {
+            implementationChecklist: ['Draft the launch email'],
+            requiredAssets: ['assets/hero-banner.png'],
+        });
+        const md = generateProjectCampaignMarkdown(generateProjectCampaignHandoff(project));
+        expect(md).toContain('Campaign Alpha');
+        expect(md).toContain('- [ ] Draft the launch email');
+        // The benign item is not mangled with an escape backslash.
+        expect(md).not.toContain('\\Draft');
+    });
+});

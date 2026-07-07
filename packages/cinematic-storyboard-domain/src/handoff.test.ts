@@ -220,3 +220,39 @@ describe('DM-004 — markdown escapes user text', () => {
     expect(md).not.toContain('`ticks`');
   });
 });
+
+// ─── V3-001 — benign text round-trips unchanged (faithfulness) ────────────────
+//
+// The escaping tests above prove hostile input is neutralized. This guards the
+// other direction: ordinary text with NO markdown-special characters must
+// survive the render byte-for-byte — no stray backslashes, no &lt;, no mangling.
+
+describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
+  function makeBoardWith(frames: StoryboardFrame[], description = ''): Storyboard {
+    return { id: 'sb-1', title: 'Test Sequence', description, frames, connections: [] };
+  }
+
+  it('preserves an ordinary title, visual, and checklist/asset items verbatim', () => {
+    const frame = makeFrame('f1', 'shot', {
+      intent: 'Establish the tollhouse at dusk.',
+      visualDescription: 'A wide shot of the tollhouse.',
+      requiredAssets: ['assets/tollhouse-exterior.png'],
+      implementationChecklist: ['Block the establishing shot'],
+      testCriteria: ['Framing matches the boards'],
+    });
+    frame.title = 'Shot Alpha';
+    const md = generateProductionMarkdown(generateProductionBrief(makeBoardWith([frame])));
+
+    expect(md).toContain('Shot Alpha');
+    expect(md).toContain('Establish the tollhouse at dusk.');
+    expect(md).toContain('A wide shot of the tollhouse.');
+    expect(md).toContain('assets/tollhouse-exterior.png');
+    expect(md).toContain('Block the establishing shot');
+    expect(md).toContain('Framing matches the boards');
+    // Enum-derived type label is not escaped and reads plainly.
+    expect(md).toContain('**Type:** shot');
+    // No collateral damage from escaping a string that needed none.
+    expect(md).not.toContain('\\');
+    expect(md).not.toContain('&lt;');
+  });
+});

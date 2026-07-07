@@ -42,7 +42,7 @@ function nullContentFrame(type: StoryboardFrame['type'] = 'sequence'): Storyboar
 /** Frame whose content key is entirely absent. */
 function missingContentFrame(type: StoryboardFrame['type'] = 'sequence'): StoryboardFrame {
   const frame = makeFrame('missing-content', type, {});
-  delete (frame as Record<string, unknown>)['content'];
+  delete (frame as unknown as Record<string, unknown>)['content'];
   return frame;
 }
 

@@ -166,9 +166,91 @@ describe('readAll — invalid records are dropped, valid ones survive', () => {
     expect(listProjects().map(p => p.id)).toEqual(['ok']);
   });
 
+  // V2-001 — createdAt is REQUIRED and is dereferenced downstream
+  // (generateProjectMarkdown does `createdAt.split('T')`). A record missing it
+  // must be DROPPED + flagged, not passed through to throw at render time.
+  it('a record missing createdAt is dropped (handoff derefs createdAt.split)', () => {
+    const good = makeProject('has-created');
+    const noCreated = makeProject('no-created') as unknown as Record<string, unknown>;
+    delete noCreated.createdAt;
+    seed([noCreated, good]);
+
+    expect(() => listProjects()).not.toThrow();
+    expect(listProjects().map(p => p.id)).toEqual(['has-created']);
+    expect(getLastReadWarning()?.code).toBe('RECORDS_DROPPED');
+    expect(getLastReadWarning()?.dropped).toBe(1);
+  });
+
+  // V2-002 — connection array elements were unvalidated. A `connections: [null]`
+  // record passed the predicate, then ConnectionLayer deref'd conn.fromFrameId
+  // and threw mid-render. It must now DROP + surface via the ReadWarning.
+  it('a record with a null connection element is dropped', () => {
+    const good = makeProject('clean-conns');
+    const badConn = makeProject('null-conn') as unknown as {
+      storyboard: { connections: unknown[] };
+    };
+    badConn.storyboard.connections = [null];
+    seed([badConn, good]);
+
+    expect(listProjects().map(p => p.id)).toEqual(['clean-conns']);
+    expect(getLastReadWarning()?.code).toBe('RECORDS_DROPPED');
+    expect(getLastReadWarning()?.dropped).toBe(1);
+  });
+
+  it('a record with a connection missing fromFrameId is dropped', () => {
+    const good = makeProject('ok-conns');
+    const badConn = makeProject('partial-conn') as unknown as {
+      storyboard: { connections: unknown[] };
+    };
+    // Missing fromFrameId — ConnectionLayer would deref undefined.fromFrameId.
+    badConn.storyboard.connections = [{ id: 'c1', toFrameId: 'x', type: 'sequence' }];
+    seed([badConn, good]);
+    expect(listProjects().map(p => p.id)).toEqual(['ok-conns']);
+    expect(getLastReadWarning()?.dropped).toBe(1);
+  });
+
+  it('a record with a well-formed connection survives', () => {
+    const withConn = makeProject('with-conn') as unknown as {
+      id: string;
+      storyboard: { frames: Array<{ id: string }>; connections: unknown[] };
+    };
+    const fid = withConn.storyboard.frames[0].id;
+    withConn.storyboard.connections = [
+      { id: 'c1', fromFrameId: fid, toFrameId: fid, type: 'sequence', label: 'loop' },
+    ];
+    seed([withConn]);
+    expect(listProjects().map(p => p.id)).toEqual(['with-conn']);
+    expect(getLastReadWarning()).toBeNull();
+  });
+
   it('getProject returns undefined for a dropped record', () => {
     seed([{ id: 'shell', title: 42 }]);
     expect(getProject('shell')).toBeUndefined();
+  });
+});
+
+// ─── V3-002 — AP-003 dropped records stay in storage byte-for-byte ────────────
+
+describe('readAll — dropped records are left in storage untouched (AP-003)', () => {
+  it('reads [valid, invalid, valid] without rewriting the raw store', () => {
+    const good1 = makeProject('keep-1');
+    const good2 = makeProject('keep-2');
+    // Build the raw string exactly as it will live in storage, then seed it.
+    const raw = JSON.stringify([good1, { corrupt: 'record' }, good2]);
+    backing.set(STORAGE_KEY, raw);
+
+    const projects = listProjects();
+    // (a) both valid projects come back
+    expect(projects.map(p => p.id).sort()).toEqual(['keep-1', 'keep-2']);
+    // (b) the invalid one is absent from the result
+    expect(projects.some(p => (p as unknown as Record<string, unknown>).corrupt)).toBe(false);
+    // (c) storage is byte-for-byte identical — the read never rewrote it
+    expect(backing.get(STORAGE_KEY)).toBe(raw);
+
+    // ...and the warning reports exactly one dropped record.
+    const warning = getLastReadWarning();
+    expect(warning?.code).toBe('RECORDS_DROPPED');
+    expect(warning?.dropped).toBe(1);
   });
 });
 

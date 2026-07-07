@@ -717,3 +717,52 @@ describe('DM-004 — markdown escapes user text', () => {
     expect(md).toContain('&lt;img');
   });
 });
+
+// ─── V3-001 — benign text round-trips unchanged (faithfulness) ────────────────
+//
+// The escaping tests above prove hostile input is neutralized. This guards the
+// other direction: ordinary text with NO markdown-special characters must
+// survive the render byte-for-byte — no stray backslashes, no &lt;, no mangling.
+// Without this, a future over-escaping regression would silently corrupt every
+// benign handoff.
+
+describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
+  it('preserves an ordinary title, summary, and checklist/asset items verbatim', () => {
+    const frame = makeFrame('a', 'scene', {
+      requiredAssets: ['assets/ui-hud.png'],
+      implementationChecklist: ['Wire the tollhouse trigger'],
+      testCriteria: ['Ledger flag sets on confirm'],
+    }, 'Quest Alpha');
+    frame.summary = 'Player enters the tollhouse.';
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+
+    // Exact substrings appear verbatim.
+    expect(md).toContain('Quest Alpha');
+    expect(md).toContain('Player enters the tollhouse.');
+    expect(md).toContain('assets/ui-hud.png');
+    expect(md).toContain('Wire the tollhouse trigger');
+    expect(md).toContain('Ledger flag sets on confirm');
+    // Enum-derived type label is not escaped and reads plainly.
+    expect(md).toContain('**Type:** SCENE');
+    // No collateral damage from escaping a string that needed none.
+    expect(md).not.toContain('\\');
+    expect(md).not.toContain('&lt;');
+  });
+
+  it('preserves benign text in the project markdown too', () => {
+    let p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameBasics(p, fid, { title: 'Quest Alpha', summary: 'Player enters the tollhouse.' });
+    p = updateFrameContent(p, fid, {
+      requiredAssets: ['assets/ui-hud.png'],
+      implementationChecklist: ['Wire the tollhouse trigger'],
+    });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('Quest Alpha');
+    expect(md).toContain('Player enters the tollhouse.');
+    expect(md).toContain('assets/ui-hud.png');
+    expect(md).toContain('Wire the tollhouse trigger');
+    expect(md).not.toContain('\\');
+    expect(md).not.toContain('&lt;');
+  });
+});

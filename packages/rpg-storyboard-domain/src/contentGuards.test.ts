@@ -48,7 +48,7 @@ function nullContentFrame(type: StoryboardFrame['type'] = 'scene'): StoryboardFr
 /** Frame whose content key is entirely absent. */
 function missingContentFrame(type: StoryboardFrame['type'] = 'scene'): StoryboardFrame {
   const frame = makeFrame('missing-content', type, {});
-  delete (frame as Record<string, unknown>)['content'];
+  delete (frame as unknown as Record<string, unknown>)['content'];
   return frame;
 }
 

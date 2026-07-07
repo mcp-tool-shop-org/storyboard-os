@@ -99,25 +99,55 @@ function isValidStoredFrame(value: unknown): boolean {
 }
 
 /**
+ * Validate a single connection to the depth the render path dereferences:
+ * ConnectionLayer reads `conn.fromFrameId` / `conn.toFrameId` to resolve
+ * endpoint frames and `conn.type` to pick the edge style, so a connection
+ * missing any of these (or a `null` array element) throws mid-render and
+ * blanks the board. The connection type is `{ id, fromFrameId, toFrameId,
+ * type: string, label?: string }` — the four required fields are all strings.
+ */
+function isValidStoredConnection(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const conn = value as {
+    id?: unknown; fromFrameId?: unknown; toFrameId?: unknown; type?: unknown;
+  };
+  if (typeof conn.id !== 'string') return false;
+  if (typeof conn.fromFrameId !== 'string') return false;
+  if (typeof conn.toFrameId !== 'string') return false;
+  if (typeof conn.type !== 'string') return false;
+  return true;
+}
+
+/**
  * Per-record validity predicate. Checks exactly the fields the app
  * dereferences on render (ProjectList card, board canvas, handoff generator,
  * and the updatedAt sort comparator). A record failing this is DROPPED from
  * the returned list — but left in storage untouched — instead of letting one
  * corrupt record nuke every project (AP-003).
+ *
+ * `createdAt` is required alongside `updatedAt`: it is a required string on
+ * the type and is dereferenced by the project handoff generator
+ * (`createdAt.split('T')`). A record missing it would pass an id/title/
+ * updatedAt-only check and then throw at handoff time (V2-001).
  */
 function isValidStoredProject(value: unknown): value is RpgStoryboardProject {
   if (!isRecord(value)) return false;
   const p = value as {
-    id?: unknown; title?: unknown; updatedAt?: unknown; storyboard?: unknown;
+    id?: unknown; title?: unknown; createdAt?: unknown; updatedAt?: unknown; storyboard?: unknown;
   };
   if (typeof p.id !== 'string' || p.id.length === 0) return false;
   if (typeof p.title !== 'string') return false;
+  if (typeof p.createdAt !== 'string') return false;
   if (typeof p.updatedAt !== 'string') return false;
   if (!isRecord(p.storyboard)) return false;
   const sb = p.storyboard as { frames?: unknown; connections?: unknown };
   if (!Array.isArray(sb.frames)) return false;
   if (!Array.isArray(sb.connections)) return false;
   if (!sb.frames.every(isValidStoredFrame)) return false;
+  // Connection elements are dereferenced at render — validate each, not just
+  // that the container is an array, so a `[null]` element can't reach the
+  // canvas and throw (V2-002).
+  if (!sb.connections.every(isValidStoredConnection)) return false;
   return true;
 }
 
