@@ -27,7 +27,7 @@ export const config: SiteConfig = {
     // See docs/snapshot-checklist.md for every doc location that holds these snapshots.
     previews: [
       { label: 'Install', code: 'git clone mcp-tool-shop-org/storyboard-os\npnpm install && pnpm dev' },
-      { label: 'Verify', code: 'pnpm verify  # 649 tests · 54 pages · 3 apps' },
+      { label: 'Verify', code: 'pnpm verify  # 937 tests · 54 pages · 3 apps' },
       { label: 'Packages', code: '@storyboard-os/core\n@storyboard-os/rpg-domain\n@storyboard-os/marketing-domain\n@storyboard-os/cinematic-domain\n@storyboard-os/canvas\n@storyboard-os/routing' },
     ],
   },
@@ -63,10 +63,10 @@ export const config: SiteConfig = {
           title: '@storyboard-os/routing',
           desc: 'URL construction helpers with zero dependencies. One factory, three route builders. Each vertical passes its own base path — the canvas and domain work without modification.',
         },
-        // AUTOGEN-NOTE: "649 tests" below is a manually updated snapshot.
+        // AUTOGEN-NOTE: "937 tests" below is a manually updated snapshot.
         // Verify with: pnpm test  (see docs/snapshot-checklist.md)
         {
-          title: '649 tests, three verticals, zero cross-domain imports',
+          title: '937 tests, three verticals, zero cross-domain imports',
           desc: 'The cinematic vertical proved multi-vertical architecture for the third time: zero changes to canvas, core, or routing. Core Hardening 1A extracted generic connection types — domains own their vocabulary without casts.',
         },
       ],
@@ -132,13 +132,13 @@ export const config: SiteConfig = {
           title: 'Use a package',
           code: 'npm install @storyboard-os/rpg-domain\n\n// Generate a quest board\nimport { createStoryboardFromTemplate } from \'@storyboard-os/rpg-domain\';\nconst board = createStoryboardFromTemplate(\'quest_flow\');',
         },
-        // AUTOGEN-NOTE: "649 tests", "6 packages", "3 apps", "54 pages" below
+        // AUTOGEN-NOTE: "937 tests", "6 packages", "3 apps", "54 pages" below
         // are manually updated snapshots. Verify with:
         //   pnpm test; pnpm -r build; ls packages/ | wc -l; ls apps/ | wc -l
         // See docs/snapshot-checklist.md for every doc location that holds these.
         {
           title: 'Verify before ship',
-          code: '# All 649 tests + full build in one command\npnpm verify  # 6 packages · 3 apps · 54 pages',
+          code: '# All 937 tests + full build in one command\npnpm verify  # 6 packages · 3 apps · 54 pages',
         },
       ],
     },

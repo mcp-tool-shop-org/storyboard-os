@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.2.0] — 2026-07-07
+
+### Dogfood Swarm — Health Hardening Pass
+
+A second parallel-agent swarm over the shipped v1.1.0: bug/security (Stage A) → dependency modernization (Wave A2) → proactive/humanization/visual (Stages B/C/D), each closed with an adversarial multi-lens verifier pass. Tests: **660 → 937 (+277)**. CI now typechecks packages *and* apps and gates a production dependency audit; `pnpm run verify` is green end to end.
+
+### Fixed (HIGH)
+
+**core / domains**
+- `validateStoryboard` no longer throws on malformed input: `frame.title`/`frame.summary` are type-guarded before `.trim()` (a non-string threw `TypeError`, violating the validator's no-throw contract); null elements in the `frames`/`connections` arrays and non-string ids now yield structured errors instead of a throw (CR-001/002/003).
+- Handoff completion no longer silently corrupts: implementation-checklist / test-criteria progress was keyed by array index while the app edits those arrays as free text, so a reorder/insert/delete re-attached "done" marks to the wrong item. Progress is now reconciled by item text on every content change (DM-001).
+- `frame.content` is normalized across the readiness / signal / handoff layer in all three domains — a null-content frame from corrupt storage no longer crashes the board or export (DM-002/003).
+
+**apps**
+- The localStorage read path is resilient: `readAll` validates each record and *drops* an invalid one (leaving it in storage) with a `role="alert"` notice, instead of returning `[]` and making every project vanish; the predicate checks every field the render path dereferences (`createdAt`, connection elements) and the sort comparator is null-safe (AP-001/002/003, V2-001/002).
+- The two localStorage-backed islands are wrapped in the existing `ErrorBoundary` at mount, so a render throw shows a fallback rather than a blank page (AP-001/004).
+- The marketing Launch Blockers panel now lists **pending** approval gates — `status === 'pending'` was always false against `CampaignBeatStatusLevel`, so pending gates never appeared (AP-006).
+- Five TypeScript errors that were shipping green (CI never typechecked) are fixed, including a wrong-argument-count call and a dead comparison (BC-001, AP-006).
+
+**build / CI**
+- CI now runs `astro check` (apps) **and** `tsc --noEmit` (packages) before tests — package + test-file type errors can no longer ship green (BC-001).
+- pnpm settings moved from the `pnpm` field in `package.json` (ignored by pnpm ≥ 10) to `pnpm-workspace.yaml`, so the `fast-uri` security override stops silently eroding on lockfile regeneration; esbuild/sharp build allowlist restored (BC-004).
+
+### Security / Dependencies
+
+- Apps migrated from astro `^4` to **astro 5.18.1** (aligned with the marketing site), `@astrojs/react` 4, vitest 3 — clears the astro-4 advisory set; workflows run on pnpm 11 (`action-setup@v6`).
+- Transitive security pins via `pnpm-workspace.yaml` `overrides`: `@ungap/structured-clone ^1.3.1` (CWE-502), `devalue ^5.8.1` (GHSA-77vg-94rm-hx3p), `vite ^6.4.3` (GHSA-fx2h-pf6j-xcff).
+- CI enforces `pnpm audit --prod --audit-level=high`. Two astro advisories (host-header SSRF `GHSA-2pvr-wf23-7pc7`, slot-name XSS `GHSA-8hv8-536x-4wqp`) are documented-and-ignored via `auditConfig.ignoreGhsas`: both are SSR/server-island-only and structurally unreachable in static `astro build` output. Tracked for removal at astro 6 (roadmap §4).
+
+### Added
+
+- **Design-token layer** — `@storyboard-os/core` `tokens.ts` (`statusColors`, `statusLabels`, `surfaces`, WCAG-AA `textColors`, `typeScale`, `spacing`) + per-domain color consts (`marketingColors`, `cinematicColors`, `rpgColors`). Replaces ~230 hand-copied hex across 30 files with one source, fixing two wrong-legend bugs (marketing GATE was red in its legend but amber on the card; cinematic VFX was pink in the legend/inspector but purple on the card) and standardizing the "ready" label to SPEC (VP-001/002/003/004/005).
+- **Keyboard + screen-reader access to the board** — a shared `AccessibleFrameList` (ARIA listbox, roving tabindex, Enter/Space → the same select + center-on-frame path) rendered inside the canvas package, inherited by all three apps with zero wiring; checklist items are real `role="checkbox"` controls (HU-001/002).
+- **localStorage schema versioning** — stored projects are a versioned envelope `{ schemaVersion, projects }` with an ordered migration ladder and a "saved by a newer version" guard that returns records rather than dropping them (PR-001).
+- Enum exhaustiveness guards (`never` compile check + runtime warn) on every readiness/status switch across the three domains (PR-003); handoff exports carry `formatVersion: 1` (PR-004); store dev diagnostics (PR-002).
+- Canvas: real Konva text measurement for badge widths with wrap/overflow, shared `DEFAULT_FRAME_STYLE`/`DEFAULT_CONNECTION_STYLE`, auto-sized connection labels + midpoint hit target (VP-010/011/012); WCAG-AA contrast on load-bearing muted text; `<main>`/`<h1>` landmarks on board pages (HU-003/004/006).
+
+### Changed
+
+- **BREAKING (minor surface):** `getMarketingFrameBadges(frame)` dropped its unused second `connections` parameter. A 2-argument call now fails to typecheck; the value it produced is unchanged.
+
+### Deferred
+
+- Bounded Stage C/D visual polish (view-state persistence, app brand wordmark, responsive header breakpoints, full cinematic tokenization, a marketing color-parity test) is tracked in `docs/roadmap.md` §8 — none is a correctness gap.
+
 ## [1.1.0] — 2026-05-12
 
 ### Dogfood Swarm Hardening Pass
