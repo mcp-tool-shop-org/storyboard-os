@@ -44,10 +44,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level=high
+
       - name: Build packages
         run: pnpm run build:packages
 
-      - name: Typecheck apps
+      - name: Typecheck packages + apps
         run: pnpm run check
 
       - name: Run tests
