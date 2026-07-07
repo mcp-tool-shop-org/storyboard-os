@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/canvas",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Domain-configurable Konva canvas renderer — frames, connections, selection, drag, type badges, connection labels.",
   "license": "MIT",
   "type": "module",
@@ -49,5 +49,13 @@
     "react-konva": "^18.2.10",
     "typescript": "^5.0.0",
     "vitest": "^3.2.6"
-  }
+  },
+  "keywords": [
+    "storyboard",
+    "canvas",
+    "konva",
+    "react",
+    "diagram"
+  ],
+  "author": "mcp-tool-shop"
 }

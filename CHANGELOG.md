@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.1] — 2026-07-07
+
+### Fixed — package publishing hygiene
+
+Every published `@storyboard-os/*` tarball declared `files: ["dist", "README.md", "LICENSE"]`, but the files were incomplete at 1.2.0 (immutable on npm — hence this patch):
+
+- **LICENSE** was referenced by all six packages but present in **none** — every tarball shipped without the MIT license it claimed. Added a `LICENSE` to each package.
+- **README.md** was missing from `@storyboard-os/marketing-domain` and `@storyboard-os/cinematic-domain` (the two verticals scaffolded after rpg-domain). Wrote a full README for each, documenting frame types, the API surface, and the trust model.
+- Added `keywords` + `author` to all six `package.json` for npm discoverability and attribution.
+
+No code changes; `dist` output is identical to 1.2.0. Verified each tarball with `npm pack --dry-run` (README + LICENSE + dist present) and confirmed every `exports`/`main`/`types` entrypoint resolves.
+
 ## [1.2.0] — 2026-07-07
 
 ### Dogfood Swarm — Health Hardening Pass

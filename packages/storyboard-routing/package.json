@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/routing",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Configurable URL helpers for storyboard apps — board, frame, and project route generation.",
   "license": "MIT",
   "type": "module",
@@ -40,5 +40,12 @@
   "devDependencies": {
     "typescript": "^5.0.0",
     "vitest": "^3.2.6"
-  }
+  },
+  "keywords": [
+    "storyboard",
+    "routing",
+    "url",
+    "helpers"
+  ],
+  "author": "mcp-tool-shop"
 }

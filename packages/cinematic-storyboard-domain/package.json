@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/cinematic-domain",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Cinematic production storyboard contract — shot types, camera language, continuity, VFX/audio requirements, edit readiness, and production brief handoff.",
   "license": "MIT",
   "type": "module",
@@ -43,5 +43,13 @@
   "devDependencies": {
     "typescript": "^5.0.0",
     "vitest": "^3.2.6"
-  }
+  },
+  "keywords": [
+    "storyboard",
+    "cinematic",
+    "production",
+    "previs",
+    "trailer"
+  ],
+  "author": "mcp-tool-shop"
 }
