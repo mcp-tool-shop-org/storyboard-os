@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/rpg-domain",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "RPG game-authoring contract — frame types, content fields, templates, validation rules, and demo data for rpg-storyboard.",
   "license": "MIT",
   "type": "module",
@@ -43,5 +43,13 @@
   "devDependencies": {
     "typescript": "^5.0.0",
     "vitest": "^3.2.6"
-  }
+  },
+  "keywords": [
+    "storyboard",
+    "rpg",
+    "game-design",
+    "narrative",
+    "quest"
+  ],
+  "author": "mcp-tool-shop"
 }

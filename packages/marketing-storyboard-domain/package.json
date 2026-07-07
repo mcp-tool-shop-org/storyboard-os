@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/marketing-domain",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Marketing campaign authoring contract — frame types, content fields, templates, validation rules, readiness model, and handoff generation for marketing-storyboard.",
   "license": "MIT",
   "type": "module",
@@ -43,5 +43,13 @@
   "devDependencies": {
     "typescript": "^5.0.0",
     "vitest": "^3.2.6"
-  }
+  },
+  "keywords": [
+    "storyboard",
+    "marketing",
+    "campaign",
+    "launch",
+    "go-to-market"
+  ],
+  "author": "mcp-tool-shop"
 }

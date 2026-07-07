@@ -1,6 +1,6 @@
 {
   "name": "@storyboard-os/core",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Generic storyboard primitives — frame, connection, annotation, template, validation. No domain-specific content.",
   "license": "MIT",
   "type": "module",
@@ -40,5 +40,14 @@
   "devDependencies": {
     "typescript": "^5.0.0",
     "vitest": "^3.2.6"
-  }
+  },
+  "keywords": [
+    "storyboard",
+    "narrative",
+    "frames",
+    "connections",
+    "validation",
+    "game-design"
+  ],
+  "author": "mcp-tool-shop"
 }
