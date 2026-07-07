@@ -87,8 +87,17 @@ export interface HandoffReadinessSummary {
   readyFraction: number;
 }
 
+/**
+ * Current handoff artifact schema version. Bump when the shape changes in a way
+ * a downstream importer must branch on. Stamped onto every generated handoff so
+ * future consumers have a discriminator (PR-004).
+ */
+export const HANDOFF_FORMAT_VERSION = 1;
+
 /** The complete quest handoff artifact. */
 export interface QuestHandoff {
+  /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
+  formatVersion: 1;
   id: string;
   title: string;
   description?: string;
@@ -124,6 +133,8 @@ export interface ProjectHandoffBeat extends HandoffBeat {
  * This is the bridge between the living authoring project and the implementation pass.
  */
 export interface ProjectHandoff {
+  /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
+  formatVersion: 1;
   /** Stable project ID (separate from the storyboard ID). */
   projectId: string;
   storyboardId: string;
@@ -276,6 +287,7 @@ export function generateHandoff(storyboard: Storyboard): QuestHandoff {
   const partialBeatIds = beats.filter(b => b.status === 'partial').map(b => b.id);
 
   return {
+    formatVersion: HANDOFF_FORMAT_VERSION,
     id:           storyboard.id,
     title:        storyboard.title,
     description:  storyboard.description ?? undefined,
@@ -631,6 +643,7 @@ export function generateProjectHandoff(project: RpgStoryboardProject): ProjectHa
   });
 
   return {
+    formatVersion:    HANDOFF_FORMAT_VERSION,
     projectId:        project.id,
     storyboardId:     storyboard.id,
     title:            project.title,

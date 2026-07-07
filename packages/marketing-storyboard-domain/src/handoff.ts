@@ -89,7 +89,16 @@ export interface CampaignHandoffReadiness {
     readyFraction: number;
 }
 
+/**
+ * Current handoff artifact schema version. Bump when the shape changes in a way
+ * a downstream importer must branch on. Stamped onto every generated handoff so
+ * future consumers have a discriminator (PR-004).
+ */
+export const HANDOFF_FORMAT_VERSION = 1;
+
 export interface CampaignHandoff {
+    /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
+    formatVersion: 1;
     id: string;
     title: string;
     description?: string;
@@ -105,6 +114,8 @@ export interface ProjectCampaignHandoffBeat extends CampaignHandoffBeat {
 }
 
 export interface ProjectCampaignHandoff {
+    /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
+    formatVersion: 1;
     projectId: string;
     projectTitle: string;
     sourceTemplateId?: string;
@@ -223,6 +234,7 @@ export function generateCampaignHandoff(storyboard: Storyboard): CampaignHandoff
     const blockedIds = beats.filter(b => b.status === 'blocked').map(b => b.id);
 
     return {
+        formatVersion: HANDOFF_FORMAT_VERSION,
         id: storyboard.id,
         title: storyboard.title,
         description: storyboard.description,
@@ -395,6 +407,7 @@ export function generateProjectCampaignHandoff(
     });
 
     return {
+        formatVersion: HANDOFF_FORMAT_VERSION,
         projectId: project.id,
         projectTitle: project.title,
         sourceTemplateId: project.sourceTemplateId,

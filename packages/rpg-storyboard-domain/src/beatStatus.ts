@@ -220,6 +220,13 @@ export function getStoryboardReadiness(storyboard: Storyboard): StoryboardReadin
       case 'partial': partial++; break;
       case 'draft':   draft++;   break;
       case 'blocked': blocked++; break;
+      default: {
+        // Exhaustiveness guard (PR-003): a new BeatStatusLevel becomes a compile
+        // error here. At runtime, warn rather than silently miscount the board.
+        const _exhaustive: never = status.level;
+        console.warn('[rpg] unhandled BeatStatusLevel value:', _exhaustive);
+        break;
+      }
     }
   }
 

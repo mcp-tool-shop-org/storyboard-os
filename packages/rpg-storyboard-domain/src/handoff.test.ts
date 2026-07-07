@@ -55,6 +55,11 @@ function makeBoard(frames: StoryboardFrame[], connections: StoryboardConnection[
 // ─── generateHandoff — metadata ───────────────────────────────────────────────
 
 describe('generateHandoff — metadata', () => {
+  it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+    const handoff = generateHandoff(makeBoard([]));
+    expect(handoff.formatVersion).toBe(1);
+  });
+
   it('carries the storyboard id and title', () => {
     const board = makeBoard([], []);
     board.id = 'quest-01';
@@ -480,6 +485,12 @@ describe('generateMarkdown', () => {
 // ─── generateProjectHandoff — metadata ───────────────────────────────────────
 
 describe('generateProjectHandoff — metadata', () => {
+  it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const h = generateProjectHandoff(p);
+    expect(h.formatVersion).toBe(1);
+  });
+
   it('carries projectId, title, createdAt, updatedAt', () => {
     const p = createProject({ title: 'My Quest', templateId: 'quest_flow' });
     const h = generateProjectHandoff(p);

@@ -193,6 +193,13 @@ export function getSequenceReadiness(storyboard: Storyboard): CinematicReadiness
       case 'partial': partial++; break;
       case 'draft':   draft++;   break;
       case 'blocked': blocked++; break;
+      default: {
+        // Exhaustiveness guard (PR-003): a new CinematicBeatStatusLevel becomes
+        // a compile error here; warn rather than silently miscount the sequence.
+        const _exhaustive: never = status.level;
+        console.warn('[cinematic] unhandled CinematicBeatStatusLevel value:', _exhaustive);
+        break;
+      }
     }
   }
 

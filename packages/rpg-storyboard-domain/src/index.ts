@@ -43,6 +43,7 @@ export {
   getFrameSignal,
   getFrameBadges,
   getChoiceBranchCount,
+  rpgColors,
 } from './frameSignals';
 
 export type {
@@ -69,6 +70,7 @@ export {
   generateMarkdown,
   generateProjectHandoff,
   generateProjectMarkdown,
+  HANDOFF_FORMAT_VERSION,
 } from './handoff';
 
 export type {

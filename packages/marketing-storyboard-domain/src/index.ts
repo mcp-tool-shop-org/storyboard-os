@@ -42,6 +42,7 @@ export {
     getMarketingFrameSignal,
     getMarketingFrameBadges,
     getSegmentPathCount,
+    marketingColors,
 } from './frameSignals';
 
 export type {
@@ -68,6 +69,7 @@ export {
     generateCampaignMarkdown,
     generateProjectCampaignHandoff,
     generateProjectCampaignMarkdown,
+    HANDOFF_FORMAT_VERSION,
 } from './handoff';
 
 export type {

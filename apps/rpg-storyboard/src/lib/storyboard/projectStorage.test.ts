@@ -14,13 +14,14 @@
 //   - fully valid store        → returned sorted, no warning
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import {
   listProjects,
   getProject,
   saveProject,
   deleteProject,
   getLastReadWarning,
+  CURRENT_SCHEMA_VERSION,
 } from './projectStorage';
 import type { RpgStoryboardProject } from '@storyboard-os/rpg-domain';
 
@@ -301,7 +302,9 @@ describe('writes — invalid raw records are preserved, not destroyed', () => {
     const result = saveProject(makeProject('newcomer'));
     expect(result.ok).toBe(true);
 
-    const raw = JSON.parse(backing.get(STORAGE_KEY)!) as unknown[];
+    // Writes now persist a { schemaVersion, projects } envelope; the invalid
+    // raw record must still survive inside `projects`.
+    const raw = (JSON.parse(backing.get(STORAGE_KEY)!) as { projects: unknown[] }).projects;
     expect(raw).toHaveLength(3); // keeper + invalid entry + newcomer
     expect(raw.some(e => (e as Record<string, unknown>)?.half === 'a record')).toBe(true);
   });
@@ -319,8 +322,196 @@ describe('writes — invalid raw records are preserved, not destroyed', () => {
     const result = deleteProject('a');
     expect(result.ok).toBe(true);
 
-    const raw = JSON.parse(backing.get(STORAGE_KEY)!) as unknown[];
+    // Envelope shape: the invalid `junk` entry survives inside `projects`.
+    const raw = (JSON.parse(backing.get(STORAGE_KEY)!) as { projects: unknown[] }).projects;
     expect(raw).toHaveLength(2); // junk + b
     expect(listProjects().map(p => p.id)).toEqual(['b']);
+  });
+});
+
+// ─── PR-001 — schema versioning + ordered migration ladder ────────────────────
+//
+// The store must wrap the project array in a versioned envelope
+// `{ schemaVersion, projects }` and run an ordered migration ladder from the
+// stored version up to CURRENT. Legacy bare arrays are treated as v0.
+// A "saved by a newer version" store must NOT be downgraded/dropped.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** Shape helpers so the tests describe the stored envelope explicitly. */
+type StoredEnvelope = { schemaVersion: number; projects: unknown[] };
+
+function readStored(): unknown {
+  const raw = backing.get(STORAGE_KEY);
+  return raw === undefined ? undefined : JSON.parse(raw);
+}
+
+describe('schema versioning — legacy v0 bare array is migrated + re-persisted as an envelope', () => {
+  it('reads a legacy bare array, migrates it (progress backfilled), and the projects survive intact', () => {
+    // Legacy store: a bare array (no envelope) with a pre-2D record lacking progress.
+    const legacy = makeProject('legacy-v0') as unknown as Record<string, unknown>;
+    delete legacy.progress;
+    seed([legacy]); // bare array — this is the v0 shape
+
+    const projects = listProjects();
+    expect(projects.map(p => p.id)).toEqual(['legacy-v0']);
+    // v0→v1 migration step is the progress backfill.
+    expect(projects[0].progress).toEqual({ frames: {} });
+    // The project content survives intact (title/storyboard untouched).
+    expect(projects[0].title).toBe('Project legacy-v0');
+    expect(projects[0].storyboard.frames).toHaveLength(1);
+  });
+
+  it('re-persists a legacy bare array as a CURRENT envelope on the next write', () => {
+    const legacy = makeProject('legacy-write') as unknown as Record<string, unknown>;
+    delete legacy.progress;
+    seed([legacy]); // bare array v0
+
+    const result = saveProject(makeProject('added'));
+    expect(result.ok).toBe(true);
+
+    const stored = readStored() as StoredEnvelope;
+    // No longer a bare array — it's an envelope at CURRENT_SCHEMA_VERSION.
+    expect(Array.isArray(stored)).toBe(false);
+    expect(stored.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(Array.isArray(stored.projects)).toBe(true);
+    // Both the migrated legacy record and the new one are present.
+    const ids = (stored.projects as Array<{ id: string }>).map(p => p.id).sort();
+    expect(ids).toEqual(['added', 'legacy-write']);
+  });
+});
+
+describe('schema versioning — a v1 envelope round-trips unchanged', () => {
+  it('reads a v1 envelope and returns its projects without dropping or mutating them', () => {
+    const p = makeProject('v1-rt');
+    seed({ schemaVersion: 1, projects: [p] });
+
+    const projects = listProjects();
+    expect(projects.map(x => x.id)).toEqual(['v1-rt']);
+    expect(getLastReadWarning()).toBeNull();
+    expect(projects[0].progress).toEqual({ frames: {} });
+  });
+
+  it('a same-version envelope read does not rewrite storage on read', () => {
+    const p = makeProject('v1-notouch');
+    const raw = JSON.stringify({ schemaVersion: 1, projects: [p] });
+    backing.set(STORAGE_KEY, raw);
+    listProjects();
+    // Reads never write.
+    expect(backing.get(STORAGE_KEY)).toBe(raw);
+  });
+});
+
+describe('schema versioning — a NEWER-schema envelope is preserved, not dropped', () => {
+  it('returns records from a schemaVersion:999 store and fires a newer-schema ReadWarning', () => {
+    const p = makeProject('from-future');
+    seed({ schemaVersion: 999, projects: [p] });
+
+    // Best-effort: the records still come back (no silent data loss).
+    const projects = listProjects();
+    expect(projects.map(x => x.id)).toEqual(['from-future']);
+
+    // A warning fires signalling the store was written by a newer version.
+    const warning = getLastReadWarning();
+    expect(warning).not.toBeNull();
+    expect(warning!.code).toBe('NEWER_SCHEMA');
+  });
+
+  it('does NOT downgrade/overwrite a newer store on read', () => {
+    const p = makeProject('future-notouch');
+    const raw = JSON.stringify({ schemaVersion: 999, projects: [p] });
+    backing.set(STORAGE_KEY, raw);
+    listProjects();
+    // Read must not have rewritten (downgraded) the newer store.
+    expect(backing.get(STORAGE_KEY)).toBe(raw);
+  });
+});
+
+describe('schema versioning — migration and validation compose', () => {
+  it('migrates valid records and drops invalid ones together (v0 array, one bad record)', () => {
+    const good = makeProject('v0-good') as unknown as Record<string, unknown>;
+    delete good.progress; // exercises the v0→v1 backfill
+    seed([good, { garbage: true }]); // bare v0 array with one invalid record
+
+    const projects = listProjects();
+    // Valid record migrated + returned...
+    expect(projects.map(p => p.id)).toEqual(['v0-good']);
+    expect(projects[0].progress).toEqual({ frames: {} });
+    // ...invalid record dropped and reported.
+    const warning = getLastReadWarning();
+    expect(warning?.code).toBe('RECORDS_DROPPED');
+    expect(warning?.dropped).toBe(1);
+  });
+});
+
+describe('schema versioning — writes always emit the CURRENT envelope', () => {
+  it('saveProject writes a { schemaVersion, projects } envelope at CURRENT_SCHEMA_VERSION', () => {
+    saveProject(makeProject('fresh'));
+    const stored = readStored() as StoredEnvelope;
+    expect(Array.isArray(stored)).toBe(false);
+    expect(stored.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect((stored.projects as Array<{ id: string }>).map(p => p.id)).toEqual(['fresh']);
+  });
+
+  it('deleteProject also writes the CURRENT envelope', () => {
+    seed({ schemaVersion: 1, projects: [makeProject('x'), makeProject('y')] });
+    deleteProject('x');
+    const stored = readStored() as StoredEnvelope;
+    expect(stored.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect((stored.projects as Array<{ id: string }>).map(p => p.id)).toEqual(['y']);
+  });
+});
+
+// ─── PR-002 — dev diagnostics (additive console.warn at inflection points) ────
+//
+// The store gets non-throwing console.warn signal at four inflection points:
+//   (a) records dropped, (b) store unreadable, (c) a migration ran,
+//   (d) a newer schema was encountered. User-facing ReadWarning is unchanged.
+// ──────────────────────────────────────────────────────────────────────────────
+
+describe('dev diagnostics — console.warn at inflection points', () => {
+  it('warns with [projectStorage] when records are dropped, carrying the count', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    seed([makeProject('keep'), { garbage: true }]);
+    listProjects();
+    const calls = spy.mock.calls.filter(c => String(c[0]).includes('[projectStorage]'));
+    expect(calls.length).toBeGreaterThan(0);
+    // The count of dropped records is carried somewhere in the call args.
+    expect(calls.some(c => c.some(arg => JSON.stringify(arg).includes('1')))).toBe(true);
+    spy.mockRestore();
+  });
+
+  it('warns when the store root is unreadable', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    seed('{"not valid json');
+    listProjects();
+    expect(spy.mock.calls.some(c => String(c[0]).includes('[projectStorage]'))).toBe(true);
+    spy.mockRestore();
+  });
+
+  it('warns when a migration runs, carrying from→to version', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const legacy = makeProject('mig') as unknown as Record<string, unknown>;
+    delete legacy.progress;
+    seed([legacy]); // v0 — forces a migration to v1
+    listProjects();
+    const calls = spy.mock.calls.filter(c => String(c[0]).includes('[projectStorage]'));
+    expect(calls.length).toBeGreaterThan(0);
+    spy.mockRestore();
+  });
+
+  it('warns when a newer schema is encountered', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    seed({ schemaVersion: 999, projects: [makeProject('fut')] });
+    listProjects();
+    expect(spy.mock.calls.some(c => String(c[0]).includes('[projectStorage]'))).toBe(true);
+    spy.mockRestore();
+  });
+
+  it('does NOT warn on a clean same-version read', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    seed({ schemaVersion: 1, projects: [makeProject('clean')] });
+    listProjects();
+    expect(spy.mock.calls.some(c => String(c[0]).includes('[projectStorage]'))).toBe(false);
+    spy.mockRestore();
   });
 });

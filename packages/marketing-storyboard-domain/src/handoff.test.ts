@@ -43,6 +43,13 @@ describe('generateCampaignHandoff', () => {
         expect(handoff.generatedAt).toBeDefined();
     });
 
+    it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+        const storyboard: Storyboard = {
+            id: 'v', title: 'V', frames: [makeFrame('f1', 'audience')], connections: [],
+        };
+        expect(generateCampaignHandoff(storyboard).formatVersion).toBe(1);
+    });
+
     it('returns beats in topological order', () => {
         const storyboard: Storyboard = {
             id: 'test',
@@ -148,6 +155,11 @@ describe('generateProjectCampaignHandoff', () => {
         expect(handoff.projectId).toBe(project.id);
         expect(handoff.projectTitle).toBe('My Campaign');
         expect(handoff.sourceTemplateId).toBe('product_launch');
+    });
+
+    it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+        const project = createCampaignProject({ title: 'V', templateId: 'product_launch' });
+        expect(generateProjectCampaignHandoff(project).formatVersion).toBe(1);
     });
 
     it('includes progress summary', () => {

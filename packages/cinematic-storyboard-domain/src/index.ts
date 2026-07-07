@@ -19,7 +19,7 @@ export type { CinematicBeatStatus, CinematicBeatStatusLevel, CinematicReadinessS
 export { validateCinematicStoryboard, validateStoryboard } from './validate';
 export type { StoryboardValidationError, StoryboardValidationResult } from './validate';
 
-export { getCinematicFrameBadges, getCinematicFrameSignal } from './frameSignals';
+export { getCinematicFrameBadges, getCinematicFrameSignal, cinematicColors } from './frameSignals';
 export type { CinematicFrameBadge, CinematicFrameSignal } from './frameSignals';
 
 export {
@@ -29,7 +29,7 @@ export {
 } from './templates';
 export type { CinematicTemplateId, CinematicTemplateDefinition } from './templates';
 
-export { generateProductionBrief, generateProductionMarkdown } from './handoff';
+export { generateProductionBrief, generateProductionMarkdown, HANDOFF_FORMAT_VERSION } from './handoff';
 export type { ProductionBrief, ProductionBriefShot } from './handoff';
 
 export { getSequenceProductionSignals } from './productionSignals';

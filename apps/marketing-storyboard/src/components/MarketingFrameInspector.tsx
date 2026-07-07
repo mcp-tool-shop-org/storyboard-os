@@ -13,13 +13,18 @@
 import {
     getCampaignBeatStatus,
     BLOCKING_REASONS,
+    marketingColors,
     type CampaignBeatStatusLevel,
     type MissingSpecReason,
     type StoryboardFrame,
     type MarketingFrameType,
 } from '@storyboard-os/marketing-domain';
+import { statusColors, statusLabels, textColors, typeScale, spacing } from '@storyboard-os/core';
 
 // ─── Type display config ──────────────────────────────────────────────────────
+// Accent per frame type comes from the shared token API so the inspector badge
+// matches the card badge and legend (VP-002/003 discipline: one source of truth
+// for every status hex). `launch_event` reads the marketing critical-path hue.
 
 const TYPE_LABELS: Record<MarketingFrameType, string> = {
     audience: 'Audience',
@@ -34,31 +39,33 @@ const TYPE_LABELS: Record<MarketingFrameType, string> = {
 };
 
 const TYPE_COLORS: Record<MarketingFrameType, string> = {
-    audience: '#3B82F6',
-    message: '#8B5CF6',
-    touchpoint: '#22C55E',
-    asset: '#F97316',
-    approval: '#EF4444',
-    launch_event: '#EAB308',
+    audience: statusColors.state,
+    message: statusColors.accent,
+    touchpoint: statusColors.spec,
+    asset: statusColors.partial,
+    approval: statusColors.blocked,
+    launch_event: marketingColors.critical,
     conversion: '#06B6D4',
     follow_up: '#6366F1',
     measurement: '#EC4899',
 };
 
 // ─── Status display config ────────────────────────────────────────────────────
+// VP-005: the "ready" state is labeled 'SPEC' everywhere (statusLabels.ready) so
+// the inspector agrees with the card badge and with the other verticals.
 
 const STATUS_COLORS: Record<CampaignBeatStatusLevel, string> = {
-    ready: '#22C55E',
-    partial: '#F97316',
-    draft: '#6B7280',
-    blocked: '#EF4444',
+    ready: statusColors.spec,
+    partial: statusColors.partial,
+    draft: statusColors.draft,
+    blocked: statusColors.blocked,
 };
 
 const STATUS_LABELS: Record<CampaignBeatStatusLevel, string> = {
-    ready: 'READY',
-    partial: 'PARTIAL',
-    draft: 'DRAFT',
-    blocked: 'BLOCKED',
+    ready: statusLabels.ready,   // 'SPEC'
+    partial: statusLabels.partial,
+    draft: statusLabels.draft,
+    blocked: statusLabels.blocked,
 };
 
 const REASON_LABELS: Record<MissingSpecReason, string> = {
@@ -96,13 +103,16 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
     );
 
     return (
-        <div style={{
-            position: 'absolute', top: 48, right: 0, bottom: 0, width: 380,
-            background: '#0c1220',
-            borderLeft: '1px solid rgba(255,255,255,0.07)',
-            display: 'flex', flexDirection: 'column',
-            overflowY: 'auto', zIndex: 20,
-        }}>
+        <aside
+            aria-label={`Frame details: ${frame.title}`}
+            style={{
+                position: 'absolute', top: 48, right: 0, bottom: 0,
+                width: spacing.panelWidth.wide, maxWidth: '40vw',
+                background: '#0c1220',
+                borderLeft: '1px solid rgba(255,255,255,0.07)',
+                display: 'flex', flexDirection: 'column',
+                overflowY: 'auto', zIndex: 20,
+            }}>
             {/* ── Header ──────────────────────────────────────────────────────────── */}
             <div style={{
                 padding: '14px 18px',
@@ -339,7 +349,7 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                     </ContentSection>
                 )}
             </div>
-        </div>
+        </aside>
     );
 }
 
@@ -348,7 +358,7 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
 function ContentSection({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+            <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: typeScale.tracking.wide, fontWeight: 600 }}>
                 {title}
             </span>
             {children}

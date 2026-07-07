@@ -100,7 +100,16 @@ export interface ProductionBriefShot {
   status: string;
 }
 
+/**
+ * Current handoff artifact schema version. Bump when the shape changes in a way
+ * a downstream importer must branch on. Stamped onto every generated brief so
+ * future consumers have a discriminator (PR-004).
+ */
+export const HANDOFF_FORMAT_VERSION = 1;
+
 export interface ProductionBrief {
+  /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
+  formatVersion: 1;
   title: string;
   description: string;
   totalShots: number;
@@ -180,6 +189,7 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
   });
 
   return {
+    formatVersion: HANDOFF_FORMAT_VERSION,
     title: storyboard.title,
     description: storyboard.description ?? '',
     totalShots: shots.length,

@@ -28,6 +28,8 @@ import {
     type SequenceHealthLevel,
 } from '@storyboard-os/cinematic-domain';
 import type { Storyboard } from '@storyboard-os/cinematic-domain';
+import { cinematicColors } from '@storyboard-os/cinematic-domain';
+import { statusColors } from '@storyboard-os/core';
 import CinematicFrameInspector from './CinematicFrameInspector';
 import ProductionSignalPanel from './ProductionSignalPanel';
 import ErrorBoundary from './ErrorBoundary';
@@ -357,10 +359,10 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                 ))}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
                     {[
-                        { text: 'CAM', color: '#3B82F6' },
-                        { text: 'VFX', color: '#EC4899' },
-                        { text: 'SFX', color: '#06B6D4' },
-                        { text: 'SPEC', color: '#22C55E' },
+                        { text: 'CAM', color: cinematicColors.camera },
+                        { text: 'VFX', color: cinematicColors.vfx },
+                        { text: 'SFX', color: cinematicColors.sfx },
+                        { text: 'SPEC', color: statusColors.spec },
                     ].map(b => (
                         <span
                             key={b.text}

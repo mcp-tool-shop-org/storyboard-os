@@ -35,6 +35,11 @@ describe('generateProductionBrief', () => {
     expect(brief.readySummary.blocked).toBe(0);
   });
 
+  it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+    const brief = generateProductionBrief(createCinematicStoryboard('trailer_flow'));
+    expect(brief.formatVersion).toBe(1);
+  });
+
   it('computes total duration from frames', () => {
     const sb = createCinematicStoryboard('trailer_flow');
     const brief = generateProductionBrief(sb);

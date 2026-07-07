@@ -162,6 +162,13 @@ export function getCampaignReadiness(storyboard: Storyboard): CampaignReadinessS
             case 'partial': partial++; break;
             case 'draft': draft++; break;
             case 'blocked': blocked++; break;
+            default: {
+                // Exhaustiveness guard (PR-003): a new CampaignBeatStatusLevel
+                // becomes a compile error here; warn rather than miscount.
+                const _exhaustive: never = status.level;
+                console.warn('[marketing] unhandled CampaignBeatStatusLevel value:', _exhaustive);
+                break;
+            }
         }
     }
 

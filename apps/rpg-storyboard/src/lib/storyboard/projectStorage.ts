@@ -4,7 +4,34 @@
 // All project data is stored in the browser — no backend required.
 //
 // Storage key : 'rpg-sb:projects'
-// Format      : JSON array of RpgStoryboardProject (ordered by updatedAt desc)
+// Format      : a versioned envelope { schemaVersion, projects[] } where
+//               `projects` is a JSON array of RpgStoryboardProject.
+//               Legacy stores (a bare JSON array, no envelope) are read as
+//               schema version 0 and migrated up on the next read/write.
+//
+// Schema versioning + migration (PR-001)
+// ---------------------------------------
+// The bare-array format had NO version marker, so any schema change that
+// isn't presence-detectable would silently mis-migrate — or, worse, the
+// per-record validity predicate would silently DROP the changed records as
+// "invalid" = permanent data loss. The envelope fixes this:
+//
+//   - On read: detect the shape. A `{ schemaVersion, projects }` object reads
+//     its own version; a legacy bare array is treated as version 0.
+//   - Migrations run stepwise up an ordered ladder from the stored version to
+//     CURRENT_SCHEMA_VERSION (v0→v1 = the pre-2D progress backfill). Adding a
+//     future v1→v2 is just another ladder step.
+//   - A store saved by a NEWER version (schemaVersion > CURRENT) is NOT
+//     downgraded or dropped: records are returned best-effort as-is and a
+//     NEWER_SCHEMA ReadWarning fires. A user who opened a newer deploy and
+//     then an older one must not lose data.
+//   - Migration runs BEFORE per-record validation, so the validity predicate
+//     always sees current-shape records.
+//   - On write: always emit the envelope at CURRENT_SCHEMA_VERSION.
+//
+// schemaVersion is internal to the stored shape — the public API
+// (getProject/listProjects/saveProject/deleteProject) is unchanged and
+// components need no changes.
 //
 // These functions are safe to call during SSR — they guard against
 // `typeof localStorage === 'undefined'` and return empty results on the server.
@@ -17,6 +44,16 @@
 import type { RpgStoryboardProject } from '@storyboard-os/rpg-domain';
 
 const STORAGE_KEY = 'rpg-sb:projects';
+
+/**
+ * The schema version this build reads and writes. Bump this AND add a matching
+ * ladder step in `migrations` whenever the stored project shape changes in a
+ * way that isn't backward-safe by presence alone.
+ */
+export const CURRENT_SCHEMA_VERSION = 1;
+
+/** Version assigned to a legacy bare-array store (no envelope). */
+const LEGACY_SCHEMA_VERSION = 0;
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -45,14 +82,20 @@ export type WriteResult =
  * non-blocking notice when records were skipped.
  *
  * Failure modes:
- *   - STORE_UNREADABLE — the store root is unusable (unparseable JSON or a
- *     non-array root). Nothing could be returned, but the raw value is left
- *     in storage untouched.
+ *   - STORE_UNREADABLE — the store root is unusable (unparseable JSON, or a
+ *     value that is neither a bare array nor a `{ schemaVersion, projects }`
+ *     envelope). Nothing could be returned, but the raw value is left in
+ *     storage untouched.
  *   - RECORDS_DROPPED — the root parsed, but `dropped` records failed
  *     validation and were omitted from the result. They remain in storage.
+ *   - NEWER_SCHEMA — the store was written by a newer build (its
+ *     `schemaVersion` exceeds this build's CURRENT_SCHEMA_VERSION). Records are
+ *     returned best-effort as-is and the raw value is left untouched — the
+ *     store is NOT downgraded — so a user who opened a newer deploy then an
+ *     older one does not lose data.
  */
 export interface ReadWarning {
-  code: 'STORE_UNREADABLE' | 'RECORDS_DROPPED';
+  code: 'STORE_UNREADABLE' | 'RECORDS_DROPPED' | 'NEWER_SCHEMA';
   message: string;
   /** How many records were skipped (0 when the whole store was unreadable). */
   dropped: number;
@@ -69,6 +112,22 @@ let lastReadWarning: ReadWarning | null = null;
  */
 export function getLastReadWarning(): ReadWarning | null {
   return lastReadWarning;
+}
+
+/**
+ * Non-throwing dev-facing diagnostic (PR-002). The store is the highest-stakes
+ * layer yet had zero dev signal (the canvas has F-CI-208 warns; the store had
+ * none). This is ADDITIVE console.warn only — the user-facing ReadWarning
+ * banner is unchanged. Fires at the store's inflection points: records dropped,
+ * store unreadable, a migration ran, a newer schema encountered.
+ */
+function devWarn(message: string, context?: unknown): void {
+  try {
+    if (context === undefined) console.warn(`[projectStorage] ${message}`);
+    else console.warn(`[projectStorage] ${message}`, context);
+  } catch {
+    // Never let a diagnostic take down a read/write.
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -152,33 +211,86 @@ function isValidStoredProject(value: unknown): value is RpgStoryboardProject {
 }
 
 /**
- * Migrate a project loaded from localStorage to the current shape.
- * Phase 2D: add `progress` field if missing (projects saved before 2D).
- * Null-safe: a missing OR malformed progress field is normalized to the
- * empty progress record rather than crashing (or dropping) the project —
- * progress is auxiliary; the user's board content is what must survive.
+ * Ordered migration ladder. Each entry `migrations[n]` upgrades a project
+ * array from schema version `n` to version `n + 1`. `migrateProjects()` applies
+ * them stepwise from the stored version up to CURRENT_SCHEMA_VERSION, so a
+ * future v1→v2 is just another entry here — that's the whole point of the
+ * envelope. Steps operate on the raw array (unknown[]) because a record may be
+ * pre-migration-shape; validation happens AFTER migration.
+ *
+ *   step 0 (v0 → v1): the pre-2D `progress` backfill. Null-safe — a missing OR
+ *   malformed progress field is normalized to the empty progress record rather
+ *   than crashing (or dropping) the project; progress is auxiliary, the user's
+ *   board content is what must survive.
  */
-function migrate(project: RpgStoryboardProject): RpgStoryboardProject {
-  const progress = (project as { progress?: unknown }).progress;
-  if (!isRecord(progress) || !isRecord((progress as { frames?: unknown }).frames)) {
-    return { ...project, progress: { frames: {} } };
+const migrations: Record<number, (projects: unknown[]) => unknown[]> = {
+  0: (projects) =>
+    projects.map((entry) => {
+      if (!isRecord(entry)) return entry; // leave non-records for the validator to drop
+      const progress = (entry as { progress?: unknown }).progress;
+      if (!isRecord(progress) || !isRecord((progress as { frames?: unknown }).frames)) {
+        return { ...entry, progress: { frames: {} } };
+      }
+      return entry;
+    }),
+};
+
+/**
+ * Apply the ladder from `fromVersion` up to CURRENT_SCHEMA_VERSION. A missing
+ * ladder step for some version is treated as a structural no-op (advance the
+ * version without touching the data) so a gap can never silently drop records.
+ */
+function migrateProjects(projects: unknown[], fromVersion: number): unknown[] {
+  let data = projects;
+  for (let v = fromVersion; v < CURRENT_SCHEMA_VERSION; v++) {
+    const step = migrations[v];
+    data = step ? step(data) : data;
   }
-  return project;
+  return data;
 }
 
 /**
- * Raw entries as stored — no validation, no migration. Used by the write
- * path so records we can't validate are carried through writes untouched
- * instead of being destroyed on the next save. Returns null when the store
- * root itself is unusable.
+ * The stored shape once parsed: either a legacy bare array (schemaVersion 0,
+ * `projects` is the array itself) or a `{ schemaVersion, projects }` envelope.
+ */
+type ParsedStore =
+  | { kind: 'store'; schemaVersion: number; projects: unknown[] }
+  | { kind: 'unreadable' };
+
+/**
+ * Detect the on-disk shape without validating individual records:
+ *   - a JSON array           → legacy v0, projects = the array
+ *   - a { schemaVersion:number, projects:array } envelope → that version
+ *   - anything else          → unreadable
+ */
+function parseStore(parsed: unknown): ParsedStore {
+  if (Array.isArray(parsed)) {
+    return { kind: 'store', schemaVersion: LEGACY_SCHEMA_VERSION, projects: parsed };
+  }
+  if (isRecord(parsed)) {
+    const version = (parsed as { schemaVersion?: unknown }).schemaVersion;
+    const projects = (parsed as { projects?: unknown }).projects;
+    if (typeof version === 'number' && Array.isArray(projects)) {
+      return { kind: 'store', schemaVersion: version, projects };
+    }
+  }
+  return { kind: 'unreadable' };
+}
+
+/**
+ * Raw project entries as stored — no per-record validation, no migration. Used
+ * by the write path so records we can't validate are carried through writes
+ * untouched instead of being destroyed on the next save. Unwraps the envelope
+ * (or a legacy bare array) to the underlying `projects` array. Returns null
+ * when the store root itself is unusable.
  */
 function readRawEntries(): unknown[] | null {
   if (typeof localStorage === 'undefined') return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw === null || raw === '') return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : null;
+    const store = parseStore(JSON.parse(raw));
+    return store.kind === 'store' ? store.projects : null;
   } catch {
     return null;
   }
@@ -188,31 +300,94 @@ function readAll(): RpgStoryboardProject[] {
   lastReadWarning = null;
   if (typeof localStorage === 'undefined') return [];
 
-  const hasStoredValue = localStorage.getItem(STORAGE_KEY) !== null;
-  const entries = readRawEntries();
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw === null || raw === '') return [];
 
-  if (entries === null) {
-    // Unparseable JSON or non-array root. Return nothing, touch nothing.
-    if (hasStoredValue) {
-      lastReadWarning = {
-        code: 'STORE_UNREADABLE',
-        message: 'Saved projects could not be read — the browser storage entry is corrupt.',
-        dropped: 0,
-      };
-    }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    // Unparseable JSON. Return nothing, touch nothing.
+    devWarn('store unreadable — JSON.parse failed', {
+      error: err instanceof Error ? err.message : String(err),
+      rawPrefix: raw.slice(0, 80),
+    });
+    lastReadWarning = {
+      code: 'STORE_UNREADABLE',
+      message: 'Saved projects could not be read — the browser storage entry is corrupt.',
+      dropped: 0,
+    };
     return [];
   }
 
-  const valid = entries.filter(isValidStoredProject);
-  const dropped = entries.length - valid.length;
+  const store = parseStore(parsed);
+  if (store.kind === 'unreadable') {
+    // Parsed, but neither a bare array nor a { schemaVersion, projects }
+    // envelope. Return nothing, touch nothing.
+    devWarn('store unreadable — root is neither a bare array nor an envelope', {
+      rawPrefix: raw.slice(0, 80),
+    });
+    lastReadWarning = {
+      code: 'STORE_UNREADABLE',
+      message: 'Saved projects could not be read — the browser storage entry is corrupt.',
+      dropped: 0,
+    };
+    return [];
+  }
+
+  // "Saved by a newer version" guard: do NOT downgrade or drop. Return the
+  // records best-effort as-is and surface a NEWER_SCHEMA warning. The raw store
+  // is left untouched (reads never write) so the newer deploy keeps its data.
+  if (store.schemaVersion > CURRENT_SCHEMA_VERSION) {
+    devWarn('newer schema encountered — returning records as-is, not downgrading', {
+      storedVersion: store.schemaVersion,
+      currentVersion: CURRENT_SCHEMA_VERSION,
+      projectCount: store.projects.length,
+    });
+    lastReadWarning = {
+      code: 'NEWER_SCHEMA',
+      message:
+        'These projects were saved by a newer version of the app. They are shown as-is; ' +
+        'save from this older version only if you understand it may drop newer fields.',
+      dropped: 0,
+    };
+    // Best-effort: return everything that at least looks like a project record,
+    // without dropping (a newer field must not read as "invalid" here). Cast via
+    // unknown — these are newer-shape records we deliberately do not validate.
+    return store.projects.filter(isRecord) as unknown as RpgStoryboardProject[];
+  }
+
+  // Migrate FIRST (stepwise up the ladder), then validate — so the validity
+  // predicate always sees current-shape records.
+  const migrated =
+    store.schemaVersion < CURRENT_SCHEMA_VERSION
+      ? migrateProjects(store.projects, store.schemaVersion)
+      : store.projects;
+  if (store.schemaVersion < CURRENT_SCHEMA_VERSION) {
+    devWarn('migration ran', {
+      fromVersion: store.schemaVersion,
+      toVersion: CURRENT_SCHEMA_VERSION,
+      projectCount: migrated.length,
+    });
+  }
+
+  const valid = migrated.filter(isValidStoredProject);
+  const dropped = migrated.length - valid.length;
   if (dropped > 0) {
+    const droppedIds = migrated
+      .filter((e) => !isValidStoredProject(e))
+      .map((e) => (isRecord(e) && typeof e.id === 'string' ? e.id : '<no id>'));
+    devWarn('records dropped during read (failed validation)', {
+      dropped,
+      ids: droppedIds,
+    });
     lastReadWarning = {
       code: 'RECORDS_DROPPED',
       message: `${dropped} saved ${dropped === 1 ? 'project' : 'projects'} could not be read and ${dropped === 1 ? 'was' : 'were'} skipped. The data is still in browser storage, untouched.`,
       dropped,
     };
   }
-  return valid.map(migrate);
+  return valid;
 }
 
 /**
@@ -231,12 +406,19 @@ function isQuotaError(err: unknown): boolean {
   );
 }
 
+/**
+ * Persist the project array as a versioned envelope at CURRENT_SCHEMA_VERSION.
+ * Always writes `{ schemaVersion, projects }` — never a bare array — so the
+ * next read can version-detect. `entries` is unknown[] because invalid raw
+ * records are carried through writes untouched (see saveProject/deleteProject).
+ */
 function writeAll(entries: unknown[]): WriteResult {
   if (typeof localStorage === 'undefined') {
     return { ok: false, code: 'WRITE_FAILED', message: 'localStorage is not available in this environment' };
   }
+  const envelope = { schemaVersion: CURRENT_SCHEMA_VERSION, projects: entries };
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
     return { ok: true };
   } catch (err) {
     if (isQuotaError(err)) {

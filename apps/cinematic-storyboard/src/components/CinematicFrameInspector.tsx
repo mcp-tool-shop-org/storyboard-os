@@ -25,6 +25,7 @@ import {
     type StoryboardFrame,
     type CinematicFrameType,
 } from '@storyboard-os/cinematic-domain';
+import { cinematicColors } from '@storyboard-os/cinematic-domain';
 
 // F-AP-202: humanize cinematic missing-reason codes so users see "Missing visual
 // description" instead of raw `no_visualDescription`. Codes come from
@@ -293,7 +294,7 @@ export default function CinematicFrameInspector({ frame, onClose }: Props) {
                 {/* VFX requirements */}
                 {content.vfxRequirements && content.vfxRequirements.length > 0 && (
                     <ContentSection title="VFX Requirements">
-                        <ListField items={content.vfxRequirements} color="#EC4899" />
+                        <ListField items={content.vfxRequirements} color={cinematicColors.vfx} />
                     </ContentSection>
                 )}
 

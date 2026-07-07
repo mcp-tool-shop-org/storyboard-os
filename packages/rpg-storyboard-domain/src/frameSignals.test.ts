@@ -7,8 +7,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { getFrameSignal, getFrameBadges, getChoiceBranchCount } from './frameSignals';
+import { getFrameSignal, getFrameBadges, getChoiceBranchCount, rpgColors } from './frameSignals';
 import type { StoryboardFrame } from './schema';
+import { statusColors, statusLabels } from '@storyboard-os/core';
 import type { StoryboardConnection } from '@storyboard-os/core';
 
 // ─── Fixture helpers ──────────────────────────────────────────────────────────
@@ -260,6 +261,42 @@ describe('getFrameBadges', () => {
       expect(badge.text.length).toBeGreaterThan(0);
       expect(badge.color).toMatch(/^#[0-9a-fA-F]{6}$/);
     }
+  });
+});
+
+// ─── Centralized token contract (VP-001 / PR-003 refactor guard) ──────────────
+// The badge colors are now sourced from core's statusColors — this proves the
+// centralization preserved the exact canonical hexes the app renders, and that
+// a known readiness value still produces the right badge after the switch was
+// refactored with an exhaustiveness default arm.
+
+describe('rpgColors sources from core statusColors', () => {
+  it('re-exports the shared status swatches under domain names', () => {
+    expect(rpgColors.state).toBe(statusColors.state);
+    expect(rpgColors.ready).toBe(statusColors.spec);
+    expect(rpgColors.partial).toBe(statusColors.partial);
+    expect(rpgColors.draft).toBe(statusColors.draft);
+  });
+
+  it('a ready frame renders the canonical SPEC label + spec color', () => {
+    const frame = makeFrame({
+      content: {
+        implementationChecklist: ['Wire up'],
+        requiredAssets: ['a.png'],
+        testCriteria: ['fires'],
+      },
+    });
+    const badge = getFrameBadges(frame).find(b => b.text === statusLabels.ready);
+    expect(badge).toBeDefined();
+    expect(badge!.color).toBe(statusColors.spec);
+  });
+
+  it('an incomplete frame renders the canonical DRAFT label + draft color', () => {
+    const badge = getFrameBadges(makeFrame({ content: {} })).find(
+      b => b.text === statusLabels.draft,
+    );
+    expect(badge).toBeDefined();
+    expect(badge!.color).toBe(statusColors.draft);
   });
 });
 
