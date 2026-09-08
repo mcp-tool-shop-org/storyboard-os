@@ -6,6 +6,14 @@ on:
     paths:
       - 'site/**'
       - '.github/workflows/pages.yml'
+      # This job installs from the WORKSPACE ROOT, so a root-level dependency
+      # change can break it while matching none of the filters above. That
+      # happened: a root pnpm-lock.yaml change broke this build, the fix landed
+      # in another root-level commit, and Pages re-ran for neither — leaving a
+      # stale failure that looked like a live one.
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
   workflow_dispatch:
 
 concurrency:
