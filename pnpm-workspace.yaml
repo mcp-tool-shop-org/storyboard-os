@@ -8,21 +8,28 @@ overrides:
   '@ungap/structured-clone': ^1.3.1
   # Security pins for transitive build-time deps flagged by `pnpm audit --prod`.
   devalue: ^5.8.1 # GHSA-77vg-94rm-hx3p — DoS via sparse-array deserialization
-  vite: ^6.4.3 # GHSA-fx2h-pf6j-xcff — dev-server server.fs.deny bypass (also lifts site's vite 6.4.2)
+  # NOTE: `vite: ^6.4.3` was pinned here for GHSA-fx2h-pf6j-xcff and has been
+  # REMOVED. astro 7 depends on vite ^8.0.13, and an override pinning vite 6
+  # wins store-wide — astro then builds against a vite it was not written for
+  # and dies with "rollupOptions.input should not be an html file when building
+  # for SSR", an error that names neither vite nor the override. vite 8 is far
+  # past that advisory; `pnpm audit --prod --audit-level=high` is the check.
 
 onlyBuiltDependencies:
   - esbuild
   - sharp
 
-# `pnpm audit --prod --audit-level=high` runs in CI (ci.yml). These two advisories
-# are acknowledged-but-ignored because they are structurally UNREACHABLE in this
-# product: storyboard-os ships as static `astro build` output (GitHub Pages) — no
-# SSR server, no server islands, no request-time Host-header or slot-name handling.
-# Both are only patched in astro 6 (a separate major); revisit at that bump.
-auditConfig:
-  ignoreGhsas:
-    - GHSA-2pvr-wf23-7pc7 # astro: Host-header SSRF in prerendered error-page fetch (SSR-only)
-    - GHSA-8hv8-536x-4wqp # astro: Reflected XSS via unescaped slot name (server-islands/SSR-only)
+# `pnpm audit --prod --audit-level=high` runs in CI (ci.yml).
+#
+# An `auditConfig.ignoreGhsas` block used to live here, suppressing two astro
+# advisories — GHSA-2pvr-wf23-7pc7 (Host-header SSRF in prerendered error-page
+# fetch) and GHSA-8hv8-536x-4wqp (reflected XSS via unescaped slot name). Both
+# were SSR-only and structurally unreachable in a statically built site, and the
+# note said to revisit them at the next astro major.
+#
+# This is that bump. On astro 7 the audit reports no known vulnerabilities with
+# the suppressions REMOVED, so they are gone rather than carried forward. The
+# gate is now unsuppressed and means what it says.
 
 allowBuilds:
   esbuild: true
