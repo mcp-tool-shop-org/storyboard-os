@@ -156,7 +156,7 @@ pnpm build      # builds all 3 apps (54 pages)
 pnpm verify     # typecheck + test + build in one command (ship gate)
 ```
 
-Requirements: Node ≥ 20, pnpm ≥ 10.
+Requirements: Node ≥ 22.13, pnpm ≥ 10.
 
 Test scope is automatically filtered to `@storyboard-os/*` packages and `rpg-storyboard` — it does not pick up sibling workspaces in the parent directory.
 
@@ -164,11 +164,11 @@ Test scope is automatically filtered to `@storyboard-os/*` packages and `rpg-sto
 
 ## Trust Model
 
-Storyboard OS is a **local-only browser application** — no server, no accounts, no network egress.
+Storyboard OS is a **local-only browser application** (three verticals) — no server, no accounts, no network egress.
 
-- **Data touched:** Project data (beat specs, board positions, checklist progress) in browser `localStorage` on the user's machine only.
-- **Data NOT touched:** No credentials, no payment info, no personal data beyond what the designer types into beat spec fields.
-- **No network requests at runtime.** The app is a static site. After the initial page load, zero network calls are made.
+- **Data touched:** **RPG only** — project data (beat specs, board positions, checklist progress) in browser `localStorage` on the user's machine. Marketing and cinematic ship static demo boards with handoff export and do **not** use `localStorage` today.
+- **Data NOT touched:** No credentials, no payment info, no personal data beyond what the operator types into spec fields (RPG) or what is authored into static demo content.
+- **No network requests at runtime.** Each app is a static site. After the initial page load, zero network calls are made.
 - **No telemetry.** Nothing is collected or transmitted.
 
 See [`SECURITY.md`](SECURITY.md) for the full trust model and vulnerability reporting.

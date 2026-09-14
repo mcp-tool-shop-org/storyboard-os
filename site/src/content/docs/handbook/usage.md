@@ -1,13 +1,17 @@
 ---
 title: Authoring Workflow
-description: The complete design loop from project creation to developer handoff.
+description: RPG design loop from durable project creation to developer handoff.
 sidebar:
   order: 2
 ---
 
+:::note
+This page is the **rpg-storyboard** authoring loop (`/projects`, Edit Beat, localStorage persist). For marketing (`pnpm dev:marketing` → `/campaigns`) and cinematic (`pnpm dev:cinematic` → `/sequences`) first-run paths, see [Getting Started](./getting-started/).
+:::
+
 ## The full authoring loop
 
-This is how a complete design session runs. Each step builds on the last; the board is always the source of truth.
+This is how a complete RPG design session runs. Each step builds on the last; the board is always the source of truth.
 
 ### 1. Create a project
 

@@ -26,28 +26,38 @@ Include:
 
 ## Trust Model
 
-Storyboard OS is a **local-only browser application** shipped as three verticals — `rpg-storyboard`, `marketing-storyboard`, and `cinematic-storyboard`. All three share the same trust model: no server, no accounts, no network egress.
+Storyboard OS is a **local-only browser application** shipped as three verticals — `rpg-storyboard`, `marketing-storyboard`, and `cinematic-storyboard`. Shared posture: no server, no accounts, no network egress, no telemetry.
 
-- **Data touched (all three verticals):** Project and storyboard data stored in browser `localStorage` on the user's own machine. No data leaves the browser.
-  - **RPG vertical:** quest titles, beat specs, board positions, checklist progress, state-change descriptions, designer notes, player-visible text
-  - **Marketing vertical:** campaign briefs, audience segment descriptions, messaging claims, channel details, approval requirements, measurement metrics, checklist progress
-  - **Cinematic vertical:** sequence and shot descriptions, camera angles and movements, dialogue, action notes, VFX/audio requirements, edit notes, continuity requirements, checklist progress
-- **Data NOT touched:** No credentials, no authentication tokens, no payment information, no personal information beyond what the user types into spec fields. No project data is ever uploaded.
-- **Network requests:** None at runtime, in any vertical. Each app is served as static HTML/JS files. After the initial page load, no network calls are made.
-- **Permissions required:** Browser `localStorage` access only. No camera, microphone, location, or file system access.
+**Persistence differs by vertical:**
+
+| Vertical | Persistence today | Data in browser |
+|----------|-------------------|-----------------|
+| **rpg-storyboard** | Yes — `localStorage` key `rpg-sb:projects` | Quest titles, beat specs, board positions, checklist/test progress, designer notes, player-visible text |
+| **marketing-storyboard** | None — SSG demo / template boards | No project store; campaign content is build-time static |
+| **cinematic-storyboard** | None — SSG demo / template boards | No project store; sequence content is build-time static |
+
+Editable localStorage-backed projects for cinematic remain future work (see roadmap §1). Do not assume marketing or cinematic read or trust a browser store.
+
+- **Data NOT touched (all verticals):** No credentials, no authentication tokens, no payment information, no personal information beyond what an operator types into editable RPG fields or authors into static demo content. No project data is ever uploaded.
+- **Network requests:** None at runtime, in any vertical. Each app is served as static HTML/JS. After the initial page load, no network calls are made.
+- **Permissions required:** RPG needs browser `localStorage` access to persist projects. Marketing and cinematic need no special permissions beyond loading the static site. No camera, microphone, location, or file-system access in any vertical.
 - **No telemetry:** Nothing is collected or transmitted by any vertical. No analytics, no error reporting, no usage tracking.
 
 ## Scope
 
-Because no vertical has a server-side component, the attack surface is identical across all three and limited to:
+Attack surface common to all three verticals:
 
-- **XSS via user-authored content:** Spec fields in every vertical (beat specs, campaign briefs, shot descriptions, dialogue, designer / author / production notes) accept plain text. If rendered as HTML without sanitization, an attacker with access to a user's localStorage (e.g., on a shared machine) could inject scripts. All spec content is rendered as text, not HTML, in all three apps.
-- **localStorage tampering:** Data in localStorage is accessible to any JavaScript running on the same origin. Each storyboard app reads and trusts its own localStorage data; malformed data causes graceful error states, not crashes. Verticals do not share localStorage namespaces, so corrupting one does not affect the others.
-- **Dependency vulnerabilities:** Standard npm dependency supply-chain risk across the shared packages (`@storyboard-os/core`, `canvas`, `routing`, `rpg-domain`, `marketing-domain`, `cinematic-domain`) and the three app shells. Dependabot monitors for updates.
+- **XSS via authored content:** Spec fields (beat specs, campaign briefs, shot descriptions, dialogue, notes) are plain text. If rendered as HTML without sanitization, malicious content could execute. All spec content is rendered as text, not HTML, in all three apps. For RPG, an attacker with access to the same-origin `localStorage` could plant hostile strings; for marketing/cinematic the content is in the shipped static bundle / domain fixtures.
+- **Dependency vulnerabilities:** Standard npm supply-chain risk across shared packages (`@storyboard-os/core`, `canvas`, `routing`, `rpg-domain`, `marketing-domain`, `cinematic-domain`) and the three app shells. Dependabot monitors for updates.
+
+**RPG-only persistence surface:**
+
+- **localStorage tampering:** Data under `rpg-sb:projects` is readable by any JavaScript on the same origin. The RPG app validates records on read (`WriteResult` / `ReadWarning`); malformed records are dropped from the in-memory list with a notice, not used to blank the whole registry. Marketing and cinematic do not share this namespace and have no store to corrupt.
+- **Store resilience:** Quota exceeded, `NEWER_SCHEMA` (store written by a newer build), and corrupt roots/records are handled in `apps/rpg-storyboard` `projectStorage.ts`. Recovery steps: [`docs/operator-playbook.md`](docs/operator-playbook.md) §5.
 
 ## Per-vertical considerations
 
-The trust model and attack surface are the same across all three verticals, but the **content** that operators put into spec fields differs by domain. The risks below are operator-side data-handling concerns, not application vulnerabilities — they apply if a user commits exported pack files, project JSON dumps, or handoff briefs to a public repository.
+The **content** operators put into spec fields (or commit as exported packs) differs by domain. The risks below are operator-side data-handling concerns, not application vulnerabilities — they apply if a user commits exported pack files, project JSON dumps, or handoff briefs to a public repository.
 
 ### Marketing vertical
 
@@ -73,7 +83,7 @@ The cinematic schema accepts free-text fields that often carry **copyrighted or 
 
 **Recommended operator practice for cinematic:**
 - Keep cinematic storyboards in a **private** repository for any pre-release production
-- `.gitignore` exported sequence JSON, handoff Markdown, and any localStorage dumps that include scripted dialogue or shot descriptions
+- `.gitignore` exported sequence JSON and handoff Markdown that include scripted dialogue or shot descriptions
 - Treat downloaded production briefs as confidential; do not share with vendors or contractors without an NDA in place and a copy of the brief stored only in a private channel
 - Strip or rewrite dialogue and visual descriptions before showcasing a board in public talks, marketing material, or documentation contributed back upstream
 
@@ -83,7 +93,8 @@ The RPG schema generally carries game-design content rather than personal or cop
 
 - Quest names, beat summaries, and player-visible text are often the author's or studio's IP for an unreleased game — treat them with the same care you would treat any other unreleased game-design document
 - If the project storyboard references licensed IP (e.g., a contracted licensed property), keep the repository private until release
+- `.gitignore` localStorage dumps / exported project JSON when they contain unpublished quest IP
 
 ### All verticals
 
-Across every vertical, the application **never uploads** anything — every concern above is about what an operator chooses to commit, share, or publish. The defaults are private: localStorage on one machine, zero network egress. The recommendations here exist because exported handoff briefs and committed pack files are easy to forget about once they leave the browser.
+Across every vertical, the application **never uploads** anything — every concern above is about what an operator chooses to commit, share, or publish. Defaults are private: RPG data stays in one browser profile; marketing/cinematic demos are static; zero network egress. The recommendations here exist because exported handoff briefs and committed pack files are easy to forget about once they leave the browser.

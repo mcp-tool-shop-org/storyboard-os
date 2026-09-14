@@ -75,7 +75,7 @@ export const config: SiteConfig = {
       kind: 'features',
       id: 'features',
       title: 'Three verticals, one platform',
-      subtitle: 'rpg-storyboard for quest authoring. marketing-storyboard for campaign implementation. cinematic-storyboard for production storyboarding. All run locally — no backend, no accounts, no server.',
+      subtitle: 'rpg-storyboard for quest authoring. marketing-storyboard for campaign implementation. cinematic-storyboard for production storyboarding. All run locally — no backend, no accounts, no server. Durable localStorage projects are RPG-only today; marketing and cinematic ship static demo boards plus handoff export.',
       features: [
         {
           title: 'Game-state signal on the board',
@@ -83,23 +83,23 @@ export const config: SiteConfig = {
         },
         {
           title: 'Full spec depth per beat',
-          desc: 'Entry conditions, exit conditions, state changes, required assets, test criteria, implementation checklist, designer notes, player text, involved characters and factions — all editable inline.',
+          desc: 'Entry conditions, exit conditions, state changes, required assets, test criteria, implementation checklist, designer notes, player text, involved characters and factions — all editable inline on RPG project boards.',
         },
         {
-          title: 'Durable projects',
-          desc: 'Create from a template, rearrange the board, edit specs, mark checklist items and test criteria complete. Position and progress persist across reload with no backend.',
+          title: 'Durable projects (RPG)',
+          desc: 'In rpg-storyboard: create from a template, rearrange the board, edit specs, mark checklist and test criteria complete. Position and progress persist in localStorage with no backend. Marketing and cinematic Phase 0 boards are static SSG demos.',
         },
         {
           title: 'Topological handoff export',
           desc: "Beats ordered by Kahn's algorithm — upstream dependencies before downstream outcomes, cycle-safe. Download as Markdown for developers or JSON for engines.",
         },
         {
-          title: 'Three production templates',
-          desc: 'Quest Flow (8 frames), Quest Branch (7 frames, 3 divergent paths), Cutscene Beat (5 frames). Every generated frame ships with full spec depth — not a blank starting point.',
+          title: 'RPG production templates',
+          desc: 'Quest Flow (8 frames), Quest Branch (7 frames, 3 divergent paths), Cutscene Beat (5 frames). Every generated frame ships with full spec depth — not a blank starting point. Marketing and cinematic ship their own domain templates.',
         },
         {
-          title: 'Progress without spec mutation',
-          desc: 'Checklist and test completion live in project.progress, never in the spec strings. The handoff regenerates from live state — edited content plus current progress, always in sync.',
+          title: 'Progress without spec mutation (RPG)',
+          desc: 'On RPG projects, checklist and test completion live in project.progress, never in the spec strings. The handoff regenerates from live state — edited content plus current progress, always in sync.',
         },
         {
           title: 'Launch readiness (marketing)',

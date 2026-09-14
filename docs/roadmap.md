@@ -72,24 +72,11 @@ Mirror `apps/rpg-storyboard/src/`:
 
 ---
 
-## 3. Operator playbook for the three-vertical architecture
+## 3. Operator playbook for the three-vertical architecture — CLOSED
 
 **Finding:** F-DS-205 (MED proactive)
 
-**Where:** `site/src/content/docs/handbook/` or `docs/`
-
-**Current state:** Release/onboard/test runbooks are scattered across `docs/phase-{0,1,2}-closeout.md`, `docs/marketing-phase-0-closeout.md`, `docs/cinematic-phase-0-closeout.md`, and the handbook getting-started page. No single doc walks an operator through "I have a new vertical to add" or "I'm releasing a patch — what's the sequence?"
-
-**Scope:** A single `docs/operator-playbook.md` covering:
-- Adding a fourth vertical (already partially covered in `docs/architecture.md`; deepen it)
-- Releasing a patch or minor (commit → translation refresh → tag → release-triggers-publish)
-- Adding a new connection or frame type to an existing vertical
-- Troubleshooting publish failures (which `publish.yml` is now atomic + re-runnable; document the rerun protocol)
-- Coordinating breaking changes (use the cinematic-domain v1.1.0 changes as the worked example)
-
-**Why deferred:** Docs work is cheap but discovering the right shape requires watching at least one real "second user" do an operation — premature playbooks fossilize the wrong workflow.
-
-**Effort estimate:** ~half a day once the workflow has been exercised once or twice post-v1.1.0.
+**Closed 2026-09-14** by [`docs/operator-playbook.md`](./operator-playbook.md): fourth-vertical checklist, patch/minor release sequence (commit → translations → tag → publish), publish.yml rerun protocol, breaking-change coordination (cinematic v1.1.0 worked example), connection/frame-type extension notes, and RPG-only localStorage recovery (quota / NEWER_SCHEMA / corrupt records). Linked from the handbook index.
 
 ---
 

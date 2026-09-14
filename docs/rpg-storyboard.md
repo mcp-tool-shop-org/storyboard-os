@@ -141,7 +141,7 @@ Stroke weight distinguishes game-state branches (`choice`, `consequence`) from n
 
 | Level | Meaning |
 |---|---|
-| `ready` | All spec sections present. Spec score ≥ 3 (designerNotes, requiredAssets, testCriteria, implementationChecklist). No domain violations. |
+| `ready` | Spec score ≥ 3 of 4 (designerNotes, requiredAssets, testCriteria, implementationChecklist) and no domain violations. One gap is allowed. |
 | `partial` | Some spec present but incomplete. Spec score 1–2. |
 | `draft` | Spec score is 0 **and** no domain blocker. Empty shells of non-domain-required types only (`hook`, `scene`, `encounter`, `npc_beat`). |
 | `blocked` | Any `BLOCKING_REASONS` hit (missing type-required fields), **regardless of spec score** — an empty `choice`/`consequence`/`reveal` is `blocked`, not `draft`. |
