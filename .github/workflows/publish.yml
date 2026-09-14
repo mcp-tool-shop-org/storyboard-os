@@ -58,19 +58,33 @@ jobs:
 
       - name: Verify build before publish (trust-but-verify)
         run: |
+          pnpm audit --prod --audit-level=high
           pnpm run build:packages
+          pnpm run check
           pnpm test
           pnpm build
 
       - name: Tag-vs-version consistency check
         run: |
-          CORE_VERSION=$(jq -r .version packages/storyboard-core/package.json)
-          EXPECTED="v${CORE_VERSION}"
-          if [ "$EXPECTED" != "${RESOLVED_TAG}" ]; then
-            echo "ERROR: tag ${RESOLVED_TAG} does not match packages/storyboard-core version ${CORE_VERSION} (expected ${EXPECTED})"
-            exit 1
-          fi
-          echo "Tag matches core version: ${RESOLVED_TAG}"
+          EXPECTED_VERSION="${RESOLVED_TAG#v}"
+          PKG_JSONS=(
+            packages/storyboard-core/package.json
+            packages/storyboard-routing/package.json
+            packages/storyboard-canvas/package.json
+            packages/rpg-storyboard-domain/package.json
+            packages/marketing-storyboard-domain/package.json
+            packages/cinematic-storyboard-domain/package.json
+          )
+          for PKG_JSON in "${PKG_JSONS[@]}"; do
+            PKG_VERSION=$(jq -r .version "$PKG_JSON")
+            PKG_NAME=$(jq -r .name "$PKG_JSON")
+            if [ "$PKG_VERSION" != "$EXPECTED_VERSION" ]; then
+              echo "ERROR: tag ${RESOLVED_TAG} does not match ${PKG_NAME} version ${PKG_VERSION} in ${PKG_JSON} (expected ${EXPECTED_VERSION})"
+              exit 1
+            fi
+            echo "OK: ${PKG_NAME}@${PKG_VERSION} matches ${RESOLVED_TAG}"
+          done
+          echo "All six publish targets match tag: ${RESOLVED_TAG}"
 
       - name: Publish @storyboard-os/core
         id: publish_core

@@ -18,6 +18,7 @@ import {
     StoryboardCanvas as KonvaBoard,
     type StoryboardCanvasConfig,
     type CanvasFrame,
+    type CanvasConnectionStyle,
     type ViewportHandle,
     DEFAULT_FRAME_STYLE,
 } from '@storyboard-os/canvas';
@@ -33,10 +34,18 @@ import {
     type LaunchReadinessLevel,
     type ApprovalGateSignal,
     type MeasurementLoopSignal,
+    type MarketingConnectionType,
+    type Storyboard,
+    type StoryboardFrame,
 } from '@storyboard-os/marketing-domain';
-import type { Storyboard } from '@storyboard-os/marketing-domain';
 import { statusColors, textColors, typeScale } from '@storyboard-os/core';
-import { categorizeApprovalSignals, shouldShowLaunchBlockersPanel } from '../lib/launchBlockers';
+import {
+    categorizeApprovalSignals,
+    shouldShowLaunchBlockersPanel,
+    collectBlockedBeatEntries,
+    launchBlockersPanelHasContent,
+    type BlockedBeatEntry,
+} from '../lib/launchBlockers';
 import MarketingFrameInspector from './MarketingFrameInspector';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -78,7 +87,7 @@ const MARKETING_CANVAS_CONFIG: StoryboardCanvasConfig = {
         choice: { stroke: statusColors.accent, dash: [8, 4], strokeWidth: 2.5 },
         // Load-bearing gate outcomes (e.g. demo approval → launch announcement).
         consequence: { stroke: statusColors.blocked, strokeWidth: 2.5 },
-    },
+    } satisfies Record<MarketingConnectionType, CanvasConnectionStyle>,
     // Byte-identical to the canvas package's exported fallback frame style —
     // reuse it verbatim rather than hand-copying the literal.
     defaultFrameStyle: DEFAULT_FRAME_STYLE,
@@ -86,8 +95,9 @@ const MARKETING_CANVAS_CONFIG: StoryboardCanvasConfig = {
 };
 
 // ─── Connection type display config ──────────────────────────────────────────
+// Exhaustive over MarketingConnectionType — a new schema variant is a compile error.
 
-const CONNECTION_TYPE_LABELS: Record<string, string> = {
+const CONNECTION_TYPE_LABELS: Record<MarketingConnectionType, string> = {
     sequence: 'Campaign Flow',
     dependency: 'Dependency',
     approval: 'Approval Gate',
@@ -96,7 +106,7 @@ const CONNECTION_TYPE_LABELS: Record<string, string> = {
     consequence: 'Consequence',
 };
 
-const CONNECTION_TYPE_COLORS: Record<string, string> = {
+const CONNECTION_TYPE_COLORS: Record<MarketingConnectionType, string> = {
     sequence: SLATE_LINE,
     dependency: statusColors.blocked,
     approval: marketingColors.gate,
@@ -105,7 +115,7 @@ const CONNECTION_TYPE_COLORS: Record<string, string> = {
     consequence: statusColors.blocked,
 };
 
-const CONNECTION_EXPLANATIONS: Record<string, string> = {
+const CONNECTION_EXPLANATIONS: Record<MarketingConnectionType, string> = {
     sequence: 'This beat follows the previous one in the campaign flow. Execution is sequential.',
     dependency: 'This beat cannot start until the upstream dependency is resolved.',
     approval: 'This beat requires formal approval before the downstream work can begin.',
@@ -113,6 +123,22 @@ const CONNECTION_EXPLANATIONS: Record<string, string> = {
     choice: 'Audience segment branch — one of several paths this segment can take through the campaign.',
     consequence: 'Outcome of an upstream gate or decision — the downstream beat fires because that condition resolved.',
 };
+
+function isMarketingConnectionType(type: string): type is MarketingConnectionType {
+    return Object.prototype.hasOwnProperty.call(CONNECTION_TYPE_LABELS, type);
+}
+
+function connectionTypeLabel(type: string): string {
+    return isMarketingConnectionType(type) ? CONNECTION_TYPE_LABELS[type] : type.toUpperCase();
+}
+
+function connectionTypeColor(type: string): string {
+    return isMarketingConnectionType(type) ? CONNECTION_TYPE_COLORS[type] : SLATE_LINE;
+}
+
+function connectionTypeExplanation(type: string): string | null {
+    return isMarketingConnectionType(type) ? CONNECTION_EXPLANATIONS[type] : null;
+}
 
 // ─── Legend ───────────────────────────────────────────────────────────────────
 
@@ -404,6 +430,7 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
                     measurementSignals,
                 }) && (
                     <LaunchBlockersPanel
+                        blockedFrameIds={launchReadiness.blockedFrameIds}
                         blockedApprovals={approvalCategories.blocked}
                         pendingApprovals={approvalCategories.pending}
                         measurementSignals={measurementSignals}
@@ -567,9 +594,9 @@ interface ConnectionPanelProps {
 }
 
 function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: ConnectionPanelProps) {
-    const typeLabel = CONNECTION_TYPE_LABELS[connection.type] ?? connection.type.toUpperCase();
-    const accentColor = CONNECTION_TYPE_COLORS[connection.type] ?? SLATE_LINE;
-    const explanation = CONNECTION_EXPLANATIONS[connection.type] ?? null;
+    const typeLabel = connectionTypeLabel(connection.type);
+    const accentColor = connectionTypeColor(connection.type);
+    const explanation = connectionTypeExplanation(connection.type);
 
     return (
         <aside style={{
@@ -718,6 +745,8 @@ function LaunchReadinessBadge({ level, summary }: { level: LaunchReadinessLevel;
 // ─── LaunchBlockersPanel ──────────────────────────────────────────────────────
 
 interface LaunchBlockersPanelProps {
+    /** Frame IDs whose beat status is blocked — must be listed when non-empty. */
+    blockedFrameIds: readonly string[];
     /** Gates with no approval requirements defined — cannot pass at all. */
     blockedApprovals: ApprovalGateSignal[];
     /** Gates defined but not fully specced — approvals awaiting completion.
@@ -725,17 +754,42 @@ interface LaunchBlockersPanelProps {
         filter compared against a level that does not exist and hid these. */
     pendingApprovals: ApprovalGateSignal[];
     measurementSignals: MeasurementLoopSignal[];
-    frames: Array<{ id: string; title: string }>;
+    frames: readonly StoryboardFrame[];
 }
 
-function LaunchBlockersPanel({ blockedApprovals, pendingApprovals, measurementSignals, frames }: LaunchBlockersPanelProps) {
+function LaunchBlockersPanel({
+    blockedFrameIds,
+    blockedApprovals,
+    pendingApprovals,
+    measurementSignals,
+    frames,
+}: LaunchBlockersPanelProps) {
     const frameTitle = (id: string) => frames.find(f => f.id === id)?.title ?? id;
 
     const missingMetrics = measurementSignals.filter(s => !s.hasMetrics);
     const openLoops = measurementSignals.filter(s => s.hasMetrics && !s.isLoop);
 
-    const hasIssues = blockedApprovals.length > 0 || pendingApprovals.length > 0 || missingMetrics.length > 0 || openLoops.length > 0;
-    if (!hasIssues) return null;
+    // Generic blocked beats cover message/conversion/asset/touchpoint/etc. that
+    // are not already painted under approval-blocked or missing-metrics sections.
+    const blockedBeats: BlockedBeatEntry[] = collectBlockedBeatEntries(
+        frames,
+        blockedFrameIds,
+        {
+            excludeFrameIds: [
+                ...blockedApprovals.map(s => s.frameId),
+                ...missingMetrics.map(s => s.frameId),
+            ],
+        },
+    );
+
+    if (!launchBlockersPanelHasContent({
+        blockedBeats,
+        blockedApprovals,
+        pendingApprovals,
+        measurementSignals,
+    })) {
+        return null;
+    }
 
     return (
         <aside style={{
@@ -756,6 +810,14 @@ function LaunchBlockersPanel({ blockedApprovals, pendingApprovals, measurementSi
                 </span>
             </div>
             <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+                {blockedBeats.length > 0 && (
+                    <BlockerSection title="Blocked beats" color={statusColors.blocked}>
+                        {blockedBeats.map(b => (
+                            <BlockerItem key={b.frameId} label={b.title} detail={b.details.join('; ')} />
+                        ))}
+                    </BlockerSection>
+                )}
 
                 {/* Approval blockers */}
                 {blockedApprovals.length > 0 && (

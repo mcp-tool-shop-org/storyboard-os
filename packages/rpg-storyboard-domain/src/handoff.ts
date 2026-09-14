@@ -65,6 +65,8 @@ export interface HandoffBeat {
   requiredAssets: string[];
   implementationChecklist: string[];
   testCriteria: string[];
+  /** Spoilers / hidden implementation notes — author/designer facing only. */
+  authorOnlyNotes: string[];
 
   // ── Graph context ─────────────────────────────────────────────────────────
   /** Branches leading OUT from this beat. Empty for terminal beats. */
@@ -249,6 +251,7 @@ function buildBeat(
     requiredAssets:        content.requiredAssets        ?? [],
     implementationChecklist: content.implementationChecklist ?? [],
     testCriteria:          content.testCriteria          ?? [],
+    authorOnlyNotes:       content.authorOnlyNotes       ?? [],
 
     outgoingBranches,
     incomingFromIds,
@@ -457,11 +460,18 @@ function renderBeat(beat: HandoffBeat, index: number): string {
     sections.push(checklistLines(beat.testCriteria.map(esc)));
   }
 
-  // Designer notes (last — implementation-facing readers can skip)
+  // Designer notes (last before author-only — implementation-facing readers can skip)
   if (beat.designerNotes) {
     sections.push('');
     sections.push('**Designer Notes:**');
-    sections.push(`> ${esc(beat.designerNotes)}`);
+    sections.push(blockquote(esc(beat.designerNotes)));
+  }
+
+  // Author-only notes — spoilers / hidden logic for implementers, not in-game copy
+  if (beat.authorOnlyNotes.length > 0) {
+    sections.push('');
+    sections.push('**Designer/Author-only Notes:**');
+    sections.push(bulletLines(beat.authorOnlyNotes.map(esc)));
   }
 
   // Outgoing branches
@@ -747,7 +757,13 @@ function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
   if (beat.designerNotes) {
     sections.push('');
     sections.push('**Designer Notes:**');
-    sections.push(`> ${esc(beat.designerNotes)}`);
+    sections.push(blockquote(esc(beat.designerNotes)));
+  }
+
+  if (beat.authorOnlyNotes.length > 0) {
+    sections.push('');
+    sections.push('**Designer/Author-only Notes:**');
+    sections.push(bulletLines(beat.authorOnlyNotes.map(esc)));
   }
 
   sections.push('');

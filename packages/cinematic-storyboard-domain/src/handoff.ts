@@ -2,20 +2,31 @@
 
 import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
 import { getCinematicBeatStatus } from './beatStatus';
+import { parseDurationRange } from './productionSignals';
+export { parseDurationSeconds } from './productionSignals';
 
 // ─── Markdown escaping (DM-004) ───────────────────────────────────────────────
 //
 // Neutralize markdown-structural characters in INLINE user text:
-// - backticks → escaped so user text cannot open/close code spans
+// - backticks / backslashes → escaped so user text cannot open code spans
 // - pipes     → escaped so user text cannot add/split table cells
+// - `*` `_`   → escaped so emphasis cannot reshape structure
+// - `[` `]` `(` `)` → escaped so link/image syntax stays inert
 // - `<`       → `&lt;` so stray inline HTML stays inert
 // - a leading `#` / `>` / `-` (per line) → escaped so user text cannot
 //   introduce headings, blockquotes, or list items
 
 function escapeMarkdownInline(text: string): string {
   return text
+    .replace(/\\/g, '\\\\')
     .replace(/`/g, '\\`')
     .replace(/\|/g, '\\|')
+    .replace(/\*/g, '\\*')
+    .replace(/_/g, '\\_')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
     .replace(/</g, '&lt;')
     .replace(/^([#>-])/gm, '\\$1');
 }
@@ -118,34 +129,23 @@ export interface ProductionBrief {
   readySummary: { ready: number; partial: number; draft: number; blocked: number };
 }
 
-// ─── Duration parsing helper ──────────────────────────────────────────────────
-
-function parseDurationSeconds(est: string | undefined): number | null {
-  if (!est) return null;
-  // Handle "3s", "3-5s", "5-8s", "8-15s"
-  const match = est.match(/(\d+)(?:\s*-\s*(\d+))?\s*s/i);
-  if (!match) return null;
-  const low = parseInt(match[1], 10);
-  const high = match[2] ? parseInt(match[2], 10) : low;
-  return (low + high) / 2;
-}
+// ─── Duration rollup (uses shared parseDurationRange / parseDurationSeconds) ──
 
 function formatTotalDuration(frames: StoryboardFrame[]): string {
   let totalLow = 0;
   let totalHigh = 0;
   for (const f of frames) {
     // `?.` guards frames whose content is null/missing (DM-002).
-    const est = f.content?.durationEstimate;
-    if (!est) continue;
-    const match = est.match(/(\d+)(?:\s*-\s*(\d+))?\s*s/i);
-    if (!match) continue;
-    totalLow += parseInt(match[1], 10);
-    totalHigh += match[2] ? parseInt(match[2], 10) : parseInt(match[1], 10);
+    const range = parseDurationRange(f.content?.durationEstimate);
+    if (!range) continue;
+    totalLow += range[0];
+    totalHigh += range[1];
   }
   if (totalLow === 0) return 'Unknown';
   if (totalLow === totalHigh) return `${totalLow}s`;
   return `${totalLow}-${totalHigh}s`;
 }
+
 
 // ─── Generate brief ──────────────────────────────────────────────────────────
 

@@ -92,17 +92,26 @@ export interface FrameBadgeDescriptor {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-function computeReadiness(content: FrameContent): FrameReadiness {
-  const score = [
-    (content.implementationChecklist?.length ?? 0) > 0,
-    (content.requiredAssets?.length ?? 0) > 0,
-    (content.testCriteria?.length ?? 0) > 0,
-    !!content.designerNotes,
-  ].filter(Boolean).length;
-
-  if (score >= 3) return 'ready';
-  if (score >= 1) return 'partial';
-  return 'incomplete';
+/**
+ * Map authoritative getBeatStatus levels onto the coarser FrameReadiness union.
+ * Domain blockers (choice/consequence/reveal rules) must not report as 'ready'
+ * just because the checklist/assets/tests score is high.
+ */
+function readinessFromBeatStatus(level: BeatStatusLevel): FrameReadiness {
+  switch (level) {
+    case 'ready':
+      return 'ready';
+    case 'partial':
+      return 'partial';
+    case 'draft':
+    case 'blocked':
+      return 'incomplete';
+    default: {
+      const _exhaustive: never = level;
+      void _exhaustive;
+      return 'incomplete';
+    }
+  }
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -113,6 +122,10 @@ function computeReadiness(content: FrameContent): FrameReadiness {
  * The signal summarizes what a canvas renderer or hover preview needs to know
  * about the frame's game-state footprint and implementation completeness —
  * without exposing the full FrameContent to the canvas.
+ *
+ * `readiness` is derived from getBeatStatus (same authority as badges /
+ * inspector), mapped onto the coarser FrameReadiness union
+ * (blocked/draft → incomplete).
  */
 export function getFrameSignal(frame: StoryboardFrame): FrameSignal {
   // Untrusted load paths can hand us a frame with null/missing content —
@@ -137,10 +150,12 @@ export function getFrameSignal(frame: StoryboardFrame): FrameSignal {
     branchConditionSummary = `${entryConditions.length} entry conditions`;
   }
 
+  const beatStatus = getBeatStatus(frame);
+
   return {
     stateChangeSummary,
     branchConditionSummary,
-    readiness: computeReadiness(content),
+    readiness: readinessFromBeatStatus(beatStatus.level),
     hasTestCoverage: (content.testCriteria?.length ?? 0) > 0,
     hasRequiredAssets: (content.requiredAssets?.length ?? 0) > 0,
     hasImplementationChecklist: (content.implementationChecklist?.length ?? 0) > 0,

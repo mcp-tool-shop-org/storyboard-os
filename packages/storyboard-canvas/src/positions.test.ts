@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { reconcilePositions, shouldAutoFit } from './positions';
+import {
+  ensureFinitePosition,
+  reconcilePositions,
+  shouldAutoFit,
+} from './positions';
 import type { PositionMap } from './types';
 
 describe('reconcilePositions', () => {
@@ -97,6 +101,49 @@ describe('reconcilePositions', () => {
     );
     expect(result.changed).toBe(true);
     expect(result.positions.f1).toEqual({ x: 0, y: 0 });
+  });
+
+  it('seeds non-finite frame.position as {x:0,y:0}', () => {
+    const result = reconcilePositions(
+      {},
+      [{ id: 'poison', position: { x: Number.NaN, y: 10 } }],
+      {},
+    );
+    expect(result.positions.poison).toEqual({ x: 0, y: 0 });
+    expect(result.propBaselines.poison).toEqual({ x: 0, y: 0 });
+  });
+
+  it('adopts {x:0,y:0} when parent pushes Infinity coordinates', () => {
+    const prev: PositionMap = { f1: { x: 10, y: 10 } };
+    const baselines: PositionMap = { f1: { x: 10, y: 10 } };
+    const result = reconcilePositions(
+      prev,
+      [{ id: 'f1', position: { x: Number.POSITIVE_INFINITY, y: 0 } }],
+      baselines,
+    );
+    expect(result.positions.f1).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('ensureFinitePosition', () => {
+  it('returns a copy of finite coordinates', () => {
+    expect(ensureFinitePosition({ x: -12, y: 34 })).toEqual({ x: -12, y: 34 });
+  });
+
+  it('falls back to origin for NaN', () => {
+    expect(ensureFinitePosition({ x: Number.NaN, y: 1 })).toEqual({ x: 0, y: 0 });
+  });
+
+  it('falls back to origin for Infinity', () => {
+    expect(ensureFinitePosition({ x: 1, y: Number.NEGATIVE_INFINITY })).toEqual({
+      x: 0,
+      y: 0,
+    });
+  });
+
+  it('falls back to origin for null/undefined', () => {
+    expect(ensureFinitePosition(null)).toEqual({ x: 0, y: 0 });
+    expect(ensureFinitePosition(undefined)).toEqual({ x: 0, y: 0 });
   });
 });
 

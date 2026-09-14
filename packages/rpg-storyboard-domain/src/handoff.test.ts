@@ -110,6 +110,7 @@ describe('generateHandoff — beat content', () => {
     expect(Array.isArray(beat.involvedCharacters)).toBe(true);
     expect(Array.isArray(beat.involvedFactions)).toBe(true);
     expect(Array.isArray(beat.possibleOutcomes)).toBe(true);
+    expect(Array.isArray(beat.authorOnlyNotes)).toBe(true);
   });
 
   it('populates content fields from frame content', () => {
@@ -126,6 +127,7 @@ describe('generateHandoff — beat content', () => {
       involvedCharacters: ['Orvyn'],
       involvedFactions: ['Guild'],
       possibleOutcomes: ['Guild outcome', 'Other outcome'],
+      authorOnlyNotes: ['Spoiler: guild path unlocks act 3'],
     });
     const beat = generateHandoff(makeBoard([frame])).beats[0];
 
@@ -141,6 +143,7 @@ describe('generateHandoff — beat content', () => {
     expect(beat.involvedCharacters).toEqual(['Orvyn']);
     expect(beat.involvedFactions).toEqual(['Guild']);
     expect(beat.possibleOutcomes).toEqual(['Guild outcome', 'Other outcome']);
+    expect(beat.authorOnlyNotes).toEqual(['Spoiler: guild path unlocks act 3']);
   });
 
   it('beat type and status reflect the domain frame', () => {
@@ -462,6 +465,37 @@ describe('generateMarkdown', () => {
     });
     const md = generateMarkdown(generateHandoff(makeBoard([frame])));
     expect(md).toContain('> The keeper looks at you steadily.');
+  });
+
+  it('quotes multi-line designer notes as a full blockquote (DM-004)', () => {
+    const frame = makeFrame('a', 'scene', {
+      designerNotes: 'Line one intent.\nLine two tone.',
+    });
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    expect(md).toContain('> Line one intent.');
+    expect(md).toContain('> Line two tone.');
+    // Must not leak a bare second line outside the blockquote.
+    expect(md).not.toMatch(/^Line two tone\./m);
+  });
+
+  it('renders authorOnlyNotes under Designer/Author-only Notes', () => {
+    const frame = makeFrame('a', 'reveal', {
+      authorOnlyNotes: ['Hidden seed for act 2', 'Do not show in VO'],
+      entryConditions: ['flag = true'],
+    });
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    expect(md).toContain('**Designer/Author-only Notes:**');
+    expect(md).toContain('Hidden seed for act 2');
+    expect(md).toContain('Do not show in VO');
+  });
+
+  it('project markdown also blockquotes multi-line designer notes', () => {
+    let p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameContent(p, fid, { designerNotes: 'Alpha note.\nBeta note.' });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('> Alpha note.');
+    expect(md).toContain('> Beta note.');
   });
 
   it('omits empty sections — no phantom headings', () => {

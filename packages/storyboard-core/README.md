@@ -193,16 +193,16 @@ if (!result.valid) {
 |---|---|
 | `INVALID_STORYBOARD_SHAPE` | Input is null/undefined or missing `frames`/`connections` arrays, or a null/non-object element inside those arrays |
 | `EMPTY_STORYBOARD` | No frames in the storyboard |
-| `INVALID_FRAME_ID` | Frame `id` is missing or not a string |
+| `INVALID_FRAME_ID` | Frame `id` is missing, empty/whitespace-only, or not a string |
 | `DUPLICATE_FRAME_ID` | Two frames share the same ID |
 | `MISSING_TITLE` | Frame has no title (missing, empty, or non-string) |
-| `MISSING_TYPE` | Frame has no type |
+| `MISSING_TYPE` | Frame has no type (missing, empty/whitespace-only, or non-string) |
 | `MISSING_SUMMARY` | Frame has no summary (missing, empty, or non-string) |
 | `MISSING_FRAME_SIZE` | Frame is missing its `size` object |
 | `MISSING_FRAME_POSITION` | Frame is missing its `position` object |
 | `INVALID_FRAME_DIMENSION` | Frame width or height is NaN/Infinity or below the 40px minimum |
 | `INVALID_FRAME_POSITION` | Frame `position.x` or `position.y` is NaN/Infinity |
-| `INVALID_CONNECTION_ID` | Connection `id` is missing or not a string |
+| `INVALID_CONNECTION_ID` | Connection `id` is missing, empty/whitespace-only, or not a string |
 | `DUPLICATE_CONNECTION_ID` | Two connections share the same ID |
 | `SELF_LOOP_CONNECTION` | Connection's `fromFrameId` equals its `toFrameId` |
 | `DUPLICATE_CONNECTION_EDGE` | Two connections describe the same `from → to` edge |

@@ -339,12 +339,13 @@ describe('validateStoryboard position validity', () => {
   });
 });
 
-// ─── Non-string title/summary guards (CR-001) ─────────────────────────────────
+// ─── Non-string title/summary/type guards (CR-001 / F-c6a618aa) ───────────────
 // Optional chaining (`frame.title?.trim()`) only guards null/undefined. A
-// number/object/array/boolean title or summary must yield a structured
-// MISSING_TITLE / MISSING_SUMMARY error — never a TypeError.
+// number/object/array/boolean title, summary, or type must yield a structured
+// MISSING_* error — never a TypeError. Type used to be truthiness-only, which
+// admitted `42` and broke AccessibleFrameList.humanizeType (.replace).
 
-describe('validateStoryboard non-string title/summary guards', () => {
+describe('validateStoryboard non-string title/summary/type guards', () => {
   const nonStringValues: Array<[string, unknown]> = [
     ['number', 42],
     ['boolean', true],
@@ -380,7 +381,119 @@ describe('validateStoryboard non-string title/summary guards', () => {
       expect(result.valid).toBe(false);
       expect(result.errors.some(e => e.code === 'MISSING_SUMMARY' && e.frameId === 'f1')).toBe(true);
     });
+
+    it(`returns MISSING_TYPE (no throw) when type is a ${label}`, () => {
+      const badFrame = { ...makeFrame('f1'), type: value };
+      const storyboard = {
+        id: 'sb',
+        title: 'Bad type type',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        frames: [badFrame as any],
+        connections: [],
+      } as Storyboard;
+      const result = validateStoryboard(storyboard);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.code === 'MISSING_TYPE' && e.frameId === 'f1')).toBe(true);
+    });
   }
+
+  it('returns MISSING_TYPE for whitespace-only type', () => {
+    const badFrame = { ...makeFrame('f1'), type: '   ' };
+    const storyboard = {
+      id: 'sb',
+      title: 'Whitespace type',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [badFrame as any],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'MISSING_TYPE' && e.frameId === 'f1')).toBe(true);
+  });
+});
+
+// ─── Empty id guards (F-cb8432f8) ─────────────────────────────────────────────
+// Empty-string (and whitespace-only) ids must not enter the id sets — otherwise
+// a connection with fromFrameId/toFrameId of "" "matches" and hides the break.
+
+describe('validateStoryboard empty id guards', () => {
+  it('returns INVALID_FRAME_ID for an empty-string frame id', () => {
+    const badFrame = { ...makeFrame('f1'), id: '' };
+    const storyboard = {
+      id: 'sb',
+      title: 'Empty frame id',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [badFrame as any],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_FRAME_ID')).toBe(true);
+  });
+
+  it('returns INVALID_FRAME_ID for a whitespace-only frame id', () => {
+    const badFrame = { ...makeFrame('f1'), id: '   ' };
+    const storyboard = {
+      id: 'sb',
+      title: 'Whitespace frame id',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [badFrame as any],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_FRAME_ID')).toBe(true);
+  });
+
+  it('empty frame id does not satisfy a connection ref of ""', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Empty id masks broken ref',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      frames: [{ ...makeFrame('f1'), id: '' } as any, makeFrame('f2')],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: 'c1', fromFrameId: '', toFrameId: 'f2', type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_FRAME_ID')).toBe(true);
+    expect(result.errors.some(e => e.code === 'BROKEN_CONNECTION_FROM' && e.connectionId === 'c1')).toBe(true);
+  });
+
+  it('returns INVALID_CONNECTION_ID for an empty-string connection id', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Empty connection id',
+      frames: [makeFrame('f1'), makeFrame('f2')],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: '', fromFrameId: 'f1', toFrameId: 'f2', type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_CONNECTION_ID')).toBe(true);
+  });
+
+  it('does not report a bogus DUPLICATE_CONNECTION_ID for two empty connection ids', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Two empty connection ids',
+      frames: [makeFrame('f1'), makeFrame('f2'), makeFrame('f3')],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: '', fromFrameId: 'f1', toFrameId: 'f2', type: 'sequence' } as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: '', fromFrameId: 'f2', toFrameId: 'f3', type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.filter(e => e.code === 'INVALID_CONNECTION_ID')).toHaveLength(2);
+    expect(result.errors.some(e => e.code === 'DUPLICATE_CONNECTION_ID')).toBe(false);
+  });
 });
 
 // ─── Per-element shape guards (CR-002) ────────────────────────────────────────

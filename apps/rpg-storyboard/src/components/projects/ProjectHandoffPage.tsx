@@ -13,13 +13,13 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import {
-  generateProjectHandoff,
   generateProjectMarkdown,
   type ProjectHandoff,
   type ProjectHandoffBeat,
   type BeatStatusLevel,
 } from '@storyboard-os/rpg-domain';
 import { getProject } from '../../lib/storyboard/projectStorage';
+import { loadProjectHandoff } from '../../lib/storyboard/handoffLoad';
 import ErrorBoundary from '../ErrorBoundary';
 
 // ─── Const display maps ───────────────────────────────────────────────────────
@@ -77,35 +77,42 @@ function download(content: string, name: string, type: string) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+type LoadError =
+  | { kind: 'not_found' }
+  | { kind: 'generate_failed'; message: string; boardHref: string };
+
 function ProjectHandoffPageInner() {
   const [handoff,   setHandoff]   = useState<ProjectHandoff | null>(null);
   const [loading,   setLoading]   = useState(true);
-  const [notFound,  setNotFound]  = useState(false);
+  const [loadError, setLoadError] = useState<LoadError | null>(null);
   const [boardHref, setBoardHref] = useState('/projects');
 
   useEffect(() => {
-    // AP-004: getProject + generateProjectHandoff run over localStorage data.
-    // An unexpected throw here used to leave the page permanently on the
-    // loading spinner (the effect died, no state transition ever happened).
-    // Route ANY failure to the existing not-found state instead.
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
-      if (!id) { setNotFound(true); setLoading(false); return; }
-
-      const project = getProject(id);
-      if (!project) { setNotFound(true); setLoading(false); return; }
-
-      setBoardHref(`/projects/board?id=${id}`);
-      setHandoff(generateProjectHandoff(project));
+    // Distinct not-found vs generate-failed — generation throws must not look
+    // like the project vanished (F-9462df76).
+    const params = new URLSearchParams(window.location.search);
+    const result = loadProjectHandoff(params.get('id'), getProject);
+    if (result.status === 'ok') {
+      setBoardHref(result.boardHref);
+      setHandoff(result.handoff);
       setLoading(false);
-    } catch (err) {
-      if (typeof console !== 'undefined') {
-        console.error('[ProjectHandoffPage] failed to generate handoff:', err);
-      }
-      setNotFound(true);
-      setLoading(false);
+      return;
     }
+    if (result.status === 'generate_failed') {
+      if (typeof console !== 'undefined') {
+        console.error('[ProjectHandoffPage] failed to generate handoff:', result.message);
+      }
+      setLoadError({
+        kind: 'generate_failed',
+        message: result.message,
+        boardHref: result.boardHref,
+      });
+      setBoardHref(result.boardHref);
+      setLoading(false);
+      return;
+    }
+    setLoadError({ kind: 'not_found' });
+    setLoading(false);
   }, []);
 
   const handleDownloadMd = useCallback(() => {
@@ -122,7 +129,24 @@ function ProjectHandoffPageInner() {
   }, [handoff]);
 
   if (loading) return <StateScreen text="Generating handoff…" />;
-  if (notFound || !handoff) return <StateScreen text="Project not found." link="/projects" linkLabel="← Projects" />;
+  if (loadError?.kind === 'not_found') {
+    return <StateScreen text="Project not found." link="/projects" linkLabel="← Projects" />;
+  }
+  if (loadError?.kind === 'generate_failed') {
+    return (
+      <StateScreen
+        text="Handoff could not be generated."
+        detail={loadError.message}
+        link={loadError.boardHref}
+        linkLabel="← Back to Board"
+        secondaryLink="/projects"
+        secondaryLinkLabel="Projects"
+      />
+    );
+  }
+  if (!handoff) {
+    return <StateScreen text="Project not found." link="/projects" linkLabel="← Projects" />;
+  }
 
   const readyPct = Math.round(handoff.readiness.readyFraction * 100);
   const dateStr  = handoff.generatedAt.split('T')[0];
@@ -422,9 +446,15 @@ function BeatCard({ beat, index }: { beat: ProjectHandoffBeat; index: number }) 
 
         {beat.designerNotes && (
           <BeatField label="Designer Notes">
-            <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6, fontStyle: 'italic' }}>
+            <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6, fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
               {beat.designerNotes}
             </p>
+          </BeatField>
+        )}
+
+        {beat.authorOnlyNotes.length > 0 && (
+          <BeatField label="Designer/Author-only Notes" accentColor="#A78BFA">
+            <ItemList items={beat.authorOnlyNotes} />
           </BeatField>
         )}
 
@@ -617,16 +647,43 @@ function Dim({ children }: { children: React.ReactNode }) {
   return <span style={{ fontSize: 12, color: '#334155' }}>{children}</span>;
 }
 
-function StateScreen({ text, link, linkLabel }: { text: string; link?: string; linkLabel?: string }) {
+function StateScreen({
+  text,
+  detail,
+  link,
+  linkLabel,
+  secondaryLink,
+  secondaryLinkLabel,
+}: {
+  text: string;
+  detail?: string;
+  link?: string;
+  linkLabel?: string;
+  secondaryLink?: string;
+  secondaryLinkLabel?: string;
+}) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       height: '100vh', gap: 12, background: '#0b1120', color: '#f1f5f9',
-      fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+      fontFamily: 'ui-sans-serif, system-ui, sans-serif', padding: 24, textAlign: 'center',
     }}>
-      <span style={{ fontSize: 14, color: '#475569' }}>{text}</span>
+      <span style={{ fontSize: 16, fontWeight: 700, color: '#94a3b8' }}>{text}</span>
+      {detail && (
+        <span style={{
+          fontSize: 12, color: '#475569', maxWidth: 480, lineHeight: 1.5,
+          fontFamily: 'ui-monospace, monospace',
+        }}>
+          {detail}
+        </span>
+      )}
       {link && (
         <a href={link} style={{ fontSize: 13, color: '#8B5CF6', textDecoration: 'none' }}>{linkLabel}</a>
+      )}
+      {secondaryLink && (
+        <a href={secondaryLink} style={{ fontSize: 12, color: '#475569', textDecoration: 'none' }}>
+          {secondaryLinkLabel}
+        </a>
       )}
     </div>
   );

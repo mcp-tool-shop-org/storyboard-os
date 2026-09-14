@@ -12,7 +12,6 @@
   "dependencies": {
     "@storyboard-os/core": "workspace:*",
     "@storyboard-os/cinematic-domain": "workspace:*",
-    "@storyboard-os/routing": "workspace:*",
     "@storyboard-os/canvas": "workspace:*",
     "@astrojs/react": "^6.0.0",
     "astro": "^7.3.1",

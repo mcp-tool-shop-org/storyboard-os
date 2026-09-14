@@ -1,6 +1,7 @@
 // ─── Cinematic Domain — Templates ────────────────────────────────────────────
 
 import type { StoryboardFrame, Storyboard, StoryboardConnection } from './schema';
+import { BOARD_SCHEMA_VERSION } from './schema';
 
 export type CinematicTemplateId = 'trailer_flow' | 'cutscene_sequence' | 'explainer_video';
 
@@ -155,6 +156,7 @@ function createTrailerFlow(): Storyboard {
     title: 'Trailer Flow',
     description: 'Hook → Context → Feature → Tension → Proof → CTA. Best for product/game trailers, release videos, repo promos.',
     templateId: 'trailer_flow',
+    schemaVersion: BOARD_SCHEMA_VERSION,
     frames,
     connections,
   };
@@ -296,6 +298,7 @@ function createCutsceneSequence(): Storyboard {
     title: 'Cutscene Sequence',
     description: 'Establishing → Character → Reveal → Reaction → Action → Exit. Best for RPG/game cinematics.',
     templateId: 'cutscene_sequence',
+    schemaVersion: BOARD_SCHEMA_VERSION,
     frames,
     connections,
   };
@@ -426,6 +429,7 @@ function createExplainerVideo(): Storyboard {
     title: 'Explainer Video',
     description: 'Problem → Metaphor → Demo → Proof → Outcome → CTA. Best for creator tools, product demos, launch assets.',
     templateId: 'explainer_video',
+    schemaVersion: BOARD_SCHEMA_VERSION,
     frames,
     connections,
   };

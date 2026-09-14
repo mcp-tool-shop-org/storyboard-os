@@ -17,6 +17,35 @@ export interface ReconcilePositionsResult {
   changed: boolean;
 }
 
+const ORIGIN = { x: 0, y: 0 };
+
+/** Once-per-id breadcrumb for non-finite position fallbacks (mirrors F-CI-208). */
+const warnedNonFiniteIds = new Set<string>();
+
+/**
+ * Return a finite canvas position. Non-finite x/y (NaN/±Infinity) fall back to
+ * `{x:0,y:0}` so FrameCard never mounts at poisoned coordinates.
+ */
+export function ensureFinitePosition(
+  pos: { x: number; y: number } | null | undefined,
+  frameId?: string,
+): { x: number; y: number } {
+  if (
+    pos != null &&
+    Number.isFinite(pos.x) &&
+    Number.isFinite(pos.y)
+  ) {
+    return { x: pos.x, y: pos.y };
+  }
+  if (frameId !== undefined && !warnedNonFiniteIds.has(frameId)) {
+    warnedNonFiniteIds.add(frameId);
+    console.warn(
+      `[storyboard-canvas] Non-finite position for frame ${frameId}; falling back to {x:0,y:0}.`,
+    );
+  }
+  return { ...ORIGIN };
+}
+
 function samePoint(
   a: { x: number; y: number } | undefined,
   b: { x: number; y: number } | undefined,
@@ -55,7 +84,8 @@ export function reconcilePositions(
   }
 
   for (const f of frames) {
-    const propPos = { ...f.position };
+    // Sanitize at the seawall: non-finite prop coords must not enter PositionMap.
+    const propPos = ensureFinitePosition(f.position, f.id);
     nextBaselines[f.id] = propPos;
 
     const prevPos = prev[f.id];
@@ -75,8 +105,8 @@ export function reconcilePositions(
       continue;
     }
 
-    // Baseline unchanged: keep local/drag state.
-    next[f.id] = prevPos;
+    // Baseline unchanged: keep local/drag state, but never keep a poisoned entry.
+    next[f.id] = ensureFinitePosition(prevPos, f.id);
   }
 
   if (!changed) {

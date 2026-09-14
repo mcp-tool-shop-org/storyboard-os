@@ -112,6 +112,11 @@ describe('createCinematicStoryboard', () => {
     expect(sb.title).toContain('Cutscene');
   });
 
+  it('stamps schemaVersion on template boards', () => {
+    const sb = createCinematicStoryboard('trailer_flow');
+    expect(sb.schemaVersion).toBe(1);
+  });
+
   it('throws on an unknown template id — F-VR-205', () => {
     expect(() => createCinematicStoryboard('fake' as any)).toThrow('Unknown cinematic template');
   });

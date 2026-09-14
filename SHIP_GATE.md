@@ -42,7 +42,7 @@
 - [x] `[all]` Dependency scanning runs in CI — `pnpm audit --prod --audit-level=high` gates every run (ci.yml) with **no** `auditConfig.ignoreGhsas`; apps pin `astro ^7.3.1` and the former SSR-only GHSA suppressions were removed on that bump (checked 2026-09-14)
 - [x] `[all]` Automated dependency update mechanism exists (2026-05-04)
 - [x] `[npm]` Six `@storyboard-os/*` packages publish to npm publicly via `.github/workflows/publish.yml` on release (core, routing, rpg-domain, canvas, marketing-domain, cinematic-domain) (2026-05-12)
-- [x] `[npm]` `engines.node` is set in root and per-package `package.json` (`>=20`) (2026-05-12)
+- [x] `[npm]` `engines.node` is set in root and per-package `package.json` (`>=22.13.0`, matching root engines) (checked 2026-09-14)
 - [x] `[npm]` Lockfile committed (`pnpm-lock.yaml`); CI installs with `--frozen-lockfile` (2026-05-12)
 - [x] `[npm]` README and LICENSE shipped inside each package tarball via `files` field (2026-05-12)
 - [x] `[npm]` npm provenance — `publish.yml` passes `--provenance` on all six `pnpm publish` steps; npm records the GitHub build attestation for every package (2026-05-12)
