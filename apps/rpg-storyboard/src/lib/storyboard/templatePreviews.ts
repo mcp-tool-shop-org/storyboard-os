@@ -15,6 +15,7 @@
 import {
   STORYBOARD_TEMPLATES,
   createStoryboardFromTemplate,
+  tollhouseLedgerProject,
 } from '@storyboard-os/rpg-domain';
 import type { Storyboard, StoryboardTemplateId } from './schema';
 
@@ -48,6 +49,20 @@ export const TEMPLATE_PREVIEW_META: TemplatePreviewMeta[] = STORYBOARD_TEMPLATES
   frameCount:   t.frameCount,
   bestFor:      t.bestFor,
 }));
+
+/** SSG getStaticPaths ids: demo sequences + template preview boards. */
+const SSG_PREVIEW_IDS = new Set<string>([
+  ...tollhouseLedgerProject.storyboards.map(s => s.id),
+  ...TEMPLATE_PREVIEW_META.map(m => m.storyboardId),
+]);
+
+/**
+ * True when `/storyboards/{id}/frames/{frameId}` is a built SSG page.
+ * Project boards use `sb-{projectId}`, which is never in that set.
+ */
+export function isSsgPreviewStoryboardId(storyboardId: string): boolean {
+  return SSG_PREVIEW_IDS.has(storyboardId);
+}
 
 // ─── Storyboard generator ─────────────────────────────────────────────────────
 

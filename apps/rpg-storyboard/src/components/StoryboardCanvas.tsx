@@ -30,6 +30,7 @@ import {
   rpgColors,
   type BeatStatusLevel,
   type FrameContent,
+  type FrameAnnotation,
 } from '@storyboard-os/rpg-domain';
 import { statusColors, surfaces, textColors, typeScale, spacing } from '@storyboard-os/core';
 import type { Storyboard } from '../lib/storyboard/schema';
@@ -122,7 +123,7 @@ const HEADER_HEIGHT = 48;
 export type SaveStatus =
   | 'saved'
   | 'saving'
-  | { kind: 'failed'; message: string }
+  | { kind: 'failed'; message: string; code?: string }
   | null;
 
 interface Props {
@@ -136,7 +137,12 @@ interface Props {
    * Called when the user saves edits in BeatEditPanel.
    * Omit on read-only boards. Providing this enables the "Edit Beat" button.
    */
-  onFrameContentChange?: (frameId: string, basics: FrameBasicsPatch, content: Partial<FrameContent>) => void;
+  onFrameContentChange?: (
+    frameId: string,
+    basics: FrameBasicsPatch,
+    content: Partial<FrameContent>,
+    annotations?: FrameAnnotation[],
+  ) => void;
   /**
    * Called when the user checks/unchecks a checklist item or test criterion.
    * `type` is 'checklist' or 'test'. Project boards only.
@@ -244,9 +250,9 @@ function StoryboardCanvasInner({
   }, [selectedFrameId]);
 
   const handleEditSave = useCallback(
-    (basics: FrameBasicsPatch, content: Partial<FrameContent>) => {
+    (basics: FrameBasicsPatch, content: Partial<FrameContent>, annotations: FrameAnnotation[]) => {
       if (editingFrameId && onFrameContentChange) {
-        onFrameContentChange(editingFrameId, basics, content);
+        onFrameContentChange(editingFrameId, basics, content, annotations);
       }
       setEditingFrameId(null);
     },
@@ -607,7 +613,9 @@ function SaveStatusChip({ status }: { status: SaveStatus }) {
             whiteSpace: 'nowrap', fontWeight: 700,
           }}
         >
-          Open Projects to delete →
+          {status.code === 'STORE_CORRUPT'
+            ? 'Open Projects to recover storage →'
+            : 'Open Projects to delete →'}
         </a>
       </span>
     );

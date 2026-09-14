@@ -5,6 +5,7 @@ import {
   createStoryboardFromTemplate,
 } from './templates';
 import { validateStoryboard } from './validate';
+import { isSsgPreviewStoryboardId } from './templatePreviews';
 
 const INPUT = { id: 'test', title: 'Test Board', description: 'Vitest fixture' };
 
@@ -324,5 +325,18 @@ describe('createStoryboardFromTemplate', () => {
         }
       });
     }
+  });
+});
+
+describe('isSsgPreviewStoryboardId', () => {
+  it('accepts demo and template preview ids used by getStaticPaths', () => {
+    expect(isSsgPreviewStoryboardId('quest-01')).toBe(true);
+    expect(isSsgPreviewStoryboardId('template-quest-flow')).toBe(true);
+    expect(isSsgPreviewStoryboardId('template-quest-branch')).toBe(true);
+    expect(isSsgPreviewStoryboardId('template-cutscene-beat')).toBe(true);
+  });
+
+  it('rejects project board ids (sb-{projectId})', () => {
+    expect(isSsgPreviewStoryboardId('sb-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee')).toBe(false);
   });
 });

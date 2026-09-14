@@ -64,4 +64,24 @@ describe('loadProjectHandoff — not-found vs generate-failed', () => {
       expect(result.boardHref).toBe('/projects/board?id=p2');
     }
   });
+
+  it('returns store_unreadable (not not_found) when the miss is a corrupt store', () => {
+    const result = loadProjectHandoff(
+      'p3',
+      () => undefined,
+      () => { throw new Error('should not generate'); },
+      () => ({ code: 'STORE_UNREADABLE' }),
+    );
+    expect(result.status).toBe('store_unreadable');
+  });
+
+  it('keeps not_found when the store is readable but the id is absent', () => {
+    const result = loadProjectHandoff(
+      'missing',
+      () => undefined,
+      () => { throw new Error('should not generate'); },
+      () => ({ code: 'RECORDS_DROPPED' }),
+    );
+    expect(result.status).toBe('not_found');
+  });
 });

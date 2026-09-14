@@ -135,6 +135,29 @@ export function getRawStoreBlob(): string | null {
 }
 
 /**
+ * Trigger a download of the raw `rpg-sb:projects` blob. Returns false when
+ * there is nothing to download (missing store, no document). Callers may
+ * alert; this helper never throws.
+ */
+export function downloadRawStoreBlob(filename = 'rpg-sb-projects-raw.json'): boolean {
+  const raw = getRawStoreBlob();
+  if (raw === null || raw === '') return false;
+  if (typeof document === 'undefined' || typeof URL === 'undefined') return false;
+  try {
+    const blob = new Blob([raw], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Non-throwing dev-facing diagnostic (PR-002). The store is the highest-stakes
  * layer yet had zero dev signal (the canvas has F-CI-208 warns; the store had
  * none). This is ADDITIVE console.warn only — the user-facing ReadWarning

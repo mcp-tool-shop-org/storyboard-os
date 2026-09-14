@@ -26,7 +26,7 @@ const FIRST_RUN: ProjectsEmptyCopy = {
   offerRawDownload: false,
 };
 
-const CORRUPT_STORE: ProjectsEmptyCopy = {
+export const CORRUPT_STORE: ProjectsEmptyCopy = {
   kind: 'corrupt-store',
   title: 'Saved projects storage is corrupt',
   body:

@@ -111,6 +111,7 @@ describe('generateHandoff — beat content', () => {
     expect(Array.isArray(beat.involvedFactions)).toBe(true);
     expect(Array.isArray(beat.possibleOutcomes)).toBe(true);
     expect(Array.isArray(beat.authorOnlyNotes)).toBe(true);
+    expect(Array.isArray(beat.annotations)).toBe(true);
   });
 
   it('populates content fields from frame content', () => {
@@ -144,6 +145,20 @@ describe('generateHandoff — beat content', () => {
     expect(beat.involvedFactions).toEqual(['Guild']);
     expect(beat.possibleOutcomes).toEqual(['Guild outcome', 'Other outcome']);
     expect(beat.authorOnlyNotes).toEqual(['Spoiler: guild path unlocks act 3']);
+    expect(beat.annotations).toEqual([]);
+  });
+
+  it('carries frame annotations (type + text) onto HandoffBeat', () => {
+    const frame = makeFrame('a', 'hook', {});
+    frame.annotations = [
+      { id: 'ann-1', type: 'timing', text: 'Target 5–10 minutes of play time.' },
+      { id: 'ann-2', type: 'danger', text: 'Do not spawn the courier yet.' },
+    ];
+    const beat = generateHandoff(makeBoard([frame])).beats[0];
+    expect(beat.annotations).toEqual([
+      { type: 'timing', text: 'Target 5–10 minutes of play time.' },
+      { type: 'danger', text: 'Do not spawn the courier yet.' },
+    ]);
   });
 
   it('beat type and status reflect the domain frame', () => {
@@ -478,6 +493,26 @@ describe('generateMarkdown', () => {
     expect(md).not.toMatch(/^Line two tone\./m);
   });
 
+  it('quotes a multi-line storyboard description as a full blockquote', () => {
+    const board = makeBoard([makeFrame('a', 'scene', {})]);
+    board.description = 'Line one intent.\nLine two tone.';
+    const md = generateMarkdown(generateHandoff(board));
+    expect(md).toContain('> Line one intent.');
+    expect(md).toContain('> Line two tone.');
+    expect(md).not.toMatch(/^Line two tone\./m);
+  });
+
+  it('emits typed annotations in quest markdown', () => {
+    const frame = makeFrame('a', 'hook', {});
+    frame.annotations = [
+      { id: 'ann-1', type: 'timing', text: 'Target 5–10 minutes of play time.' },
+    ];
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    expect(md).toContain('**Annotations:**');
+    expect(md).toContain('**Timing:**');
+    expect(md).toContain('Target 5–10 minutes of play time.');
+  });
+
   it('renders authorOnlyNotes under Designer/Author-only Notes', () => {
     const frame = makeFrame('a', 'reveal', {
       authorOnlyNotes: ['Hidden seed for act 2', 'Do not show in VO'],
@@ -496,6 +531,25 @@ describe('generateMarkdown', () => {
     const md = generateProjectMarkdown(generateProjectHandoff(p));
     expect(md).toContain('> Alpha note.');
     expect(md).toContain('> Beta note.');
+  });
+
+  it('project markdown blockquotes a multi-line description', () => {
+    const p = createProject({
+      title: 'T',
+      description: 'Alpha desc.\nBeta desc.',
+      templateId: 'quest_flow',
+    });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('> Alpha desc.');
+    expect(md).toContain('> Beta desc.');
+    expect(md).not.toMatch(/^Beta desc\./m);
+  });
+
+  it('project markdown emits template-seeded annotations', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('**Annotations:**');
+    expect(md).toContain('Target 5–10 minutes of play time.');
   });
 
   it('omits empty sections — no phantom headings', () => {
@@ -761,6 +815,32 @@ describe('DM-004 — markdown escapes user text', () => {
     expect(md).not.toContain('<img');
     expect(md).toContain('&lt;img');
   });
+
+  it('escapes emphasis and link/image syntax (* _ [] ()) in quest markdown', () => {
+    const frame = makeFrame('f1', 'scene', {
+      designerNotes: 'see *bold* and _italic_ plus [click](http://x)',
+    }, 'Beat *A* [B](url)');
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    expect(md).toContain('\\*bold\\*');
+    expect(md).toContain('\\_italic\\_');
+    expect(md).toContain('\\[click\\]\\(http://x\\)');
+    expect(md).toContain('Beat \\*A\\* \\[B\\]\\(url\\)');
+  });
+
+  it('escapes emphasis and link/image syntax in project markdown', () => {
+    let p = createProject({ title: 'Quest *X* [Y](z)', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    p = updateFrameBasics(p, fid, { title: 'Beat *A* [B](url)' });
+    p = updateFrameContent(p, fid, {
+      implementationChecklist: ['see *bold* and _italic_ plus [click](http://x)'],
+    });
+    const md = generateProjectMarkdown(generateProjectHandoff(p));
+    expect(md).toContain('Quest \\*X\\* \\[Y\\]\\(z\\)');
+    expect(md).toContain('Beat \\*A\\* \\[B\\]\\(url\\)');
+    expect(md).toContain('\\*bold\\*');
+    expect(md).toContain('\\_italic\\_');
+    expect(md).toContain('\\[click\\]\\(http://x\\)');
+  });
 });
 
 // ─── V3-001 — benign text round-trips unchanged (faithfulness) ────────────────
@@ -807,7 +887,8 @@ describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
     expect(md).toContain('Player enters the tollhouse.');
     expect(md).toContain('assets/ui-hud.png');
     expect(md).toContain('Wire the tollhouse trigger');
-    expect(md).not.toContain('\\');
     expect(md).not.toContain('&lt;');
+    // Template frames include snake_case flags; those are escaped on purpose.
+    // The isolated quest-markdown case above is the no-backslash guard.
   });
 });

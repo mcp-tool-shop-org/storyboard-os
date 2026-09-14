@@ -4,6 +4,7 @@ import {
   updateFramePosition,
   updateFrameBasics,
   updateFrameContent,
+  updateFrameAnnotations,
   setChecklistItemComplete,
   setTestCriterionComplete,
   getFrameProgress,
@@ -279,6 +280,36 @@ describe('updateFrameContent', () => {
   it('returns project unchanged when frameId is unknown', () => {
     const p = makeProject();
     const result = updateFrameContent(p, 'unknown', { designerNotes: 'X' });
+    expect(result).toBe(p);
+  });
+});
+
+describe('updateFrameAnnotations', () => {
+  function makeProject() {
+    return createProject({ title: 'Test', templateId: 'quest_flow' });
+  }
+
+  it('replaces annotations on the target frame', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const next = [
+      { id: 'ann-new', type: 'danger' as const, text: 'Do not spawn the courier yet.' },
+    ];
+    const updated = updateFrameAnnotations(p, fid, next);
+    expect(updated.storyboard.frames[0].annotations).toEqual(next);
+  });
+
+  it('does not mutate the original project', () => {
+    const p = makeProject();
+    const fid = p.storyboard.frames[0].id;
+    const original = p.storyboard.frames[0].annotations;
+    updateFrameAnnotations(p, fid, []);
+    expect(p.storyboard.frames[0].annotations).toBe(original);
+  });
+
+  it('returns project unchanged when frameId is unknown', () => {
+    const p = makeProject();
+    const result = updateFrameAnnotations(p, 'unknown', []);
     expect(result).toBe(p);
   });
 });
