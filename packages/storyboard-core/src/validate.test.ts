@@ -570,6 +570,62 @@ describe('validateStoryboard non-string id and ref guards', () => {
     expect(result.errors.some(e => e.code === 'BROKEN_CONNECTION_FROM' && e.connectionId === 'c1')).toBe(true);
     expect(result.errors.some(e => e.code === 'BROKEN_CONNECTION_TO' && e.connectionId === 'c1')).toBe(true);
   });
+
+  it('returns INVALID_CONNECTION_ID for a connection with an undefined id', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Undefined connection id',
+      frames: [makeFrame('f1'), makeFrame('f2')],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: undefined, fromFrameId: 'f1', toFrameId: 'f2', type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    const err = result.errors.find(e => e.code === 'INVALID_CONNECTION_ID');
+    expect(err).toBeDefined();
+    expect(err!.message).toContain('connections[0]');
+    expect(err!.message).toContain('undefined');
+    expect(err!.connectionId).toBeUndefined();
+  });
+
+  it('returns INVALID_CONNECTION_ID for a connection with a numeric id', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Numeric connection id',
+      frames: [makeFrame('f1'), makeFrame('f2')],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: 42, fromFrameId: 'f1', toFrameId: 'f2', type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    const err = result.errors.find(e => e.code === 'INVALID_CONNECTION_ID');
+    expect(err).toBeDefined();
+    expect(err!.message).toContain('connections[0]');
+    expect(err!.message).toContain('number');
+    expect(err!.connectionId).toBeUndefined();
+  });
+
+  it('does not report a bogus DUPLICATE_CONNECTION_ID for two connections with undefined ids', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Two undefined connection ids',
+      frames: [makeFrame('f1'), makeFrame('f2'), makeFrame('f3')],
+      connections: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: undefined, fromFrameId: 'f1', toFrameId: 'f2', type: 'sequence' } as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: undefined, fromFrameId: 'f2', toFrameId: 'f3', type: 'sequence' } as any,
+      ],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.filter(e => e.code === 'INVALID_CONNECTION_ID')).toHaveLength(2);
+    expect(result.errors.some(e => e.code === 'DUPLICATE_CONNECTION_ID')).toBe(false);
+  });
 });
 
 // ─── Connection invariants (F-CI-005) ─────────────────────────────────────────

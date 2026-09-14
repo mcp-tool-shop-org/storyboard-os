@@ -26,3 +26,7 @@ export { DEFAULT_FRAME_STYLE, DEFAULT_CONNECTION_STYLE } from './defaults';
 // HU-001: pure roving-tabindex navigation logic, exported for reuse/testing.
 export { nextFrameIndex, isNavKey } from './a11yNav';
 export type { NavKey } from './a11yNav';
+
+// Position reconcile + autoFit guards (pure; safe to unit-test without Konva).
+export { reconcilePositions, shouldAutoFit } from './positions';
+export type { PropPositionMap, ReconcilePositionsResult } from './positions';
