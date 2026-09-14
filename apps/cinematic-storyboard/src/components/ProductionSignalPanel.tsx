@@ -62,7 +62,7 @@ interface Props {
 }
 
 export default function ProductionSignalPanel({ signals, onClose }: Props) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['pressure', 'blocked']));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['pressure', 'blocked', 'camera-unknown']));
 
   const toggle = (section: string) => {
     setExpandedSections(prev => {
@@ -272,6 +272,23 @@ export default function ProductionSignalPanel({ signals, onClose }: Props) {
                     {shot.framing && ` · ${shot.framing}`}
                   </div>
                 </div>
+              ))}
+            </div>
+          </SignalSection>
+        )}
+
+        {/* Unclassified camera copy — even when nothing is a known moving shot. */}
+        {signals.cameraComplexity.totalUnknownShots > 0 && (
+          <SignalSection
+            title={`Unclassified camera (${signals.cameraComplexity.totalUnknownShots})`}
+            sectionKey="camera-unknown"
+            expanded={expandedSections.has('camera-unknown')}
+            onToggle={toggle}
+            accentColor="#94a3b8"
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {signals.cameraComplexity.unknownMovementSamples.map(sample => (
+                <div key={sample} style={ITEM_CHIP}>{sample}</div>
               ))}
             </div>
           </SignalSection>

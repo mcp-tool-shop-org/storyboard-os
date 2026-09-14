@@ -106,4 +106,31 @@ describe('ProductionSignalPanel', () => {
     expect(html).toContain('empty sequence');
     expect(html).toContain('Empty sequence — no shots to produce.');
   });
+
+  it('renders unclassified camera samples when totalComplexShots is 0', () => {
+    const html = renderToStaticMarkup(
+      createElement(ProductionSignalPanel, {
+        signals: makeSignals({
+          health: 'green',
+          healthReason: 'Production-ready',
+          pressureSummary: ['4 shots with unclassified camera movement — review copy.'],
+          cameraComplexity: {
+            totalComplexShots: 0,
+            totalStaticShots: 0,
+            totalUnspecifiedShots: 0,
+            totalUnknownShots: 4,
+            unknownMovementSamples: ['Steadicam', 'gimbal follow subject', 'slow drift', 'rack focus'],
+            complexShots: [],
+          },
+        }),
+        onClose: () => {},
+      }),
+    );
+    expect(html).toContain('Unclassified camera (4)');
+    expect(html).toContain('Steadicam');
+    expect(html).toContain('gimbal follow subject');
+    expect(html).toContain('slow drift');
+    expect(html).toContain('rack focus');
+    expect(html).not.toContain('Camera Complexity');
+  });
 });

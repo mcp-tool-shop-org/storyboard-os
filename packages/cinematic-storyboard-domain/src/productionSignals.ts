@@ -57,6 +57,7 @@ export interface DurationRollup {
   estimatedHighSeconds: number;
   formatted: string;
   coveredFrames: number;
+  /** Empty / whitespace durationEstimate only — not unparsable non-empty values. */
   uncoveredFrames: number;
   /** Non-empty estimates that did not parse after broadening. */
   unparsableSamples: string[];
@@ -269,17 +270,18 @@ function computeDurationRollup(storyboard: Storyboard): DurationRollup {
 
   for (const frame of storyboard.frames) {
     const est = frame.content?.durationEstimate;
+    const trimmed = typeof est === 'string' ? est.trim() : '';
     const range = parseDurationRange(est);
     if (range) {
       totalLow += range[0];
       totalHigh += range[1];
       covered++;
-    } else {
+    } else if (!trimmed) {
+      // Empty / whitespace only — truly missing. Unparsable non-empty values
+      // (TBD, "a beat") must not inflate uncoveredFrames / "untimed" / missing copy.
       uncovered++;
-      if (est && est.trim() && unparsableSamples.length < 5) {
-        const sample = est.trim();
-        if (!unparsableSamples.includes(sample)) unparsableSamples.push(sample);
-      }
+    } else if (unparsableSamples.length < 5 && !unparsableSamples.includes(trimmed)) {
+      unparsableSamples.push(trimmed);
     }
   }
 
