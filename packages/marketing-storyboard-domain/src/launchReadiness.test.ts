@@ -31,6 +31,15 @@ function makeCampaign(frames: StoryboardFrame[], connections: Storyboard['connec
 // ─── getCampaignLaunchReadiness ───────────────────────────────────────────────
 
 describe('getCampaignLaunchReadiness', () => {
+    it('returns draft (not ready) for an empty campaign with zero frames', () => {
+        const result = getCampaignLaunchReadiness(makeCampaign([]));
+        expect(result.level).toBe('draft');
+        expect(result.summary).toMatch(/no beats/i);
+        expect(result.blockedFrameIds).toEqual([]);
+        expect(result.criticalPathFrameIds).toEqual([]);
+        expect(result.missingMeasurementFrameIds).toEqual([]);
+    });
+
     it('returns ready for a fully-specced campaign', () => {
         const frames: StoryboardFrame[] = [
             makeFrame({

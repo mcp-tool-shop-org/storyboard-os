@@ -3,8 +3,9 @@ import {
   launchRpgStoryboardCampaign,
   generateCampaignHandoff,
   generateCampaignMarkdown,
+  BLOCKING_REASONS,
   type Storyboard,
-  type CampaignBeatStatusLevel,
+  type MissingSpecReason,
 } from '@storyboard-os/marketing-domain';
 
 export function getStaticPaths() {
@@ -60,11 +61,14 @@ const TYPE_LABELS: Record<string, string> = {
   measurement:   'Measurement',
 };
 
+// Keep in sync with canvas CONNECTION_TYPE_LABELS (Segment Path / Consequence).
 const CONN_LABELS: Record<string, string> = {
   sequence:    'campaign flow',
   dependency:  'dependency',
   approval:    'approval gate',
   optional:    'optional',
+  choice:      'segment path',
+  consequence: 'consequence',
 };
 
 // Human-readable labels for launch-blocker / spec-gap codes emitted by
@@ -89,6 +93,18 @@ const BLOCKER_LABELS: Record<string, string> = {
 };
 function humanizeBlocker(code: string): string {
   return BLOCKER_LABELS[code] ?? code.replace(/_/g, ' ');
+}
+
+/** True launch blockers only — mirrors MarketingFrameInspector / BLOCKING_REASONS. */
+function launchBlockersFor(missing: readonly MissingSpecReason[]): MissingSpecReason[] {
+  return missing.filter(r => BLOCKING_REASONS.has(r));
+}
+
+/** Non-blocking incompleteness (excludes advisory depth fields, same as inspector). */
+function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[] {
+  return missing.filter(
+    r => !BLOCKING_REASONS.has(r) && r !== 'no_proof_points' && r !== 'no_launch_dependencies',
+  );
 }
 ---
 
@@ -192,6 +208,14 @@ function humanizeBlocker(code: string): string {
       font-size: 11px; color: #fca5a5; line-height: 1.55;
     }
     .beat-blocker ul { color: #fca5a5; }
+    .beat-spec-gaps {
+      background: rgba(249,115,22,0.06);
+      border: 1px solid rgba(249,115,22,0.22);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 11px; color: #fdba74; line-height: 1.55;
+    }
+    .beat-spec-gaps ul { color: #fdba74; }
 
     .claim-text {
       background: rgba(139,92,246,0.06);
@@ -270,6 +294,8 @@ function humanizeBlocker(code: string): string {
         const typeColor = TYPE_COLORS[beat.type] ?? '#475569';
         const typeLabel = TYPE_LABELS[beat.type] ?? beat.type.toUpperCase();
         const statusColor = STATUS_COLORS[beat.status] ?? '#475569';
+        const blockers = launchBlockersFor(beat.missing);
+        const gaps = specGapsFor(beat.missing);
         return (
           <article class="beat-card">
             <div class="beat-header">
@@ -284,11 +310,21 @@ function humanizeBlocker(code: string): string {
             </div>
 
             <div class="beat-body">
-              {beat.missing.length > 0 && (
+              {blockers.length > 0 && (
                 <div class="beat-blocker">
                   <strong>⚠ Launch blockers:</strong>
                   <ul style="margin: 6px 0 0 18px; padding: 0;">
-                    {beat.missing.map(code => (
+                    {blockers.map(code => (
+                      <li>{humanizeBlocker(code)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {gaps.length > 0 && (
+                <div class="beat-spec-gaps">
+                  <strong>Spec gaps:</strong>
+                  <ul style="margin: 6px 0 0 18px; padding: 0;">
+                    {gaps.map(code => (
                       <li>{humanizeBlocker(code)}</li>
                     ))}
                   </ul>
