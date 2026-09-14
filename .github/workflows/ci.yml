@@ -62,3 +62,6 @@ jobs:
 
       - name: Build app
         run: pnpm build
+
+      - name: Build site
+        run: pnpm --filter site build
