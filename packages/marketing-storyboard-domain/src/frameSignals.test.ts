@@ -7,7 +7,7 @@ import type { StoryboardFrame, MarketingFrameContent } from './schema';
 
 function makeFrame(
     type: string,
-    content: Partial<MarketingFrameContent> = {},
+    content: Partial<MarketingFrameContent> | null = {},
 ): StoryboardFrame {
     return {
         id: `frame-${type}`,
@@ -18,6 +18,28 @@ function makeFrame(
         size: { width: 260, height: 160 },
         content: content as MarketingFrameContent,
         annotations: [],
+    };
+}
+
+function fullContent(overrides: Partial<MarketingFrameContent> = {}): MarketingFrameContent {
+    return {
+        objective: 'Test objective',
+        audienceSegment: 'Test segment',
+        customerStateBefore: ['Before state'],
+        customerStateAfter: ['After state'],
+        channel: 'Email',
+        messageClaim: 'Test claim',
+        proofPoints: ['Proof 1'],
+        objectionsHandled: ['Objection 1'],
+        requiredAssets: ['Asset 1'],
+        approvalRequirements: ['Approval 1'],
+        launchDependencies: ['Dependency 1'],
+        conversionGoal: 'Signup',
+        metrics: ['Metric 1'],
+        testCriteria: ['Criterion 1'],
+        implementationChecklist: ['Task 1'],
+        ownerNotes: 'Notes',
+        ...overrides,
     };
 }
 
@@ -95,27 +117,50 @@ describe('getMarketingFrameBadges', () => {
         expect(badges.some(b => b.text === 'GATE')).toBe(true);
     });
 
-    it('includes SPEC badge when ready', () => {
-        const frame = makeFrame('audience', {
-            objective: 'Test',
-            implementationChecklist: ['Task'],
-            requiredAssets: ['Asset'],
-            testCriteria: ['Criterion'],
-        });
+    it('includes SPEC badge when beat status is ready', () => {
+        const frame = makeFrame('audience', fullContent());
         const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'SPEC')).toBe(true);
     });
 
-    it('includes PARTIAL badge when partial', () => {
-        const frame = makeFrame('audience', { objective: 'Test' });
+    it('includes PARTIAL badge when beat status is partial', () => {
+        const frame = makeFrame('audience', {
+            objective: 'Test',
+            audienceSegment: 'Segment',
+            customerStateBefore: ['Before'],
+            customerStateAfter: ['After'],
+            // missing testCriteria, implementationChecklist → partial
+        });
         const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'PARTIAL')).toBe(true);
     });
 
-    it('includes DRAFT badge when incomplete', () => {
+    it('includes DRAFT badge when beat status is draft', () => {
         const frame = makeFrame('audience', {});
         const badges = getMarketingFrameBadges(frame);
         expect(badges.some(b => b.text === 'DRAFT')).toBe(true);
+    });
+
+    it('conversion without conversionGoal must not emit a SPEC badge (F-3073a6a5)', () => {
+        // Checklist + assets + tests + objective would previously paint SPEC via
+        // computeReadiness while getCampaignBeatStatus correctly returns blocked.
+        const frame = makeFrame('conversion', fullContent({ conversionGoal: undefined }));
+        const badges = getMarketingFrameBadges(frame);
+        expect(badges.some(b => b.text === 'SPEC')).toBe(false);
+        expect(badges.some(b => b.text === statusLabels.blocked)).toBe(true);
+    });
+
+    it('conversion without conversionGoal emits BLOCKED even with a full implementation score', () => {
+        const frame = makeFrame('conversion', {
+            objective: 'Drive signups',
+            implementationChecklist: ['Wire CTA'],
+            requiredAssets: ['Landing hero'],
+            testCriteria: ['CTA click tracked'],
+            // no conversionGoal
+        });
+        const badges = getMarketingFrameBadges(frame);
+        expect(badges.some(b => b.text === 'SPEC')).toBe(false);
+        expect(badges.some(b => b.text === 'BLOCKED')).toBe(true);
     });
 });
 
@@ -148,12 +193,7 @@ describe('marketingColors', () => {
     });
 
     it('a ready frame renders the canonical SPEC label + spec color', () => {
-        const frame = makeFrame('audience', {
-            objective: 'x',
-            implementationChecklist: ['t'],
-            requiredAssets: ['a'],
-            testCriteria: ['c'],
-        });
+        const frame = makeFrame('audience', fullContent());
         const badge = getMarketingFrameBadges(frame).find(b => b.text === statusLabels.ready);
         expect(badge).toBeDefined();
         expect(badge!.color).toBe(statusColors.spec);

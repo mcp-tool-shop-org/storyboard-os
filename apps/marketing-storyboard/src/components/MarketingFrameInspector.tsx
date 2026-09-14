@@ -20,6 +20,7 @@ import {
     type MarketingFrameType,
 } from '@storyboard-os/marketing-domain';
 import { statusColors, statusLabels, textColors, typeScale, spacing } from '@storyboard-os/core';
+import { resolveInspectorContent } from '../lib/frameContent';
 
 // ─── Type display config ──────────────────────────────────────────────────────
 // Accent per frame type comes from the shared token API so the inspector badge
@@ -95,7 +96,7 @@ interface Props {
 export default function MarketingFrameInspector({ frame, onClose }: Props) {
     const accent = TYPE_COLORS[frame.type];
     const status = getCampaignBeatStatus(frame);
-    const content = frame.content;
+    const content = resolveInspectorContent(frame);
 
     const blockers = status.missing.filter(r => BLOCKING_REASONS.has(r));
     const specGaps = status.missing.filter(

@@ -10,6 +10,7 @@
 
 import type { StoryboardFrame, MarketingFrameContent, StoryboardConnection } from './schema';
 import { statusColors, statusLabels } from '@storyboard-os/core';
+import { getCampaignBeatStatus, type CampaignBeatStatusLevel } from './beatStatus';
 
 // ─── Marketing badge colors ───────────────────────────────────────────────────
 // The single source for marketing badge colors. The shared status swatches come
@@ -32,16 +33,20 @@ export const marketingColors = {
 
 export type FrameReadiness = 'ready' | 'partial' | 'incomplete';
 
-const READINESS_LABEL: Record<FrameReadiness, string> = {
-  ready:      statusLabels.ready,   // 'SPEC'
-  partial:    statusLabels.partial, // 'PARTIAL'
-  incomplete: statusLabels.draft,   // 'DRAFT'
+// Badge readiness mirrors getCampaignBeatStatus so type-rule blockers cannot
+// paint as SPEC while the inspector/launch rollup show blocked.
+const BEAT_STATUS_LABEL: Record<CampaignBeatStatusLevel, string> = {
+    ready:   statusLabels.ready,   // 'SPEC'
+    partial: statusLabels.partial, // 'PARTIAL'
+    draft:   statusLabels.draft,   // 'DRAFT'
+    blocked: statusLabels.blocked, // 'BLOCKED'
 };
 
-const READINESS_COLOR: Record<FrameReadiness, string> = {
-  ready:      marketingColors.ready,
-  partial:    marketingColors.partial,
-  incomplete: marketingColors.draft,
+const BEAT_STATUS_COLOR: Record<CampaignBeatStatusLevel, string> = {
+    ready:   marketingColors.ready,
+    partial: marketingColors.partial,
+    draft:   marketingColors.draft,
+    blocked: marketingColors.blocked,
 };
 
 export interface MarketingFrameSignal {
@@ -118,27 +123,12 @@ export function getMarketingFrameBadges(
         badges.push({ text: 'GATE', color: marketingColors.gate });
     }
 
-    // Readiness badge
-    const readiness = computeReadiness(content);
-    switch (readiness) {
-        case 'ready':
-        case 'partial':
-        case 'incomplete':
-            badges.push({
-                text: READINESS_LABEL[readiness],
-                color: READINESS_COLOR[readiness],
-            });
-            break;
-        default: {
-            // Exhaustiveness guard (PR-003): a new FrameReadiness arm becomes a
-            // compile error. At runtime, warn and fall back to DRAFT rather than
-            // dropping the readiness badge (which would miscount coverage).
-            const _exhaustive: never = readiness;
-            console.warn('[marketing] unhandled FrameReadiness value:', _exhaustive);
-            badges.push({ text: statusLabels.draft, color: marketingColors.draft });
-            break;
-        }
-    }
+    // Readiness badge — authoritative beat status (includes type-rule blockers)
+    const status = getCampaignBeatStatus(frame);
+    badges.push({
+        text: BEAT_STATUS_LABEL[status.level],
+        color: BEAT_STATUS_COLOR[status.level],
+    });
 
     return badges;
 }
