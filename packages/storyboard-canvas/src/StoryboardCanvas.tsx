@@ -505,6 +505,14 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       [onSelectFrame, onSelectConnection],
     );
 
+    // Keyboard activation always SELECTS (does not toggle), matching frames.
+    const activateConnectionById = useCallback(
+      (id: string) => {
+        handleSelectConnection(id);
+      },
+      [handleSelectConnection],
+    );
+
     const handleDragEnd = useCallback((id: string, x: number, y: number) => {
       const next = ensureFinitePosition({ x, y }, id);
       setPositions(prev => ({ ...prev, [id]: next }));
@@ -519,6 +527,16 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
         DEFAULT_FRAME_STYLE
       );
     }
+
+    // Same label the type bar paints — AccessibleFrameList must not humanize
+    // the raw type key while the card shows the configured type-bar label.
+    const typeLabelFor = useCallback(
+      (type: string) =>
+        config.frameTypeStyles[type]?.label ??
+        config.defaultFrameStyle?.label ??
+        DEFAULT_FRAME_STYLE.label,
+      [config],
+    );
 
     // ── ARIA ids (stable per instance) ───────────────────────────────────────
     // Assigned once per mount; kept in a ref so re-renders don't re-seed them.
@@ -536,13 +554,13 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
         // absolutely positioned within the canvas area.
         style={{ width: '100%', height: '100%', position: 'relative' }}
       >
-        {/* HU-001: screen-reader description of the canvas + its keyboard model.
-            Referenced by the interactive regions via aria-describedby. Visually
-            hidden but present in the accessibility tree (not display:none). */}
-        <span id={descId} style={SR_ONLY_STYLE}>
+        {/* Keyboard-model copy for listbox aria-describedby only. aria-hidden
+            so browse mode does not also announce this as a preceding sibling. */}
+        <span id={descId} style={SR_ONLY_STYLE} aria-hidden="true">
           Interactive storyboard canvas. Use the frames list to move between
           frames with the arrow keys; press Enter or Space to open a frame and
-          center it. Fit, zoom, reset, and pan are available from the toolbar.
+          center it. Selectable connections appear in the same list. Fit, zoom,
+          reset, and pan are available from the toolbar.
         </span>
 
         {/* HU-001: accessible frame list — a real focusable HTML element tree
@@ -553,45 +571,54 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
           selectedFrameId={selectedFrameId ?? null}
           onActivateFrame={activateFrameById}
           describedById={descId}
+          typeLabelFor={typeLabelFor}
+          connections={onSelectConnection ? connections : undefined}
+          selectedConnectionId={selectedConnectionId ?? null}
+          onActivateConnection={
+            onSelectConnection ? activateConnectionById : undefined
+          }
         />
 
-        <Stage
-          ref={stageRef}
-          width={containerSize.width}
-          height={containerSize.height}
-          onMouseDown={handleStageMouseDown}
-          onMouseMove={handleStageMouseMove}
-          onWheel={handleWheel}
-          onClick={handleStageClick}
-          onTap={handleStageClick}
-        >
-          {/* Connections below frames — interactive when onSelectConnection is provided */}
-          <Layer listening={!!onSelectConnection}>
-            <ConnectionLayer
-              connections={connections}
-              frames={frames}
-              positions={positions}
-              config={config}
-              selectedConnectionId={selectedConnectionId}
-              onSelectConnection={onSelectConnection ? handleSelectConnection : undefined}
-            />
-          </Layer>
-
-          {/* Frame cards */}
-          <Layer>
-            {frames.map(frame => (
-              <FrameCard
-                key={frame.id}
-                frame={frame}
-                position={positions[frame.id] ?? frame.position}
-                style={styleFor(frame.type)}
-                isSelected={selectedFrameId === frame.id}
-                onSelect={handleSelectFrame}
-                onDragEnd={handleDragEnd}
+        {/* Opaque Konva board — equivalent is the frames list above. */}
+        <div aria-hidden="true" style={{ width: '100%', height: '100%' }}>
+          <Stage
+            ref={stageRef}
+            width={containerSize.width}
+            height={containerSize.height}
+            onMouseDown={handleStageMouseDown}
+            onMouseMove={handleStageMouseMove}
+            onWheel={handleWheel}
+            onClick={handleStageClick}
+            onTap={handleStageClick}
+          >
+            {/* Connections below frames — interactive when onSelectConnection is provided */}
+            <Layer listening={!!onSelectConnection}>
+              <ConnectionLayer
+                connections={connections}
+                frames={frames}
+                positions={positions}
+                config={config}
+                selectedConnectionId={selectedConnectionId}
+                onSelectConnection={onSelectConnection ? handleSelectConnection : undefined}
               />
-            ))}
-          </Layer>
-        </Stage>
+            </Layer>
+
+            {/* Frame cards */}
+            <Layer>
+              {frames.map(frame => (
+                <FrameCard
+                  key={frame.id}
+                  frame={frame}
+                  position={positions[frame.id] ?? frame.position}
+                  style={styleFor(frame.type)}
+                  isSelected={selectedFrameId === frame.id}
+                  onSelect={handleSelectFrame}
+                  onDragEnd={handleDragEnd}
+                />
+              ))}
+            </Layer>
+          </Stage>
+        </div>
       </div>
     );
   },

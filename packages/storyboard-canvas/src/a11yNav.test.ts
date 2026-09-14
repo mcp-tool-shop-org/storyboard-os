@@ -8,16 +8,76 @@ import { nextFrameIndex, isNavKey } from './a11yNav';
 // Source pin: package vitest is node-env (no jsdom), so DOM render is out of
 // reach — assert the TSX keeps distinct nav vs listbox accessible names.
 
+function readSrc(name: string): string {
+  return readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), name),
+    'utf8',
+  );
+}
+
 describe('AccessibleFrameList aria labels', () => {
   it('keeps distinct nav landmark and listbox names', () => {
-    const src = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), 'AccessibleFrameList.tsx'),
-      'utf8',
-    );
+    const src = readSrc('AccessibleFrameList.tsx');
     expect(src).toContain('aria-label="Frame navigation"');
     expect(src).toContain('aria-label="Storyboard frames"');
     expect(src.match(/aria-label="Frame navigation"/g)?.length).toBe(1);
     expect(src.match(/aria-label="Storyboard frames"/g)?.length).toBe(1);
+  });
+
+  it('uses config type labels (not humanizeType of the raw key)', () => {
+    const src = readSrc('AccessibleFrameList.tsx');
+    expect(src).toContain('accessibleFrameName(item.frame, typeLabelFor)');
+    expect(src).not.toMatch(/humanizeType\(frame\.type\)/);
+  });
+
+  it('lists connections in the same listbox when onActivateConnection is set', () => {
+    const src = readSrc('AccessibleFrameList.tsx');
+    expect(src).toContain('onActivateConnection');
+    expect(src).toContain("kind: 'connection'");
+    expect(src).toContain('accessibleConnectionName');
+  });
+
+  it('uses secondary text and opaque empty-board panel', () => {
+    const src = readSrc('AccessibleFrameList.tsx');
+    expect(src).toMatch(/EMPTY_STYLE[\s\S]*color: '#94a3b8'/);
+    expect(src).toContain('focusWithin || isEmpty');
+  });
+});
+
+describe('StoryboardCanvas a11y wiring', () => {
+  it('hides the Stage from the accessibility tree', () => {
+    const src = readSrc('StoryboardCanvas.tsx');
+    expect(src).toContain('aria-hidden="true"');
+    expect(src).toMatch(/<div aria-hidden="true"[\s\S]*<Stage/);
+  });
+
+  it('does not expose the keyboard-help span in browse order', () => {
+    const src = readSrc('StoryboardCanvas.tsx');
+    expect(src).toMatch(/id=\{descId\}[^>]*aria-hidden="true"/);
+  });
+});
+
+describe('package index viewport math re-exports', () => {
+  it('re-exports the README viewport math names from index.ts', () => {
+    const src = readSrc('index.ts');
+    for (const name of [
+      'fitViewToFrames',
+      'centerOnFrame',
+      'zoomAtPoint',
+      'zoomFromCenter',
+      'clampScale',
+    ]) {
+      expect(src).toContain(name);
+    }
+  });
+});
+
+describe('FrameCard seawall', () => {
+  it('uses shared title, badge, and size guards', () => {
+    const src = readSrc('FrameCard.tsx');
+    expect(src).toContain('ensureFiniteSize(frame.size, frame.id)');
+    expect(src).toContain('frameDisplayTitle(frame.title)');
+    expect(src).toContain('badgesWithText(frame.badges)');
   });
 });
 

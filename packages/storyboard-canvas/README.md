@@ -258,8 +258,12 @@ interface ViewportHandle {
 | Plain scroll | Pan (natural two-finger trackpad) |
 | Frame drag | Reposition frame; triggers `onFramePositionChange` on release |
 | Click frame | Selects frame; triggers `onSelectFrame` |
-| Click connection | Selects connection; triggers `onSelectConnection` |
+| Frames list — Arrow / Home / End | Move between frames (and selectable connections). Tab lands on the list; it is one tab stop (roving tabindex). |
+| Frames list — Enter / Space | Selects the active frame and centers it (`onSelectFrame`); or selects the active connection (`onSelectConnection`) |
+| Click connection | Selects connection; triggers `onSelectConnection`. Same path as Enter/Space on that connection in the frames list when `onSelectConnection` is provided. |
 | Click background | Deselects; triggers `onSelectFrame(null)` |
+
+`StoryboardCanvas` mounts an `AccessibleFrameList` overlay (arrow keys + Enter/Space) so every consuming app inherits keyboard frame activation. When `onSelectConnection` is provided, connection rows are appended to the same list — there is no separate connections surface. Pointer click on a connection remains available; it is not pointer-only.
 
 The background-drag guard (`e.target !== stage`) prevents pan from triggering when a frame card is being dragged.
 
@@ -309,7 +313,7 @@ const zoomed = zoomAtPoint(currentView, pointerX, pointerY, zoomFactor);
 const clamped = clampScale(rawScale); // clamps to [0.1, 4]
 ```
 
-All 27 viewport math tests in `viewport.test.ts` run without DOM or Konva, making them fast and reliable in CI.
+Viewport math tests in `viewport.test.ts` run without DOM or Konva, making them fast and reliable in CI.
 
 ---
 
