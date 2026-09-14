@@ -200,7 +200,7 @@ function softSanitizeStoredFrame(value: unknown): RpgStoryboardProject['storyboa
   return {
     ...(value as object),
     content: isRecord(frame.content) ? frame.content : {},
-  } as RpgStoryboardProject['storyboard']['frames'][number];
+  } as unknown as RpgStoryboardProject['storyboard']['frames'][number];
 }
 
 /**
