@@ -1,5 +1,25 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { nextFrameIndex, isNavKey } from './a11yNav';
+
+// ─── AccessibleFrameList landmark labels (F-78162158) ─────────────────────────
+// Source pin: package vitest is node-env (no jsdom), so DOM render is out of
+// reach — assert the TSX keeps distinct nav vs listbox accessible names.
+
+describe('AccessibleFrameList aria labels', () => {
+  it('keeps distinct nav landmark and listbox names', () => {
+    const src = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), 'AccessibleFrameList.tsx'),
+      'utf8',
+    );
+    expect(src).toContain('aria-label="Frame navigation"');
+    expect(src).toContain('aria-label="Storyboard frames"');
+    expect(src.match(/aria-label="Frame navigation"/g)?.length).toBe(1);
+    expect(src.match(/aria-label="Storyboard frames"/g)?.length).toBe(1);
+  });
+});
 
 // ─── isNavKey ─────────────────────────────────────────────────────────────────
 
