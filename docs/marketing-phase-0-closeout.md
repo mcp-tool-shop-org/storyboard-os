@@ -59,6 +59,8 @@ It is not a marketing planner, content calendar, or project management tool. Tho
 - Handoff: generateCampaignBrief, generateCampaignMarkdown
 - Demo campaign: 12-frame "Launch rpg-storyboard" campaign
 
+> Live barrel names later changed: `getCampaignBeatStatus`, `createCampaignFromTemplate`, `generateCampaignHandoff` → `CampaignHandoff` then `generateCampaignMarkdown(handoff)`. Names above are the Phase 0 closeout record.
+
 ### M-0B — App Vertical (3 pages)
 
 - `apps/marketing-storyboard` — Astro SSG application

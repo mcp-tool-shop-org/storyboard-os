@@ -55,7 +55,11 @@ The cinematic board answers: What makes this sequence hard to shoot, animate, ed
 
 ## The handoff
 
-When the board is ready, click **Handoff →** in the header. The project handoff regenerates from live state:
+**Handoff →** opens that vertical's export page. Only RPG regenerates from a live project store. Per-vertical first-run URLs: [Getting Started](./getting-started/).
+
+### RPG — live project export
+
+On an RPG project board, **Handoff →** regenerates from live `localStorage` state:
 
 - Project identity and template provenance
 - Progress summary: checklist done/total, tests done/total
@@ -63,6 +67,10 @@ When the board is ready, click **Handoff →** in the header. The project handof
 - Each beat shows edited content, readiness status, and `[x]` / `[ ]` completion
 
 Download as **Markdown** (developer-readable) or **JSON** (engine-ingestible).
+
+### Marketing and cinematic — SSG briefs
+
+Marketing `/campaigns/:id/handoff` and cinematic `/sequences/:id/handoff` are static SSG campaign / production briefs. There is no project store and no progress overlay — Markdown and JSON are generated from the authored demo or template board at build time, then offered as a download.
 
 ## Next steps
 

@@ -215,7 +215,7 @@ getMarketingFrameSignal(frame)
 ### Beat status
 
 ```ts
-getMarketingBeatStatus(frame)
+getCampaignBeatStatus(frame)
 // → BeatStatusLevel: 'ready' | 'partial' | 'draft' | 'blocked'
 
 getCampaignReadiness(storyboard)
@@ -245,7 +245,7 @@ MARKETING_TEMPLATES
 // → product_launch | brand_awareness | content_campaign
 
 getMarketingTemplate(id)
-createMarketingStoryboard(templateId)
+createCampaignFromTemplate(templateId, input)
 ```
 
 ### Validation
@@ -258,11 +258,11 @@ validateMarketingStoryboard(storyboard)
 ### Handoff
 
 ```ts
-generateCampaignBrief(storyboard)
-// → CampaignBrief: campaign-scoped handoff for execution team
+generateCampaignHandoff(board)
+// → CampaignHandoff: campaign-scoped handoff for execution team
 
-generateCampaignMarkdown(brief)
-// → Markdown for campaign brief
+generateCampaignMarkdown(handoff)
+// → Markdown for campaign brief (takes CampaignHandoff, not Storyboard)
 ```
 
 ---

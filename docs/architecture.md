@@ -153,7 +153,7 @@ getMarketingFrameBadges()      // per-frame badges: STATE, GATE, SPEC
 getMarketingFrameSignal()      // readiness + signal details per frame
 
 // Beat status (M-0A)
-getMarketingBeatStatus()       // BeatStatusLevel: ready | partial | draft | blocked
+getCampaignBeatStatus()        // BeatStatusLevel: ready | partial | draft | blocked
 getCampaignReadiness()         // counts by level across campaign
 
 // Launch readiness (M-0C)
@@ -165,14 +165,14 @@ getMeasurementLoopSignals()    // per-measurement: hasMetrics, isLoop, connectio
 // Templates (M-0A)
 MARKETING_TEMPLATES            // product_launch | brand_awareness | content_campaign
 getMarketingTemplate()
-createMarketingStoryboard()
+createCampaignFromTemplate()   // (templateId, input) → Storyboard
 
 // Validation (M-0A)
 validateMarketingStoryboard()  // domain rules on top of core structural validation
 
 // Handoff (M-0A)
-generateCampaignBrief()        // CampaignBrief: campaign-scoped handoff for execution team
-generateCampaignMarkdown()     // Markdown for campaign brief
+generateCampaignHandoff()      // CampaignHandoff: campaign-scoped handoff for execution team
+generateCampaignMarkdown()     // Markdown for campaign brief (takes CampaignHandoff, not Storyboard)
 
 // Demo campaign
 launchRpgStoryboardCampaign    // 12-frame demo campaign with full launch-readiness spec

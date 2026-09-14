@@ -156,7 +156,7 @@ pnpm build      # builds all 3 apps (54 pages)
 pnpm verify     # typecheck + test + build in one command (ship gate)
 ```
 
-Requirements: Node ≥ 22.13, pnpm ≥ 10.
+Requirements: Node ≥ 22.13, pnpm ≥ 11.
 
 Test scope is automatically filtered to `@storyboard-os/*` packages and `rpg-storyboard` — it does not pick up sibling workspaces in the parent directory.
 
