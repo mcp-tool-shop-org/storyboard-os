@@ -20,6 +20,9 @@ import { DEFAULT_CONNECTION_STYLE } from './defaults';
 
 const DEFAULT_STROKE_WIDTH = 1.5;
 
+/** Once-per-id breadcrumb when a connection endpoint frame is missing. */
+const warnedDanglingEndpointIds = new Set<string>();
+
 // ─── Label sizing (VP-012) ────────────────────────────────────────────────────
 // The label box was a fixed 88px with no ellipsis, so long labels clipped at an
 // arbitrary character. Auto-size to the measured text up to LABEL_MAX_WIDTH;
@@ -96,7 +99,22 @@ function ConnectionLayer({
       {connections.map(conn => {
         const fromFrame = frameMap.get(conn.fromFrameId);
         const toFrame = frameMap.get(conn.toFrameId);
-        if (!fromFrame || !toFrame) return null;
+        if (!fromFrame || !toFrame) {
+          // Mirror F-CI-208: dangling refs are the other silent-drop class.
+          if (!warnedDanglingEndpointIds.has(conn.id)) {
+            warnedDanglingEndpointIds.add(conn.id);
+            const missing = [
+              !fromFrame ? `fromFrameId="${conn.fromFrameId}"` : null,
+              !toFrame ? `toFrameId="${conn.toFrameId}"` : null,
+            ]
+              .filter(Boolean)
+              .join(', ');
+            console.warn(
+              `[storyboard-canvas] Skipping connection ${conn.id} — missing endpoint frame(s) (${missing}).`,
+            );
+          }
+          return null;
+        }
 
         const fromPos = positions[conn.fromFrameId] ?? fromFrame.position;
         const toPos = positions[conn.toFrameId] ?? toFrame.position;

@@ -51,7 +51,12 @@ import ConnectionLayer from './ConnectionLayer';
 import FrameCard from './FrameCard';
 import AccessibleFrameList from './AccessibleFrameList';
 import { DEFAULT_FRAME_STYLE } from './defaults';
-import { reconcilePositions, shouldAutoFit, type PropPositionMap } from './positions';
+import {
+  ensureFinitePosition,
+  reconcilePositions,
+  shouldAutoFit,
+  type PropPositionMap,
+} from './positions';
 
 // ─── Public handle exposed via ref ────────────────────────────────────────────
 
@@ -153,7 +158,9 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
   ) {
     // ── State ──────────────────────────────────────────────────────────────
     const [positions, setPositions] = useState<PositionMap>(() =>
-      Object.fromEntries(frames.map(f => [f.id, { ...f.position }])),
+      Object.fromEntries(
+        frames.map(f => [f.id, ensureFinitePosition(f.position, f.id)]),
+      ),
     );
 
     // viewState is the React-side mirror of the Stage's actual transform.
@@ -176,7 +183,7 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
     const propBaselinesRef = useRef<PropPositionMap | null>(null);
     if (propBaselinesRef.current === null) {
       propBaselinesRef.current = Object.fromEntries(
-        frames.map(f => [f.id, { ...f.position }]),
+        frames.map(f => [f.id, ensureFinitePosition(f.position, f.id)]),
       );
     }
     const lastPositionEpochRef = useRef(positionEpoch);
@@ -222,6 +229,26 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
         );
       }
     }, [frames]);
+
+    // ── Duplicate connection id warning (mirrors F-CV-006) ─────────────────
+    // ConnectionLayer keys arrows with `key={conn.id}`; collisions cause
+    // selection misfires the same way duplicate frame ids break PositionMap.
+    const warnedDuplicateConnIds = useRef(false);
+    useEffect(() => {
+      if (warnedDuplicateConnIds.current) return;
+      const seen = new Set<string>();
+      const dupes = new Set<string>();
+      for (const c of connections) {
+        if (seen.has(c.id)) dupes.add(c.id);
+        seen.add(c.id);
+      }
+      if (dupes.size > 0) {
+        warnedDuplicateConnIds.current = true;
+        console.warn(
+          `[storyboard-canvas] Duplicate connection ids in connections prop: ${[...dupes].join(', ')} — React keys and connection selection will misbehave for these connections.`,
+        );
+      }
+    }, [connections]);
 
     // ── Imperative apply ───────────────────────────────────────────────────
     // All viewport changes go through here. Imperatively sets the Konva Stage
@@ -479,8 +506,9 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
     );
 
     const handleDragEnd = useCallback((id: string, x: number, y: number) => {
-      setPositions(prev => ({ ...prev, [id]: { x, y } }));
-      onFramePositionChange?.(id, { x, y });
+      const next = ensureFinitePosition({ x, y }, id);
+      setPositions(prev => ({ ...prev, [id]: next }));
+      onFramePositionChange?.(id, next);
     }, [onFramePositionChange]);
 
     // ── Style helper ───────────────────────────────────────────────────────

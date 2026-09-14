@@ -106,18 +106,23 @@ export function validateStoryboard(
       continue;
     }
 
-    // Non-string ids never enter the id sets: `frameIds.has(undefined)` would
-    // otherwise "match" a connection whose ref is also undefined, silently
-    // masking the broken reference. Field errors below carry frameId only when
-    // it is a real string.
-    const frameId = typeof frame.id === 'string' ? frame.id : undefined;
-
-    if (frameId === undefined) {
+    // Non-string / empty ids never enter the id sets: `frameIds.has(undefined)`
+    // or `frameIds.has("")` would otherwise "match" a connection whose ref is
+    // the same empty value, silently masking the broken reference. Field
+    // errors below carry frameId only when it is a non-empty string.
+    let frameId: string | undefined;
+    if (typeof frame.id !== 'string') {
       errors.push({
         code: 'INVALID_FRAME_ID',
         message: `frames[${frameIndex}] has a non-string id (got ${describeType(frame.id)}).`,
       });
+    } else if (!frame.id.trim()) {
+      errors.push({
+        code: 'INVALID_FRAME_ID',
+        message: `frames[${frameIndex}] has an empty id.`,
+      });
     } else {
+      frameId = frame.id;
       if (seenIds.has(frameId)) {
         errors.push({
           code: 'DUPLICATE_FRAME_ID',
@@ -136,7 +141,9 @@ export function validateStoryboard(
       errors.push({ code: 'MISSING_TITLE', message: 'Frame is missing a title.', frameId });
     }
 
-    if (!frame.type) {
+    // Match title/summary: truthy non-strings (e.g. 42) and whitespace-only
+    // strings must not pass — AccessibleFrameList.humanizeType calls .replace.
+    if (typeof frame.type !== 'string' || !frame.type.trim()) {
       errors.push({ code: 'MISSING_TYPE', message: 'Frame is missing a type.', frameId });
     }
 
@@ -199,19 +206,23 @@ export function validateStoryboard(
       continue;
     }
 
-    // Non-string connection ids never enter the id sets: two connections with
-    // `id: undefined` would otherwise collide as a bogus DUPLICATE_CONNECTION_ID
-    // (same failure mode CR-003 fixed for frames). Field errors below carry
-    // connectionId only when it is a real string.
-    const connectionId = typeof conn.id === 'string' ? conn.id : undefined;
-    const connLabel = connectionId ?? `connections[${connIndex}]`;
-
-    if (connectionId === undefined) {
+    // Non-string / empty connection ids never enter the id sets: two connections
+    // with `id: undefined` or `id: ""` would otherwise collide as a bogus
+    // DUPLICATE_CONNECTION_ID (same failure mode CR-003 fixed for frames).
+    // Field errors below carry connectionId only when it is a non-empty string.
+    let connectionId: string | undefined;
+    if (typeof conn.id !== 'string') {
       errors.push({
         code: 'INVALID_CONNECTION_ID',
         message: `connections[${connIndex}] has a non-string id (got ${describeType(conn.id)}).`,
       });
+    } else if (!conn.id.trim()) {
+      errors.push({
+        code: 'INVALID_CONNECTION_ID',
+        message: `connections[${connIndex}] has an empty id.`,
+      });
     } else {
+      connectionId = conn.id;
       if (seenConnectionIds.has(connectionId)) {
         errors.push({
           code: 'DUPLICATE_CONNECTION_ID',
@@ -221,13 +232,20 @@ export function validateStoryboard(
       }
       seenConnectionIds.add(connectionId);
     }
+    const connLabel = connectionId ?? `connections[${connIndex}]`;
 
-    // Refs are only meaningful as strings. Identity-based checks (self-loop,
-    // duplicate edge) are gated on both refs being strings — otherwise
-    // `undefined === undefined` reads as a self-loop and `"undefined|undefined"`
-    // edge keys collide, reporting nonsense on malformed input.
-    const fromRef = typeof conn.fromFrameId === 'string' ? conn.fromFrameId : undefined;
-    const toRef = typeof conn.toFrameId === 'string' ? conn.toFrameId : undefined;
+    // Refs are only meaningful as non-empty strings. Identity-based checks
+    // (self-loop, duplicate edge) are gated on both refs being usable —
+    // otherwise `undefined === undefined` or `"" === ""` reads as a self-loop
+    // and empty edge keys collide, reporting nonsense on malformed input.
+    const fromRef =
+      typeof conn.fromFrameId === 'string' && conn.fromFrameId.trim()
+        ? conn.fromFrameId
+        : undefined;
+    const toRef =
+      typeof conn.toFrameId === 'string' && conn.toFrameId.trim()
+        ? conn.toFrameId
+        : undefined;
 
     if (fromRef !== undefined && toRef !== undefined) {
       if (fromRef === toRef) {
@@ -250,32 +268,44 @@ export function validateStoryboard(
       }
     }
 
-    // Non-string refs get their own broken-ref message instead of relying on
-    // `frameIds.has(...)` — a non-string frame id in the set would otherwise
-    // "match" and mask the broken reference entirely.
-    if (fromRef === undefined) {
+    // Non-string / empty refs get their own broken-ref message instead of
+    // relying on `frameIds.has(...)` — a non-string or empty frame id in the
+    // set would otherwise "match" and mask the broken reference entirely.
+    if (typeof conn.fromFrameId !== 'string') {
       errors.push({
         code: 'BROKEN_CONNECTION_FROM',
         message: `Connection "${connLabel}" has a non-string fromFrameId (got ${describeType(conn.fromFrameId)}); expected a frame id.`,
         connectionId,
       });
-    } else if (!frameIds.has(fromRef)) {
+    } else if (!conn.fromFrameId.trim()) {
       errors.push({
         code: 'BROKEN_CONNECTION_FROM',
-        message: `Connection "${connLabel}" references unknown fromFrameId "${fromRef}".`,
+        message: `Connection "${connLabel}" has an empty fromFrameId; expected a frame id.`,
+        connectionId,
+      });
+    } else if (!frameIds.has(conn.fromFrameId)) {
+      errors.push({
+        code: 'BROKEN_CONNECTION_FROM',
+        message: `Connection "${connLabel}" references unknown fromFrameId "${conn.fromFrameId}".`,
         connectionId,
       });
     }
-    if (toRef === undefined) {
+    if (typeof conn.toFrameId !== 'string') {
       errors.push({
         code: 'BROKEN_CONNECTION_TO',
         message: `Connection "${connLabel}" has a non-string toFrameId (got ${describeType(conn.toFrameId)}); expected a frame id.`,
         connectionId,
       });
-    } else if (!frameIds.has(toRef)) {
+    } else if (!conn.toFrameId.trim()) {
       errors.push({
         code: 'BROKEN_CONNECTION_TO',
-        message: `Connection "${connLabel}" references unknown toFrameId "${toRef}".`,
+        message: `Connection "${connLabel}" has an empty toFrameId; expected a frame id.`,
+        connectionId,
+      });
+    } else if (!frameIds.has(conn.toFrameId)) {
+      errors.push({
+        code: 'BROKEN_CONNECTION_TO',
+        message: `Connection "${connLabel}" references unknown toFrameId "${conn.toFrameId}".`,
         connectionId,
       });
     }

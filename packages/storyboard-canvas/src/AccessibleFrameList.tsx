@@ -32,6 +32,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { CanvasFrame } from './types';
 import { isNavKey, nextFrameIndex } from './a11yNav';
+import { humanizeType } from './humanizeType';
+
+export { humanizeType } from './humanizeType';
 
 interface Props {
   frames: CanvasFrame[];
@@ -130,17 +133,22 @@ const EMPTY_STYLE: React.CSSProperties = {
 // so the accessible name composes title + humanized type + badge texts. When a
 // frame has no badges, name is just title + type (graceful).
 
-function humanizeType(type: string): string {
-  return type.replace(/[_-]+/g, ' ').trim();
-}
-
 function accessibleName(frame: CanvasFrame): string {
-  const parts: string[] = [frame.title || 'Untitled frame'];
+  const title =
+    typeof frame.title === 'string' && frame.title.trim()
+      ? frame.title
+      : 'Untitled frame';
+  const parts: string[] = [title];
   const type = humanizeType(frame.type);
   if (type) parts.push(type);
   const badges = frame.badges ?? [];
   if (badges.length > 0) {
-    parts.push(badges.map(b => b.text).join(', '));
+    parts.push(
+      badges
+        .map(b => (typeof b.text === 'string' ? b.text : ''))
+        .filter(Boolean)
+        .join(', '),
+    );
   }
   return parts.join(' — ');
 }
@@ -305,7 +313,9 @@ export default function AccessibleFrameList({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {frame.title || 'Untitled frame'}
+                  {typeof frame.title === 'string' && frame.title.trim()
+                    ? frame.title
+                    : 'Untitled frame'}
                 </span>
               </li>
             );
