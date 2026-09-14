@@ -70,27 +70,46 @@ describe('getMarketingFrameSignal', () => {
         expect(signal.channelSummary).toBeNull();
     });
 
-    it('computes readiness: ready when 3+ fields present', () => {
-        const frame = makeFrame('audience', {
-            objective: 'Test',
-            implementationChecklist: ['Task'],
-            requiredAssets: ['Asset'],
-            testCriteria: ['Criterion'],
-        });
+    it('computes readiness: ready when beat status is ready', () => {
+        const frame = makeFrame('audience', fullContent());
         const signal = getMarketingFrameSignal(frame);
         expect(signal.readiness).toBe('ready');
     });
 
-    it('computes readiness: partial when 1-2 fields present', () => {
-        const frame = makeFrame('audience', { objective: 'Test' });
+    it('computes readiness: partial when beat status is partial', () => {
+        // ≤3 non-advisory spec gaps → partial (missing proofPoints/launchDependencies are advisory)
+        const frame = makeFrame('audience', {
+            objective: 'Test',
+            audienceSegment: 'Segment',
+            customerStateBefore: ['Before'],
+            customerStateAfter: ['After'],
+            // missing testCriteria + implementationChecklist (+ advisory) → 2 gaps → partial
+        });
         const signal = getMarketingFrameSignal(frame);
         expect(signal.readiness).toBe('partial');
     });
 
-    it('computes readiness: incomplete when no fields present', () => {
+    it('computes readiness: incomplete when no fields present (draft → incomplete)', () => {
         const frame = makeFrame('audience', {});
         const signal = getMarketingFrameSignal(frame);
         expect(signal.readiness).toBe('incomplete');
+    });
+
+    // F-2ac558f8 / RPG F-a6959b0e: signal.readiness must follow getCampaignBeatStatus.
+    it('is incomplete (not ready) for a blocked conversion with full checklist score', () => {
+        const frame = makeFrame('conversion', {
+            objective: 'Drive signups',
+            audienceSegment: 'Warm leads',
+            customerStateBefore: ['Aware'],
+            customerStateAfter: ['Converted'],
+            implementationChecklist: ['Wire CTA'],
+            requiredAssets: ['Landing hero'],
+            testCriteria: ['CTA click tracked'],
+            proofPoints: ['Proof'],
+            launchDependencies: ['Landing live'],
+            // no conversionGoal → getCampaignBeatStatus blocked
+        });
+        expect(getMarketingFrameSignal(frame).readiness).toBe('incomplete');
     });
 
     it('reports hasMetrics', () => {

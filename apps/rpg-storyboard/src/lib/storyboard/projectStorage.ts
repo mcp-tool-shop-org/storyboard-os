@@ -121,6 +121,20 @@ export function getLastReadWarning(): ReadWarning | null {
 }
 
 /**
+ * Raw localStorage value for `rpg-sb:projects`, or null when unavailable /
+ * unset. Used by corrupt-store recovery so the user can download the blob
+ * before clearing site data — the parsed API cannot export unreadable roots.
+ */
+export function getRawStoreBlob(): string | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Non-throwing dev-facing diagnostic (PR-002). The store is the highest-stakes
  * layer yet had zero dev signal (the canvas has F-CI-208 warns; the store had
  * none). This is ADDITIVE console.warn only — the user-facing ReadWarning

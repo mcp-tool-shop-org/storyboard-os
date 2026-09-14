@@ -263,6 +263,13 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
         .filter(f => (f.content?.metrics?.length ?? 0) === 0)
         .map(f => f.id);
 
+    // Open measurement loops: metrics present but no feedback edge (hasMetrics && !isLoop).
+    // Must demote ready — the Launch Blockers rail already lists these.
+    const openLoopCount = getMeasurementLoopSignals(campaign)
+        .filter(s => s.hasMetrics && !s.isLoop)
+        .length;
+    const hasOpenMeasurementLoops = openLoopCount > 0;
+
     // Critical path (all connection types — see longestPathToLaunchEvent)
     const criticalPathFrameIds = longestPathToLaunchEvent(frames, connections);
 
@@ -286,11 +293,16 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
         level = 'blocked';
         const blockerCount = blockedFrameIds.length;
         summary = `${blockerCount} launch ${blockerCount === 1 ? 'blocker' : 'blockers'} — campaign cannot ship`;
-    } else if (hasAnyBlocked || hasMeasurementGap) {
+    } else if (hasAnyBlocked || hasMeasurementGap || hasOpenMeasurementLoops) {
         level = 'at_risk';
         const issues: string[] = [];
         if (hasAnyBlocked) issues.push(`${blockedFrameIds.length} blocked`);
         if (hasMeasurementGap) issues.push('measurement gaps');
+        if (hasOpenMeasurementLoops) {
+            issues.push(
+                openLoopCount === 1 ? '1 open measurement loop' : `${openLoopCount} open measurement loops`,
+            );
+        }
         summary = `At risk — ${issues.join(', ')}`;
     } else if (draftCount > frames.length / 2) {
         level = 'draft';

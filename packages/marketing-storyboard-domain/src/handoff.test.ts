@@ -146,6 +146,63 @@ describe('generateCampaignMarkdown', () => {
         const md = generateCampaignMarkdown(handoff);
         expect(md).toContain('- [ ]');
     });
+
+    it('emits proof points, objections handled, and owner notes when present (F-8cbc4229)', () => {
+        const storyboard: Storyboard = {
+            id: 'pp',
+            title: 'Proof Campaign',
+            frames: [
+                makeFrame('msg', 'message', {
+                    messageClaim: 'Ships fast',
+                    proofPoints: ['Benchmarked against X'],
+                    objectionsHandled: ['Too expensive → ROI calculator'],
+                    ownerNotes: 'Do not promise enterprise SLA yet',
+                }),
+            ],
+            connections: [],
+        };
+        const beat = generateCampaignHandoff(storyboard).beats[0];
+        expect(beat.proofPoints).toEqual(['Benchmarked against X']);
+        expect(beat.objectionsHandled).toEqual(['Too expensive → ROI calculator']);
+        expect(beat.ownerNotes).toBe('Do not promise enterprise SLA yet');
+
+        const md = generateCampaignMarkdown(generateCampaignHandoff(storyboard));
+        expect(md).toContain('**Proof Points:**');
+        expect(md).toContain('- Benchmarked against X');
+        expect(md).toContain('**Objections Handled:**');
+        expect(md).toContain('- Too expensive → ROI calculator');
+        expect(md).toContain('**Owner Notes:**');
+        expect(md).toContain('Do not promise enterprise SLA yet');
+    });
+
+    it('lists only true launch blockers under ### Blocked Beats (F-1157926f)', () => {
+        const storyboard: Storyboard = {
+            id: 'blk',
+            title: 'Blocked Campaign',
+            frames: [
+                makeFrame('conv', 'conversion', {
+                    // blocked: no conversionGoal; also ordinary gaps + advisory
+                    objective: undefined,
+                    proofPoints: undefined,
+                    launchDependencies: undefined,
+                }),
+            ],
+            connections: [],
+        };
+        const md = generateCampaignMarkdown(generateCampaignHandoff(storyboard));
+        expect(md).toContain('### Blocked Beats');
+        expect(md).toMatch(/### Blocked Beats[\s\S]*?no_conversion_goal/);
+        // Ordinary incompleteness / advisory must not appear under Blocked Beats.
+        const blockedSection = md.slice(
+            md.indexOf('### Blocked Beats'),
+            md.indexOf('### Spec Gaps') >= 0 ? md.indexOf('### Spec Gaps') : md.indexOf('## Campaign Beats'),
+        );
+        expect(blockedSection).not.toContain('no_objective');
+        expect(blockedSection).not.toContain('no_proof_points');
+        expect(blockedSection).not.toContain('no_launch_dependencies');
+        expect(md).toContain('### Spec Gaps');
+        expect(md).toMatch(/### Spec Gaps[\s\S]*?no_objective/);
+    });
 });
 
 describe('generateProjectCampaignHandoff', () => {
@@ -259,6 +316,20 @@ describe('DM-004 — markdown escapes user text', () => {
         expect(md).not.toContain('<img');
         expect(md).toContain('&lt;img');
         expect(md).not.toContain('`ticks`');
+    });
+
+    it('escapes emphasis and link/image syntax (* _ [] ()) (F-a9199745)', () => {
+        const frame = makeFrame('f1', 'message', {
+            messageClaim: 'see *bold* and _italic_ plus [click](http://x)',
+        });
+        // Title containing *](http://x) must stay inert in the brief.
+        frame.title = 'Beat*](http://x)';
+        const md = generateCampaignMarkdown(generateCampaignHandoff(makeBoardWith(frame)));
+        expect(md).toContain('\\*bold\\*');
+        expect(md).toContain('\\_italic\\_');
+        expect(md).toContain('\\[click\\]\\(http://x\\)');
+        expect(md).toContain('Beat\\*\\]\\(http://x\\)');
+        expect(md).not.toContain('*](http://x)');
     });
 
     it('escapes user text in the project markdown too', () => {

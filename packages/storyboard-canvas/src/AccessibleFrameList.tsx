@@ -242,7 +242,7 @@ export default function AccessibleFrameList({
 
   return (
     <nav
-      aria-label="Storyboard frames"
+      aria-label="Frame navigation"
       style={panelStyle}
       onFocus={() => setFocusWithin(true)}
       onBlur={e => {
