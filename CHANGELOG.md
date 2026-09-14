@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Security / Dependencies
+
+- Apps pin **astro ^7.3.1**. The two SSR-only `auditConfig.ignoreGhsas` suppressions (`GHSA-2pvr-wf23-7pc7`, `GHSA-8hv8-536x-4wqp`) are removed from `pnpm-workspace.yaml`; `pnpm audit --prod --audit-level=high` runs unsuppressed in CI.
+
 ## [1.2.1] — 2026-07-07
 
 ### Fixed — package publishing hygiene

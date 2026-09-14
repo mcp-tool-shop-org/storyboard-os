@@ -76,12 +76,8 @@ Domains own their connection vocabulary via `StoryboardConnection<TConnectionTyp
 |---|---|
 | `ready` | At least 3 of the 4 spec fields completed (designerNotes, requiredAssets, testCriteria, implementationChecklist) — spec score ≥ 3 out of 4. No domain violations. |
 | `partial` | Some spec present but incomplete — 1 or 2 of the 4 spec fields completed (spec score 1–2). |
-| `draft` | No spec present (score = 0). Exists structurally but carries no implementation depth. |
-| `blocked` | Domain violation: `choice`/`consequence` missing `stateChanges`, or `reveal` missing both `entryConditions` and `stateChanges`. |
-
-:::note
-An empty `choice` frame (score = 0) is `draft`, not `blocked`. A frame must have at least some content before domain rules apply.
-:::
+| `draft` | Spec score is 0 **and** no domain blocker. Empty shells of non-domain-required types only (`hook`, `scene`, `encounter`, `npc_beat`). |
+| `blocked` | Any `BLOCKING_REASONS` hit (missing type-required fields), **regardless of spec score** — an empty `choice`/`consequence`/`reveal` is `blocked`, not `draft`. |
 
 ### Missing spec reasons
 
