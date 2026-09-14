@@ -120,6 +120,22 @@ describe('getSequenceProductionSignals', () => {
     expect(signals.cameraComplexity.complexShots[0].movement).toBe('Tracking shot');
   });
 
+  it('treats cameraMovement: "Static" as a static shot, not complex', () => {
+    const sb = makeStoryboard({
+      frames: [
+        makeFrame('s1', { content: { cameraMovement: 'Static' } }),
+        makeFrame('s2', { content: { cameraMovement: 'Static then slow zoom into center frame' } }),
+        makeFrame('s3', { content: { cameraMovement: 'none' } }),
+        makeFrame('s4', { content: { cameraMovement: 'locked off' } }),
+        makeFrame('s5', { content: { cameraMovement: 'Slow pan or static hold' } }),
+      ],
+    });
+    const signals = getSequenceProductionSignals(sb);
+    expect(signals.cameraComplexity.totalStaticShots).toBe(4);
+    expect(signals.cameraComplexity.totalComplexShots).toBe(1);
+    expect(signals.cameraComplexity.complexShots[0].movement).toBe('Slow pan or static hold');
+  });
+
   it('computes duration rollup', () => {
     const sb = makeStoryboard({
       frames: [

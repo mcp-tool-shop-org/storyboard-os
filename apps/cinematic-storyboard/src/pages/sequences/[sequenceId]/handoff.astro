@@ -51,6 +51,18 @@ const TYPE_COLORS: Record<string, string> = {
   edit_beat:    '#EAB308',
 };
 
+/** Connection-type palette — mirrors CinematicStoryboardCanvas CONNECTION_TYPE_COLORS. */
+const CONNECTION_TYPE_COLORS: Record<string, string> = {
+  sequence:        '#475569',
+  match_cut:       '#3B82F6',
+  cutaway:         '#F97316',
+  reaction:        '#A855F7',
+  transition:      '#6366F1',
+  continuity:      '#22C55E',
+  parallel_action: '#EAB308',
+  fallback:        '#334155',
+};
+
 const TYPE_LABELS: Record<string, string> = {
   sequence:     'Sequence',
   shot:         'Shot',
@@ -394,7 +406,7 @@ const CONN_LABELS: Record<string, string> = {
           {storyboard.connections.map(conn => {
             const from = storyboard.frames.find(f => f.id === conn.fromFrameId);
             const to = storyboard.frames.find(f => f.id === conn.toFrameId);
-            const connColor = TYPE_COLORS[conn.type] ?? '#475569';
+            const connColor = CONNECTION_TYPE_COLORS[conn.type] ?? '#475569';
             return (
               <tr>
                 <td>{from?.title ?? conn.fromFrameId}</td>

@@ -69,7 +69,7 @@ import {
 - **Frame signals** — `getCinematicFrameSignal(frame)` / `getCinematicFrameBadges(frame)` derive per-shot state and canvas badges; `cinematicColors` is the canonical badge palette (shared status swatches from core + `vfx`, `camera`, `sfx`).
 - **Readiness model** — `getCinematicBeatStatus(frame)` classifies a shot's readiness; `getSequenceReadiness(board)` rolls the shots up into a sequence readiness summary.
 - **Production signals** — `getSequenceProductionSignals(board)` surfaces sequence **health**, **VFX** and **audio** burden, **camera-complexity** hotspots, **continuity risk**, **blocked shots**, and a **duration rollup** — the "where is the pain" view for a producer.
-- **Handoff** — `generateProductionBrief(board)` and `generateProductionMarkdown(board)` emit a production brief carrying `HANDOFF_FORMAT_VERSION` for downstream consumers. User text is neutralized before interpolation.
+- **Handoff** — two-step: `const brief = generateProductionBrief(board)` then `generateProductionMarkdown(brief)`. The markdown helper takes a `ProductionBrief`, not a `Storyboard`. Briefs carry `HANDOFF_FORMAT_VERSION` for downstream consumers. User text is neutralized before interpolation.
 - **Demo** — `storyboardOsLaunchTrailer` is a complete example sequence for tests and previews.
 
 ## Trust model

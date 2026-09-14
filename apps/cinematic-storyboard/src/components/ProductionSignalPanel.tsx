@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import type { ProductionSignals, SequenceHealthLevel } from '@storyboard-os/cinematic-domain';
+import { humanizeReason } from '../lib/humanizeReason';
 
 // ─── Health colors ────────────────────────────────────────────────────────────
 
@@ -169,7 +170,9 @@ export default function ProductionSignalPanel({ signals, onClose }: Props) {
               {signals.blockedShots.map(shot => (
                 <div key={shot.frameId} style={ITEM_CHIP}>
                   <span style={{ fontWeight: 600, color: '#f1f5f9' }}>{shot.frameTitle}</span>
-                  <span style={{ color: '#64748b', marginLeft: 8 }}>{shot.reasons.join(', ')}</span>
+                  <span style={{ color: '#64748b', marginLeft: 8 }}>
+                    {shot.reasons.map(humanizeReason).join(', ')}
+                  </span>
                 </div>
               ))}
             </div>
