@@ -18,7 +18,7 @@ export interface ApprovalSignalCategories {
 }
 
 /** Measurement frames that have metrics but no outgoing feedback edge. */
-export function hasOpenMeasurementLoops(signals: MeasurementLoopSignal[]): boolean {
+export function hasOpenMeasurementLoops(signals: readonly MeasurementLoopSignal[]): boolean {
     return signals.some(s => s.hasMetrics && !s.isLoop);
 }
 

@@ -124,6 +124,8 @@ function loopSignal(overrides: Partial<MeasurementLoopSignal>): MeasurementLoopS
         title: 'Post-launch metrics',
         hasMetrics: true,
         metricsCount: 2,
+        hasIncomingConnection: false,
+        hasOutgoingConnection: false,
         isLoop: false,
         ...overrides,
     };
