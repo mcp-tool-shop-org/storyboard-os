@@ -35,8 +35,17 @@ export {
   generateProductionMarkdown,
   HANDOFF_FORMAT_VERSION,
   parseDurationSeconds,
+  humanizeFrameType,
+  humanizeStatus,
+  humanizeConnectionType,
+  humanizeMissingReason,
+  getConnectionTypeColor,
+  FRAME_TYPE_LABELS,
+  STATUS_LABELS,
+  CONNECTION_TYPE_LABELS,
+  CONNECTION_TYPE_COLORS,
 } from './handoff';
-export type { ProductionBrief, ProductionBriefShot } from './handoff';
+export type { ProductionBrief, ProductionBriefShot, ProductionBriefConnection } from './handoff';
 
 export {
   getSequenceProductionSignals,

@@ -35,9 +35,10 @@ describe('generateProductionBrief', () => {
     expect(brief.readySummary.blocked).toBe(0);
   });
 
-  it('stamps formatVersion: 1 for downstream importers (PR-004)', () => {
+  it('stamps formatVersion: 2 for downstream importers (connections + missingReasons)', () => {
     const brief = generateProductionBrief(createCinematicStoryboard('trailer_flow'));
-    expect(brief.formatVersion).toBe(1);
+    expect(brief.formatVersion).toBe(2);
+    expect(brief.connections).toBeDefined();
   });
 
   it('computes total duration from frames', () => {
@@ -258,6 +259,77 @@ describe('DM-004 — markdown escapes user text', () => {
   });
 });
 
+describe('handoff humanization and Sequence Flow', () => {
+  it('humanizes Type/Status in markdown and keeps enums in JSON', () => {
+    const storyboard: Storyboard = {
+      id: 'type-status',
+      title: 'Type Status',
+      frames: [
+        makeFrame('s1', 'camera_move', {
+          cameraMovement: 'Pan left',
+          intent: 'Reveal',
+          durationEstimate: '3s',
+        }),
+      ],
+      connections: [],
+    };
+    const brief = generateProductionBrief(storyboard);
+    expect(brief.shots[0].type).toBe('camera_move');
+    expect(brief.shots[0].status).toBe('ready');
+    const md = generateProductionMarkdown(brief);
+    expect(md).toContain('**Type:** Camera Move');
+    expect(md).toContain('**Status:** READY');
+    expect(md).not.toContain('**Type:** camera_move');
+  });
+
+  it('stamps connections on the brief and emits Sequence Flow in markdown', () => {
+    const brief = generateProductionBrief(storyboardOsLaunchTrailer);
+    expect(brief.connections.some(c => c.type === 'match_cut')).toBe(true);
+    expect(brief.connections.some(c => c.type === 'parallel_action')).toBe(true);
+    const match = brief.connections.find(c => c.id === 'dc-3');
+    expect(match?.fromTitle).toBe('RPG Vertical Demo');
+    expect(match?.toTitle).toBe('Marketing Vertical Demo');
+    const md = generateProductionMarkdown(brief);
+    expect(md).toContain('## Sequence Flow');
+    expect(md).toContain('match cut');
+    expect(md).toContain('parallel');
+    expect(md).not.toMatch(/\| match_cut \|/);
+    expect(md).not.toMatch(/\| parallel_action \|/);
+  });
+
+  it('copies missingReasons onto blocked shots and humanizes them in markdown', () => {
+    const blocked: Storyboard = {
+      id: 'blocked',
+      title: 'Blocked',
+      frames: [makeFrame('s1', 'shot', { intent: 'Hook only' })],
+      connections: [],
+    };
+    const brief = generateProductionBrief(blocked);
+    expect(brief.shots[0].status).toBe('blocked');
+    expect(brief.shots[0].missingReasons).toContain('no_visualDescription');
+    const md = generateProductionMarkdown(brief);
+    expect(md).toContain('Visual description missing');
+    expect(md).not.toContain('no_visualDescription');
+
+    const ready: Storyboard = {
+      id: 'ready',
+      title: 'Ready',
+      frames: [
+        makeFrame('s1', 'shot', {
+          visualDescription: 'Wide',
+          intent: 'Hook',
+          cameraAngle: 'Wide',
+          durationEstimate: '3s',
+        }),
+      ],
+      connections: [],
+    };
+    const readyBrief = generateProductionBrief(ready);
+    expect(readyBrief.shots[0].missingReasons).toBeUndefined();
+    expect(generateProductionMarkdown(readyBrief)).not.toContain('**Missing:**');
+  });
+});
+
 // ─── V3-001 — benign text round-trips unchanged (faithfulness) ────────────────
 //
 // The escaping tests above prove hostile input is neutralized. This guards the
@@ -286,8 +358,9 @@ describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
     expect(md).toContain('assets/tollhouse-exterior.png');
     expect(md).toContain('Block the establishing shot');
     expect(md).toContain('Framing matches the boards');
-    // Enum-derived type label is not escaped and reads plainly.
-    expect(md).toContain('**Type:** shot');
+    // Humanized type/status labels (JSON keeps the enums).
+    expect(md).toContain('**Type:** Shot');
+    expect(md).toContain('**Status:** READY');
     // No collateral damage from escaping a string that needed none.
     expect(md).not.toContain('\\');
     expect(md).not.toContain('&lt;');

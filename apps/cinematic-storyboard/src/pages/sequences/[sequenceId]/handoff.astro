@@ -6,6 +6,11 @@ import {
   generateProductionBrief,
   generateProductionMarkdown,
   getSequenceReadiness,
+  humanizeFrameType,
+  humanizeStatus,
+  humanizeConnectionType,
+  humanizeMissingReason,
+  getConnectionTypeColor,
   type Storyboard,
 } from '@storyboard-os/cinematic-domain';
 
@@ -51,40 +56,6 @@ const TYPE_COLORS: Record<string, string> = {
   edit_beat:    '#EAB308',
 };
 
-/** Connection-type palette — mirrors CinematicStoryboardCanvas CONNECTION_TYPE_COLORS. */
-const CONNECTION_TYPE_COLORS: Record<string, string> = {
-  sequence:        '#475569',
-  match_cut:       '#3B82F6',
-  cutaway:         '#F97316',
-  reaction:        '#A855F7',
-  transition:      '#6366F1',
-  continuity:      '#22C55E',
-  parallel_action: '#EAB308',
-  fallback:        '#334155',
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  sequence:     'Sequence',
-  shot:         'Shot',
-  camera_move:  'Camera Move',
-  action:       'Action',
-  dialogue:     'Dialogue',
-  transition:   'Transition',
-  vfx:          'VFX',
-  audio:        'Audio',
-  edit_beat:    'Edit Beat',
-};
-
-const CONN_LABELS: Record<string, string> = {
-  sequence:        'sequence',
-  match_cut:       'match cut',
-  cutaway:         'cutaway',
-  reaction:        'reaction',
-  transition:      'transition',
-  continuity:      'continuity',
-  parallel_action: 'parallel',
-  fallback:        'fallback',
-};
 ---
 
 <!DOCTYPE html>
@@ -208,8 +179,9 @@ const CONN_LABELS: Record<string, string> = {
       color: #64748b; cursor: pointer; transition: border-color 0.12s;
       font-family: inherit;
     }
+    .export-tablist { display: flex; gap: 8px; }
     .export-tab.active,
-    .export-tab[aria-pressed="true"] { border-color: #475569; color: #f1f5f9; }
+    .export-tab[aria-selected="true"] { border-color: #475569; color: #f1f5f9; }
     .export-download {
       font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 4px;
       background: #0f1825; border: 1px solid rgba(255,255,255,0.12);
@@ -272,16 +244,23 @@ const CONN_LABELS: Record<string, string> = {
             class="shot-type-badge"
             style={`background: ${TYPE_COLORS[shot.type] ?? '#475569'}18; border: 1px solid ${TYPE_COLORS[shot.type] ?? '#475569'}44; color: ${TYPE_COLORS[shot.type] ?? '#475569'};`}
           >
-            {TYPE_LABELS[shot.type] ?? shot.type}
+            {humanizeFrameType(shot.type)}
           </span>
           <span class="shot-title">{shot.title}</span>
           <span
             class="shot-status-badge"
             style={`background: ${STATUS_COLORS[shot.status] ?? '#475569'}18; border: 1px solid ${STATUS_COLORS[shot.status] ?? '#475569'}44; color: ${STATUS_COLORS[shot.status] ?? '#475569'};`}
           >
-            {shot.status.toUpperCase()}
+            {humanizeStatus(shot.status)}
           </span>
         </div>
+
+        {shot.missingReasons && shot.missingReasons.length > 0 && (
+          <div class="shot-field">
+            <div class="shot-field-label">Missing</div>
+            <div class="shot-field-value">{shot.missingReasons.map(humanizeMissingReason).join(', ')}</div>
+          </div>
+        )}
 
         {shot.intent && (
           <div class="shot-field">
@@ -411,19 +390,17 @@ const CONN_LABELS: Record<string, string> = {
           </tr>
         </thead>
         <tbody>
-          {storyboard.connections.map(conn => {
-            const from = storyboard.frames.find(f => f.id === conn.fromFrameId);
-            const to = storyboard.frames.find(f => f.id === conn.toFrameId);
-            const connColor = CONNECTION_TYPE_COLORS[conn.type] ?? '#475569';
+          {brief.connections.map(conn => {
+            const connColor = getConnectionTypeColor(conn.type);
             return (
               <tr>
-                <td>{from?.title ?? conn.fromFrameId}</td>
+                <td>{conn.fromTitle}</td>
                 <td>
                   <span class="conn-type-badge" style={`background: ${connColor}18; color: ${connColor};`}>
-                    {CONN_LABELS[conn.type] ?? conn.type}
+                    {humanizeConnectionType(conn.type)}
                   </span>
                 </td>
-                <td>{to?.title ?? conn.toFrameId}</td>
+                <td>{conn.toTitle}</td>
               </tr>
             );
           })}
@@ -434,9 +411,11 @@ const CONN_LABELS: Record<string, string> = {
     <!-- Export -->
     <div class="export-section">
       <div class="section-title">Export</div>
-      <div class="export-tabs" role="tablist" aria-label="Export format">
-        <button type="button" class="export-tab active" id="tab-md" role="tab" aria-selected="true" aria-pressed="true">Markdown</button>
-        <button type="button" class="export-tab" id="tab-json" role="tab" aria-selected="false" aria-pressed="false">JSON</button>
+      <div class="export-tabs">
+        <div class="export-tablist" role="tablist" aria-label="Export format">
+          <button type="button" class="export-tab active" id="tab-md" role="tab" aria-selected="true" aria-controls="export-content" tabindex="0">Markdown</button>
+          <button type="button" class="export-tab" id="tab-json" role="tab" aria-selected="false" aria-controls="export-content" tabindex="-1">JSON</button>
+        </div>
         <a
           class="export-download"
           id="export-download"
@@ -444,7 +423,7 @@ const CONN_LABELS: Record<string, string> = {
           download={`${filename}.md`}
         >Download</a>
       </div>
-      <pre class="export-block" id="export-content" role="tabpanel">{markdownText}</pre>
+      <pre class="export-block" id="export-content" role="tabpanel" aria-labelledby="tab-md" tabindex="0">{markdownText}</pre>
     </div>
   </div>
 
@@ -460,9 +439,12 @@ const CONN_LABELS: Record<string, string> = {
       tabJson?.classList.toggle('active', !isMd);
       tabMd?.setAttribute('aria-selected', String(isMd));
       tabJson?.setAttribute('aria-selected', String(!isMd));
-      tabMd?.setAttribute('aria-pressed', String(isMd));
-      tabJson?.setAttribute('aria-pressed', String(!isMd));
-      if (content) content.textContent = isMd ? markdownText : jsonText;
+      tabMd?.setAttribute('tabindex', isMd ? '0' : '-1');
+      tabJson?.setAttribute('tabindex', isMd ? '-1' : '0');
+      if (content) {
+        content.textContent = isMd ? markdownText : jsonText;
+        content.setAttribute('aria-labelledby', isMd ? 'tab-md' : 'tab-json');
+      }
       if (download instanceof HTMLAnchorElement) {
         if (isMd) {
           download.href = `data:text/markdown;charset=utf-8,${encodeURIComponent(markdownText)}`;
@@ -476,6 +458,21 @@ const CONN_LABELS: Record<string, string> = {
 
     tabMd?.addEventListener('click', () => activate('md'));
     tabJson?.addEventListener('click', () => activate('json'));
+
+    const tablist = tabMd?.closest('[role="tablist"]');
+    tablist?.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+      e.preventDefault();
+      const formats = ['md', 'json'];
+      let idx = document.activeElement === tabJson ? 1 : 0;
+      if (e.key === 'ArrowRight') idx = (idx + 1) % formats.length;
+      else if (e.key === 'ArrowLeft') idx = (idx - 1 + formats.length) % formats.length;
+      else if (e.key === 'Home') idx = 0;
+      else idx = formats.length - 1;
+      const format = formats[idx];
+      activate(format);
+      (format === 'md' ? tabMd : tabJson)?.focus();
+    });
   </script>
 </body>
 </html>
