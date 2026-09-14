@@ -94,6 +94,9 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
   const route  = frameRoute(storyboardId, frame.id);
   const accent = TYPE_COLORS[frame.type];
   const status = getBeatStatus(frame);
+  // Null-normalize so NEWER_SCHEMA / corrupt loads with null content do not throw
+  // when dereferencing content.* (sibling of projectStorage soft-sanitize).
+  const content = frame.content ?? {};
 
   // HU-005: move focus into the panel when it opens (or when it switches to a
   // different frame) so keyboard + screen-reader users land inside the newly
@@ -227,26 +230,26 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
 
       {/* ── Implementation progress ─────────────────────────────────────────── */}
       {frameProgress && (
-        (frame.content.implementationChecklist?.length ?? 0) > 0 || (frame.content.testCriteria?.length ?? 0) > 0
+        (content.implementationChecklist?.length ?? 0) > 0 || (content.testCriteria?.length ?? 0) > 0
       ) && (
         <div style={{
           padding: '14px 18px',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
           display: 'flex', flexDirection: 'column', gap: 16,
         }}>
-          {frame.content.implementationChecklist && frame.content.implementationChecklist.length > 0 && (
+          {content.implementationChecklist && content.implementationChecklist.length > 0 && (
             <ProgressChecklist
               label="Implementation Checklist"
-              items={frame.content.implementationChecklist}
+              items={content.implementationChecklist}
               progress={frameProgress.checklist}
               accentColor={statusColors.spec}
               onChange={onChecklistChange}
             />
           )}
-          {frame.content.testCriteria && frame.content.testCriteria.length > 0 && (
+          {content.testCriteria && content.testCriteria.length > 0 && (
             <ProgressChecklist
               label="Test Criteria"
-              items={frame.content.testCriteria}
+              items={content.testCriteria}
               progress={frameProgress.testCriteria}
               accentColor={statusColors.state}
               onChange={onTestCriterionChange}
@@ -257,35 +260,35 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
 
       {/* ── Content fields ──────────────────────────────────────────────────── */}
       <div style={{ padding: '14px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
-        {frame.content.stakes && (
-          <Field label="Stakes" value={frame.content.stakes} color={statusColors.partial} />
+        {content.stakes && (
+          <Field label="Stakes" value={content.stakes} color={statusColors.partial} />
         )}
-        {frame.content.designerNotes && (
-          <Field label="Designer Notes" value={frame.content.designerNotes} />
+        {content.designerNotes && (
+          <Field label="Designer Notes" value={content.designerNotes} />
         )}
-        {frame.content.playerVisibleText && (
-          <Field label="In-Game Text" value={frame.content.playerVisibleText} color={statusColors.spec} />
+        {content.playerVisibleText && (
+          <Field label="In-Game Text" value={content.playerVisibleText} color={statusColors.spec} />
         )}
-        {frame.content.authorOnlyNotes && frame.content.authorOnlyNotes.length > 0 && (
+        {content.authorOnlyNotes && content.authorOnlyNotes.length > 0 && (
           <Field
             label="Author Notes"
-            value={frame.content.authorOnlyNotes.map((s, i) => `${i + 1}. ${s}`).join('\n\n')}
+            value={content.authorOnlyNotes.map((s, i) => `${i + 1}. ${s}`).join('\n\n')}
             color={statusColors.accent}
           />
         )}
-        {frame.content.stateChanges && frame.content.stateChanges.length > 0 && (
-          <Field label="State Changes" value={frame.content.stateChanges.join('\n')} color={statusColors.state} />
+        {content.stateChanges && content.stateChanges.length > 0 && (
+          <Field label="State Changes" value={content.stateChanges.join('\n')} color={statusColors.state} />
         )}
-        {frame.content.involvedCharacters && frame.content.involvedCharacters.length > 0 && (
-          <Field label="Characters" value={frame.content.involvedCharacters.join('\n')} />
+        {content.involvedCharacters && content.involvedCharacters.length > 0 && (
+          <Field label="Characters" value={content.involvedCharacters.join('\n')} />
         )}
-        {frame.content.involvedFactions && frame.content.involvedFactions.length > 0 && (
-          <Field label="Factions" value={frame.content.involvedFactions.join('\n')} />
+        {content.involvedFactions && content.involvedFactions.length > 0 && (
+          <Field label="Factions" value={content.involvedFactions.join('\n')} />
         )}
-        {frame.content.possibleOutcomes && frame.content.possibleOutcomes.length > 0 && (
+        {content.possibleOutcomes && content.possibleOutcomes.length > 0 && (
           <Field
             label="Possible Outcomes"
-            value={frame.content.possibleOutcomes.map((o, i) => `${i + 1}. ${o}`).join('\n')}
+            value={content.possibleOutcomes.map((o, i) => `${i + 1}. ${o}`).join('\n')}
           />
         )}
       </div>

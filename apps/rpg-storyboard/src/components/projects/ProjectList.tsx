@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { listProjects, getLastReadWarning, type ReadWarning } from '../../lib/storyboard/projectStorage';
+import {
+  listProjects,
+  getLastReadWarning,
+  deleteProject,
+  type ReadWarning,
+} from '../../lib/storyboard/projectStorage';
 import type { RpgStoryboardProject } from '@storyboard-os/rpg-domain';
 import ErrorBoundary from '../ErrorBoundary';
 
@@ -17,19 +22,60 @@ function formatDate(iso: string): string {
   });
 }
 
+function readWarningTitle(warning: ReadWarning): string {
+  switch (warning.code) {
+    case 'STORE_UNREADABLE':
+      return 'Saved projects could not be read';
+    case 'NEWER_SCHEMA':
+      return 'Projects saved by a newer version';
+    case 'RECORDS_DROPPED':
+      return `${warning.dropped} saved ${warning.dropped === 1 ? 'project' : 'projects'} skipped`;
+    default: {
+      const _exhaustive: never = warning.code;
+      void _exhaustive;
+      return 'Saved projects need attention';
+    }
+  }
+}
+
 function ProjectListInner() {
   const [projects, setProjects] = useState<RpgStoryboardProject[]>([]);
   const [readWarning, setReadWarning] = useState<ReadWarning | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function refresh() {
     setProjects(listProjects());
     // AP-003: if corrupt records were skipped (or the whole store was
     // unreadable), say so — an unexplained shorter/empty list looks like
     // silent data loss even when the data is still sitting in storage.
     setReadWarning(getLastReadWarning());
+  }
+
+  useEffect(() => {
+    refresh();
     setLoaded(true);
   }, []);
+
+  function handleDelete(project: RpgStoryboardProject, e: React.MouseEvent) {
+    // Card is an <a>; stop navigation when the delete control is used.
+    e.preventDefault();
+    e.stopPropagation();
+    const ok = window.confirm(
+      `Delete “${project.title}”? This cannot be undone.`,
+    );
+    if (!ok) return;
+    const result = deleteProject(project.id);
+    if (!result.ok) {
+      const prefix = result.code === 'QUOTA_EXCEEDED'
+        ? 'Storage full — '
+        : 'Delete failed — ';
+      setActionError(`${prefix}${result.message}`);
+      return;
+    }
+    setActionError(null);
+    refresh();
+  }
 
   if (!loaded) {
     return <div style={styles.loading}>Loading…</div>;
@@ -42,11 +88,17 @@ function ProjectListInner() {
       {readWarning && (
         <div role="alert" style={styles.readWarning}>
           <span style={styles.readWarningTitle}>
-            {readWarning.code === 'STORE_UNREADABLE'
-              ? 'Saved projects could not be read'
-              : `${readWarning.dropped} saved ${readWarning.dropped === 1 ? 'project' : 'projects'} skipped`}
+            {readWarningTitle(readWarning)}
           </span>
           <span style={styles.readWarningBody}>{readWarning.message}</span>
+        </div>
+      )}
+
+      {/* ── Delete / write failure ── */}
+      {actionError && (
+        <div role="alert" style={styles.actionError}>
+          <span style={styles.actionErrorTitle}>Could not delete project</span>
+          <span style={styles.readWarningBody}>{actionError}</span>
         </div>
       )}
 
@@ -78,24 +130,35 @@ function ProjectListInner() {
             const templateLabel = project.sourceTemplateId
               ? (TEMPLATE_LABELS[project.sourceTemplateId] ?? project.sourceTemplateId)
               : 'Custom';
-            const frameCount = project.storyboard.frames.length;
+            const frameCount = project.storyboard?.frames?.length ?? 0;
             const boardUrl = `/projects/board?id=${project.id}`;
 
             return (
-              <a href={boardUrl} key={project.id} style={styles.card}>
-                <div style={styles.cardMain}>
-                  <span style={styles.cardTitle}>{project.title}</span>
-                  {project.description && (
-                    <span style={styles.cardDesc}>{project.description}</span>
-                  )}
-                </div>
-                <div style={styles.cardMeta}>
-                  <span style={styles.templateBadge}>{templateLabel}</span>
-                  <span style={styles.metaDetail}>{frameCount} beats</span>
-                  <span style={styles.metaDetail}>Updated {formatDate(project.updatedAt)}</span>
-                </div>
-                <span style={styles.cardArrow}>→</span>
-              </a>
+              <div key={project.id} style={styles.card}>
+                <a href={boardUrl} style={styles.cardLink}>
+                  <div style={styles.cardMain}>
+                    <span style={styles.cardTitle}>{project.title}</span>
+                    {project.description && (
+                      <span style={styles.cardDesc}>{project.description}</span>
+                    )}
+                  </div>
+                  <div style={styles.cardMeta}>
+                    <span style={styles.templateBadge}>{templateLabel}</span>
+                    <span style={styles.metaDetail}>{frameCount} beats</span>
+                    <span style={styles.metaDetail}>Updated {formatDate(project.updatedAt)}</span>
+                  </div>
+                  <span style={styles.cardArrow}>→</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={(e) => handleDelete(project, e)}
+                  style={styles.deleteBtn}
+                  aria-label={`Delete project ${project.title}`}
+                  title="Delete project"
+                >
+                  Delete
+                </button>
+              </div>
             );
           })}
         </div>
@@ -146,6 +209,21 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     color: '#94a3b8',
     lineHeight: 1.5,
+  },
+  actionError: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    padding: '12px 16px',
+    marginBottom: 24,
+    background: 'rgba(239,68,68,0.08)',
+    border: '1px solid rgba(239,68,68,0.28)',
+    borderRadius: 8,
+  },
+  actionErrorTitle: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#fca5a5',
   },
   header: {
     display: 'flex',
@@ -221,13 +299,19 @@ const styles: Record<string, React.CSSProperties> = {
   card: {
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
     padding: '16px 20px',
     background: '#0f1825',
     border: '1px solid rgba(255,255,255,0.07)',
     borderRadius: 8,
+  },
+  cardLink: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
     textDecoration: 'none',
-    transition: 'border-color 0.15s',
+    minWidth: 0,
   },
   cardMain: {
     flex: 1,
@@ -278,5 +362,17 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     color: '#334155',
     flexShrink: 0,
+  },
+  deleteBtn: {
+    flexShrink: 0,
+    fontSize: 11,
+    fontWeight: 700,
+    padding: '6px 12px',
+    borderRadius: 4,
+    background: 'transparent',
+    color: '#f87171',
+    border: '1px solid rgba(248,113,113,0.35)',
+    cursor: 'pointer',
+    letterSpacing: '0.04em',
   },
 };
