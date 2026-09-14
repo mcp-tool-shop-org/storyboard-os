@@ -7,6 +7,7 @@ dist/
 site/.astro/
 site/dist/
 site/node_modules/
+site/package-lock.json
 .polyglot-cache.json
 *.tgz
 .swarm/

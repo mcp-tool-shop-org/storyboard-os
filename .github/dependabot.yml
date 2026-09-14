@@ -4,11 +4,20 @@ updates:
     directory: /
     schedule:
       interval: monthly
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     groups:
-      storyboard-os-deps:
+      # Patch/minor stay mergeable even if a major bump conflicts the lockfile.
+      storyboard-os-patch-minor:
         patterns:
           - "*"
+        update-types:
+          - "patch"
+          - "minor"
+      storyboard-os-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   - package-ecosystem: github-actions
     directory: /
