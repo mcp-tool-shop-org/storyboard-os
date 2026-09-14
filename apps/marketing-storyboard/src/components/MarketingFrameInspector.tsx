@@ -14,8 +14,9 @@ import {
     getCampaignBeatStatus,
     BLOCKING_REASONS,
     marketingColors,
+    FRAME_TYPE_LABELS,
+    humanizeMissingReason,
     type CampaignBeatStatusLevel,
-    type MissingSpecReason,
     type StoryboardFrame,
     type MarketingFrameType,
 } from '@storyboard-os/marketing-domain';
@@ -26,18 +27,6 @@ import { resolveInspectorContent } from '../lib/frameContent';
 // Accent per frame type comes from the shared token API so the inspector badge
 // matches the card badge and legend (VP-002/003 discipline: one source of truth
 // for every status hex). `launch_event` reads the marketing critical-path hue.
-
-const TYPE_LABELS: Record<MarketingFrameType, string> = {
-    audience: 'Audience',
-    message: 'Message',
-    touchpoint: 'Touchpoint',
-    asset: 'Asset',
-    approval: 'Approval',
-    launch_event: 'Launch Event',
-    conversion: 'Conversion',
-    follow_up: 'Follow-Up',
-    measurement: 'Measurement',
-};
 
 const TYPE_COLORS: Record<MarketingFrameType, string> = {
     audience: statusColors.state,
@@ -67,23 +56,6 @@ const STATUS_LABELS: Record<CampaignBeatStatusLevel, string> = {
     partial: statusLabels.partial,
     draft: statusLabels.draft,
     blocked: statusLabels.blocked,
-};
-
-const REASON_LABELS: Record<MissingSpecReason, string> = {
-    no_conversion_goal: 'Conversion goal required for this frame type',
-    no_required_assets: 'Required assets must be listed',
-    no_approval_requirements: 'Approval requirements must be defined',
-    no_metrics: 'Metrics required for measurement frames',
-    no_channel: 'Channel required for touchpoint frames',
-    no_message_claim: 'Message claim required',
-    no_objective: 'No objective defined',
-    no_audience_segment: 'No audience segment specified',
-    no_customer_state_before: 'No customer state (before) listed',
-    no_customer_state_after: 'No customer state (after) listed',
-    no_test_criteria: 'No test criteria defined',
-    no_implementation_checklist: 'No implementation checklist',
-    no_proof_points: 'No proof points listed',
-    no_launch_dependencies: 'No launch dependencies documented',
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -127,7 +99,7 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                         color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase',
                         alignSelf: 'flex-start',
                     }}>
-                        {TYPE_LABELS[frame.type]}
+                        {FRAME_TYPE_LABELS[frame.type]}
                     </span>
                     <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.3 }}>
                         {frame.title}
@@ -180,7 +152,7 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                         {blockers.map(r => (
                             <li key={r} style={{ fontSize: 11, color: '#EF4444', display: 'flex', alignItems: 'flex-start', gap: 5 }}>
                                 <span style={{ flexShrink: 0, marginTop: 1 }}>⚠</span>
-                                <span>{REASON_LABELS[r]}</span>
+                                <span>{humanizeMissingReason(r)}</span>
                             </li>
                         ))}
                     </ul>
@@ -191,7 +163,7 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                         {specGaps.map(r => (
                             <li key={r} style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'flex-start', gap: 5 }}>
                                 <span style={{ flexShrink: 0 }}>–</span>
-                                <span>{REASON_LABELS[r]}</span>
+                                <span>{humanizeMissingReason(r)}</span>
                             </li>
                         ))}
                     </ul>
@@ -289,6 +261,17 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                     </ContentSection>
                 )}
 
+                {/* Objections handled */}
+                {content.objectionsHandled && content.objectionsHandled.length > 0 && (
+                    <ContentSection title="Objections Handled">
+                        <ul style={{ margin: 0, padding: '0 0 0 14px', listStyle: 'disc' }}>
+                            {content.objectionsHandled.map((o, i) => (
+                                <li key={i} style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>{o}</li>
+                            ))}
+                        </ul>
+                    </ContentSection>
+                )}
+
                 {/* Required assets */}
                 {content.requiredAssets && content.requiredAssets.length > 0 && (
                     <ContentSection title="Required Assets">
@@ -306,6 +289,17 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                         <ul style={{ margin: 0, padding: '0 0 0 14px', listStyle: 'disc' }}>
                             {content.approvalRequirements.map((a, i) => (
                                 <li key={i} style={{ fontSize: 11, color: '#EF4444', lineHeight: 1.5 }}>{a}</li>
+                            ))}
+                        </ul>
+                    </ContentSection>
+                )}
+
+                {/* Launch dependencies */}
+                {content.launchDependencies && content.launchDependencies.length > 0 && (
+                    <ContentSection title="Launch Dependencies">
+                        <ul style={{ margin: 0, padding: '0 0 0 14px', listStyle: 'disc' }}>
+                            {content.launchDependencies.map((d, i) => (
+                                <li key={i} style={{ fontSize: 11, color: '#F59E0B', lineHeight: 1.5 }}>{d}</li>
                             ))}
                         </ul>
                     </ContentSection>
@@ -347,6 +341,13 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                                 </li>
                             ))}
                         </ul>
+                    </ContentSection>
+                )}
+
+                {/* Owner notes */}
+                {content.ownerNotes?.trim() && (
+                    <ContentSection title="Owner Notes">
+                        <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.6 }}>{content.ownerNotes}</p>
                     </ContentSection>
                 )}
             </div>

@@ -7,7 +7,7 @@ import {
     createCampaignFromTemplate,
 } from './templates';
 import { validateMarketingStoryboard } from './validate';
-import { getCampaignBeatStatus } from './beatStatus';
+import { getCampaignLaunchReadiness, getMeasurementLoopSignals } from './launchReadiness';
 import type { MarketingTemplateId, MarketingFrameType } from './schema';
 
 const VALID_FRAME_TYPES: MarketingFrameType[] = [
@@ -106,6 +106,17 @@ describe('MARKETING_TEMPLATES', () => {
                 // Template frames should not have blocking validation errors
                 const structuralErrors = result.errors.filter(e => !e.code.startsWith('MARKETING_'));
                 expect(structuralErrors).toHaveLength(0);
+            });
+
+            it('closes the measurement loop so spec-complete boards are not open-loop at_risk (F-5d3af7e7)', () => {
+                const loops = getMeasurementLoopSignals(storyboard);
+                expect(loops.length).toBeGreaterThan(0);
+                expect(loops.every(s => s.isLoop)).toBe(true);
+                const result = getCampaignLaunchReadiness(storyboard);
+                expect(result.summary).not.toMatch(/open measurement loop/i);
+                if (result.blockedFrameIds.length === 0 && result.missingMeasurementFrameIds.length === 0) {
+                    expect(result.level).toBe('ready');
+                }
             });
         });
     }

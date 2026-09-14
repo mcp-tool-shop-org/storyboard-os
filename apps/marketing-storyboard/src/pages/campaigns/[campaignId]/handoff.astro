@@ -4,11 +4,16 @@ import {
   generateCampaignHandoff,
   generateCampaignMarkdown,
   BLOCKING_REASONS,
+  FRAME_TYPE_LABELS,
+  humanizeMissingReason,
+  humanizeFrameType,
+  humanizeConnectionType,
+  humanizeBeatStatus,
   type Storyboard,
   type MissingSpecReason,
-  type MarketingConnectionType,
   type MarketingFrameType,
 } from '@storyboard-os/marketing-domain';
+import { statusLabels } from '@storyboard-os/core';
 
 export function getStaticPaths() {
   const allCampaigns: Storyboard[] = [
@@ -52,58 +57,8 @@ const TYPE_COLORS: Record<MarketingFrameType, string> = {
   measurement:   '#EC4899',
 };
 
-const TYPE_LABELS: Record<MarketingFrameType, string> = {
-  audience:      'Audience',
-  message:       'Message',
-  touchpoint:    'Touchpoint',
-  asset:         'Asset',
-  approval:      'Approval',
-  launch_event:  'Launch',
-  conversion:    'Conversion',
-  follow_up:     'Follow-Up',
-  measurement:   'Measurement',
-};
-
-// Exhaustive over MarketingConnectionType — keep in sync with canvas CONNECTION_TYPE_LABELS.
-const CONN_LABELS: Record<MarketingConnectionType, string> = {
-  sequence:    'campaign flow',
-  dependency:  'dependency',
-  approval:    'approval gate',
-  optional:    'optional',
-  choice:      'segment path',
-  consequence: 'consequence',
-};
-
 function isMarketingFrameType(type: string): type is MarketingFrameType {
-  return Object.prototype.hasOwnProperty.call(TYPE_LABELS, type);
-}
-
-function isMarketingConnectionType(type: string): type is MarketingConnectionType {
-  return Object.prototype.hasOwnProperty.call(CONN_LABELS, type);
-}
-
-// Human-readable labels for launch-blocker / spec-gap codes emitted by
-// @storyboard-os/marketing-domain getCampaignBeatStatus(). Rendering the raw
-// enum strings (e.g., `no_message_claim`) leaks domain-internal vocabulary
-// into the handoff brief.
-const BLOCKER_LABELS: Record<string, string> = {
-  no_conversion_goal:        'Conversion goal not defined',
-  no_required_assets:        'Required assets not listed',
-  no_approval_requirements:  'Approval requirements not defined',
-  no_metrics:                'Metrics not defined',
-  no_channel:                'Channel not specified',
-  no_message_claim:          'Message claim not written',
-  no_objective:              'Objective not defined',
-  no_audience_segment:       'Audience segment not specified',
-  no_customer_state_before:  'Customer state (before) not defined',
-  no_customer_state_after:   'Customer state (after) not defined',
-  no_test_criteria:          'Test criteria not defined',
-  no_implementation_checklist: 'Implementation checklist missing',
-  no_proof_points:           'Proof points not provided',
-  no_launch_dependencies:    'Launch dependencies not noted',
-};
-function humanizeBlocker(code: string): string {
-  return BLOCKER_LABELS[code] ?? code.replace(/_/g, ' ');
+  return Object.prototype.hasOwnProperty.call(FRAME_TYPE_LABELS, type);
 }
 
 /** True launch blockers only — mirrors MarketingFrameInspector / BLOCKING_REASONS. */
@@ -278,22 +233,22 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
       <div class="readiness-chips">
         {handoff.readiness.ready > 0 && (
           <span class="readiness-chip" style={`background: ${STATUS_COLORS.ready}18; border: 1px solid ${STATUS_COLORS.ready}44; color: ${STATUS_COLORS.ready}`}>
-            {handoff.readiness.ready} READY
+            {handoff.readiness.ready} {statusLabels.ready}
           </span>
         )}
         {handoff.readiness.partial > 0 && (
           <span class="readiness-chip" style={`background: ${STATUS_COLORS.partial}18; border: 1px solid ${STATUS_COLORS.partial}44; color: ${STATUS_COLORS.partial}`}>
-            {handoff.readiness.partial} PARTIAL
+            {handoff.readiness.partial} {statusLabels.partial}
           </span>
         )}
         {handoff.readiness.blocked > 0 && (
           <span class="readiness-chip" style={`background: ${STATUS_COLORS.blocked}18; border: 1px solid ${STATUS_COLORS.blocked}44; color: ${STATUS_COLORS.blocked}`}>
-            {handoff.readiness.blocked} BLOCKED
+            {handoff.readiness.blocked} {statusLabels.blocked}
           </span>
         )}
         {handoff.readiness.draft > 0 && (
           <span class="readiness-chip" style={`background: ${STATUS_COLORS.draft}18; border: 1px solid ${STATUS_COLORS.draft}44; color: ${STATUS_COLORS.draft}`}>
-            {handoff.readiness.draft} DRAFT
+            {handoff.readiness.draft} {statusLabels.draft}
           </span>
         )}
       </div>
@@ -303,7 +258,7 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
     <div class="beat-list">
       {handoff.beats.map((beat, idx) => {
         const typeColor = isMarketingFrameType(beat.type) ? TYPE_COLORS[beat.type] : '#475569';
-        const typeLabel = isMarketingFrameType(beat.type) ? TYPE_LABELS[beat.type] : beat.type.toUpperCase();
+        const typeLabel = humanizeFrameType(beat.type);
         const statusColor = STATUS_COLORS[beat.status] ?? '#475569';
         const blockers = launchBlockersFor(beat.missing);
         const gaps = specGapsFor(beat.missing);
@@ -316,7 +271,7 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
               </span>
               <span class="beat-title">{beat.title}</span>
               <span class="beat-status" style={`background: ${statusColor}18; border: 1px solid ${statusColor}44; color: ${statusColor}`}>
-                {beat.status.toUpperCase()}
+                {humanizeBeatStatus(beat.status)}
               </span>
             </div>
 
@@ -326,7 +281,7 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                   <strong>⚠ Launch blockers:</strong>
                   <ul style="margin: 6px 0 0 18px; padding: 0;">
                     {blockers.map(code => (
-                      <li>{humanizeBlocker(code)}</li>
+                      <li>{humanizeMissingReason(code)}</li>
                     ))}
                   </ul>
                 </div>
@@ -336,7 +291,7 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                   <strong>Spec gaps:</strong>
                   <ul style="margin: 6px 0 0 18px; padding: 0;">
                     {gaps.map(code => (
-                      <li>{humanizeBlocker(code)}</li>
+                      <li>{humanizeMissingReason(code)}</li>
                     ))}
                   </ul>
                 </div>
@@ -348,6 +303,13 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                 <div class="field">
                   <span class="field-label">Objective</span>
                   <span class="field-value">{beat.objective}</span>
+                </div>
+              )}
+
+              {beat.audienceSegment && (
+                <div class="field">
+                  <span class="field-label">Audience</span>
+                  <span class="field-value">{beat.audienceSegment}</span>
                 </div>
               )}
 
@@ -456,6 +418,20 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                 </div>
               )}
 
+              {beat.launchDependencies.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Launch Dependencies</span>
+                  <div class="item-list">
+                    {beat.launchDependencies.map(d => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #F59E0B">▣</span>
+                        <span class="item-text">{d}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {beat.metrics.length > 0 && (
                 <div class="field">
                   <span class="field-label">Metrics</span>
@@ -513,7 +489,7 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                       <div class="branch-row">
                         <span class="branch-arrow">→</span>
                         <span class="branch-dest">{b.toTitle}</span>
-                        <span class="branch-type">({isMarketingConnectionType(b.type) ? CONN_LABELS[b.type] : b.type})</span>
+                        <span class="branch-type">({humanizeConnectionType(b.type)})</span>
                         {b.label && <span class="branch-label">{b.label}</span>}
                       </div>
                     ))}

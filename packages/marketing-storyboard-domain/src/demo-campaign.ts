@@ -203,7 +203,7 @@ const frames: StoryboardFrame[] = [
             ],
             implementationChecklist: [
                 'Ensure quick start is < 4 commands',
-                'Test on Node 20 + pnpm 9',
+                'Test on Node ≥ 22.13 + pnpm 11',
                 'Verify demo board renders correctly',
             ],
         },
@@ -286,5 +286,7 @@ export const launchRpgStoryboardCampaign: Storyboard = {
         { id: 'conn-06', fromFrameId: 'launch-announcement', toFrameId: 'launch-conversion', type: 'sequence' },
         { id: 'conn-07', fromFrameId: 'launch-conversion', toFrameId: 'launch-follow-up', type: 'sequence' },
         { id: 'conn-08', fromFrameId: 'launch-follow-up', toFrameId: 'launch-measurement', type: 'sequence' },
+        // Close the measurement loop so launch readiness can reach 'ready' (F-5d3af7e7).
+        { id: 'conn-09', fromFrameId: 'launch-measurement', toFrameId: 'launch-follow-up', type: 'sequence' },
     ],
 };
