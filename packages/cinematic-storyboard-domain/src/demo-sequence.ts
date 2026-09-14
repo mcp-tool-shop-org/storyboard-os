@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
+import { BOARD_SCHEMA_VERSION } from './schema';
 
 const frames: StoryboardFrame[] = [
   {
@@ -159,6 +160,7 @@ export const storyboardOsLaunchTrailer: Storyboard = {
   id: 'demo-launch-trailer',
   title: 'Storyboard OS Launch Trailer',
   description: 'Production storyboard for the Storyboard OS launch trailer. 8 shots with full camera language, asset requirements, and edit readiness. Dogfoods the cinematic domain.',
+  schemaVersion: BOARD_SCHEMA_VERSION,
   frames,
   connections,
 };

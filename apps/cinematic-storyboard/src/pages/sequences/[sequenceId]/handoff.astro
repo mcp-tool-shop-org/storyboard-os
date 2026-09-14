@@ -201,13 +201,21 @@ const CONN_LABELS: Record<string, string> = {
     }
 
     .export-section { margin-top: 48px; }
-    .export-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .export-tabs { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
     .export-tab {
       font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 4px;
       background: #0f1825; border: 1px solid rgba(255,255,255,0.07);
       color: #64748b; cursor: pointer; transition: border-color 0.12s;
+      font-family: inherit;
     }
-    .export-tab.active { border-color: #475569; color: #f1f5f9; }
+    .export-tab.active,
+    .export-tab[aria-pressed="true"] { border-color: #475569; color: #f1f5f9; }
+    .export-download {
+      font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 4px;
+      background: #0f1825; border: 1px solid rgba(255,255,255,0.12);
+      color: #94a3b8; text-decoration: none; margin-left: auto;
+    }
+    .export-download:hover { color: #f1f5f9; border-color: #475569; }
     .export-block {
       background: #0a0e18; border: 1px solid rgba(255,255,255,0.06);
       border-radius: 6px; padding: 16px; overflow-x: auto;
@@ -426,29 +434,48 @@ const CONN_LABELS: Record<string, string> = {
     <!-- Export -->
     <div class="export-section">
       <div class="section-title">Export</div>
-      <div class="export-tabs">
-        <span class="export-tab active" id="tab-md">Markdown</span>
-        <span class="export-tab" id="tab-json">JSON</span>
+      <div class="export-tabs" role="tablist" aria-label="Export format">
+        <button type="button" class="export-tab active" id="tab-md" role="tab" aria-selected="true" aria-pressed="true">Markdown</button>
+        <button type="button" class="export-tab" id="tab-json" role="tab" aria-selected="false" aria-pressed="false">JSON</button>
+        <a
+          class="export-download"
+          id="export-download"
+          href={`data:text/markdown;charset=utf-8,${encodeURIComponent(markdownText)}`}
+          download={`${filename}.md`}
+        >Download</a>
       </div>
-      <pre class="export-block" id="export-content">{markdownText}</pre>
+      <pre class="export-block" id="export-content" role="tabpanel">{markdownText}</pre>
     </div>
   </div>
 
-  <script define:vars={{ markdownText, jsonText }}>
+  <script define:vars={{ markdownText, jsonText, filename }}>
     const tabMd = document.getElementById('tab-md');
     const tabJson = document.getElementById('tab-json');
     const content = document.getElementById('export-content');
+    const download = document.getElementById('export-download');
 
-    tabMd?.addEventListener('click', () => {
-      tabMd.classList.add('active');
-      tabJson?.classList.remove('active');
-      if (content) content.textContent = markdownText;
-    });
-    tabJson?.addEventListener('click', () => {
-      tabJson.classList.add('active');
-      tabMd?.classList.remove('active');
-      if (content) content.textContent = jsonText;
-    });
+    function activate(format) {
+      const isMd = format === 'md';
+      tabMd?.classList.toggle('active', isMd);
+      tabJson?.classList.toggle('active', !isMd);
+      tabMd?.setAttribute('aria-selected', String(isMd));
+      tabJson?.setAttribute('aria-selected', String(!isMd));
+      tabMd?.setAttribute('aria-pressed', String(isMd));
+      tabJson?.setAttribute('aria-pressed', String(!isMd));
+      if (content) content.textContent = isMd ? markdownText : jsonText;
+      if (download instanceof HTMLAnchorElement) {
+        if (isMd) {
+          download.href = `data:text/markdown;charset=utf-8,${encodeURIComponent(markdownText)}`;
+          download.download = `${filename}.md`;
+        } else {
+          download.href = `data:application/json;charset=utf-8,${encodeURIComponent(jsonText)}`;
+          download.download = `${filename}.json`;
+        }
+      }
+    }
+
+    tabMd?.addEventListener('click', () => activate('md'));
+    tabJson?.addEventListener('click', () => activate('json'));
   </script>
 </body>
 </html>

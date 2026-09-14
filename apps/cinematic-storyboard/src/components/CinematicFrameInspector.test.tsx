@@ -18,7 +18,7 @@ vi.mock('@storyboard-os/cinematic-domain', () => ({
     hasContinuity: false,
     cameraSummary: null,
   }),
-  cinematicColors: { vfx: '#EC4899' },
+  cinematicColors: { vfx: '#A855F7' },
 }));
 
 import CinematicFrameInspector from './CinematicFrameInspector';

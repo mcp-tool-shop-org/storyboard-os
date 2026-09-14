@@ -68,4 +68,13 @@ export type StoryboardFrame = CoreFrame<CinematicFrameType, CinematicFrameConten
 
 export type StoryboardConnection = CoreConnection<CinematicConnectionType>;
 
-export type Storyboard = CoreStoryboard<StoryboardFrame, StoryboardConnection>;
+/**
+ * Board schema discriminator for future load/migration paths.
+ * Stamped on demo + template boards. Not a project/playlist model.
+ */
+export const BOARD_SCHEMA_VERSION = 1;
+
+export type Storyboard = CoreStoryboard<StoryboardFrame, StoryboardConnection> & {
+  /** Optional board-format version; stamped by createCinematicStoryboard / demo. */
+  schemaVersion?: number;
+};

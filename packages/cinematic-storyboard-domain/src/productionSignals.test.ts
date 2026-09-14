@@ -34,11 +34,11 @@ function makeFrame(id: string, overrides: Record<string, unknown> = {}) {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('getSequenceProductionSignals', () => {
-  it('returns green health for an empty sequence', () => {
+  it('returns yellow health for an empty sequence (not Production-ready)', () => {
     const signals = getSequenceProductionSignals(makeStoryboard());
-    expect(signals.health).toBe('green');
-    expect(signals.healthReason).toBe('Production-ready');
-    expect(signals.pressureSummary).toHaveLength(0);
+    expect(signals.health).toBe('yellow');
+    expect(signals.healthReason).toBe('empty sequence');
+    expect(signals.pressureSummary.some(s => /empty sequence/i.test(s))).toBe(true);
   });
 
   it('returns green health for a fully-specced sequence', () => {
@@ -111,12 +111,13 @@ describe('getSequenceProductionSignals', () => {
       frames: [
         makeFrame('c1', { content: { cameraMovement: 'Tracking shot', cameraAngle: 'Low' } }),
         makeFrame('c2', { content: { cameraMovement: 'Crane up' } }),
-        makeFrame('c3', { content: { cameraAngle: 'Wide' } }), // static (no movement)
+        makeFrame('c3', { content: { cameraAngle: 'Wide' } }), // unspecified (no movement)
       ],
     });
     const signals = getSequenceProductionSignals(sb);
     expect(signals.cameraComplexity.totalComplexShots).toBe(2);
-    expect(signals.cameraComplexity.totalStaticShots).toBe(1);
+    expect(signals.cameraComplexity.totalStaticShots).toBe(0);
+    expect(signals.cameraComplexity.totalUnspecifiedShots).toBe(1);
     expect(signals.cameraComplexity.complexShots[0].movement).toBe('Tracking shot');
   });
 
@@ -136,6 +137,27 @@ describe('getSequenceProductionSignals', () => {
     expect(signals.cameraComplexity.complexShots[0].movement).toBe('Slow pan or static hold');
   });
 
+  it('does not count unknown cameraMovement as static', () => {
+    const sb = makeStoryboard({
+      frames: [
+        makeFrame('u1', { content: { cameraMovement: 'Steadicam' } }),
+        makeFrame('u2', { content: { cameraMovement: 'gimbal follow subject' } }),
+        makeFrame('u3', { content: { cameraMovement: 'slow drift' } }),
+        makeFrame('u4', { content: { cameraMovement: 'rack focus' } }),
+        makeFrame('u5', { content: { cameraMovement: 'Static' } }),
+        makeFrame('u6', { content: {} }),
+      ],
+    });
+    const signals = getSequenceProductionSignals(sb);
+    expect(signals.cameraComplexity.totalStaticShots).toBe(1);
+    expect(signals.cameraComplexity.totalUnspecifiedShots).toBe(1);
+    expect(signals.cameraComplexity.totalUnknownShots).toBe(4);
+    expect(signals.cameraComplexity.totalComplexShots).toBe(0);
+    expect(signals.cameraComplexity.unknownMovementSamples).toEqual(
+      expect.arrayContaining(['Steadicam', 'gimbal follow subject', 'slow drift', 'rack focus']),
+    );
+  });
+
   it('computes duration rollup', () => {
     const sb = makeStoryboard({
       frames: [
@@ -150,6 +172,22 @@ describe('getSequenceProductionSignals', () => {
     expect(signals.durationRollup.formatted).toBe('8–11s');
     expect(signals.durationRollup.coveredFrames).toBe(2);
     expect(signals.durationRollup.uncoveredFrames).toBe(1);
+  });
+
+  it('parses broader durationEstimate forms (seconds / bare / m:ss)', () => {
+    const sb = makeStoryboard({
+      frames: [
+        makeFrame('d1', { content: { durationEstimate: '3 seconds' } }),
+        makeFrame('d2', { content: { durationEstimate: '90' } }),
+        makeFrame('d3', { content: { durationEstimate: '1:30' } }),
+        makeFrame('d4', { content: { durationEstimate: '2-4 sec' } }),
+      ],
+    });
+    const signals = getSequenceProductionSignals(sb);
+    expect(signals.durationRollup.coveredFrames).toBe(4);
+    expect(signals.durationRollup.estimatedLowSeconds).toBe(3 + 90 + 90 + 2);
+    expect(signals.durationRollup.estimatedHighSeconds).toBe(3 + 90 + 90 + 4);
+    expect(signals.durationRollup.unparsableSamples).toHaveLength(0);
   });
 
   it('computes continuity risks from frame requirements', () => {
