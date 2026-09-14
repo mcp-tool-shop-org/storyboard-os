@@ -244,6 +244,18 @@ describe('DM-004 — markdown escapes user text', () => {
     expect(md).toContain('&lt;img');
     expect(md).not.toContain('`ticks`');
   });
+
+  it('escapes emphasis and link/image syntax (* _ [] ())', () => {
+    const frame = makeFrame('f1', 'shot', {
+      visualDescription: 'see *bold* and _italic_ plus [click](http://x)',
+    });
+    frame.title = 'Shot *A* [B](url)';
+    const md = generateProductionMarkdown(generateProductionBrief(makeBoardWith([frame])));
+    expect(md).toContain('\\*bold\\*');
+    expect(md).toContain('\\_italic\\_');
+    expect(md).toContain('\\[click\\]\\(http://x\\)');
+    expect(md).toContain('Shot \\*A\\* \\[B\\]\\(url\\)');
+  });
 });
 
 // ─── V3-001 — benign text round-trips unchanged (faithfulness) ────────────────

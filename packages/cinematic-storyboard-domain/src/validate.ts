@@ -23,6 +23,7 @@ import {
   type StoryboardValidationResult,
 } from '@storyboard-os/core';
 import type { Storyboard, StoryboardFrame, CinematicFrameType } from './schema';
+import { parseDurationRange } from './productionSignals';
 
 export type { StoryboardValidationError, StoryboardValidationResult };
 export { validateStoryboard };
@@ -95,6 +96,15 @@ export function validateCinematicStoryboard(
           frameId: frame.id,
         });
       }
+    }
+
+    const durationEstimate = frame.content.durationEstimate;
+    if (isNonEmpty(durationEstimate) && !parseDurationRange(durationEstimate)) {
+      errors.push({
+        code: 'CINEMATIC_UNPARSABLE_DURATION',
+        message: `Frame "${frame.id}" has durationEstimate "${durationEstimate}" that could not be parsed (use Ns, N-Ms, N seconds, or m:ss).`,
+        frameId: frame.id,
+      });
     }
   }
 

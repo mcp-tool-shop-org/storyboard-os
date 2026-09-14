@@ -9,6 +9,7 @@ export type {
   Storyboard,
   StoryboardConnection,
 } from './schema';
+export { BOARD_SCHEMA_VERSION } from './schema';
 
 export {
   getCinematicBeatStatus,
@@ -29,10 +30,18 @@ export {
 } from './templates';
 export type { CinematicTemplateId, CinematicTemplateDefinition } from './templates';
 
-export { generateProductionBrief, generateProductionMarkdown, HANDOFF_FORMAT_VERSION } from './handoff';
+export {
+  generateProductionBrief,
+  generateProductionMarkdown,
+  HANDOFF_FORMAT_VERSION,
+  parseDurationSeconds,
+} from './handoff';
 export type { ProductionBrief, ProductionBriefShot } from './handoff';
 
-export { getSequenceProductionSignals } from './productionSignals';
+export {
+  getSequenceProductionSignals,
+  parseDurationRange,
+} from './productionSignals';
 export type {
   ProductionSignals,
   ContinuityRisk,

@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import type { ProductionSignals, SequenceHealthLevel } from '@storyboard-os/cinematic-domain';
+import { cinematicColors } from '@storyboard-os/cinematic-domain';
 import { humanizeReason } from '../lib/humanizeReason';
 
 // ─── Health colors ────────────────────────────────────────────────────────────
@@ -215,7 +216,7 @@ export default function ProductionSignalPanel({ signals, onClose }: Props) {
             sectionKey="vfx"
             expanded={expandedSections.has('vfx')}
             onToggle={toggle}
-            accentColor="#EC4899"
+            accentColor={cinematicColors.vfx}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {signals.vfxBurden.shots.map(shot => (

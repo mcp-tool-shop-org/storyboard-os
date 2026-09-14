@@ -41,7 +41,14 @@ export interface CameraComplexityShot {
 
 export interface CameraComplexitySummary {
   totalComplexShots: number;
+  /** Explicit static / none / locked-off language only — not missing or unknown. */
   totalStaticShots: number;
+  /** Missing or empty cameraMovement. */
+  totalUnspecifiedShots: number;
+  /** Non-empty free text that is neither static nor a known complex token. */
+  totalUnknownShots: number;
+  /** Sample strings for unclassified camera copy (panel / pressure). */
+  unknownMovementSamples: string[];
   complexShots: CameraComplexityShot[];
 }
 
@@ -51,6 +58,8 @@ export interface DurationRollup {
   formatted: string;
   coveredFrames: number;
   uncoveredFrames: number;
+  /** Non-empty estimates that did not parse after broadening. */
+  unparsableSamples: string[];
 }
 
 export interface BlockedShot {
@@ -73,15 +82,56 @@ export interface ProductionSignals {
   pressureSummary: string[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Duration parsing (shared with handoff) ───────────────────────────────────
+//
+// Accepts: "3s", "3-5s", "3 seconds", "3 sec", bare "90", "1:30" (m:ss).
 
-function parseDurationRange(est: string | undefined): [number, number] | null {
+/**
+ * Parse a free-text duration estimate into a [low, high] second range.
+ * Returns null when empty or unparsable.
+ */
+export function parseDurationRange(est: string | undefined): [number, number] | null {
   if (!est) return null;
-  const match = est.match(/(\d+)(?:\s*-\s*(\d+))?\s*s/i);
-  if (!match) return null;
-  const low = parseInt(match[1], 10);
-  const high = match[2] ? parseInt(match[2], 10) : low;
-  return [low, high];
+  const raw = est.trim();
+  if (!raw) return null;
+
+  // m:ss or mm:ss (optionally ranged "1:00-1:30")
+  const clockRange = raw.match(
+    /^(\d{1,2}):([0-5]\d)(?:\s*-\s*(\d{1,2}):([0-5]\d))?$/,
+  );
+  if (clockRange) {
+    const low = parseInt(clockRange[1], 10) * 60 + parseInt(clockRange[2], 10);
+    const high = clockRange[3]
+      ? parseInt(clockRange[3], 10) * 60 + parseInt(clockRange[4], 10)
+      : low;
+    return [low, high];
+  }
+
+  // "3s", "3-5s", "3 seconds", "3-5 sec", "3 second"
+  const unitRange = raw.match(
+    /^(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*(?:seconds?|secs?|s)\b/i,
+  );
+  if (unitRange) {
+    const low = parseFloat(unitRange[1]);
+    const high = unitRange[2] ? parseFloat(unitRange[2]) : low;
+    return [low, high];
+  }
+
+  // Bare number → seconds
+  const bare = raw.match(/^(\d+(?:\.\d+)?)$/);
+  if (bare) {
+    const n = parseFloat(bare[1]);
+    return [n, n];
+  }
+
+  return null;
+}
+
+/** Mid-point seconds for a duration estimate, or null if unparsable. */
+export function parseDurationSeconds(est: string | undefined): number | null {
+  const range = parseDurationRange(est);
+  if (!range) return null;
+  return (range[0] + range[1]) / 2;
 }
 
 function formatDuration(low: number, high: number): string {
@@ -158,21 +208,28 @@ const STATIC_MOVEMENT = /^(static\b|none|locked\s*off)\b/i;
 const COMPLEX_MOVEMENT =
   /\b(dolly|pan|track(?:ing)?|crane|push(?:-?in)?|pull(?:-?back)?|handheld|tilt|zoom|orbit|whip|boom|truck|pedestal|arc|reframe)\b/i;
 
-function isComplexCameraMovement(movement: string | undefined): boolean {
-  if (!movement || !movement.trim()) return false;
+type CameraMovementKind = 'complex' | 'static' | 'unspecified' | 'unknown';
+
+function classifyCameraMovement(movement: string | undefined): CameraMovementKind {
+  if (!movement || !movement.trim()) return 'unspecified';
   const m = movement.trim();
   // Leading "Static…" / "none" / "locked off" wins even if later words mention zoom.
-  if (STATIC_MOVEMENT.test(m)) return false;
-  return COMPLEX_MOVEMENT.test(m);
+  if (STATIC_MOVEMENT.test(m)) return 'static';
+  if (COMPLEX_MOVEMENT.test(m)) return 'complex';
+  return 'unknown';
 }
 
 function computeCameraComplexity(storyboard: Storyboard): CameraComplexitySummary {
   const complexShots: CameraComplexityShot[] = [];
   let staticShots = 0;
+  let unspecifiedShots = 0;
+  let unknownShots = 0;
+  const unknownMovementSamples: string[] = [];
 
   for (const frame of storyboard.frames) {
     const movement = frame.content?.cameraMovement;
-    if (isComplexCameraMovement(movement)) {
+    const kind = classifyCameraMovement(movement);
+    if (kind === 'complex') {
       complexShots.push({
         frameId: frame.id,
         frameTitle: frame.title,
@@ -180,12 +237,27 @@ function computeCameraComplexity(storyboard: Storyboard): CameraComplexitySummar
         angle: frame.content?.cameraAngle,
         framing: frame.content?.framing,
       });
-    } else {
+    } else if (kind === 'static') {
       staticShots++;
+    } else if (kind === 'unspecified') {
+      unspecifiedShots++;
+    } else {
+      unknownShots++;
+      const sample = movement!.trim();
+      if (unknownMovementSamples.length < 5 && !unknownMovementSamples.includes(sample)) {
+        unknownMovementSamples.push(sample);
+      }
     }
   }
 
-  return { totalComplexShots: complexShots.length, totalStaticShots: staticShots, complexShots };
+  return {
+    totalComplexShots: complexShots.length,
+    totalStaticShots: staticShots,
+    totalUnspecifiedShots: unspecifiedShots,
+    totalUnknownShots: unknownShots,
+    unknownMovementSamples,
+    complexShots,
+  };
 }
 
 function computeDurationRollup(storyboard: Storyboard): DurationRollup {
@@ -193,15 +265,21 @@ function computeDurationRollup(storyboard: Storyboard): DurationRollup {
   let totalHigh = 0;
   let covered = 0;
   let uncovered = 0;
+  const unparsableSamples: string[] = [];
 
   for (const frame of storyboard.frames) {
-    const range = parseDurationRange(frame.content?.durationEstimate);
+    const est = frame.content?.durationEstimate;
+    const range = parseDurationRange(est);
     if (range) {
       totalLow += range[0];
       totalHigh += range[1];
       covered++;
     } else {
       uncovered++;
+      if (est && est.trim() && unparsableSamples.length < 5) {
+        const sample = est.trim();
+        if (!unparsableSamples.includes(sample)) unparsableSamples.push(sample);
+      }
     }
   }
 
@@ -211,6 +289,7 @@ function computeDurationRollup(storyboard: Storyboard): DurationRollup {
     formatted: totalLow > 0 ? formatDuration(totalLow, totalHigh) : 'Unknown',
     coveredFrames: covered,
     uncoveredFrames: uncovered,
+    unparsableSamples,
   };
 }
 
@@ -233,8 +312,16 @@ function computeBlockedShots(storyboard: Storyboard): BlockedShot[] {
 
 // ─── Pressure Summary ─────────────────────────────────────────────────────────
 
-function buildPressureSummary(signals: Omit<ProductionSignals, 'pressureSummary' | 'health' | 'healthReason'>): string[] {
+function buildPressureSummary(
+  signals: Omit<ProductionSignals, 'pressureSummary' | 'health' | 'healthReason'>,
+  frameCount: number,
+): string[] {
   const lines: string[] = [];
+
+  if (frameCount === 0) {
+    lines.push('Empty sequence — no shots to produce.');
+    return lines;
+  }
 
   if (signals.blockedShots.length > 0) {
     lines.push(`${signals.blockedShots.length} shot${signals.blockedShots.length > 1 ? 's' : ''} blocked — missing critical spec fields.`);
@@ -256,14 +343,29 @@ function buildPressureSummary(signals: Omit<ProductionSignals, 'pressureSummary'
     lines.push(`Audio in ${signals.audioBurden.totalFramesWithAudio} shot${signals.audioBurden.totalFramesWithAudio > 1 ? 's' : ''} (${signals.audioBurden.totalRequirements} items).`);
   }
 
-  const { totalComplexShots, totalStaticShots } = signals.cameraComplexity;
-  const total = totalComplexShots + totalStaticShots;
+  const {
+    totalComplexShots,
+    totalStaticShots,
+    totalUnspecifiedShots,
+    totalUnknownShots,
+  } = signals.cameraComplexity;
+  const total = totalComplexShots + totalStaticShots + totalUnspecifiedShots + totalUnknownShots;
   if (total > 0 && totalComplexShots / total > 0.5) {
     lines.push(`Camera-heavy: ${totalComplexShots}/${total} shots have camera movement.`);
+  }
+  if (totalUnknownShots > 0) {
+    lines.push(
+      `${totalUnknownShots} shot${totalUnknownShots > 1 ? 's' : ''} with unclassified camera movement — review copy.`,
+    );
   }
 
   if (signals.durationRollup.uncoveredFrames > 0) {
     lines.push(`${signals.durationRollup.uncoveredFrames} shot${signals.durationRollup.uncoveredFrames > 1 ? 's' : ''} missing duration estimate — timing risk.`);
+  }
+  if (signals.durationRollup.unparsableSamples.length > 0) {
+    lines.push(
+      `${signals.durationRollup.unparsableSamples.length} duration estimate${signals.durationRollup.unparsableSamples.length > 1 ? 's' : ''} could not be parsed (use Ns, N-Ms, N seconds, or m:ss).`,
+    );
   }
 
   return lines;
@@ -271,7 +373,14 @@ function buildPressureSummary(signals: Omit<ProductionSignals, 'pressureSummary'
 
 // ─── Health Level ─────────────────────────────────────────────────────────────
 
-function computeHealth(signals: Omit<ProductionSignals, 'health' | 'healthReason' | 'pressureSummary'>): { health: SequenceHealthLevel; healthReason: string } {
+function computeHealth(
+  signals: Omit<ProductionSignals, 'health' | 'healthReason' | 'pressureSummary'>,
+  frameCount: number,
+): { health: SequenceHealthLevel; healthReason: string } {
+  if (frameCount === 0) {
+    return { health: 'yellow', healthReason: 'empty sequence' };
+  }
+
   // Red: any blocked shots
   if (signals.blockedShots.length > 0) {
     return { health: 'red', healthReason: `${signals.blockedShots.length} blocked shot${signals.blockedShots.length > 1 ? 's' : ''}` };
@@ -282,6 +391,9 @@ function computeHealth(signals: Omit<ProductionSignals, 'health' | 'healthReason
 
   if (signals.durationRollup.uncoveredFrames > 0) {
     yellowReasons.push('missing duration estimates');
+  }
+  if (signals.durationRollup.unparsableSamples.length > 0) {
+    yellowReasons.push('unparsable duration estimates');
   }
   if (signals.continuityRisks.length > 2) {
     yellowReasons.push('high continuity risk');
@@ -300,6 +412,7 @@ function computeHealth(signals: Omit<ProductionSignals, 'health' | 'healthReason
 // ─── Main Entry Point ─────────────────────────────────────────────────────────
 
 export function getSequenceProductionSignals(storyboard: Storyboard): ProductionSignals {
+  const frameCount = storyboard.frames.length;
   const continuityRisks = computeContinuityRisks(storyboard);
   const vfxBurden = computeVfxBurden(storyboard);
   const audioBurden = computeAudioBurden(storyboard);
@@ -308,8 +421,8 @@ export function getSequenceProductionSignals(storyboard: Storyboard): Production
   const blockedShots = computeBlockedShots(storyboard);
 
   const partial = { continuityRisks, vfxBurden, audioBurden, cameraComplexity, durationRollup, blockedShots };
-  const { health, healthReason } = computeHealth(partial);
-  const pressureSummary = buildPressureSummary(partial);
+  const { health, healthReason } = computeHealth(partial, frameCount);
+  const pressureSummary = buildPressureSummary(partial, frameCount);
 
   return {
     health,

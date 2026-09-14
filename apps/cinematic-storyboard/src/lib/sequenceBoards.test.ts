@@ -17,6 +17,7 @@ import {
     generateProductionBrief,
     generateProductionMarkdown,
     getSequenceReadiness,
+    BOARD_SCHEMA_VERSION,
 } from '@storyboard-os/cinematic-domain';
 
 // Frame vocabulary the app's canvas config + handoff color maps cover.
@@ -63,6 +64,10 @@ describe('createCinematicStoryboard', () => {
                 expect(sequence.frames.length).toBeGreaterThan(0);
             });
 
+            it('stamps schemaVersion for future load paths', () => {
+                expect(sequence.schemaVersion).toBe(BOARD_SCHEMA_VERSION);
+            });
+
             it('passes cinematic validation', () => {
                 const result = validateCinematicStoryboard(sequence);
                 expect(result.valid).toBe(true);
@@ -98,6 +103,10 @@ describe('storyboardOsLaunchTrailer', () => {
     it('has a routable id and title', () => {
         expect(storyboardOsLaunchTrailer.id).toBeTruthy();
         expect(storyboardOsLaunchTrailer.title).toBeTruthy();
+    });
+
+    it('stamps schemaVersion for future load paths', () => {
+        expect(storyboardOsLaunchTrailer.schemaVersion).toBe(BOARD_SCHEMA_VERSION);
     });
 
     it('passes cinematic validation', () => {
