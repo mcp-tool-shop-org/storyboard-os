@@ -6,7 +6,7 @@
 //
 // Exports:
 //   getCampaignLaunchReadiness()  — headline rollup signal
-//   getCampaignCriticalPath()     — longest dependency chain through launch_event
+//   getCampaignCriticalPath()     — longest path through launch_event (all connection types)
 //   getApprovalGateSignals()      — approval gate visibility at board level
 //   getMeasurementLoopSignals()   — measurement closure signals
 //
@@ -16,7 +16,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
-import { getCampaignBeatStatus, BLOCKING_REASONS } from './beatStatus';
+import { getCampaignBeatStatus } from './beatStatus';
 import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -53,12 +53,7 @@ export interface MeasurementLoopSignal {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Connection types that represent blocking dependencies */
-function isBlockingConnection(type: string): boolean {
-    return type === 'consequence' || type === 'dependency';
-}
-
-/** Build adjacency list (fromId → toIds) */
+/** Build adjacency list (fromId → toIds) — every MarketingConnectionType counts. */
 function buildAdjacency(connections: StoryboardConnection[]): Map<string, string[]> {
     const adj = new Map<string, string[]>();
     for (const conn of connections) {
@@ -69,7 +64,7 @@ function buildAdjacency(connections: StoryboardConnection[]): Map<string, string
     return adj;
 }
 
-/** Build reverse adjacency (toId → fromIds) */
+/** Build reverse adjacency (toId → fromIds) — every MarketingConnectionType counts. */
 function buildReverseAdjacency(connections: StoryboardConnection[]): Map<string, string[]> {
     const rev = new Map<string, string[]>();
     for (const conn of connections) {
@@ -81,8 +76,11 @@ function buildReverseAdjacency(connections: StoryboardConnection[]): Map<string,
 }
 
 /**
- * Find the longest path from any root (0 in-degree) to any launch_event frame,
- * using all connection types. Returns frame IDs in path order.
+ * Find the longest path from any root (0 in-degree) to any launch_event frame.
+ * Critical-path adjacency intentionally includes all connection types
+ * (sequence, choice, dependency, approval, consequence, optional) — not only
+ * dependency/consequence edges — so campaign flow and segment branches both
+ * contribute to launch ordering. Returns frame IDs in path order.
  */
 function longestPathToLaunchEvent(
     frames: StoryboardFrame[],
@@ -230,6 +228,20 @@ function approvalBlocksLaunch(
 export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadinessSummary {
     const { frames, connections } = campaign;
 
+    // Empty board: disagreeing with validateMarketingStoryboard (EMPTY_STORYBOARD)
+    // and getCampaignReadiness (readyFraction:0) by reporting 'ready' is wrong —
+    // zero beats means the campaign is still a draft, not launch-ready.
+    if (frames.length === 0) {
+        return {
+            level: 'draft',
+            blockedFrameIds: [],
+            approvalGateFrameIds: [],
+            missingMeasurementFrameIds: [],
+            criticalPathFrameIds: [],
+            summary: 'Campaign has no beats — add frames before launch readiness applies',
+        };
+    }
+
     // Compute per-frame status
     const blockedFrameIds: string[] = [];
     for (const frame of frames) {
@@ -251,7 +263,7 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
         .filter(f => (f.content?.metrics?.length ?? 0) === 0)
         .map(f => f.id);
 
-    // Critical path
+    // Critical path (all connection types — see longestPathToLaunchEvent)
     const criticalPathFrameIds = longestPathToLaunchEvent(frames, connections);
 
     // Determine overall level
@@ -299,7 +311,7 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
 }
 
 /**
- * Critical path: longest dependency chain through launch_event.
+ * Critical path: longest chain through launch_event across all connection types.
  * Returns frame IDs in execution order.
  */
 export function getCampaignCriticalPath(campaign: Storyboard): string[] {

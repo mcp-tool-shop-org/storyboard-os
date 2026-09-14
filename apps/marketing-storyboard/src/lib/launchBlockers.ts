@@ -3,18 +3,44 @@
 // Pure categorization logic for the Launch Blockers panel.
 //
 // Lives outside the canvas component so it can be unit-tested without pulling
-// Konva/react-konva into a node test environment. Type-only domain import —
-// nothing from the domain package executes at runtime here.
+// Konva/react-konva into a node test environment.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { ApprovalGateSignal, MeasurementLoopSignal } from '@storyboard-os/marketing-domain';
+import {
+    getCampaignBeatStatus,
+    BLOCKING_REASONS,
+    type ApprovalGateSignal,
+    type MeasurementLoopSignal,
+    type MissingSpecReason,
+    type StoryboardFrame,
+} from '@storyboard-os/marketing-domain';
 
 export interface ApprovalSignalCategories {
     /** Gates that cannot pass at all — approval requirements are missing. */
     blocked: ApprovalGateSignal[];
     /** Gates that are defined but not yet fully specced/signed off. */
     pending: ApprovalGateSignal[];
+}
+
+export interface BlockedBeatEntry {
+    frameId: string;
+    title: string;
+    /** Humanized BLOCKING_REASONS (or a generic fallback). */
+    details: string[];
+}
+
+const BLOCKING_REASON_LABELS: Record<string, string> = {
+    no_conversion_goal: 'Conversion goal required',
+    no_required_assets: 'Required assets must be listed',
+    no_approval_requirements: 'Approval requirements must be defined',
+    no_metrics: 'Metrics required',
+    no_channel: 'Channel required',
+    no_message_claim: 'Message claim required',
+};
+
+function humanizeBlockingReason(reason: MissingSpecReason): string {
+    return BLOCKING_REASON_LABELS[reason] ?? reason.replace(/_/g, ' ');
 }
 
 /** Measurement frames that have metrics but no outgoing feedback edge. */
@@ -26,6 +52,8 @@ export function hasOpenMeasurementLoops(signals: readonly MeasurementLoopSignal[
  * Outer visibility gate for the Launch Blockers panel.
  * Must include open loops — otherwise a clean campaign whose only issue is an
  * unclosed measurement loop never mounts the panel that would surface it.
+ * When blockedFrameIds is non-empty the panel MUST also render those beats
+ * (see collectBlockedBeatEntries) — visibility and contents stay aligned.
  */
 export function shouldShowLaunchBlockersPanel(input: {
     blockedFrameIds: readonly string[];
@@ -38,6 +66,61 @@ export function shouldShowLaunchBlockersPanel(input: {
         input.missingMeasurementFrameIds.length > 0 ||
         input.pendingApprovals.length > 0 ||
         hasOpenMeasurementLoops(input.measurementSignals)
+    );
+}
+
+/**
+ * Blocked beats the Launch Blockers rail claims to cover when
+ * `blockedFrameIds` is non-empty. Excludes frames already listed under the
+ * approval-blocked or missing-metrics sections so each beat appears once in
+ * its most specific category.
+ */
+export function collectBlockedBeatEntries(
+    frames: readonly StoryboardFrame[],
+    blockedFrameIds: readonly string[],
+    options?: { excludeFrameIds?: readonly string[] },
+): BlockedBeatEntry[] {
+    const exclude = new Set(options?.excludeFrameIds ?? []);
+    const frameById = new Map(frames.map(f => [f.id, f]));
+
+    return blockedFrameIds
+        .filter(id => !exclude.has(id))
+        .map(id => {
+            const frame = frameById.get(id);
+            if (!frame) {
+                return { frameId: id, title: id, details: ['Blocked'] };
+            }
+            const status = getCampaignBeatStatus(frame);
+            const blockers = status.missing.filter(r => BLOCKING_REASONS.has(r));
+            return {
+                frameId: id,
+                title: frame.title,
+                details: blockers.length > 0
+                    ? blockers.map(humanizeBlockingReason)
+                    : ['Blocked'],
+            };
+        });
+}
+
+/**
+ * Whether the panel body has anything to paint. Must stay true whenever
+ * shouldShowLaunchBlockersPanel is true for the same campaign signals —
+ * otherwise the titled rail mounts and then returns null.
+ */
+export function launchBlockersPanelHasContent(input: {
+    blockedBeats: readonly BlockedBeatEntry[];
+    blockedApprovals: readonly ApprovalGateSignal[];
+    pendingApprovals: readonly ApprovalGateSignal[];
+    measurementSignals: readonly MeasurementLoopSignal[];
+}): boolean {
+    const missingMetrics = input.measurementSignals.filter(s => !s.hasMetrics);
+    const openLoops = input.measurementSignals.filter(s => s.hasMetrics && !s.isLoop);
+    return (
+        input.blockedBeats.length > 0 ||
+        input.blockedApprovals.length > 0 ||
+        input.pendingApprovals.length > 0 ||
+        missingMetrics.length > 0 ||
+        openLoops.length > 0
     );
 }
 

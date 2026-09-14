@@ -8,16 +8,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import type { ApprovalGateSignal } from '@storyboard-os/marketing-domain';
+import type { ApprovalGateSignal, StoryboardFrame } from '@storyboard-os/marketing-domain';
 import {
     launchRpgStoryboardCampaign,
     getApprovalGateSignals,
+    getCampaignLaunchReadiness,
     type MeasurementLoopSignal,
 } from '@storyboard-os/marketing-domain';
 import {
     categorizeApprovalSignals,
     hasOpenMeasurementLoops,
     shouldShowLaunchBlockersPanel,
+    collectBlockedBeatEntries,
+    launchBlockersPanelHasContent,
 } from './launchBlockers';
 
 function signal(overrides: Partial<ApprovalGateSignal>): ApprovalGateSignal {
@@ -175,5 +178,102 @@ describe('hasOpenMeasurementLoops / shouldShowLaunchBlockersPanel', () => {
             pendingApprovals: [signal({ status: 'partial' })],
             measurementSignals: [],
         })).toBe(true);
+    });
+});
+
+// ─── Blocked beats section (F-e2528549) ───────────────────────────────────────
+// Visibility gated on blockedFrameIds must paint those beats — previously the
+// panel mounted then returned null when only non-approval/non-measurement
+// frames were blocked.
+
+function makeFrame(overrides: Partial<StoryboardFrame> & { id: string; type: StoryboardFrame['type'] }): StoryboardFrame {
+    return {
+        title: overrides.title ?? overrides.id,
+        summary: '',
+        position: { x: 0, y: 0 },
+        size: { width: 200, height: 120 },
+        content: {},
+        annotations: [],
+        ...overrides,
+    } as StoryboardFrame;
+}
+
+describe('collectBlockedBeatEntries / launchBlockersPanelHasContent', () => {
+    it('lists blocked conversion/message beats with humanized blockers', () => {
+        const frames = [
+            makeFrame({ id: 'conv-1', type: 'conversion', title: 'Signup CTA', content: {} }),
+            makeFrame({ id: 'msg-1', type: 'message', title: 'Core claim', content: {} }),
+        ];
+        const entries = collectBlockedBeatEntries(frames, ['conv-1', 'msg-1']);
+        expect(entries).toHaveLength(2);
+        expect(entries[0]).toMatchObject({ frameId: 'conv-1', title: 'Signup CTA' });
+        expect(entries[0].details.some(d => /conversion/i.test(d))).toBe(true);
+        expect(entries[1].details.some(d => /message claim/i.test(d))).toBe(true);
+    });
+
+    it('excludes frames already covered by approval/measurement sections', () => {
+        const frames = [
+            makeFrame({ id: 'appr-1', type: 'approval', title: 'Legal', content: {} }),
+            makeFrame({ id: 'conv-1', type: 'conversion', title: 'CTA', content: {} }),
+        ];
+        const entries = collectBlockedBeatEntries(frames, ['appr-1', 'conv-1'], {
+            excludeFrameIds: ['appr-1'],
+        });
+        expect(entries.map(e => e.frameId)).toEqual(['conv-1']);
+    });
+
+    it('keeps panel content non-empty when visibility is true for blocked-only boards', () => {
+        const frames = [
+            makeFrame({ id: 'conv-1', type: 'conversion', title: 'Signup CTA', content: {} }),
+            makeFrame({
+                id: 'launch',
+                type: 'launch_event',
+                content: {
+                    objective: 'x', audienceSegment: 'z',
+                    customerStateBefore: ['a'], customerStateAfter: ['b'],
+                    testCriteria: ['t'], implementationChecklist: ['i'],
+                    requiredAssets: ['a'],
+                },
+            }),
+        ];
+        const readiness = getCampaignLaunchReadiness({
+            id: 't', title: 'T', frames, connections: [],
+        });
+        expect(readiness.blockedFrameIds).toContain('conv-1');
+
+        const show = shouldShowLaunchBlockersPanel({
+            blockedFrameIds: readiness.blockedFrameIds,
+            missingMeasurementFrameIds: readiness.missingMeasurementFrameIds,
+            pendingApprovals: [],
+            measurementSignals: [],
+        });
+        expect(show).toBe(true);
+
+        const blockedBeats = collectBlockedBeatEntries(frames, readiness.blockedFrameIds);
+        expect(launchBlockersPanelHasContent({
+            blockedBeats,
+            blockedApprovals: [],
+            pendingApprovals: [],
+            measurementSignals: [],
+        })).toBe(true);
+        expect(blockedBeats.some(b => b.frameId === 'conv-1')).toBe(true);
+    });
+
+    it('panel has content for open loops without blocked frames', () => {
+        expect(launchBlockersPanelHasContent({
+            blockedBeats: [],
+            blockedApprovals: [],
+            pendingApprovals: [],
+            measurementSignals: [loopSignal({ hasMetrics: true, isLoop: false })],
+        })).toBe(true);
+    });
+
+    it('panel has no content when everything is clean', () => {
+        expect(launchBlockersPanelHasContent({
+            blockedBeats: [],
+            blockedApprovals: [],
+            pendingApprovals: [],
+            measurementSignals: [loopSignal({ hasMetrics: true, isLoop: true })],
+        })).toBe(false);
     });
 });
