@@ -15,11 +15,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import Konva from 'konva';
 import {
   StoryboardCanvas as KonvaBoard,
   type StoryboardCanvasConfig,
   type CanvasFrame,
   type ViewportHandle,
+  type ViewState,
   DEFAULT_CONNECTION_STYLE,
 } from '@storyboard-os/canvas';
 import {
@@ -32,6 +34,7 @@ import {
 import { statusColors, surfaces, textColors, typeScale, spacing } from '@storyboard-os/core';
 import type { Storyboard } from '../lib/storyboard/schema';
 import type { FrameBasicsPatch, FrameProgress, ProjectProgress, ProjectProgressSummary } from '../lib/storyboard/project';
+import { loadBoardView, saveBoardView } from '../lib/storyboard/boardViewStorage';
 import FrameInspector from './storyboard/FrameInspector';
 import ViewControls from './storyboard/ViewControls';
 import BeatEditPanel from './projects/BeatEditPanel';
@@ -151,16 +154,80 @@ interface Props {
    * Project boards should pass `/projects/handoff?id=${projectId}`.
    */
   handoffHref?: string;
+  /**
+   * Stable id used as the sessionStorage key for zoom/pan persistence.
+   * Project boards should pass the project id; template previews default to
+   * the storyboard id.
+   */
+  viewStorageKey?: string;
 }
 
-function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameContentChange, onProgressChange, projectProgress, progressSummary, saveStatus, handoffHref }: Props) {
+function StoryboardCanvasInner({
+  storyboard,
+  onFramePositionChange,
+  onFrameContentChange,
+  onProgressChange,
+  projectProgress,
+  progressSummary,
+  saveStatus,
+  handoffHref,
+  viewStorageKey,
+}: Props) {
   const resolvedHandoffHref = handoffHref ?? `/storyboards/${storyboard.id}/handoff`;
+  const boardViewKey = viewStorageKey ?? storyboard.id;
+  const persistedView = useMemo(() => loadBoardView(boardViewKey), [boardViewKey]);
+
   const [selectedFrameId, setSelectedFrameId]           = useState<string | null>(null);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [editingFrameId, setEditingFrameId]             = useState<string | null>(null);
-  const [scale, setScale]                               = useState(1);
+  const [scale, setScale]                               = useState(persistedView?.scale ?? 1);
 
   const canvasRef = useRef<ViewportHandle | null>(null);
+  const boardAreaRef = useRef<HTMLDivElement | null>(null);
+  // Skip persisting the first autoFit callback so a fresh board does not lock
+  // the autofit framing into sessionStorage before the user adjusts anything.
+  const skipPersistCount = useRef(persistedView ? 0 : 1);
+
+  const handleViewStateChange = useCallback(
+    (v: ViewState) => {
+      setScale(v.scale);
+      if (skipPersistCount.current > 0) {
+        skipPersistCount.current -= 1;
+        return;
+      }
+      saveBoardView(boardViewKey, v);
+    },
+    [boardViewKey],
+  );
+
+  // Restore persisted zoom/pan after the Konva Stage mounts. Canvas does not
+  // yet expose initialViewState/setView (core-infra), so we apply the transform
+  // imperatively on the Stage that lives inside our board area. Interactions
+  // read from the Stage, so subsequent pan/zoom stay consistent.
+  useEffect(() => {
+    if (!persistedView) return;
+    let cancelled = false;
+    let attempts = 0;
+
+    const tryApply = () => {
+      if (cancelled) return;
+      const root = boardAreaRef.current;
+      const stage = Konva.stages.find(s => (root ? root.contains(s.container()) : false));
+      if (!stage) {
+        if (attempts++ < 60) requestAnimationFrame(tryApply);
+        return;
+      }
+      stage.scale({ x: persistedView.scale, y: persistedView.scale });
+      stage.position({ x: persistedView.x, y: persistedView.y });
+      stage.batchDraw();
+      setScale(persistedView.scale);
+    };
+
+    requestAnimationFrame(tryApply);
+    return () => {
+      cancelled = true;
+    };
+  }, [persistedView, boardViewKey]);
 
   const handleSelectFrame = useCallback((id: string | null) => {
     setSelectedFrameId(id);
@@ -348,15 +415,18 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
       <main style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
         {/* Canvas area — fills all remaining space, clip overflow */}
-        <div style={{
-          flex: 1,
-          overflow: 'hidden',
-          position: 'relative',
-          backgroundImage: 'radial-gradient(circle, #1e293b 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
-          backgroundPosition: '0 0',
-          backgroundColor: surfaces.bgPage,
-        }}>
+        <div
+          ref={boardAreaRef}
+          style={{
+            flex: 1,
+            overflow: 'hidden',
+            position: 'relative',
+            backgroundImage: 'radial-gradient(circle, #1e293b 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
+            backgroundPosition: '0 0',
+            backgroundColor: surfaces.bgPage,
+          }}
+        >
           <KonvaBoard
             ref={canvasRef}
             frames={canvasFrames}
@@ -366,9 +436,13 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
             onSelectFrame={handleSelectFrame}
             selectedConnectionId={selectedConnectionId}
             onSelectConnection={handleSelectConnection}
-            onViewStateChange={v => setScale(v.scale)}
+            onViewStateChange={handleViewStateChange}
             onFramePositionChange={onFramePositionChange}
-            autoFit
+            autoFit={!persistedView}
+            // Forward-compat: when canvas honors initialViewState, restore is declarative.
+            {...(persistedView
+              ? { initialViewState: persistedView as ViewState }
+              : {})}
           />
 
           {/* Viewport controls — absolutely positioned over canvas */}
@@ -507,26 +581,34 @@ function ProgressCounts({ summary }: { summary: ProjectProgressSummary }) {
 function SaveStatusChip({ status }: { status: SaveStatus }) {
   if (!status) return null;
 
-  // Failed state — red chip with the error message as a tooltip so the user
-  // sees the chip turn red AND can hover for the underlying reason. This is
-  // the load-bearing humanization fix for F-AP-201: we must not show a green
-  // "Saved" chip after a localStorage write threw.
+  // Failed state — show WHAT failed and WHERE to recover (Projects delete UI),
+  // not a bare "Save failed" that hides the recovery path in a tooltip.
   if (typeof status === 'object' && status.kind === 'failed') {
     const color = '#EF4444';
     return (
       <span
-        title={status.message}
         role="status"
         aria-live="polite"
         style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-          padding: '2px 8px', borderRadius: 4,
+          display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+          padding: '3px 8px', borderRadius: 4,
           background: `${color}22`,
           border: `1px solid ${color}55`,
           color,
+          maxWidth: 420,
         }}
       >
-        Save failed
+        <span style={{ lineHeight: 1.35 }}>{status.message}</span>
+        <a
+          href="/projects"
+          style={{
+            color: '#FCA5A5', textDecoration: 'underline',
+            whiteSpace: 'nowrap', fontWeight: 700,
+          }}
+        >
+          Open Projects to delete →
+        </a>
       </span>
     );
   }

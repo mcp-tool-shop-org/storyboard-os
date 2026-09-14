@@ -90,9 +90,12 @@ interface Props {
   onTestCriterionChange?: (index: number, complete: boolean) => void;
 }
 
+const TYPE_FALLBACK_COLOR = '#475569';
+
 export default function FrameInspector({ frame, storyboardId, onClose, onEditClick, frameProgress, onChecklistChange, onTestCriterionChange }: Props) {
   const route  = frameRoute(storyboardId, frame.id);
-  const accent = TYPE_COLORS[frame.type];
+  const accent = TYPE_COLORS[frame.type] ?? TYPE_FALLBACK_COLOR;
+  const typeLabel = TYPE_LABELS[frame.type] ?? String(frame.type).replace(/_/g, ' ').toUpperCase();
   const status = getBeatStatus(frame);
   // Null-normalize so NEWER_SCHEMA / corrupt loads with null content do not throw
   // when dereferencing content.* (sibling of projectStorage soft-sanitize).
@@ -140,7 +143,7 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
             color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase',
             alignSelf: 'flex-start',
           }}>
-            {TYPE_LABELS[frame.type]}
+            {typeLabel}
           </span>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.3 }}>
             {frame.title}

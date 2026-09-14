@@ -153,6 +153,48 @@ describe('getFrameSignal', () => {
       });
       expect(getFrameSignal(frame).readiness).toBe('ready');
     });
+
+    // F-a6959b0e: signal.readiness must follow getBeatStatus, not checklist score alone.
+    it('is incomplete (not ready) for a blocked choice with full checklist score', () => {
+      const frame = makeFrame({
+        type: 'choice',
+        content: {
+          designerNotes: 'Branch',
+          implementationChecklist: ['Wire tree'],
+          requiredAssets: ['choice_ui.png'],
+          testCriteria: ['Both fire'],
+          // no stateChanges → getBeatStatus blocked
+        },
+      });
+      expect(getFrameSignal(frame).readiness).toBe('incomplete');
+    });
+
+    it('is incomplete for a blocked reveal with full checklist score', () => {
+      const frame = makeFrame({
+        type: 'reveal',
+        content: {
+          designerNotes: 'Secret',
+          implementationChecklist: ['Trigger VO'],
+          requiredAssets: ['reveal_vo.ogg'],
+          testCriteria: ['VO once'],
+        },
+      });
+      expect(getFrameSignal(frame).readiness).toBe('incomplete');
+    });
+
+    it('is ready for a choice that satisfies domain rules and checklist score', () => {
+      const frame = makeFrame({
+        type: 'choice',
+        content: {
+          designerNotes: 'Branch',
+          stateChanges: ['faction = guild'],
+          implementationChecklist: ['Wire tree'],
+          requiredAssets: ['choice_ui.png'],
+          testCriteria: ['Both fire'],
+        },
+      });
+      expect(getFrameSignal(frame).readiness).toBe('ready');
+    });
   });
 
   describe('spec coverage flags', () => {

@@ -83,7 +83,9 @@ function ProjectBoardInner() {
       // into the visible label.
       const prefix = result.code === 'QUOTA_EXCEEDED'
         ? 'Storage full — '
-        : 'Save error — ';
+        : result.code === 'STORE_CORRUPT'
+          ? 'Storage corrupt — '
+          : 'Save error — ';
       setSaveStatus({ kind: 'failed', message: `${prefix}${result.message}` });
     }
   }, []);
@@ -158,6 +160,7 @@ function ProjectBoardInner() {
       progressSummary={progressSummary}
       saveStatus={saveStatus}
       handoffHref={`/projects/handoff?id=${project.id}`}
+      viewStorageKey={project.id}
     />
   );
 }
