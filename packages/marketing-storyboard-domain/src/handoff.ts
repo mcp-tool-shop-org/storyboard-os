@@ -11,7 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Storyboard, StoryboardFrame, MarketingFrameContent, StoryboardConnection } from './schema';
-import { getCampaignBeatStatus, getCampaignReadiness } from './beatStatus';
+import { getCampaignBeatStatus, getCampaignReadiness, BLOCKING_REASONS } from './beatStatus';
 import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
 import type { MarketingStoryboardProject, ProjectProgressSummary } from './project';
 import { getFrameProgress, getProjectProgress } from './project';
@@ -19,18 +19,39 @@ import { getFrameProgress, getProjectProgress } from './project';
 // ─── Markdown escaping (DM-004) ───────────────────────────────────────────────
 //
 // Neutralize markdown-structural characters in INLINE user text:
-// - backticks → escaped so user text cannot open/close code spans
+// - backticks / backslashes → escaped so user text cannot open code spans
 // - pipes     → escaped so user text cannot add/split table cells
+// - `*` `_`   → escaped so emphasis cannot reshape structure
+// - `[` `]` `(` `)` → escaped so link/image syntax stays inert
 // - `<`       → `&lt;` so stray inline HTML stays inert
 // - a leading `#` / `>` / `-` (per line) → escaped so user text cannot
 //   introduce headings, blockquotes, or list items
 
 function escapeMarkdownInline(text: string): string {
     return text
+        .replace(/\\/g, '\\\\')
         .replace(/`/g, '\\`')
         .replace(/\|/g, '\\|')
+        .replace(/\*/g, '\\*')
+        .replace(/_/g, '\\_')
+        .replace(/\[/g, '\\[')
+        .replace(/\]/g, '\\]')
+        .replace(/\(/g, '\\(')
+        .replace(/\)/g, '\\)')
         .replace(/</g, '&lt;')
         .replace(/^([#>-])/gm, '\\$1');
+}
+
+/** True launch blockers only — mirrors handoff.astro / MarketingFrameInspector. */
+function launchBlockersFor(missing: readonly MissingSpecReason[]): MissingSpecReason[] {
+    return missing.filter(r => BLOCKING_REASONS.has(r));
+}
+
+/** Non-blocking incompleteness (excludes advisory depth fields). */
+function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[] {
+    return missing.filter(
+        r => !BLOCKING_REASONS.has(r) && r !== 'no_proof_points' && r !== 'no_launch_dependencies',
+    );
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,6 +95,8 @@ export interface CampaignHandoffBeat {
     // Implementation
     testCriteria: string[];
     implementationChecklist: string[];
+    /** Author-only notes (mirrors RPG authorOnlyNotes on the handoff beat). */
+    ownerNotes?: string;
 
     // Graph context
     outgoingBranches: HandoffBranch[];
@@ -219,6 +242,7 @@ function buildBeat(
         metrics: content.metrics ?? [],
         testCriteria: content.testCriteria ?? [],
         implementationChecklist: content.implementationChecklist ?? [],
+        ownerNotes: content.ownerNotes,
         outgoingBranches: outgoing,
         incomingFromIds: incoming,
     };
@@ -282,9 +306,32 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
         lines.push('');
         for (const id of handoff.blockedIds) {
             const beat = handoff.beats.find(b => b.id === id);
-            if (beat) lines.push(`- **${esc(beat.title)}** — missing: ${beat.missing.join(', ')}`);
+            if (!beat) continue;
+            const blockers = launchBlockersFor(beat.missing);
+            // Only true launch blockers under this heading — not advisory / ordinary gaps.
+            if (blockers.length > 0) {
+                lines.push(`- **${esc(beat.title)}** — missing: ${blockers.join(', ')}`);
+            } else {
+                lines.push(`- **${esc(beat.title)}**`);
+            }
         }
         lines.push('');
+
+        const gapLines: string[] = [];
+        for (const id of handoff.blockedIds) {
+            const beat = handoff.beats.find(b => b.id === id);
+            if (!beat) continue;
+            const gaps = specGapsFor(beat.missing);
+            if (gaps.length > 0) {
+                gapLines.push(`- **${esc(beat.title)}** — missing: ${gaps.join(', ')}`);
+            }
+        }
+        if (gapLines.length > 0) {
+            lines.push('### Spec Gaps');
+            lines.push('');
+            lines.push(...gapLines);
+            lines.push('');
+        }
     }
 
     // Beats
@@ -318,6 +365,18 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
 
         if (beat.messageClaim) {
             lines.push(`**Message:** ${esc(beat.messageClaim)}`);
+            lines.push('');
+        }
+
+        if (beat.proofPoints.length > 0) {
+            lines.push('**Proof Points:**');
+            for (const p of beat.proofPoints) lines.push(`- ${esc(p)}`);
+            lines.push('');
+        }
+
+        if (beat.objectionsHandled.length > 0) {
+            lines.push('**Objections Handled:**');
+            for (const o of beat.objectionsHandled) lines.push(`- ${esc(o)}`);
             lines.push('');
         }
 
@@ -371,6 +430,13 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
         if (beat.implementationChecklist.length > 0) {
             lines.push('**Implementation Checklist:**');
             for (const c of beat.implementationChecklist) lines.push(`- [ ] ${esc(c)}`);
+            lines.push('');
+        }
+
+        if (beat.ownerNotes?.trim()) {
+            lines.push('**Owner Notes:**');
+            lines.push('');
+            lines.push(esc(beat.ownerNotes));
             lines.push('');
         }
 
