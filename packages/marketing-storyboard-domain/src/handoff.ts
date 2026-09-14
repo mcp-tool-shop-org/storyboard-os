@@ -15,6 +15,12 @@ import { getCampaignBeatStatus, getCampaignReadiness, BLOCKING_REASONS } from '.
 import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
 import type { MarketingStoryboardProject, ProjectProgressSummary } from './project';
 import { getFrameProgress, getProjectProgress } from './project';
+import {
+    humanizeBeatStatus,
+    humanizeConnectionType,
+    humanizeFrameType,
+    humanizeMissingReason,
+} from './labels';
 
 // ─── Markdown escaping (DM-004) ───────────────────────────────────────────────
 //
@@ -310,28 +316,27 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
             const blockers = launchBlockersFor(beat.missing);
             // Only true launch blockers under this heading — not advisory / ordinary gaps.
             if (blockers.length > 0) {
-                lines.push(`- **${esc(beat.title)}** — missing: ${blockers.join(', ')}`);
+                lines.push(`- **${esc(beat.title)}** — missing: ${blockers.map(humanizeMissingReason).join(', ')}`);
             } else {
                 lines.push(`- **${esc(beat.title)}**`);
             }
         }
         lines.push('');
+    }
 
-        const gapLines: string[] = [];
-        for (const id of handoff.blockedIds) {
-            const beat = handoff.beats.find(b => b.id === id);
-            if (!beat) continue;
-            const gaps = specGapsFor(beat.missing);
-            if (gaps.length > 0) {
-                gapLines.push(`- **${esc(beat.title)}** — missing: ${gaps.join(', ')}`);
-            }
+    // Spec gaps for every beat that has them — not only blockedIds (F-5c0c80f1).
+    const gapLines: string[] = [];
+    for (const beat of handoff.beats) {
+        const gaps = specGapsFor(beat.missing);
+        if (gaps.length > 0) {
+            gapLines.push(`- **${esc(beat.title)}** — missing: ${gaps.map(humanizeMissingReason).join(', ')}`);
         }
-        if (gapLines.length > 0) {
-            lines.push('### Spec Gaps');
-            lines.push('');
-            lines.push(...gapLines);
-            lines.push('');
-        }
+    }
+    if (gapLines.length > 0) {
+        lines.push('### Spec Gaps');
+        lines.push('');
+        lines.push(...gapLines);
+        lines.push('');
     }
 
     // Beats
@@ -343,7 +348,7 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
     for (const beat of handoff.beats) {
         lines.push(`### ${esc(beat.title)}`);
         lines.push('');
-        lines.push(`**Type:** ${beat.type} | **Status:** ${beat.status}`);
+        lines.push(`**Type:** ${humanizeFrameType(beat.type)} | **Status:** ${humanizeBeatStatus(beat.status)}`);
         lines.push('');
         lines.push(esc(beat.summary));
         lines.push('');
@@ -443,7 +448,7 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
         if (beat.outgoingBranches.length > 0) {
             lines.push('**Next:**');
             for (const b of beat.outgoingBranches) {
-                lines.push(`- → ${esc(b.toTitle)} (${b.type}${b.label ? ': ' + esc(b.label) : ''})`);
+                lines.push(`- → ${esc(b.toTitle)} (${humanizeConnectionType(b.type)}${b.label ? ': ' + esc(b.label) : ''})`);
             }
             lines.push('');
         }
@@ -524,7 +529,7 @@ export function generateProjectCampaignMarkdown(handoff: ProjectCampaignHandoff)
     for (const beat of handoff.beats) {
         lines.push(`### ${esc(beat.title)}`);
         lines.push('');
-        lines.push(`**Type:** ${beat.type} | **Status:** ${beat.status}`);
+        lines.push(`**Type:** ${humanizeFrameType(beat.type)} | **Status:** ${humanizeBeatStatus(beat.status)}`);
         lines.push('');
         lines.push(esc(beat.summary));
         lines.push('');

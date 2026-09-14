@@ -192,6 +192,15 @@ describe('getCampaignLaunchReadiness', () => {
         expect(result.criticalPathFrameIds.length).toBeGreaterThan(0);
         expect(result.approvalGateFrameIds).toContain('launch-approval');
     });
+
+    it('demo campaign is not at_risk from an open measurement loop (F-5d3af7e7)', () => {
+        const result = getCampaignLaunchReadiness(launchRpgStoryboardCampaign);
+        expect(result.summary).not.toMatch(/open measurement loop/i);
+        expect(getMeasurementLoopSignals(launchRpgStoryboardCampaign).every(s => s.isLoop)).toBe(true);
+        if (result.blockedFrameIds.length === 0 && result.missingMeasurementFrameIds.length === 0) {
+            expect(result.level).toBe('ready');
+        }
+    });
 });
 
 // ─── getCampaignCriticalPath ──────────────────────────────────────────────────
@@ -358,5 +367,6 @@ describe('getMeasurementLoopSignals', () => {
         expect(signals.length).toBeGreaterThan(0);
         expect(signals[0].frameId).toBe('launch-measurement');
         expect(signals[0].hasMetrics).toBe(true);
+        expect(signals[0].isLoop).toBe(true);
     });
 });

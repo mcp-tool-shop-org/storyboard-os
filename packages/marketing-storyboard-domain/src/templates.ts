@@ -275,6 +275,22 @@ function buildTemplate(
                 type: 'sequence' as const,
             }));
 
+            // Close the measurement loop: terminal readout feeds back into
+            // follow-up (or message) so getCampaignLaunchReadiness can reach
+            // 'ready' on an otherwise spec-complete board (F-5d3af7e7).
+            const measurement = frames.find(f => f.type === 'measurement');
+            const feedbackTarget =
+                [...frames].reverse().find(f => f.type === 'follow_up')
+                ?? frames.find(f => f.type === 'message');
+            if (measurement && feedbackTarget && feedbackTarget.id !== measurement.id) {
+                connections.push({
+                    id: `${input.id}-conn-feedback`,
+                    fromFrameId: measurement.id,
+                    toFrameId: feedbackTarget.id,
+                    type: 'sequence' as const,
+                });
+            }
+
             return {
                 id: input.id,
                 title: input.title,

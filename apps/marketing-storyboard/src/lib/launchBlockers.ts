@@ -10,9 +10,9 @@
 import {
     getCampaignBeatStatus,
     BLOCKING_REASONS,
+    humanizeMissingReason,
     type ApprovalGateSignal,
     type MeasurementLoopSignal,
-    type MissingSpecReason,
     type StoryboardFrame,
 } from '@storyboard-os/marketing-domain';
 
@@ -28,19 +28,6 @@ export interface BlockedBeatEntry {
     title: string;
     /** Humanized BLOCKING_REASONS (or a generic fallback). */
     details: string[];
-}
-
-const BLOCKING_REASON_LABELS: Record<string, string> = {
-    no_conversion_goal: 'Conversion goal required',
-    no_required_assets: 'Required assets must be listed',
-    no_approval_requirements: 'Approval requirements must be defined',
-    no_metrics: 'Metrics required',
-    no_channel: 'Channel required',
-    no_message_claim: 'Message claim required',
-};
-
-function humanizeBlockingReason(reason: MissingSpecReason): string {
-    return BLOCKING_REASON_LABELS[reason] ?? reason.replace(/_/g, ' ');
 }
 
 /** Measurement frames that have metrics but no outgoing feedback edge. */
@@ -96,7 +83,7 @@ export function collectBlockedBeatEntries(
                 frameId: id,
                 title: frame.title,
                 details: blockers.length > 0
-                    ? blockers.map(humanizeBlockingReason)
+                    ? blockers.map(humanizeMissingReason)
                     : ['Blocked'],
             };
         });
