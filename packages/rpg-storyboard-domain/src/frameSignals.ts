@@ -12,32 +12,38 @@
 import type { StoryboardFrame, FrameContent } from './schema';
 import { statusColors, statusLabels } from '@storyboard-os/core';
 import type { StoryboardConnection } from '@storyboard-os/core';
+import { getBeatStatus } from './beatStatus';
+import type { BeatStatusLevel } from './beatStatus';
 
 // ─── RPG badge colors ─────────────────────────────────────────────────────────
 // RPG has no domain-specific badge colors beyond the shared status set — the
 // STATE badge is the shared `state` blue and the readiness badges are the shared
-// spec/partial/draft swatches. `rpgColors` re-exports those under the domain's
-// name so app legends/inspectors import the SAME const the badges are built from
-// and can never drift from the card. `label` maps the domain's own readiness
-// enum ('incomplete') onto the canonical DRAFT label (VP-005).
+// spec/partial/draft/blocked swatches. `rpgColors` re-exports those under the
+// domain's name so app legends/inspectors import the SAME const the badges are
+// built from and can never drift from the card. Canvas readiness badges come
+// from getBeatStatus (not computeReadiness alone) so a choice/consequence/reveal
+// that fails domain rules shows BLOCKED, not a contradictory SPEC/PARTIAL.
 
 export const rpgColors = {
   state:   statusColors.state,
   ready:   statusColors.spec,
   partial: statusColors.partial,
   draft:   statusColors.draft,
+  blocked: statusColors.blocked,
 } as const;
 
-const RPG_READINESS_LABEL: Record<FrameReadiness, string> = {
-  ready:      statusLabels.ready,   // 'SPEC'
-  partial:    statusLabels.partial, // 'PARTIAL'
-  incomplete: statusLabels.draft,   // 'DRAFT'
+const RPG_STATUS_LABEL: Record<BeatStatusLevel, string> = {
+  ready:   statusLabels.ready,   // 'SPEC'
+  partial: statusLabels.partial, // 'PARTIAL'
+  draft:   statusLabels.draft,   // 'DRAFT'
+  blocked: statusLabels.blocked, // 'BLOCKED'
 };
 
-const RPG_READINESS_COLOR: Record<FrameReadiness, string> = {
-  ready:      rpgColors.ready,
-  partial:    rpgColors.partial,
-  incomplete: rpgColors.draft,
+const RPG_STATUS_COLOR: Record<BeatStatusLevel, string> = {
+  ready:   rpgColors.ready,
+  partial: rpgColors.partial,
+  draft:   rpgColors.draft,
+  blocked: rpgColors.blocked,
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -147,7 +153,9 @@ export function getFrameSignal(frame: StoryboardFrame): FrameSignal {
  *
  * Returns:
  * - A STATE badge (blue) if the frame modifies game state.
- * - A readiness badge: SPEC (green), PARTIAL (orange), or DRAFT (gray).
+ * - A readiness badge from getBeatStatus: SPEC / PARTIAL / DRAFT / BLOCKED.
+ *   BLOCKED replaces SPEC/PARTIAL/DRAFT when domain rules fail (choice /
+ *   consequence missing stateChanges, reveal missing entry/state).
  *
  * The caller (app adapter) maps these to CanvasBadge[] before passing to
  * the canvas package. The canvas never sees FrameContent.
@@ -160,21 +168,24 @@ export function getFrameBadges(frame: StoryboardFrame): FrameBadgeDescriptor[] {
     badges.push({ text: 'STATE', color: rpgColors.state });
   }
 
-  switch (signal.readiness) {
+  // Authoritative readiness — same source as header counts + inspector.
+  const status = getBeatStatus(frame);
+  switch (status.level) {
     case 'ready':
     case 'partial':
-    case 'incomplete':
+    case 'draft':
+    case 'blocked':
       badges.push({
-        text: RPG_READINESS_LABEL[signal.readiness],
-        color: RPG_READINESS_COLOR[signal.readiness],
+        text: RPG_STATUS_LABEL[status.level],
+        color: RPG_STATUS_COLOR[status.level],
       });
       break;
     default: {
-      // Exhaustiveness guard (PR-003): if FrameReadiness grows a new arm, this
+      // Exhaustiveness guard (PR-003): if BeatStatusLevel grows a new arm, this
       // is a compile error. At runtime, warn and fall back to DRAFT rather than
       // silently dropping the badge (which would miscount readiness).
-      const _exhaustive: never = signal.readiness;
-      console.warn('[rpg] unhandled FrameReadiness value:', _exhaustive);
+      const _exhaustive: never = status.level;
+      console.warn('[rpg] unhandled BeatStatusLevel value:', _exhaustive);
       badges.push({ text: statusLabels.draft, color: rpgColors.draft });
       break;
     }

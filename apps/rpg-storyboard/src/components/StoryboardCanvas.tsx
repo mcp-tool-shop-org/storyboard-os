@@ -435,13 +435,15 @@ function StoryboardCanvasInner({ storyboard, onFramePositionChange, onFrameConte
             <span style={{ fontSize: typeScale.xs, color: textColors.secondary }}>{entry.label}</span>
           </div>
         ))}
-        {/* Badge legend + shortcut hint. STATE/SPEC colors come from the SAME
-            rpgColors source getFrameBadges() uses for the card badges, so the
-            footer key and the on-card chips can never drift. */}
+        {/* Badge legend + shortcut hint. Colors come from the SAME rpgColors
+            source getFrameBadges() uses for the card badges, so the footer key
+            and the on-card chips can never drift. BLOCKED is included because
+            domain-blocked beats now emit that badge instead of SPEC/PARTIAL. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, marginLeft: 'auto' }}>
           {[
-            { text: 'STATE', color: rpgColors.state },
-            { text: 'SPEC',  color: rpgColors.ready },
+            { text: 'STATE',   color: rpgColors.state },
+            { text: 'SPEC',    color: rpgColors.ready },
+            { text: 'BLOCKED', color: rpgColors.blocked },
           ].map(b => (
             <span
               key={b.text}

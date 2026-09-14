@@ -248,6 +248,53 @@ describe('getFrameBadges', () => {
     expect(badges).toHaveLength(2);
   });
 
+  // F-3d81544f: full-spec score must not paint SPEC when getBeatStatus is blocked.
+  it('emits BLOCKED (not SPEC) for a choice frame with full spec but empty stateChanges', () => {
+    const frame = makeFrame({
+      type: 'choice',
+      content: {
+        designerNotes: 'Branch the player into faction A or B',
+        implementationChecklist: ['Wire dialogue tree'],
+        requiredAssets: ['choice_ui.png'],
+        testCriteria: ['Both outcomes fire'],
+        // deliberately no stateChanges — domain blocker
+      },
+    });
+    const badges = getFrameBadges(frame);
+    const readiness = badges.find(b =>
+      ['SPEC', 'PARTIAL', 'DRAFT', 'BLOCKED'].includes(b.text),
+    );
+    expect(readiness?.text).toBe('BLOCKED');
+    expect(readiness?.color).toBe(statusColors.blocked);
+    expect(badges.find(b => b.text === 'SPEC')).toBeUndefined();
+  });
+
+  it('emits BLOCKED for a consequence frame missing stateChanges despite full spec', () => {
+    const frame = makeFrame({
+      type: 'consequence',
+      content: {
+        designerNotes: 'Aftermath beat',
+        implementationChecklist: ['Play cutscene'],
+        requiredAssets: ['aftermath.mp4'],
+        testCriteria: ['Flag set'],
+      },
+    });
+    expect(getFrameBadges(frame).find(b => b.text === 'BLOCKED')).toBeDefined();
+  });
+
+  it('emits BLOCKED for a reveal frame with neither entryConditions nor stateChanges', () => {
+    const frame = makeFrame({
+      type: 'reveal',
+      content: {
+        designerNotes: 'Secret revealed',
+        implementationChecklist: ['Trigger VO'],
+        requiredAssets: ['reveal_vo.ogg'],
+        testCriteria: ['VO plays once'],
+      },
+    });
+    expect(getFrameBadges(frame).find(b => b.text === 'BLOCKED')).toBeDefined();
+  });
+
   it('each badge has a non-empty text and a valid hex color string', () => {
     const frame = makeFrame({
       content: {
@@ -276,6 +323,7 @@ describe('rpgColors sources from core statusColors', () => {
     expect(rpgColors.ready).toBe(statusColors.spec);
     expect(rpgColors.partial).toBe(statusColors.partial);
     expect(rpgColors.draft).toBe(statusColors.draft);
+    expect(rpgColors.blocked).toBe(statusColors.blocked);
   });
 
   it('a ready frame renders the canonical SPEC label + spec color', () => {
