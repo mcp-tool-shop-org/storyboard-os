@@ -47,8 +47,10 @@ Every frame carries: `objective`, `audienceSegment`, `customerStateBefore`, `cus
 | Type | Meaning |
 |---|---|
 | `sequence` | This beat follows the previous one in campaign flow. |
+| `choice` | Audience-segment path — one of N segments opens. |
 | `dependency` | This beat cannot start until the upstream beat is resolved. |
 | `approval` | This beat requires formal approval before downstream work begins. |
+| `consequence` | Outcome arc — a result of an upstream beat (demo `conn-05`: launch-approval → launch-announcement). |
 | `optional` | This path is optional — the campaign can proceed without it. |
 
 Connections carry structural meaning. The critical path algorithm traverses them to find the longest path to `launch_event`.
