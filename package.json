@@ -20,8 +20,9 @@
   },
   "engines": {
     "node": ">=22.13.0",
-    "pnpm": ">=10"
+    "pnpm": ">=11"
   },
+  "packageManager": "pnpm@11.4.0",
   "devDependencies": {
     "tsup": "^8.5.1"
   }
