@@ -18,21 +18,29 @@
 //     the ends). Only the active option has tabIndex 0; the rest are -1.
 //   - Enter / Space activates the active option → onActivateFrame(id), which
 //     runs the SAME onSelectFrame path the mouse uses AND centers the canvas.
+//   - When onActivateConnection is provided, connection rows are appended to
+//     the SAME list (not a second surface) and Enter/Space selects them.
 //   - aria-selected reflects the canvas selection so the announced state and
 //     the visual selection stay in agreement, in BOTH directions (activating
 //     here selects on the canvas; selecting on the canvas moves the active
 //     option here).
 //
 // The pure index arithmetic for arrow/Home/End lives in ./a11yNav (unit-tested
-// there); this file owns only the DOM + focus wiring, which the package's
-// node-env vitest setup (no jsdom) cannot exercise directly.
+// there); display-name helpers live in ./frameText. This file owns the DOM +
+// focus wiring, which the package's node-env vitest setup (no jsdom) cannot
+// exercise directly.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import type { CanvasFrame } from './types';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CanvasConnection, CanvasFrame } from './types';
 import { isNavKey, nextFrameIndex } from './a11yNav';
-import { humanizeType } from './humanizeType';
+import {
+  accessibleConnectionName,
+  accessibleFrameName,
+  connectionVisibleLabel,
+  frameDisplayTitle,
+} from './frameText';
 
 export { humanizeType } from './humanizeType';
 
@@ -44,7 +52,22 @@ interface Props {
   onActivateFrame: (id: string) => void;
   /** id of the sr-only canvas description, wired via aria-describedby. */
   describedById?: string;
+  /**
+   * Resolves a frame type key to the type-bar label FrameCard shows
+   * (`config.frameTypeStyles[type].label`). Falls back to DEFAULT_FRAME_STYLE
+   * label when omitted.
+   */
+  typeLabelFor?: (type: string) => string;
+  /** Connections listed after frames when `onActivateConnection` is provided. */
+  connections?: CanvasConnection[];
+  selectedConnectionId?: string | null;
+  /** Activate a connection by id — same path as a pointer click on the arrow. */
+  onActivateConnection?: (id: string) => void;
 }
+
+type ListItem =
+  | { kind: 'frame'; id: string; frame: CanvasFrame }
+  | { kind: 'connection'; id: string; connection: CanvasConnection };
 
 // ─── Presentation ─────────────────────────────────────────────────────────────
 // Visually subtle but genuinely present (NOT display:none — that would remove it
@@ -120,37 +143,21 @@ const OPTION_FOCUSED_OUTLINE: React.CSSProperties = {
   boxShadow: 'inset 0 0 0 1.5px rgba(148,163,184,0.8)',
 };
 
+// Secondary text (#94a3b8) — AA normal on the navy chrome. Empty boards have
+// no tabbable option, so the panel is forced opaque (see panelStyle below).
 const EMPTY_STYLE: React.CSSProperties = {
   fontSize: 12,
-  color: '#64748b',
+  color: '#94a3b8',
   padding: '8px 10px',
   fontStyle: 'italic',
 };
 
-// ─── Accessible name ──────────────────────────────────────────────────────────
-// title + type + status. The generic CanvasFrame has no `status` field — in this
-// package per-frame status is carried by domain BADGES (STATE / SPEC / CAM / …),
-// so the accessible name composes title + humanized type + badge texts. When a
-// frame has no badges, name is just title + type (graceful).
-
-function accessibleName(frame: CanvasFrame): string {
-  const title =
-    typeof frame.title === 'string' && frame.title.trim()
-      ? frame.title
-      : 'Untitled frame';
-  const parts: string[] = [title];
-  const type = humanizeType(frame.type);
-  if (type) parts.push(type);
-  const badges = frame.badges ?? [];
-  if (badges.length > 0) {
-    parts.push(
-      badges
-        .map(b => (typeof b.text === 'string' ? b.text : ''))
-        .filter(Boolean)
-        .join(', '),
-    );
+function headerLabel(frameCount: number, connectionCount: number): string {
+  if (connectionCount > 0 && frameCount > 0) {
+    return `Board · ${frameCount + connectionCount}`;
   }
-  return parts.join(' — ');
+  if (connectionCount > 0) return `Connections · ${connectionCount}`;
+  return `Frames${frameCount > 0 ? ` · ${frameCount}` : ''}`;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -160,8 +167,30 @@ export default function AccessibleFrameList({
   selectedFrameId,
   onActivateFrame,
   describedById,
+  typeLabelFor,
+  connections,
+  selectedConnectionId,
+  onActivateConnection,
 }: Props) {
-  const count = frames.length;
+  const includeConnections = !!onActivateConnection;
+  const items: ListItem[] = useMemo(() => {
+    const next: ListItem[] = frames.map(frame => ({
+      kind: 'frame',
+      id: frame.id,
+      frame,
+    }));
+    if (includeConnections) {
+      for (const connection of connections ?? []) {
+        next.push({ kind: 'connection', id: connection.id, connection });
+      }
+    }
+    return next;
+  }, [frames, connections, includeConnections]);
+
+  const count = items.length;
+  const frameCount = frames.length;
+  const connectionCount = includeConnections ? (connections?.length ?? 0) : 0;
+  const isEmpty = count === 0;
 
   // Index of the roving-tabindex "active" option.
   const [activeIndex, setActiveIndex] = useState(0);
@@ -173,7 +202,7 @@ export default function AccessibleFrameList({
   // steal focus from the page when selection changes for unrelated reasons.
   const wantFocusMove = useRef(false);
 
-  // ── Keep activeIndex valid as frames change ─────────────────────────────────
+  // ── Keep activeIndex valid as items change ──────────────────────────────────
   useEffect(() => {
     setActiveIndex(prev => {
       if (count === 0) return 0;
@@ -182,14 +211,24 @@ export default function AccessibleFrameList({
   }, [count]);
 
   // ── Mirror external (mouse) selection into the active option ────────────────
-  // When the canvas selection changes from outside (a mouse click on a card),
-  // move the roving active option to match so the two surfaces agree. This does
-  // NOT move DOM focus (wantFocusMove stays false) — it only realigns the list.
+  // When the canvas selection changes from outside (a mouse click on a card
+  // or connection), move the roving active option to match so the two surfaces
+  // agree. This does NOT move DOM focus (wantFocusMove stays false).
   useEffect(() => {
-    if (!selectedFrameId) return;
-    const idx = frames.findIndex(f => f.id === selectedFrameId);
-    if (idx >= 0) setActiveIndex(idx);
-  }, [selectedFrameId, frames]);
+    if (selectedFrameId) {
+      const idx = items.findIndex(
+        item => item.kind === 'frame' && item.id === selectedFrameId,
+      );
+      if (idx >= 0) setActiveIndex(idx);
+      return;
+    }
+    if (selectedConnectionId) {
+      const idx = items.findIndex(
+        item => item.kind === 'connection' && item.id === selectedConnectionId,
+      );
+      if (idx >= 0) setActiveIndex(idx);
+    }
+  }, [selectedFrameId, selectedConnectionId, items]);
 
   // ── Apply a pending keyboard-driven focus move ──────────────────────────────
   useEffect(() => {
@@ -197,6 +236,16 @@ export default function AccessibleFrameList({
     wantFocusMove.current = false;
     optionRefs.current[activeIndex]?.focus();
   }, [activeIndex]);
+
+  const activateItem = useCallback(
+    (index: number) => {
+      const item = items[index];
+      if (!item) return;
+      if (item.kind === 'frame') onActivateFrame(item.id);
+      else onActivateConnection?.(item.id);
+    },
+    [items, onActivateFrame, onActivateConnection],
+  );
 
   // ── Keydown on an option (roving tabindex + activation) ─────────────────────
   const handleOptionKeyDown = useCallback(
@@ -217,28 +266,29 @@ export default function AccessibleFrameList({
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault();
         e.stopPropagation();
-        const frame = frames[activeIndex];
-        if (frame) onActivateFrame(frame.id);
+        activateItem(activeIndex);
         return;
       }
       // Escape intentionally NOT handled/stopped here — it bubbles to the app so
       // the existing "Escape = deselect / close panels" behaviour still fires.
     },
-    [activeIndex, count, frames, onActivateFrame],
+    [activeIndex, count, activateItem],
   );
 
   const handleOptionClick = useCallback(
     (index: number) => {
       setActiveIndex(index);
-      const frame = frames[index];
-      if (frame) onActivateFrame(frame.id);
+      activateItem(index);
     },
-    [frames, onActivateFrame],
+    [activateItem],
   );
 
-  const panelStyle: React.CSSProperties = focusWithin
-    ? { ...PANEL_STYLE, ...PANEL_FOCUSED_STYLE }
-    : PANEL_STYLE;
+  // Empty boards have no tabbable option, so force the focused/opaque treatment
+  // or the role=status copy stays a low-contrast ghost in the corner.
+  const panelStyle: React.CSSProperties =
+    focusWithin || isEmpty
+      ? { ...PANEL_STYLE, ...PANEL_FOCUSED_STYLE }
+      : PANEL_STYLE;
 
   return (
     <nav
@@ -253,10 +303,10 @@ export default function AccessibleFrameList({
       }}
     >
       <div style={HEADER_STYLE} aria-hidden="true">
-        Frames{count > 0 ? ` · ${count}` : ''}
+        {headerLabel(frameCount, connectionCount)}
       </div>
 
-      {count === 0 ? (
+      {isEmpty ? (
         // Graceful empty state — a real, announced status, not a crash.
         <div role="status" style={EMPTY_STYLE}>
           No frames on this board.
@@ -268,25 +318,40 @@ export default function AccessibleFrameList({
           aria-describedby={describedById}
           style={LIST_STYLE}
         >
-          {frames.map((frame, index) => {
-            const isSelected = frame.id === selectedFrameId;
+          {items.map((item, index) => {
+            const isSelected =
+              item.kind === 'frame'
+                ? item.id === selectedFrameId
+                : item.id === selectedConnectionId;
             const isActive = index === activeIndex;
             const style: React.CSSProperties = {
               ...OPTION_STYLE,
               ...(isSelected ? OPTION_SELECTED_STYLE : null),
               ...(isActive && focusWithin ? OPTION_FOCUSED_OUTLINE : null),
             };
+            const name =
+              item.kind === 'frame'
+                ? accessibleFrameName(item.frame, typeLabelFor)
+                : accessibleConnectionName(item.connection, frames);
+            const visible =
+              item.kind === 'frame'
+                ? frameDisplayTitle(item.frame.title)
+                : connectionVisibleLabel(item.connection);
+            const swatchColor =
+              item.kind === 'frame' && item.frame.badges && item.frame.badges[0]
+                ? item.frame.badges[0].color
+                : '#475569';
             return (
               <li
-                key={frame.id}
+                key={`${item.kind}-${item.id}`}
                 ref={el => {
                   optionRefs.current[index] = el;
                 }}
                 role="option"
                 aria-selected={isSelected}
                 aria-current={isSelected ? 'true' : undefined}
-                aria-label={accessibleName(frame)}
-                title={accessibleName(frame)}
+                aria-label={name}
+                title={name}
                 // Roving tabindex: exactly one option is tabbable at a time.
                 tabIndex={isActive ? 0 : -1}
                 style={style}
@@ -295,17 +360,24 @@ export default function AccessibleFrameList({
               >
                 <span
                   aria-hidden="true"
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    flexShrink: 0,
-                    background:
-                      frame.badges && frame.badges[0]
-                        ? frame.badges[0].color
-                        : '#475569',
-                  }}
-                />
+                  style={
+                    item.kind === 'frame'
+                      ? {
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          flexShrink: 0,
+                          background: swatchColor,
+                        }
+                      : {
+                          flexShrink: 0,
+                          color: '#94a3b8',
+                          fontSize: 11,
+                        }
+                  }
+                >
+                  {item.kind === 'connection' ? '→' : null}
+                </span>
                 <span
                   style={{
                     overflow: 'hidden',
@@ -313,9 +385,7 @@ export default function AccessibleFrameList({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {typeof frame.title === 'string' && frame.title.trim()
-                    ? frame.title
-                    : 'Untitled frame'}
+                  {visible}
                 </span>
               </li>
             );

@@ -19,8 +19,14 @@ export interface ReconcilePositionsResult {
 
 const ORIGIN = { x: 0, y: 0 };
 
+/** Substitute card size when width/height are non-finite (NaN/±Infinity). */
+export const DEFAULT_FRAME_SIZE = { width: 200, height: 120 };
+
 /** Once-per-id breadcrumb for non-finite position fallbacks (mirrors F-CI-208). */
 const warnedNonFiniteIds = new Set<string>();
+
+/** Once-per-id breadcrumb for non-finite size fallbacks. */
+const warnedNonFiniteSizeIds = new Set<string>();
 
 /**
  * Return a finite canvas position. Non-finite x/y (NaN/±Infinity) fall back to
@@ -44,6 +50,30 @@ export function ensureFinitePosition(
     );
   }
   return { ...ORIGIN };
+}
+
+/**
+ * Return a finite card size. Non-finite width/height fall back to
+ * DEFAULT_FRAME_SIZE so FrameCard never creates poisoned Konva geometry.
+ */
+export function ensureFiniteSize(
+  size: { width: number; height: number } | null | undefined,
+  frameId?: string,
+): { width: number; height: number } {
+  if (
+    size != null &&
+    Number.isFinite(size.width) &&
+    Number.isFinite(size.height)
+  ) {
+    return { width: size.width, height: size.height };
+  }
+  if (frameId !== undefined && !warnedNonFiniteSizeIds.has(frameId)) {
+    warnedNonFiniteSizeIds.add(frameId);
+    console.warn(
+      `[storyboard-canvas] Non-finite size for frame ${frameId}; falling back to {width:${DEFAULT_FRAME_SIZE.width},height:${DEFAULT_FRAME_SIZE.height}}.`,
+    );
+  }
+  return { ...DEFAULT_FRAME_SIZE };
 }
 
 function samePoint(

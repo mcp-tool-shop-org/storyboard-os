@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
+  DEFAULT_FRAME_SIZE,
   ensureFinitePosition,
+  ensureFiniteSize,
   reconcilePositions,
   shouldAutoFit,
 } from './positions';
@@ -144,6 +146,32 @@ describe('ensureFinitePosition', () => {
   it('falls back to origin for null/undefined', () => {
     expect(ensureFinitePosition(null)).toEqual({ x: 0, y: 0 });
     expect(ensureFinitePosition(undefined)).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('ensureFiniteSize', () => {
+  it('returns a copy of finite dimensions', () => {
+    expect(ensureFiniteSize({ width: 220, height: 140 })).toEqual({
+      width: 220,
+      height: 140,
+    });
+  });
+
+  it('falls back to DEFAULT_FRAME_SIZE for NaN', () => {
+    expect(ensureFiniteSize({ width: Number.NaN, height: 140 })).toEqual(
+      DEFAULT_FRAME_SIZE,
+    );
+  });
+
+  it('falls back to DEFAULT_FRAME_SIZE for Infinity', () => {
+    expect(
+      ensureFiniteSize({ width: 220, height: Number.POSITIVE_INFINITY }),
+    ).toEqual(DEFAULT_FRAME_SIZE);
+  });
+
+  it('falls back to DEFAULT_FRAME_SIZE for null/undefined', () => {
+    expect(ensureFiniteSize(null)).toEqual(DEFAULT_FRAME_SIZE);
+    expect(ensureFiniteSize(undefined)).toEqual(DEFAULT_FRAME_SIZE);
   });
 });
 
