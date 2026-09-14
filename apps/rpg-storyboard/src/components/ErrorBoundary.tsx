@@ -32,6 +32,14 @@ interface Props {
    * surface wants different wording (e.g. project board vs template preview).
    */
   fallbackTitle?: string;
+  /**
+   * Override the canvas-only body. List/handoff surfaces must pass their own
+   * copy so a throw does not claim "the interactive board" failed.
+   */
+  fallbackBody?: string;
+  /** Optional recovery link when `handoffHref` is the wrong destination. */
+  fallbackCtaHref?: string;
+  fallbackCtaLabel?: string;
 }
 
 interface State {
@@ -62,20 +70,25 @@ export default class ErrorBoundary extends React.Component<Props, State> {
     if (!this.state.hasError) return this.props.children;
 
     const title = this.props.fallbackTitle ?? 'Canvas failed to load';
-    const href = this.props.handoffHref;
+    const body = this.props.fallbackBody
+      ?? (this.props.fallbackTitle
+        ? 'This view could not be rendered. Your data is unchanged.'
+        : 'The interactive board could not be rendered in this browser. Your data is unchanged — only the canvas view failed.');
+    const href = this.props.fallbackCtaHref ?? this.props.handoffHref;
+    const ctaLabel = this.props.fallbackCtaLabel
+      ?? (this.props.handoffHref && !this.props.fallbackCtaHref
+        ? 'View the handoff brief →'
+        : 'Continue →');
 
     return (
       <div role="alert" style={fallbackStyles.root}>
         <div style={fallbackStyles.card}>
           <span style={fallbackStyles.icon} aria-hidden="true">⚠</span>
           <h2 style={fallbackStyles.title}>{title}</h2>
-          <p style={fallbackStyles.body}>
-            The interactive board could not be rendered in this browser. Your
-            data is unchanged — only the canvas view failed.
-          </p>
+          <p style={fallbackStyles.body}>{body}</p>
           {href && (
             <a href={href} style={fallbackStyles.cta}>
-              View the handoff brief →
+              {ctaLabel}
             </a>
           )}
           {this.state.message && (

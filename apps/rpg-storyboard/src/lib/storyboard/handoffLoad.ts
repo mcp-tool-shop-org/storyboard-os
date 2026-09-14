@@ -14,21 +14,30 @@ import {
 export type HandoffLoadResult =
   | { status: 'ok'; handoff: ProjectHandoff; boardHref: string }
   | { status: 'not_found' }
+  | { status: 'store_unreadable' }
   | { status: 'generate_failed'; message: string; boardHref: string };
 
 /**
  * Resolve a project id into a handoff artifact, or a distinct failure mode.
  * `getProject` is injected so tests can drive missing/found without localStorage.
+ * After a miss, `getReadWarning` distinguishes a corrupt store from a genuine
+ * not-found — STORE_UNREADABLE must not look like data loss.
  */
 export function loadProjectHandoff(
   id: string | null | undefined,
   getProject: (id: string) => RpgStoryboardProject | undefined,
   generate: (project: RpgStoryboardProject) => ProjectHandoff = generateProjectHandoff,
+  getReadWarning?: () => { code: string } | null,
 ): HandoffLoadResult {
   if (!id) return { status: 'not_found' };
 
   const project = getProject(id);
-  if (!project) return { status: 'not_found' };
+  if (!project) {
+    if (getReadWarning?.()?.code === 'STORE_UNREADABLE') {
+      return { status: 'store_unreadable' };
+    }
+    return { status: 'not_found' };
+  }
 
   const boardHref = `/projects/board?id=${id}`;
   try {

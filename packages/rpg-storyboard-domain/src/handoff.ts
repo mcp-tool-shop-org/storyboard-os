@@ -34,6 +34,12 @@ export interface HandoffBranch {
   toTitle: string;
 }
 
+/** Frame annotation carried into the handoff (type + text; ids are authoring-only). */
+export interface HandoffAnnotation {
+  type: string;
+  text: string;
+}
+
 /**
  * A single beat in the quest handoff — everything a developer needs to
  * implement this beat in an RPG engine.
@@ -67,6 +73,12 @@ export interface HandoffBeat {
   testCriteria: string[];
   /** Spoilers / hidden implementation notes — author/designer facing only. */
   authorOnlyNotes: string[];
+
+  /**
+   * Typed frame annotations (timing, danger, designer_note, branch_note, …).
+   * Seeded by templates and editable on project boards — not preview-only.
+   */
+  annotations: HandoffAnnotation[];
 
   // ── Graph context ─────────────────────────────────────────────────────────
   /** Branches leading OUT from this beat. Empty for terminal beats. */
@@ -252,6 +264,10 @@ function buildBeat(
     implementationChecklist: content.implementationChecklist ?? [],
     testCriteria:          content.testCriteria          ?? [],
     authorOnlyNotes:       content.authorOnlyNotes       ?? [],
+    annotations:           (frame.annotations ?? []).map(a => ({
+      type: a.type,
+      text: a.text,
+    })),
 
     outgoingBranches,
     incomingFromIds,
@@ -333,16 +349,25 @@ function connTypeLabel(type: string): string {
 
 /**
  * Neutralize markdown-structural characters in INLINE user text:
- * - backticks → escaped so user text cannot open/close code spans
+ * - backticks / backslashes → escaped so user text cannot open code spans
  * - pipes     → escaped so user text cannot add/split table cells
+ * - `*` `_`   → escaped so emphasis cannot reshape structure
+ * - `[` `]` `(` `)` → escaped so link/image syntax stays inert
  * - `<`       → `&lt;` so stray inline HTML stays inert
  * - a leading `#` / `>` / `-` (per line) → escaped so user text cannot
  *   introduce headings, blockquotes, or list items
  */
 function escapeMarkdownInline(text: string): string {
   return text
+    .replace(/\\/g, '\\\\')
     .replace(/`/g, '\\`')
     .replace(/\|/g, '\\|')
+    .replace(/\*/g, '\\*')
+    .replace(/_/g, '\\_')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
     .replace(/</g, '&lt;')
     .replace(/^([#>-])/gm, '\\$1');
 }
@@ -373,6 +398,31 @@ function blockquote(text: string): string {
     .split('\n')
     .map(line => `> ${line}`)
     .join('\n');
+}
+
+const ANNOTATION_LABELS: Record<string, string> = {
+  designer_note:  'Designer Note',
+  player_visible: 'Player Visible',
+  author_only:    'Author Only',
+  danger:         'Danger',
+  timing:         'Timing',
+  branch_note:    'Branch Note',
+};
+
+function annotationLabel(type: string): string {
+  return ANNOTATION_LABELS[type] ?? type.replace(/_/g, ' ');
+}
+
+function annotationMarkdown(
+  annotations: HandoffAnnotation[] | undefined,
+  esc: (s: string) => string,
+): string[] {
+  if (!annotations || annotations.length === 0) return [];
+  return [
+    '',
+    '**Annotations:**',
+    ...annotations.map(a => `- **${esc(annotationLabel(a.type))}:** ${esc(a.text)}`),
+  ];
 }
 
 function renderBeat(beat: HandoffBeat, index: number): string {
@@ -474,6 +524,8 @@ function renderBeat(beat: HandoffBeat, index: number): string {
     sections.push(bulletLines(beat.authorOnlyNotes.map(esc)));
   }
 
+  sections.push(...annotationMarkdown(beat.annotations, esc));
+
   // Outgoing branches
   sections.push('');
   if (beat.outgoingBranches.length === 0) {
@@ -536,7 +588,7 @@ export function generateMarkdown(handoff: QuestHandoff): string {
   sections.push('');
 
   if (handoff.description) {
-    sections.push(`> ${escapeMarkdownInline(handoff.description)}`);
+    sections.push(blockquote(escapeMarkdownInline(handoff.description)));
     sections.push('');
   }
 
@@ -766,6 +818,8 @@ function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
     sections.push(bulletLines(beat.authorOnlyNotes.map(esc)));
   }
 
+  sections.push(...annotationMarkdown(beat.annotations, esc));
+
   sections.push('');
   if (beat.outgoingBranches.length === 0) {
     if (beat.status !== 'draft') sections.push('**Outgoing:** none — terminal beat');
@@ -822,7 +876,7 @@ export function generateProjectMarkdown(handoff: ProjectHandoff): string {
   sections.push('');
 
   if (handoff.description) {
-    sections.push(`> ${escapeMarkdownInline(handoff.description)}`);
+    sections.push(blockquote(escapeMarkdownInline(handoff.description)));
     sections.push('');
   }
 

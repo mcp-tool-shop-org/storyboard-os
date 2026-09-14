@@ -14,13 +14,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   generateProjectMarkdown,
+  generateProjectHandoff,
   type ProjectHandoff,
   type ProjectHandoffBeat,
   type BeatStatusLevel,
 } from '@storyboard-os/rpg-domain';
-import { getProject } from '../../lib/storyboard/projectStorage';
+import { getProject, getLastReadWarning } from '../../lib/storyboard/projectStorage';
 import { loadProjectHandoff } from '../../lib/storyboard/handoffLoad';
 import ErrorBoundary from '../ErrorBoundary';
+import CorruptStoreRecovery from './CorruptStoreRecovery';
 
 // ─── Const display maps ───────────────────────────────────────────────────────
 
@@ -44,6 +46,15 @@ const CONN_LABELS: Record<string, string> = {
   consequence: 'consequence',
   optional:    'optional',
   fallback:    'fallback',
+};
+
+const ANNOTATION_LABELS: Record<string, string> = {
+  designer_note:  'Designer Note',
+  player_visible: 'Player Visible',
+  author_only:    'Author Only',
+  danger:         'Danger',
+  timing:         'Timing',
+  branch_note:    'Branch Note',
 };
 
 // Short noun-phrase labels for the Partial-section "missing: ..." list.
@@ -79,6 +90,7 @@ function download(content: string, name: string, type: string) {
 
 type LoadError =
   | { kind: 'not_found' }
+  | { kind: 'store_unreadable' }
   | { kind: 'generate_failed'; message: string; boardHref: string };
 
 function ProjectHandoffPageInner() {
@@ -91,7 +103,12 @@ function ProjectHandoffPageInner() {
     // Distinct not-found vs generate-failed — generation throws must not look
     // like the project vanished (F-9462df76).
     const params = new URLSearchParams(window.location.search);
-    const result = loadProjectHandoff(params.get('id'), getProject);
+    const result = loadProjectHandoff(
+      params.get('id'),
+      getProject,
+      generateProjectHandoff,
+      getLastReadWarning,
+    );
     if (result.status === 'ok') {
       setBoardHref(result.boardHref);
       setHandoff(result.handoff);
@@ -108,6 +125,11 @@ function ProjectHandoffPageInner() {
         boardHref: result.boardHref,
       });
       setBoardHref(result.boardHref);
+      setLoading(false);
+      return;
+    }
+    if (result.status === 'store_unreadable') {
+      setLoadError({ kind: 'store_unreadable' });
       setLoading(false);
       return;
     }
@@ -129,6 +151,9 @@ function ProjectHandoffPageInner() {
   }, [handoff]);
 
   if (loading) return <StateScreen text="Generating handoff…" />;
+  if (loadError?.kind === 'store_unreadable') {
+    return <CorruptStoreRecovery />;
+  }
   if (loadError?.kind === 'not_found') {
     return <StateScreen text="Project not found." link="/projects" linkLabel="← Projects" />;
   }
@@ -299,7 +324,12 @@ function ProjectHandoffPageInner() {
 // visible fallback with a route back to the projects list.
 export default function ProjectHandoffPage() {
   return (
-    <ErrorBoundary fallbackTitle="Handoff failed to render">
+    <ErrorBoundary
+      fallbackTitle="Handoff failed to render"
+      fallbackBody="The handoff document could not be rendered. Your project data is unchanged — only this view failed."
+      fallbackCtaHref="/projects"
+      fallbackCtaLabel="← Projects"
+    >
       <ProjectHandoffPageInner />
     </ErrorBoundary>
   );
@@ -455,6 +485,26 @@ function BeatCard({ beat, index }: { beat: ProjectHandoffBeat; index: number }) 
         {beat.authorOnlyNotes.length > 0 && (
           <BeatField label="Designer/Author-only Notes" accentColor="#A78BFA">
             <ItemList items={beat.authorOnlyNotes} />
+          </BeatField>
+        )}
+
+        {(beat.annotations?.length ?? 0) > 0 && (
+          <BeatField label="Annotations" accentColor="#F97316">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(beat.annotations ?? []).map((ann, i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+                    textTransform: 'uppercase', color: '#fdba74',
+                  }}>
+                    {ANNOTATION_LABELS[ann.type] ?? ann.type.replace(/_/g, ' ')}
+                  </span>
+                  <span style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>
+                    {ann.text}
+                  </span>
+                </div>
+              ))}
+            </div>
           </BeatField>
         )}
 

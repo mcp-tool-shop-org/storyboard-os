@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   listProjects,
   getLastReadWarning,
-  getRawStoreBlob,
+  downloadRawStoreBlob,
   deleteProject,
   type ReadWarning,
 } from '../../lib/storyboard/projectStorage';
@@ -45,19 +45,11 @@ function readWarningTitle(warning: ReadWarning): string {
   }
 }
 
-function downloadRawStoreBlob(): void {
-  const raw = getRawStoreBlob();
-  if (raw === null || raw === '') {
+function handleDownloadRawBlob(): void {
+  const ok = downloadRawStoreBlob();
+  if (!ok) {
     window.alert('No raw storage blob is present for this origin.');
-    return;
   }
-  const blob = new Blob([raw], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'rpg-sb-projects-raw.json';
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 function ProjectListInner() {
@@ -165,7 +157,7 @@ function ProjectListInner() {
           {emptyCopy.offerRawDownload && (
             <button
               type="button"
-              onClick={downloadRawStoreBlob}
+              onClick={handleDownloadRawBlob}
               style={styles.emptyBtnSecondary}
             >
               Download raw storage blob
@@ -227,7 +219,10 @@ function ProjectListInner() {
 // blank the whole page. The boundary keeps the failure visible and recoverable.
 export default function ProjectList() {
   return (
-    <ErrorBoundary fallbackTitle="Project list failed to load">
+    <ErrorBoundary
+      fallbackTitle="Project list failed to load"
+      fallbackBody="The project list could not be rendered. Your saved projects are unchanged — only this view failed."
+    >
       <ProjectListInner />
     </ErrorBoundary>
   );

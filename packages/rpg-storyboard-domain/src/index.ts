@@ -75,6 +75,7 @@ export {
 
 export type {
   HandoffBranch,
+  HandoffAnnotation,
   HandoffBeat,
   HandoffReadinessSummary,
   QuestHandoff,
@@ -87,6 +88,7 @@ export {
   updateFramePosition,
   updateFrameBasics,
   updateFrameContent,
+  updateFrameAnnotations,
   setChecklistItemComplete,
   setTestCriterionComplete,
   getFrameProgress,

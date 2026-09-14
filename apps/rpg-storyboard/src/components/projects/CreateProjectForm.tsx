@@ -17,12 +17,14 @@ export default function CreateProjectForm({ templateId }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) {
       setError('Project title is required.');
+      setErrorCode(null);
       return;
     }
     setSubmitting(true);
@@ -43,6 +45,7 @@ export default function CreateProjectForm({ templateId }: Props) {
         : result.code === 'STORE_CORRUPT'
           ? 'Storage corrupt — '
           : 'Save failed — ';
+      setErrorCode(result.code);
       setError(`${prefix}${result.message}`);
       return;
     }
@@ -66,7 +69,7 @@ export default function CreateProjectForm({ templateId }: Props) {
         <input
           type="text"
           value={title}
-          onChange={e => { setTitle(e.target.value); setError(''); }}
+          onChange={e => { setTitle(e.target.value); setError(''); setErrorCode(null); }}
           placeholder={`My ${templateName}`}
           autoFocus
           required
@@ -75,11 +78,13 @@ export default function CreateProjectForm({ templateId }: Props) {
         {error && (
           <span style={styles.errorMsg} role="alert">
             {error}
-            {(error.startsWith('Storage full') || error.startsWith('Storage corrupt')) && (
+            {(errorCode === 'QUOTA_EXCEEDED' || errorCode === 'STORE_CORRUPT') && (
               <>
                 {' '}
                 <a href="/projects" style={styles.errorLink}>
-                  Open Projects to delete →
+                  {errorCode === 'STORE_CORRUPT'
+                    ? 'Open Projects to recover storage →'
+                    : 'Open Projects to delete →'}
                 </a>
               </>
             )}

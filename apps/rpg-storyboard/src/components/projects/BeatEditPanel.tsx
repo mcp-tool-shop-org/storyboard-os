@@ -1,7 +1,7 @@
 // ─── BeatEditPanel.tsx ────────────────────────────────────────────────────────
 //
 // Inline edit form for a single storyboard beat (project boards only).
-// Edits title + summary (basics) and all FrameContent implementation fields.
+// Edits title + summary (basics), FrameContent fields, and frame annotations.
 //
 // Array fields are presented as one-item-per-line textareas.
 // No rich text, no collaboration features — just saved implementation content.
@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
-import type { StoryboardFrame, StoryboardFrameType } from '../../lib/storyboard/schema';
+import type { StoryboardFrame, StoryboardFrameType, FrameAnnotation, FrameAnnotationType } from '../../lib/storyboard/schema';
 import type { FrameBasicsPatch } from '../../lib/storyboard/project';
 import type { FrameContent } from '@storyboard-os/rpg-domain';
 
@@ -50,11 +50,48 @@ function linesToArr(text: string): string[] {
     .filter(Boolean);
 }
 
+const ANNOTATION_TYPES: FrameAnnotationType[] = [
+  'designer_note',
+  'player_visible',
+  'author_only',
+  'danger',
+  'timing',
+  'branch_note',
+];
+
+const ANNOTATION_TYPE_SET = new Set<string>(ANNOTATION_TYPES);
+
+function formatAnnotations(annotations: FrameAnnotation[]): string {
+  return annotations.map(a => `${a.type}: ${a.text}`).join('\n');
+}
+
+function parseAnnotations(text: string, existing: FrameAnnotation[]): FrameAnnotation[] {
+  const lines = linesToArr(text);
+  return lines.map((line, i) => {
+    const match = line.match(/^([a-z_]+):\s*(.*)$/i);
+    const rawType = match ? match[1].toLowerCase() : '';
+    const type: FrameAnnotationType = ANNOTATION_TYPE_SET.has(rawType)
+      ? (rawType as FrameAnnotationType)
+      : 'designer_note';
+    const noteText = match && ANNOTATION_TYPE_SET.has(rawType) ? match[2] : line;
+    const prev = existing[i];
+    return {
+      id: prev?.id ?? `ann-${i}-${type}`,
+      type,
+      text: noteText,
+    };
+  });
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
   frame: StoryboardFrame;
-  onSave: (basics: FrameBasicsPatch, content: Partial<FrameContent>) => void;
+  onSave: (
+    basics: FrameBasicsPatch,
+    content: Partial<FrameContent>,
+    annotations: FrameAnnotation[],
+  ) => void;
   onCancel: () => void;
 }
 
@@ -88,6 +125,7 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
   const [testCriteria,           setTestCriteria]           = useState(arrToLines(existing.testCriteria));
   const [implementationChecklist,setImplementationChecklist] = useState(arrToLines(existing.implementationChecklist));
   const [authorOnlyNotes,        setAuthorOnlyNotes]        = useState(arrToLines(existing.authorOnlyNotes));
+  const [annotationsText,        setAnnotationsText]        = useState(formatAnnotations(frame.annotations ?? []));
 
   function handleSave() {
     const basics: FrameBasicsPatch = {};
@@ -110,7 +148,7 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
       authorOnlyNotes:        linesToArr(authorOnlyNotes),
     };
 
-    onSave(basics, content);
+    onSave(basics, content, parseAnnotations(annotationsText, frame.annotations ?? []));
   }
 
   return (
@@ -301,7 +339,17 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
             onChange={e => setAuthorOnlyNotes(e.target.value)}
             rows={3}
             style={taStyle}
-            placeholder="Private authoring notes (not shown in handoff)"
+            placeholder="Spoilers / hidden logic — included in the handoff, not in-game copy"
+          />
+        </Section>
+
+        <Section label="Annotations (type: text, one per line)" accent={accent}>
+          <textarea
+            value={annotationsText}
+            onChange={e => setAnnotationsText(e.target.value)}
+            rows={4}
+            style={taStyle}
+            placeholder="timing: Target 5–10 minutes of play time."
           />
         </Section>
 
