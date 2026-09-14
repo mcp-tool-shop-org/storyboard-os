@@ -16,7 +16,16 @@ export type {
 } from './types';
 
 export type { ViewState } from './viewport';
-export { DEFAULT_VIEW_STATE, MIN_SCALE, MAX_SCALE } from './viewport';
+export {
+  DEFAULT_VIEW_STATE,
+  MIN_SCALE,
+  MAX_SCALE,
+  fitViewToFrames,
+  centerOnFrame,
+  zoomAtPoint,
+  zoomFromCenter,
+  clampScale,
+} from './viewport';
 
 // VP-011: single source of truth for the neutral fallback styles. App canvas
 // configs should reference these instead of hand-copying the same literals into

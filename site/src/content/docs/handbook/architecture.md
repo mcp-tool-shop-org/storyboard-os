@@ -117,12 +117,12 @@ Does not import from any app, `@storyboard-os/canvas`, `@storyboard-os/routing`,
 
 **Key exports:**
 - Frame signals: `getMarketingFrameBadges()`, `getMarketingFrameSignal()`
-- Beat status: `getMarketingBeatStatus()`, `getCampaignReadiness()`
+- Beat status: `getCampaignBeatStatus()`, `getCampaignReadiness()`
 - Launch readiness: `getCampaignLaunchReadiness()`, `getCampaignCriticalPath()`
 - Approval gates: `getApprovalGateSignals()`
 - Measurement loops: `getMeasurementLoopSignals()`
-- Templates: product_launch, brand_awareness, content_campaign
-- Handoff: `generateCampaignBrief()`, `generateCampaignMarkdown()`
+- Templates: product_launch, brand_awareness, content_campaign — `createCampaignFromTemplate()`
+- Handoff: `generateCampaignHandoff(board)` → `CampaignHandoff`, then `generateCampaignMarkdown(handoff)`
 
 ### What the marketing domain is NOT
 

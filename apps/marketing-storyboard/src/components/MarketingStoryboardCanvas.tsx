@@ -38,7 +38,7 @@ import {
     type Storyboard,
     type StoryboardFrame,
 } from '@storyboard-os/marketing-domain';
-import { statusColors, textColors, typeScale } from '@storyboard-os/core';
+import { statusColors, statusLabels, textColors, typeScale } from '@storyboard-os/core';
 import {
     categorizeApprovalSignals,
     shouldShowLaunchBlockersPanel,
@@ -567,7 +567,7 @@ function ReadinessCounts({ summary }: { summary: ReturnType<typeof getCampaignRe
             {chips.map(({ level, count }) => (
                 <span
                     key={level}
-                    title={`${count} ${level}`}
+                    title={`${count} ${statusLabels[level]}`}
                     style={{
                         fontSize: 10, fontWeight: 700,
                         padding: '2px 6px', borderRadius: 3,
@@ -577,7 +577,7 @@ function ReadinessCounts({ summary }: { summary: ReturnType<typeof getCampaignRe
                         letterSpacing: '0.04em',
                     }}
                 >
-                    {count} {level.toUpperCase()}
+                    {count} {statusLabels[level]}
                 </span>
             ))}
         </div>

@@ -21,6 +21,7 @@ import {
 import { statusColors, statusLabels, textColors } from '@storyboard-os/core';
 import type { FrameProgress } from '../../lib/storyboard/project';
 import { frameRoute } from '../../lib/storyboard/routes';
+import { isSsgPreviewStoryboardId } from '../../lib/storyboard/templatePreviews';
 
 // ─── Type display config ──────────────────────────────────────────────────────
 // Accents come from the shared @storyboard-os/core token API (statusColors) so
@@ -65,6 +66,15 @@ const STATUS_LABELS: Record<BeatStatusLevel, string> = {
   blocked: statusLabels.blocked,
 };
 
+const ANNOTATION_LABELS: Record<string, string> = {
+  designer_note:  'Designer Note',
+  player_visible: 'Player Visible',
+  author_only:    'Author Only',
+  danger:         'Danger',
+  timing:         'Timing',
+  branch_note:    'Branch Note',
+};
+
 const REASON_LABELS: Record<MissingSpecReason, string> = {
   no_state_changes:             'State changes required for this frame type',
   no_entry_or_state_change:     'Entry conditions or state changes required for reveal',
@@ -94,6 +104,7 @@ const TYPE_FALLBACK_COLOR = '#475569';
 
 export default function FrameInspector({ frame, storyboardId, onClose, onEditClick, frameProgress, onChecklistChange, onTestCriterionChange }: Props) {
   const route  = frameRoute(storyboardId, frame.id);
+  const canOpenFramePage = isSsgPreviewStoryboardId(storyboardId);
   const accent = TYPE_COLORS[frame.type] ?? TYPE_FALLBACK_COLOR;
   const typeLabel = TYPE_LABELS[frame.type] ?? String(frame.type).replace(/_/g, ' ').toUpperCase();
   const status = getBeatStatus(frame);
@@ -294,6 +305,15 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
             value={content.possibleOutcomes.map((o, i) => `${i + 1}. ${o}`).join('\n')}
           />
         )}
+        {(frame.annotations ?? []).length > 0 && (
+          <Field
+            label="Annotations"
+            value={(frame.annotations ?? []).map(a => {
+              const label = ANNOTATION_LABELS[a.type] ?? a.type.replace(/_/g, ' ');
+              return `${label}: ${a.text}`;
+            }).join('\n\n')}
+          />
+        )}
       </div>
 
       {/* ── Footer actions ────────────────────────────────────────────────────── */}
@@ -311,22 +331,26 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
             Edit Beat ✎
           </button>
         )}
-        <a
-          href={route}
-          style={{
-            display: 'block', padding: '10px 16px', textAlign: 'center',
-            background: onEditClick ? 'rgba(255,255,255,0.05)' : accent,
-            color: onEditClick ? textColors.secondary : '#fff',
-            border: onEditClick ? '1px solid rgba(255,255,255,0.1)' : 'none',
-            fontWeight: 700, fontSize: 13, textDecoration: 'none',
-            borderRadius: 6, letterSpacing: '0.02em',
-          }}
-        >
-          Open Frame Page →
-        </a>
-        <p style={{ marginTop: 0, fontSize: 10, color: textColors.muted, textAlign: 'center', fontFamily: 'monospace' }}>
-          {route}
-        </p>
+        {canOpenFramePage && (
+          <>
+            <a
+              href={route}
+              style={{
+                display: 'block', padding: '10px 16px', textAlign: 'center',
+                background: onEditClick ? 'rgba(255,255,255,0.05)' : accent,
+                color: onEditClick ? textColors.secondary : '#fff',
+                border: onEditClick ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                fontWeight: 700, fontSize: 13, textDecoration: 'none',
+                borderRadius: 6, letterSpacing: '0.02em',
+              }}
+            >
+              Open Frame Page →
+            </a>
+            <p style={{ marginTop: 0, fontSize: 10, color: textColors.muted, textAlign: 'center', fontFamily: 'monospace' }}>
+              {route}
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

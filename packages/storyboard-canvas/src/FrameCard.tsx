@@ -12,6 +12,12 @@ import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { CanvasFrame, CanvasFrameStyle, CanvasBadge } from './types';
 import { DEFAULT_FRAME_STYLE } from './defaults';
+import { ensureFiniteSize } from './positions';
+import {
+  badgesWithText,
+  frameDisplaySummary,
+  frameDisplayTitle,
+} from './frameText';
 
 const TYPE_BAR_HEIGHT = 26;
 const PADDING = 10;
@@ -49,7 +55,8 @@ function measureBadgeTextWidth(text: string): number {
     return badgeMeasureNode.measureSize(text).width;
   } catch {
     // Defensive fallback (no canvas context available): the old heuristic.
-    return text.length * 6.5;
+    // Guard typeof — a non-string here used to throw on `.length`.
+    return (typeof text === 'string' ? text.length : 0) * 6.5;
   }
 }
 
@@ -193,8 +200,10 @@ export default function FrameCard({
   onSelect,
   onDragEnd,
 }: Props) {
-  const { width, height } = frame.size;
-  const badges = frame.badges ?? [];
+  const { width, height } = ensureFiniteSize(frame.size, frame.id);
+  const title = frameDisplayTitle(frame.title);
+  const summary = frameDisplaySummary(frame.summary);
+  const badges = badgesWithText(frame.badges);
   const innerWidth = width - PADDING * 2;
 
   // VP-010: lay badges out (measured widths, wrap, clamp) instead of a naive
@@ -268,7 +277,7 @@ export default function FrameCard({
       <Text
         x={PADDING} y={TITLE_Y}
         width={width - PADDING * 2}
-        text={frame.title}
+        text={title}
         fontSize={13}
         fontStyle="bold"
         fill="#f1f5f9"
@@ -282,7 +291,7 @@ export default function FrameCard({
         x={PADDING} y={SUMMARY_Y}
         width={width - PADDING * 2}
         height={summaryMaxHeight}
-        text={frame.summary}
+        text={summary}
         fontSize={11}
         fill="#94a3b8"
         wrap="word"

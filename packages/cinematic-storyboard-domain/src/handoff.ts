@@ -3,7 +3,24 @@
 import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
 import { getCinematicBeatStatus } from './beatStatus';
 import { parseDurationRange } from './productionSignals';
+import {
+  humanizeConnectionType,
+  humanizeFrameType,
+  humanizeMissingReason,
+  humanizeStatus,
+} from './labels';
 export { parseDurationSeconds } from './productionSignals';
+export {
+  humanizeConnectionType,
+  humanizeFrameType,
+  humanizeMissingReason,
+  humanizeStatus,
+  FRAME_TYPE_LABELS,
+  STATUS_LABELS,
+  CONNECTION_TYPE_LABELS,
+  CONNECTION_TYPE_COLORS,
+  getConnectionTypeColor,
+} from './labels';
 
 // ─── Markdown escaping (DM-004) ───────────────────────────────────────────────
 //
@@ -109,23 +126,37 @@ export interface ProductionBriefShot {
   checklist: string[];
   testCriteria: string[];
   status: string;
+  /** Beat-status reason codes; omitted when empty so ready shots stay quiet. */
+  missingReasons?: string[];
+}
+
+export interface ProductionBriefConnection {
+  id: string;
+  fromFrameId: string;
+  toFrameId: string;
+  fromTitle: string;
+  toTitle: string;
+  /** Raw connection enum — humanize only in markdown/HTML. */
+  type: string;
 }
 
 /**
  * Current handoff artifact schema version. Bump when the shape changes in a way
  * a downstream importer must branch on. Stamped onto every generated brief so
  * future consumers have a discriminator (PR-004).
+ * 2: connections + optional missingReasons on shots.
  */
-export const HANDOFF_FORMAT_VERSION = 1;
+export const HANDOFF_FORMAT_VERSION = 2;
 
 export interface ProductionBrief {
-  /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
-  formatVersion: 1;
+  /** Schema discriminator for downstream importers (PR-004). */
+  formatVersion: number;
   title: string;
   description: string;
   totalShots: number;
   totalDuration: string;
   shots: ProductionBriefShot[];
+  connections: ProductionBriefConnection[];
   readySummary: { ready: number; partial: number; draft: number; blocked: number };
 }
 
@@ -165,7 +196,7 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
     if (content.cameraAngle) cameraParts.push(content.cameraAngle);
     if (content.cameraMovement) cameraParts.push(content.cameraMovement);
 
-    return {
+    const shot: ProductionBriefShot = {
       frameId: frame.id,
       shotNumber: i + 1,
       title: frame.title,
@@ -186,7 +217,21 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
       testCriteria: content.testCriteria ?? [],
       status: status.level,
     };
+    if (status.missingReasons.length > 0) {
+      shot.missingReasons = status.missingReasons;
+    }
+    return shot;
   });
+
+  const frameTitle = new Map(storyboard.frames.map(f => [f.id, f.title]));
+  const connections: ProductionBriefConnection[] = (storyboard.connections ?? []).map(conn => ({
+    id: conn.id,
+    fromFrameId: conn.fromFrameId,
+    toFrameId: conn.toFrameId,
+    fromTitle: frameTitle.get(conn.fromFrameId) ?? conn.fromFrameId,
+    toTitle: frameTitle.get(conn.toFrameId) ?? conn.toFrameId,
+    type: conn.type,
+  }));
 
   return {
     formatVersion: HANDOFF_FORMAT_VERSION,
@@ -195,6 +240,7 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
     totalShots: shots.length,
     totalDuration: formatTotalDuration(storyboard.frames),
     shots,
+    connections,
     readySummary: summary,
   };
 }
@@ -221,8 +267,12 @@ export function generateProductionMarkdown(brief: ProductionBrief): string {
   for (const shot of brief.shots) {
     lines.push(`## Shot ${shot.shotNumber}: ${esc(shot.title)}`);
     lines.push('');
-    lines.push(`**Type:** ${shot.type} · **Status:** ${shot.status}${shot.duration ? ` · **Duration:** ${esc(shot.duration)}` : ''}`);
+    lines.push(`**Type:** ${humanizeFrameType(shot.type)} · **Status:** ${humanizeStatus(shot.status)}${shot.duration ? ` · **Duration:** ${esc(shot.duration)}` : ''}`);
     lines.push('');
+    if (shot.missingReasons && shot.missingReasons.length > 0) {
+      lines.push(`**Missing:** ${shot.missingReasons.map(humanizeMissingReason).map(esc).join(', ')}`);
+      lines.push('');
+    }
 
     if (shot.intent) {
       lines.push(`**Intent:** ${esc(shot.intent)}`);
@@ -298,6 +348,19 @@ export function generateProductionMarkdown(brief: ProductionBrief): string {
     }
 
     lines.push('---');
+    lines.push('');
+  }
+
+  if (brief.connections && brief.connections.length > 0) {
+    lines.push('## Sequence Flow');
+    lines.push('');
+    lines.push('| From | Type | To |');
+    lines.push('| --- | --- | --- |');
+    for (const conn of brief.connections) {
+      lines.push(
+        `| ${esc(conn.fromTitle)} | ${humanizeConnectionType(conn.type)} | ${esc(conn.toTitle)} |`,
+      );
+    }
     lines.push('');
   }
 

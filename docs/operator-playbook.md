@@ -214,7 +214,7 @@ pnpm dev:cinematic    # cinematic app
 pnpm verify           # ship gate: build packages + check + test + build apps
 ```
 
-Requirements: **Node ≥ 22.13**, pnpm ≥ 10.
+Requirements: **Node ≥ 22.13**, pnpm ≥ 11. Workspace pin: `packageManager` `pnpm@11.4.0` (same pin as CI `publish.yml`).
 
 First-run paths for each vertical: handbook
 [Getting Started](../site/src/content/docs/handbook/getting-started.md).

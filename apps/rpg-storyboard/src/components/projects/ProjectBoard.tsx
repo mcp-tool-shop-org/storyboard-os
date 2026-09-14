@@ -6,24 +6,27 @@
 // read-only and never call onFramePositionChange.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { getProject, saveProject } from '../../lib/storyboard/projectStorage';
+import { getProject, saveProject, getLastReadWarning } from '../../lib/storyboard/projectStorage';
 import {
   updateFramePosition,
   updateFrameBasics,
   updateFrameContent,
+  updateFrameAnnotations,
   setChecklistItemComplete,
   setTestCriterionComplete,
   getProjectProgress,
 } from '../../lib/storyboard/project';
-import type { RpgStoryboardProject, FrameContent } from '@storyboard-os/rpg-domain';
+import type { RpgStoryboardProject, FrameContent, FrameAnnotation } from '@storyboard-os/rpg-domain';
 import type { FrameBasicsPatch } from '../../lib/storyboard/project';
 import StoryboardCanvas, { type SaveStatus } from '../StoryboardCanvas';
 import ErrorBoundary from '../ErrorBoundary';
+import CorruptStoreRecovery from './CorruptStoreRecovery';
 
 function ProjectBoardInner() {
   const [project, setProject]   = useState<RpgStoryboardProject | null>(null);
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [storeUnreadable, setStoreUnreadable] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(null);
 
   // Keep a mutable ref to the latest project so handlePositionChange
@@ -44,7 +47,13 @@ function ProjectBoardInner() {
     }
     const p = getProject(id);
     if (!p) {
-      setNotFound(true);
+      // A corrupt root looks like a miss (readAll → []). Do not call that
+      // "project not found" — recovery lives on /projects.
+      if (getLastReadWarning()?.code === 'STORE_UNREADABLE') {
+        setStoreUnreadable(true);
+      } else {
+        setNotFound(true);
+      }
       setLoading(false);
       return;
     }
@@ -86,7 +95,11 @@ function ProjectBoardInner() {
         : result.code === 'STORE_CORRUPT'
           ? 'Storage corrupt — '
           : 'Save error — ';
-      setSaveStatus({ kind: 'failed', message: `${prefix}${result.message}` });
+      setSaveStatus({
+        kind: 'failed',
+        message: `${prefix}${result.message}`,
+        code: result.code,
+      });
     }
   }, []);
 
@@ -102,13 +115,21 @@ function ProjectBoardInner() {
 
   // ── Frame content change → update project → save to localStorage ───────────
   const handleFrameContentChange = useCallback(
-    (frameId: string, basics: FrameBasicsPatch, content: Partial<FrameContent>) => {
+    (
+      frameId: string,
+      basics: FrameBasicsPatch,
+      content: Partial<FrameContent>,
+      annotations?: FrameAnnotation[],
+    ) => {
       const current = projectRef.current;
       if (!current) return;
-      // Apply basics first, then content on the result
+      // Apply basics first, then content, then annotations (frame-level, not content).
       const afterBasics  = updateFrameBasics(current, frameId, basics);
       const afterContent = updateFrameContent(afterBasics, frameId, content);
-      persistAndNotify(afterContent);
+      const afterAnn = annotations
+        ? updateFrameAnnotations(afterContent, frameId, annotations)
+        : afterContent;
+      persistAndNotify(afterAnn);
     },
     [persistAndNotify],
   );
@@ -134,6 +155,10 @@ function ProjectBoardInner() {
         <span style={styles.stateText}>Loading project…</span>
       </div>
     );
+  }
+
+  if (storeUnreadable) {
+    return <CorruptStoreRecovery />;
   }
 
   if (notFound || !project) {
@@ -170,13 +195,12 @@ function ProjectBoardInner() {
 // project) would silently unmount the island and blank the page. Wrapping the
 // WHOLE island here means any throw shows the boundary fallback instead.
 export default function ProjectBoard() {
-  const projectId = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('id')
-    : null;
   return (
     <ErrorBoundary
       fallbackTitle="Board failed to load"
-      handoffHref={projectId ? `/projects/handoff?id=${projectId}` : undefined}
+      fallbackBody="The project board could not be loaded. Your data is unchanged — only this view failed."
+      fallbackCtaHref="/projects"
+      fallbackCtaLabel="← Projects"
     >
       <ProjectBoardInner />
     </ErrorBoundary>

@@ -77,24 +77,28 @@ The domain computes production pressure from the sequence graph:
 
 ### Health derivation
 
-- **Red:** Any blocked shots (missing type-critical fields despite partial spec).
-- **Yellow:** Missing duration estimates, high continuity risk (>2 shots), or heavy VFX burden (>5 items).
-- **Green:** No blockers and no yellow-level warnings.
+`computeHealth` inside `getSequenceProductionSignals(board)` is the authority (`packages/cinematic-storyboard-domain/src/productionSignals.ts`):
+
+- **Red:** Any blocked shots (`getCinematicBeatStatus` level `blocked`). A missing type-required field is enough — spec score does not matter.
+- **Yellow:** Empty sequence (`frameCount === 0`, reason `empty sequence`); missing duration estimates; unparsable duration estimates; high continuity risk (>2 shots); or heavy VFX burden (>5 items).
+- **Green:** At least one frame, no blocked shots, and no yellow-level warnings. An empty sequence is **yellow**, not green.
 
 ---
 
 ## Beat Status Model
 
-Per-frame readiness is computed from spec completeness:
+`getCinematicBeatStatus(frame)` in `@storyboard-os/cinematic-domain` is the authoritative source of readiness. The app renders the result; the domain decides it. (Same pattern as handbook RPG `getBeatStatus`.)
 
 | Level | Criteria |
 |---|---|
-| `ready` | ≥4 spec fields populated, no type-blocking fields missing |
-| `partial` | 1–3 spec fields populated, no blockers |
-| `draft` | Zero spec fields populated |
-| `blocked` | Type-blocking field missing with some other spec present |
+| `ready` | Spec score ≥ 3 **and** no type-blocking field missing |
+| `partial` | Spec score 1–2 **and** no type-blocking field missing |
+| `draft` | Spec score is 0 **and** no type blocker — empty `sequence` containers (no blocking field) and unknown types with no domain requirements |
+| `blocked` | Any type-required field missing, **regardless of spec score** — an empty `shot` (no `visualDescription`) is `blocked`, not `draft` |
 
-Type-blocking fields:
+Spec score counts populated fields among: `intent`, `visualDescription`, `cameraAngle`, `cameraMovement`, `framing`, `durationEstimate`, `requiredAssets`, `continuityRequirements`, `implementationChecklist`, `testCriteria`.
+
+Type-blocking fields (`sequence` has none):
 - `shot` → `visualDescription`
 - `camera_move` → `cameraMovement`
 - `action` → `actionNotes`

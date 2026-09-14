@@ -231,6 +231,31 @@ describe('getSequenceProductionSignals', () => {
     expect(signals.healthReason).toContain('missing duration');
   });
 
+  it('does not treat unparsable durationEstimate "TBD" as missing', () => {
+    const sb = makeStoryboard({
+      frames: [
+        makeFrame('tbd', {
+          content: {
+            intent: 'Hook',
+            visualDescription: 'Explosion',
+            cameraAngle: 'Wide',
+            cameraMovement: 'Static',
+            durationEstimate: 'TBD',
+          },
+        }),
+      ],
+    });
+    const signals = getSequenceProductionSignals(sb);
+    expect(signals.durationRollup.uncoveredFrames).toBe(0);
+    expect(signals.durationRollup.coveredFrames).toBe(0);
+    expect(signals.durationRollup.unparsableSamples).toEqual(['TBD']);
+    expect(signals.pressureSummary.some(s => /missing duration/i.test(s))).toBe(false);
+    expect(signals.pressureSummary.some(s => /could not be parsed/i.test(s))).toBe(true);
+    expect(signals.healthReason).not.toContain('missing duration');
+    expect(signals.healthReason).toContain('unparsable duration');
+    expect(signals.health).toBe('yellow');
+  });
+
   it('builds a pressure summary with multiple signals', () => {
     const sb = makeStoryboard({
       frames: [

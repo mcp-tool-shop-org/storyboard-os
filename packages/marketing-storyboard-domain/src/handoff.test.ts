@@ -191,17 +191,64 @@ describe('generateCampaignMarkdown', () => {
         };
         const md = generateCampaignMarkdown(generateCampaignHandoff(storyboard));
         expect(md).toContain('### Blocked Beats');
-        expect(md).toMatch(/### Blocked Beats[\s\S]*?no_conversion_goal/);
+        expect(md).toMatch(/### Blocked Beats[\s\S]*?Conversion goal not defined/);
+        expect(md).not.toMatch(/### Blocked Beats[\s\S]*?no_conversion_goal/);
         // Ordinary incompleteness / advisory must not appear under Blocked Beats.
         const blockedSection = md.slice(
             md.indexOf('### Blocked Beats'),
             md.indexOf('### Spec Gaps') >= 0 ? md.indexOf('### Spec Gaps') : md.indexOf('## Campaign Beats'),
         );
         expect(blockedSection).not.toContain('no_objective');
+        expect(blockedSection).not.toContain('Objective not defined');
         expect(blockedSection).not.toContain('no_proof_points');
         expect(blockedSection).not.toContain('no_launch_dependencies');
         expect(md).toContain('### Spec Gaps');
-        expect(md).toMatch(/### Spec Gaps[\s\S]*?no_objective/);
+        expect(md).toMatch(/### Spec Gaps[\s\S]*?Objective not defined/);
+        expect(md).not.toContain('no_objective');
+        expect(md).not.toContain('no_conversion_goal');
+    });
+
+    it('lists spec gaps for every beat that has them, not only blockedIds (F-5c0c80f1)', () => {
+        const storyboard: Storyboard = {
+            id: 'gaps',
+            title: 'Gaps Campaign',
+            frames: [
+                makeFrame('aud', 'audience', {
+                    objective: 'Reach them',
+                    // no audienceSegment / states / tests / checklist → spec gaps, not blocked
+                }),
+            ],
+            connections: [],
+        };
+        const md = generateCampaignMarkdown(generateCampaignHandoff(storyboard));
+        expect(md).not.toContain('### Blocked Beats');
+        expect(md).toContain('### Spec Gaps');
+        expect(md).toContain('Audience segment not specified');
+        expect(md).not.toContain('no_audience_segment');
+        expect(md).toContain('**Type:** Audience');
+        expect(md).not.toContain('**Type:** audience');
+    });
+
+    it('humanizes type, status, and next-step connection types (F-5c0c80f1)', () => {
+        const storyboard: Storyboard = {
+            id: 'human',
+            title: 'Human Campaign',
+            frames: [
+                makeFrame('msg', 'message', { messageClaim: 'Ships' }),
+                makeFrame('conv', 'conversion', { conversionGoal: 'Signup' }),
+            ],
+            connections: [
+                { id: 'c1', fromFrameId: 'msg', toFrameId: 'conv', type: 'sequence' },
+            ],
+        };
+        const md = generateCampaignMarkdown(generateCampaignHandoff(storyboard));
+        expect(md).toContain('**Type:** Message');
+        expect(md).toContain('**Type:** Conversion');
+        expect(md).not.toContain('**Status:** ready');
+        expect(md).not.toContain('**Status:** blocked');
+        expect(md).toMatch(/\*\*Status:\*\* (SPEC|PARTIAL|DRAFT|BLOCKED)/);
+        expect(md).toContain('(campaign flow)');
+        expect(md).not.toContain('(sequence)');
     });
 });
 
@@ -372,8 +419,8 @@ describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
         expect(md).toContain('assets/hero-banner.png');
         expect(md).toContain('Draft the launch email');
         expect(md).toContain('CTA fires the signup event');
-        // Enum-derived type label is not escaped and reads plainly.
-        expect(md).toContain('**Type:** message');
+        // Enum-derived type label is humanized and not escaped.
+        expect(md).toContain('**Type:** Message');
         // No collateral damage from escaping a string that needed none.
         expect(md).not.toContain('\\');
         expect(md).not.toContain('&lt;');

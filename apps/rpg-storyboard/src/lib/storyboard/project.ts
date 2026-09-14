@@ -9,6 +9,7 @@ export {
   updateFramePosition,
   updateFrameBasics,
   updateFrameContent,
+  updateFrameAnnotations,
   setChecklistItemComplete,
   setTestCriterionComplete,
   getFrameProgress,

@@ -9,7 +9,7 @@
 // Storage is not the domain's concern. The app layer persists projects.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, StoryboardTemplateId, FrameContent } from './schema';
+import type { Storyboard, StoryboardTemplateId, FrameContent, FrameAnnotation } from './schema';
 import { createStoryboardFromTemplate } from './templates';
 
 // ─── Progress types ───────────────────────────────────────────────────────────
@@ -318,6 +318,33 @@ export function updateFrameContent(
         f.id === frameId
           ? { ...f, content: { ...f.content, ...patch } }
           : f,
+      ),
+    },
+  };
+}
+
+/**
+ * Return a new project with a frame's annotations replaced.
+ *
+ * Pure function. Bumps `updatedAt`. No-op on unknown frameId.
+ * Annotations live on the frame (not FrameContent) so this is a separate
+ * patch from `updateFrameContent`.
+ */
+export function updateFrameAnnotations(
+  project: RpgStoryboardProject,
+  frameId: string,
+  annotations: FrameAnnotation[],
+): RpgStoryboardProject {
+  const frameExists = project.storyboard.frames.some(f => f.id === frameId);
+  if (!frameExists) return project;
+
+  return {
+    ...project,
+    updatedAt: new Date().toISOString(),
+    storyboard: {
+      ...project.storyboard,
+      frames: project.storyboard.frames.map(f =>
+        f.id === frameId ? { ...f, annotations } : f,
       ),
     },
   };

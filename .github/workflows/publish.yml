@@ -26,8 +26,9 @@ jobs:
 
     steps:
       - name: Validate tag input
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
-          TAG="${{ github.event.release.tag_name || inputs.tag }}"
           if [ -z "$TAG" ]; then
             echo "ERROR: tag input required (got empty value)"
             exit 1

@@ -57,6 +57,17 @@ export {
     BLOCKING_REASONS,
 } from './beatStatus';
 
+export {
+    FRAME_TYPE_LABELS,
+    CONNECTION_TYPE_LABELS,
+    MISSING_REASON_LABELS,
+    BEAT_STATUS_LABELS,
+    humanizeFrameType,
+    humanizeConnectionType,
+    humanizeMissingReason,
+    humanizeBeatStatus,
+} from './labels';
+
 export type {
     CampaignBeatStatusLevel,
     MissingSpecReason,
