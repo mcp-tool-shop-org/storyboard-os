@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: Package map, dependency rules, and how to add a second vertical.
+description: Package map for the three shipped verticals, dependency rules, and how to add a fourth.
 sidebar:
   order: 3
 ---
@@ -260,9 +260,9 @@ const persistAndNotify = (updated: RpgStoryboardProject) => {
 
 ---
 
-## Adding a new vertical
+## Adding a fourth vertical
 
-A new vertical (e.g. `apps/screenplay-storyboard`) would:
+Three verticals ship today. A fourth (e.g. `apps/screenplay-storyboard`) would:
 
 1. Create `packages/screenplay-domain` — its own frame types, content fields, connection vocabulary, and templates built on `@storyboard-os/core` generics
 2. Define its own connection type: `type ScreenplayConnectionType = 'sequence' | 'flashback' | 'montage' | ...`
@@ -273,3 +273,5 @@ A new vertical (e.g. `apps/screenplay-storyboard`) would:
 It would not touch `@storyboard-os/rpg-domain`, `@storyboard-os/marketing-domain`, or `@storyboard-os/cinematic-domain`. The canvas viewport, connection selection, badge rendering, and frame drag all work without modification.
 
 Three verticals have proven this pattern: zero infrastructure changes required for any new vertical.
+
+Full operator checklist (workspace scripts, publish.yml, docs touchpoints, store recovery): [`docs/operator-playbook.md`](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/operator-playbook.md).

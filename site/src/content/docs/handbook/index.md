@@ -42,7 +42,7 @@ Project boards persist across reload. No backend, no accounts, no server — eve
 | **Campaign board** | `/campaigns/:id` | Full campaign canvas with launch readiness signals |
 | **Campaign brief** | `/campaigns/:id/handoff` | Markdown + JSON export for execution team |
 
-The marketing board answers: Can this campaign ship, and what blocks it?
+The marketing board answers: Can this campaign ship, and what blocks it? Boards are static SSG demos — no localStorage persistence in this vertical today.
 
 ### cinematic-storyboard
 
@@ -51,7 +51,7 @@ The marketing board answers: Can this campaign ship, and what blocks it?
 | **Sequence board** | `/sequences/:id` | Full cinematic canvas with production signals (health, burden, complexity) |
 | **Production brief** | `/sequences/:id/handoff` | Markdown + JSON export for production team |
 
-The cinematic board answers: What makes this sequence hard to shoot, animate, edit, or hand off?
+The cinematic board answers: What makes this sequence hard to shoot, animate, edit, or hand off? Same as marketing: static SSG demos today; durable projects are roadmap work.
 
 ## The handoff
 
@@ -66,7 +66,8 @@ Download as **Markdown** (developer-readable) or **JSON** (engine-ingestible).
 
 ## Next steps
 
-- [Getting Started](./getting-started/) — install and run in under two minutes
-- [Authoring Workflow](./usage/) — the full design loop from project creation to handoff
-- [Architecture](./architecture/) — package map, dependency rules, adding a new vertical
+- [Getting Started](./getting-started/) — install and first-run paths for RPG, marketing, and cinematic
+- [Authoring Workflow](./usage/) — the RPG design loop from project creation to handoff
+- [Architecture](./architecture/) — package map for three shipped verticals; adding a fourth
 - [Reference](./reference/) — frame types, connection types, readiness model, API
+- [Operator playbook](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/operator-playbook.md) — fourth vertical, release/publish rerun, breaking changes, RPG store recovery
