@@ -40,7 +40,56 @@ describe('getCampaignLaunchReadiness', () => {
         expect(result.missingMeasurementFrameIds).toEqual([]);
     });
 
-    it('returns ready for a fully-specced campaign', () => {
+    it('returns ready for a fully-specced campaign with a closed measurement loop', () => {
+        const frames: StoryboardFrame[] = [
+            makeFrame({
+                id: 'msg', type: 'message',
+                content: {
+                    objective: 'x', messageClaim: 'y', audienceSegment: 'z',
+                    customerStateBefore: ['a'], customerStateAfter: ['b'],
+                    testCriteria: ['t'], implementationChecklist: ['i'],
+                },
+            }),
+            makeFrame({
+                id: 'launch', type: 'launch_event',
+                content: {
+                    objective: 'x', audienceSegment: 'z',
+                    customerStateBefore: ['a'], customerStateAfter: ['b'],
+                    testCriteria: ['t'], implementationChecklist: ['i'],
+                    requiredAssets: ['asset'],
+                },
+            }),
+            makeFrame({
+                id: 'meas', type: 'measurement',
+                content: {
+                    objective: 'x', audienceSegment: 'z',
+                    customerStateBefore: ['a'], customerStateAfter: ['b'],
+                    testCriteria: ['t'], implementationChecklist: ['i'],
+                    metrics: ['m1'],
+                },
+            }),
+            makeFrame({
+                id: 'follow', type: 'follow_up',
+                content: {
+                    objective: 'x', audienceSegment: 'z',
+                    customerStateBefore: ['a'], customerStateAfter: ['b'],
+                    testCriteria: ['t'], implementationChecklist: ['i'],
+                },
+            }),
+        ];
+        const conns = [
+            { id: 'c1', fromFrameId: 'msg', toFrameId: 'launch', type: 'sequence' as const },
+            { id: 'c2', fromFrameId: 'launch', toFrameId: 'meas', type: 'sequence' as const },
+            // Close the measurement loop — metrics alone are not enough for ready.
+            { id: 'c3', fromFrameId: 'meas', toFrameId: 'follow', type: 'sequence' as const },
+        ];
+        const result = getCampaignLaunchReadiness(makeCampaign(frames, conns));
+        expect(result.level).toBe('ready');
+        expect(result.blockedFrameIds).toEqual([]);
+        expect(result.missingMeasurementFrameIds).toEqual([]);
+    });
+
+    it('returns at_risk for metrics-complete measurement that is not looped (F-f5bc5623)', () => {
         const frames: StoryboardFrame[] = [
             makeFrame({
                 id: 'msg', type: 'message',
@@ -72,9 +121,11 @@ describe('getCampaignLaunchReadiness', () => {
         const conns = [
             { id: 'c1', fromFrameId: 'msg', toFrameId: 'launch', type: 'sequence' as const },
             { id: 'c2', fromFrameId: 'launch', toFrameId: 'meas', type: 'sequence' as const },
+            // No outgoing from meas → open loop
         ];
         const result = getCampaignLaunchReadiness(makeCampaign(frames, conns));
-        expect(result.level).toBe('ready');
+        expect(result.level).toBe('at_risk');
+        expect(result.summary).toMatch(/open measurement loop/i);
         expect(result.blockedFrameIds).toEqual([]);
         expect(result.missingMeasurementFrameIds).toEqual([]);
     });

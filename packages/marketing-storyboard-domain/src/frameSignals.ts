@@ -67,21 +67,33 @@ export interface FrameBadgeDescriptor {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-function computeReadiness(content: MarketingFrameContent): FrameReadiness {
-    const score = [
-        (content.implementationChecklist?.length ?? 0) > 0,
-        (content.requiredAssets?.length ?? 0) > 0,
-        (content.testCriteria?.length ?? 0) > 0,
-        !!content.objective,
-    ].filter(Boolean).length;
-
-    if (score >= 3) return 'ready';
-    if (score >= 1) return 'partial';
-    return 'incomplete';
+/** Map beat status onto the coarser FrameReadiness union (blocked/draft → incomplete). */
+function readinessFromBeatStatus(level: CampaignBeatStatusLevel): FrameReadiness {
+    switch (level) {
+        case 'ready':
+            return 'ready';
+        case 'partial':
+            return 'partial';
+        case 'draft':
+        case 'blocked':
+            return 'incomplete';
+        default: {
+            const _exhaustive: never = level;
+            void _exhaustive;
+            return 'incomplete';
+        }
+    }
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+/**
+ * Extract a MarketingFrameSignal from a campaign frame.
+ *
+ * `readiness` follows getCampaignBeatStatus (same authority as badges /
+ * inspector / launch rollup), mapped onto FrameReadiness
+ * (blocked/draft → incomplete). A type-rule blocker cannot report ready.
+ */
 export function getMarketingFrameSignal(frame: StoryboardFrame): MarketingFrameSignal {
     // Untrusted load paths can hand us a frame with null/missing content —
     // normalize to an empty spec instead of throwing (DM-002).
@@ -93,11 +105,12 @@ export function getMarketingFrameSignal(frame: StoryboardFrame): MarketingFrameS
             : null;
 
     const channelSummary = content.channel?.trim() || null;
+    const beatStatus = getCampaignBeatStatus(frame);
 
     return {
         customerStateSummary,
         channelSummary,
-        readiness: computeReadiness(content),
+        readiness: readinessFromBeatStatus(beatStatus.level),
         hasMetrics: (content.metrics?.length ?? 0) > 0,
         hasRequiredAssets: (content.requiredAssets?.length ?? 0) > 0,
         hasImplementationChecklist: (content.implementationChecklist?.length ?? 0) > 0,

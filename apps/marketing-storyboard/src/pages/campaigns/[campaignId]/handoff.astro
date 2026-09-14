@@ -6,6 +6,8 @@ import {
   BLOCKING_REASONS,
   type Storyboard,
   type MissingSpecReason,
+  type MarketingConnectionType,
+  type MarketingFrameType,
 } from '@storyboard-os/marketing-domain';
 
 export function getStaticPaths() {
@@ -37,7 +39,8 @@ const STATUS_COLORS: Record<string, string> = {
   blocked: '#EF4444',
 };
 
-const TYPE_COLORS: Record<string, string> = {
+// Exhaustive over MarketingFrameType — a new schema variant is a compile error.
+const TYPE_COLORS: Record<MarketingFrameType, string> = {
   audience:      '#3B82F6',
   message:       '#8B5CF6',
   touchpoint:    '#22C55E',
@@ -49,7 +52,7 @@ const TYPE_COLORS: Record<string, string> = {
   measurement:   '#EC4899',
 };
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS: Record<MarketingFrameType, string> = {
   audience:      'Audience',
   message:       'Message',
   touchpoint:    'Touchpoint',
@@ -61,8 +64,8 @@ const TYPE_LABELS: Record<string, string> = {
   measurement:   'Measurement',
 };
 
-// Keep in sync with canvas CONNECTION_TYPE_LABELS (Segment Path / Consequence).
-const CONN_LABELS: Record<string, string> = {
+// Exhaustive over MarketingConnectionType — keep in sync with canvas CONNECTION_TYPE_LABELS.
+const CONN_LABELS: Record<MarketingConnectionType, string> = {
   sequence:    'campaign flow',
   dependency:  'dependency',
   approval:    'approval gate',
@@ -70,6 +73,14 @@ const CONN_LABELS: Record<string, string> = {
   choice:      'segment path',
   consequence: 'consequence',
 };
+
+function isMarketingFrameType(type: string): type is MarketingFrameType {
+  return Object.prototype.hasOwnProperty.call(TYPE_LABELS, type);
+}
+
+function isMarketingConnectionType(type: string): type is MarketingConnectionType {
+  return Object.prototype.hasOwnProperty.call(CONN_LABELS, type);
+}
 
 // Human-readable labels for launch-blocker / spec-gap codes emitted by
 // @storyboard-os/marketing-domain getCampaignBeatStatus(). Rendering the raw
@@ -291,8 +302,8 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
     <p class="section-title">Campaign Beats — Implementation Order</p>
     <div class="beat-list">
       {handoff.beats.map((beat, idx) => {
-        const typeColor = TYPE_COLORS[beat.type] ?? '#475569';
-        const typeLabel = TYPE_LABELS[beat.type] ?? beat.type.toUpperCase();
+        const typeColor = isMarketingFrameType(beat.type) ? TYPE_COLORS[beat.type] : '#475569';
+        const typeLabel = isMarketingFrameType(beat.type) ? TYPE_LABELS[beat.type] : beat.type.toUpperCase();
         const statusColor = STATUS_COLORS[beat.status] ?? '#475569';
         const blockers = launchBlockersFor(beat.missing);
         const gaps = specGapsFor(beat.missing);
@@ -344,6 +355,34 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                 <div class="field">
                   <span class="field-label">Message Claim</span>
                   <p class="claim-text">"{beat.messageClaim}"</p>
+                </div>
+              )}
+
+              {beat.proofPoints.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Proof Points</span>
+                  <div class="item-list">
+                    {beat.proofPoints.map(p => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #8B5CF6">▸</span>
+                        <span class="item-text">{p}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.objectionsHandled.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Objections Handled</span>
+                  <div class="item-list">
+                    {beat.objectionsHandled.map(o => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #F59E0B">◇</span>
+                        <span class="item-text">{o}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -459,6 +498,13 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                 </div>
               )}
 
+              {beat.ownerNotes?.trim() && (
+                <div class="field">
+                  <span class="field-label">Owner Notes</span>
+                  <span class="field-value">{beat.ownerNotes}</span>
+                </div>
+              )}
+
               {beat.outgoingBranches.length > 0 && (
                 <div class="field">
                   <span class="field-label">Next Steps</span>
@@ -467,7 +513,7 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                       <div class="branch-row">
                         <span class="branch-arrow">→</span>
                         <span class="branch-dest">{b.toTitle}</span>
-                        <span class="branch-type">({CONN_LABELS[b.type] ?? b.type})</span>
+                        <span class="branch-type">({isMarketingConnectionType(b.type) ? CONN_LABELS[b.type] : b.type})</span>
                         {b.label && <span class="branch-label">{b.label}</span>}
                       </div>
                     ))}
