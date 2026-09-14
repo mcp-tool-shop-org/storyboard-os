@@ -150,11 +150,20 @@ apps/rpg-storyboard
 
 ## ID encoding
 
-All id segments (`storyboardId`, `frameId`, `projectId`) are passed through `encodeURIComponent` before interpolation. This means:
+All id segments (`storyboardId`, `frameId`, `projectId`) go through an internal `encodeSegment` helper before interpolation:
 
-- IDs containing `/`, `?`, `#`, spaces, unicode, or `..` are safely encoded and cannot escape the configured base path.
+1. Bare `.` and `..` are specially percent-encoded to `%2E` and `%2E%2E` (CR-004). `encodeURIComponent` leaves dots intact, so those two ids would otherwise survive verbatim and normalize to the current/parent path segment — escaping the configured base.
+2. Every other id (including ids that merely *contain* dots, like `v1.2`) is passed through `encodeURIComponent`.
+
+This means:
+
+- IDs containing `/`, `?`, `#`, spaces, unicode, or `../` are safely encoded and cannot escape the configured base path.
 - `boardRoute('../admin')` returns `/storyboards/..%2Fadmin` — not a path-traversal URL.
+- `boardRoute('..')` returns `/storyboards/%2E%2E` — not the parent of the base path.
+- `boardRoute('.')` returns `/storyboards/%2E` — not the current segment.
 - The configured `storyboardBasePath` itself is NOT encoded (it is a trusted constant from your app's config). Only the runtime id arguments are encoded.
+
+The CR-004 cases in `src/routes.test.ts` (`createStoryboardRoutes — bare dot segments`) are the regression contract for the bare `.` / `..` branch.
 
 If your app round-trips ids through a router that auto-decodes path params, you will see the original id on the other side.
 
