@@ -65,7 +65,7 @@ Every RPG frame carries a `FrameContent` object with implementation depth, not j
 interface FrameContent {
   designerNotes?: string;          // Intent, tone, design rationale — author-facing
   playerVisibleText?: string;      // What the player actually sees or hears
-  authorOnlyNotes?: string;        // Spoilers, hidden logic — never shown in-game
+  authorOnlyNotes?: string[];      // Spoilers, hidden logic — author-facing list (one entry per note; never shown in-game)
   stakes?: string;                 // What is at risk if this beat fails or is skipped
   entryConditions?: string[];      // Game-state flags that must be true before this fires
   exitConditions?: string[];       // What must be true for this beat to resolve

@@ -71,7 +71,9 @@ const LEGACY_SCHEMA_VERSION = 0;
 export type WriteResult =
   | { ok: true }
   | { ok: false; code: 'QUOTA_EXCEEDED'; message: string }
-  | { ok: false; code: 'WRITE_FAILED'; message: string };
+  | { ok: false; code: 'WRITE_FAILED'; message: string }
+  /** Store root is corrupt — refuse to write so sibling projects are not wiped. */
+  | { ok: false; code: 'STORE_CORRUPT'; message: string };
 
 /**
  * Result of the most recent read from localStorage, when something was wrong.
@@ -99,6 +101,10 @@ export interface ReadWarning {
   message: string;
   /** How many records were skipped (0 when the whole store was unreadable). */
   dropped: number;
+  /** Frame ids removed by soft-sanitize on a NEWER_SCHEMA load (optional). */
+  strippedFrameIds?: string[];
+  /** Connection ids removed by soft-sanitize on a NEWER_SCHEMA load (optional). */
+  strippedConnectionIds?: string[];
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -203,6 +209,13 @@ function softSanitizeStoredFrame(value: unknown): RpgStoryboardProject['storyboa
   } as unknown as RpgStoryboardProject['storyboard']['frames'][number];
 }
 
+/** Result of soft-sanitizing one NEWER_SCHEMA project, including strip telemetry. */
+interface SoftSanitizeResult {
+  project: RpgStoryboardProject;
+  strippedFrameIds: string[];
+  strippedConnectionIds: string[];
+}
+
 /**
  * Soft-sanitize a NEWER_SCHEMA project for render safety without applying the
  * full current-schema validity predicate (a newer field must not drop the
@@ -210,7 +223,7 @@ function softSanitizeStoredFrame(value: unknown): RpgStoryboardProject['storyboa
  * drops only crash-shaped frames/connections. Returns null only when the
  * project shell itself is unusable.
  */
-function softSanitizeNewerProject(value: unknown): RpgStoryboardProject | null {
+function softSanitizeNewerProject(value: unknown): SoftSanitizeResult | null {
   if (!isRecord(value)) return null;
   const p = value as {
     id?: unknown; title?: unknown; createdAt?: unknown; updatedAt?: unknown;
@@ -223,25 +236,45 @@ function softSanitizeNewerProject(value: unknown): RpgStoryboardProject | null {
   const rawFrames = Array.isArray(sb.frames) ? sb.frames : [];
   const rawConns = Array.isArray(sb.connections) ? sb.connections : [];
 
-  const frames = rawFrames
-    .map(softSanitizeStoredFrame)
-    .filter((f): f is RpgStoryboardProject['storyboard']['frames'][number] => f !== null);
-  const connections = rawConns.filter(
-    isValidStoredConnection,
-  ) as RpgStoryboardProject['storyboard']['connections'];
+  const strippedFrameIds: string[] = [];
+  const frames: RpgStoryboardProject['storyboard']['frames'] = [];
+  for (const raw of rawFrames) {
+    const sanitized = softSanitizeStoredFrame(raw);
+    if (sanitized) {
+      frames.push(sanitized);
+    } else {
+      const id = isRecord(raw) && typeof raw.id === 'string' ? raw.id : '<no id>';
+      strippedFrameIds.push(id);
+    }
+  }
+
+  const strippedConnectionIds: string[] = [];
+  const connections: RpgStoryboardProject['storyboard']['connections'] = [];
+  for (const raw of rawConns) {
+    if (isValidStoredConnection(raw)) {
+      connections.push(raw as RpgStoryboardProject['storyboard']['connections'][number]);
+    } else {
+      const id = isRecord(raw) && typeof raw.id === 'string' ? raw.id : '<no id>';
+      strippedConnectionIds.push(id);
+    }
+  }
 
   return {
-    ...(value as object),
-    id: p.id,
-    title: p.title,
-    createdAt: typeof p.createdAt === 'string' ? p.createdAt : '',
-    updatedAt: typeof p.updatedAt === 'string' ? p.updatedAt : '',
-    storyboard: {
-      ...(sb as object),
-      frames,
-      connections,
-    },
-  } as RpgStoryboardProject;
+    project: {
+      ...(value as object),
+      id: p.id,
+      title: p.title,
+      createdAt: typeof p.createdAt === 'string' ? p.createdAt : '',
+      updatedAt: typeof p.updatedAt === 'string' ? p.updatedAt : '',
+      storyboard: {
+        ...(sb as object),
+        frames,
+        connections,
+      },
+    } as RpgStoryboardProject,
+    strippedFrameIds,
+    strippedConnectionIds,
+  };
 }
 
 /**
@@ -409,21 +442,43 @@ function readAll(): RpgStoryboardProject[] {
   // The raw store is left untouched (reads never write) so the newer deploy
   // keeps its data. A newer *field* must not read as "invalid" here.
   if (store.schemaVersion > CURRENT_SCHEMA_VERSION) {
+    const sanitized: SoftSanitizeResult[] = [];
+    for (const entry of store.projects) {
+      const result = softSanitizeNewerProject(entry);
+      if (result) sanitized.push(result);
+    }
+    const strippedFrameIds = sanitized.flatMap(r =>
+      r.strippedFrameIds.map(fid => `${r.project.id}/${fid}`),
+    );
+    const strippedConnectionIds = sanitized.flatMap(r =>
+      r.strippedConnectionIds.map(cid => `${r.project.id}/${cid}`),
+    );
+    const strippedCount = strippedFrameIds.length + strippedConnectionIds.length;
+
     devWarn('newer schema encountered — soft-sanitizing crash shapes, not downgrading', {
       storedVersion: store.schemaVersion,
       currentVersion: CURRENT_SCHEMA_VERSION,
       projectCount: store.projects.length,
+      strippedFrameCount: strippedFrameIds.length,
+      strippedConnectionCount: strippedConnectionIds.length,
+      strippedFrameIds,
+      strippedConnectionIds,
     });
+
+    const stripNotice = strippedCount > 0
+      ? ` Soft-sanitize removed ${strippedFrameIds.length} frame(s) and ${strippedConnectionIds.length} connection(s) that could not be rendered safely.`
+      : '';
     lastReadWarning = {
       code: 'NEWER_SCHEMA',
       message:
         'These projects were saved by a newer version of the app. They are shown as-is; ' +
-        'save from this older version only if you understand it may drop newer fields.',
-      dropped: 0,
+        'save from this older version only if you understand it may drop newer fields.' +
+        stripNotice,
+      dropped: strippedCount,
+      strippedFrameIds: strippedFrameIds.length > 0 ? strippedFrameIds : undefined,
+      strippedConnectionIds: strippedConnectionIds.length > 0 ? strippedConnectionIds : undefined,
     };
-    return store.projects
-      .map(softSanitizeNewerProject)
-      .filter((p): p is RpgStoryboardProject => p !== null);
+    return sanitized.map(r => r.project);
   }
 
   // Migrate FIRST (stepwise up the ladder), then validate — so the validity
@@ -525,11 +580,26 @@ export function getProject(id: string): RpgStoryboardProject | undefined {
  *
  * Records that fail validation are carried through untouched: only a VALID
  * record with the same id is replaced. If the store root itself is corrupt
- * there is nothing machine-readable to preserve, so the write starts a fresh
- * array — refusing to write would brick saving forever.
+ * (unreadable JSON / wrong shape), the write is REFUSED with STORE_CORRUPT —
+ * overwriting with a single-project envelope would permanently wipe siblings.
  */
 export function saveProject(project: RpgStoryboardProject): WriteResult {
-  const entries = readRawEntries() ?? [];
+  if (typeof localStorage === 'undefined') {
+    return { ok: false, code: 'WRITE_FAILED', message: 'localStorage is not available in this environment' };
+  }
+  const entries = readRawEntries();
+  if (entries === null) {
+    devWarn('refusing save — store root is corrupt; writing would wipe siblings', {
+      projectId: project.id,
+    });
+    return {
+      ok: false,
+      code: 'STORE_CORRUPT',
+      message:
+        'Browser storage is corrupt and cannot be updated safely. ' +
+        'Open Projects to export what you can, then clear site data for this origin and re-import.',
+    };
+  }
   const kept = entries.filter(e => !(isValidStoredProject(e) && e.id === project.id));
   return writeAll([...kept, project]);
 }
@@ -539,8 +609,25 @@ export function saveProject(project: RpgStoryboardProject): WriteResult {
  * Returns the same WriteResult shape — a quota-exceeded delete is rare but
  * possible (the rewrite still has to land), and callers should react.
  * Invalid raw records never match by id, so they survive deletes untouched.
+ * A corrupt store root refuses the write (same as saveProject) so siblings
+ * are not wiped by a "fresh" envelope containing only the delete result.
  */
 export function deleteProject(id: string): WriteResult {
-  const entries = readRawEntries() ?? [];
+  if (typeof localStorage === 'undefined') {
+    return { ok: false, code: 'WRITE_FAILED', message: 'localStorage is not available in this environment' };
+  }
+  const entries = readRawEntries();
+  if (entries === null) {
+    devWarn('refusing delete — store root is corrupt; writing would wipe siblings', {
+      projectId: id,
+    });
+    return {
+      ok: false,
+      code: 'STORE_CORRUPT',
+      message:
+        'Browser storage is corrupt and cannot be updated safely. ' +
+        'Open Projects to export what you can, then clear site data for this origin and re-import.',
+    };
+  }
   return writeAll(entries.filter(e => !(isValidStoredProject(e) && e.id === id)));
 }

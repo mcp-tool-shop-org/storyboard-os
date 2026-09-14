@@ -40,7 +40,9 @@ export default function CreateProjectForm({ templateId }: Props) {
       setSubmitting(false);
       const prefix = result.code === 'QUOTA_EXCEEDED'
         ? 'Storage full — '
-        : 'Save failed — ';
+        : result.code === 'STORE_CORRUPT'
+          ? 'Storage corrupt — '
+          : 'Save failed — ';
       setError(`${prefix}${result.message}`);
       return;
     }
@@ -70,7 +72,19 @@ export default function CreateProjectForm({ templateId }: Props) {
           required
           style={styles.input}
         />
-        {error && <span style={styles.errorMsg}>{error}</span>}
+        {error && (
+          <span style={styles.errorMsg} role="alert">
+            {error}
+            {(error.startsWith('Storage full') || error.startsWith('Storage corrupt')) && (
+              <>
+                {' '}
+                <a href="/projects" style={styles.errorLink}>
+                  Open Projects to delete →
+                </a>
+              </>
+            )}
+          </span>
+        )}
       </label>
 
       <label style={styles.fieldGroup}>
@@ -168,6 +182,12 @@ const styles: Record<string, React.CSSProperties> = {
   errorMsg: {
     fontSize: 12,
     color: '#ef4444',
+    lineHeight: 1.5,
+  },
+  errorLink: {
+    color: '#fca5a5',
+    fontWeight: 700,
+    textDecoration: 'underline',
   },
   actions: {
     display: 'flex',

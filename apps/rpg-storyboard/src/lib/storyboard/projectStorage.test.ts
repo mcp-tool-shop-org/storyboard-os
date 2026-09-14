@@ -477,6 +477,9 @@ describe('schema versioning — a NEWER-schema envelope is preserved, not droppe
     expect(projects[0].storyboard.connections).toHaveLength(1);
     expect(projects[0].storyboard.connections[0].id).toBe('c1');
     expect(getLastReadWarning()?.code).toBe('NEWER_SCHEMA');
+    // Soft-sanitize strip telemetry (F-0a2c3bde)
+    expect(getLastReadWarning()?.strippedFrameIds?.some(id => id.includes('crash'))).toBe(true);
+    expect(getLastReadWarning()?.dropped).toBeGreaterThan(0);
   });
 });
 
@@ -566,6 +569,89 @@ describe('dev diagnostics — console.warn at inflection points', () => {
     seed({ schemaVersion: 1, projects: [makeProject('clean')] });
     listProjects();
     expect(spy.mock.calls.some(c => String(c[0]).includes('[projectStorage]'))).toBe(false);
+    spy.mockRestore();
+  });
+});
+
+// ─── F-956fcb6d — corrupt store must not wipe siblings on write ───────────────
+
+describe('writes — refuse when store root is corrupt (no sibling wipe)', () => {
+  it('saveProject returns STORE_CORRUPT and leaves the corrupt blob untouched', () => {
+    const corrupt = '{"definitely not valid json';
+    seed(corrupt);
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = saveProject(makeProject('newcomer'));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe('STORE_CORRUPT');
+      expect(result.message.toLowerCase()).toContain('corrupt');
+    }
+    // Raw corrupt value must survive — writing a fresh envelope would wipe siblings.
+    expect(backing.get(STORAGE_KEY)).toBe(corrupt);
+    expect(spy.mock.calls.some(c => String(c[0]).includes('[projectStorage]'))).toBe(true);
+    spy.mockRestore();
+  });
+
+  it('deleteProject returns STORE_CORRUPT on an unreadable envelope shape', () => {
+    seed({ oops: 'not an envelope' });
+    const before = backing.get(STORAGE_KEY);
+    const result = deleteProject('anything');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.code).toBe('STORE_CORRUPT');
+    expect(backing.get(STORAGE_KEY)).toBe(before);
+  });
+});
+
+// ─── F-0a2c3bde — NEWER_SCHEMA soft-sanitize strip telemetry ──────────────────
+
+describe('NEWER_SCHEMA — stripped frame/connection warning', () => {
+  it('reports stripped frame/connection ids and counts in ReadWarning + console.warn', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const goodFrame = {
+      id: 'ok-f1',
+      type: 'scene',
+      title: 'Good',
+      position: { x: 0, y: 0 },
+      size: { width: 220, height: 120 },
+      content: {},
+      annotations: [],
+    };
+    seed({
+      schemaVersion: 999,
+      projects: [{
+        id: 'strip-me',
+        title: 'Strip Me',
+        createdAt: '2026-07-01T00:00:00.000Z',
+        updatedAt: '2026-07-01T00:00:00.000Z',
+        storyboard: {
+          id: 'sb',
+          title: 'Board',
+          frames: [goodFrame, { id: 'crash-f', title: 'no type' }, null],
+          connections: [
+            { id: 'c-ok', fromFrameId: 'ok-f1', toFrameId: 'ok-f1', type: 'sequence' },
+            null,
+            { id: 'c-bad' },
+          ],
+        },
+        progress: { frames: {} },
+      }],
+    });
+
+    const projects = listProjects();
+    expect(projects).toHaveLength(1);
+    expect(projects[0].storyboard.frames.map(f => f.id)).toEqual(['ok-f1']);
+
+    const warning = getLastReadWarning();
+    expect(warning?.code).toBe('NEWER_SCHEMA');
+    expect(warning?.dropped).toBeGreaterThan(0);
+    expect(warning?.strippedFrameIds?.some(id => id.includes('crash-f'))).toBe(true);
+    expect(warning?.message.toLowerCase()).toContain('soft-sanitize');
+    expect(
+      spy.mock.calls.some(c =>
+        c.some(arg => JSON.stringify(arg).includes('strippedFrameIds')),
+      ),
+    ).toBe(true);
     spy.mockRestore();
   });
 });

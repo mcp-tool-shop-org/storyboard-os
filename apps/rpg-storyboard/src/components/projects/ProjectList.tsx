@@ -26,8 +26,13 @@ function readWarningTitle(warning: ReadWarning): string {
   switch (warning.code) {
     case 'STORE_UNREADABLE':
       return 'Saved projects could not be read';
-    case 'NEWER_SCHEMA':
-      return 'Projects saved by a newer version';
+    case 'NEWER_SCHEMA': {
+      const stripped = (warning.strippedFrameIds?.length ?? 0)
+        + (warning.strippedConnectionIds?.length ?? 0);
+      return stripped > 0
+        ? `Projects saved by a newer version — ${stripped} beat(s)/link(s) hidden`
+        : 'Projects saved by a newer version';
+    }
     case 'RECORDS_DROPPED':
       return `${warning.dropped} saved ${warning.dropped === 1 ? 'project' : 'projects'} skipped`;
     default: {
@@ -69,7 +74,9 @@ function ProjectListInner() {
     if (!result.ok) {
       const prefix = result.code === 'QUOTA_EXCEEDED'
         ? 'Storage full — '
-        : 'Delete failed — ';
+        : result.code === 'STORE_CORRUPT'
+          ? 'Storage corrupt — '
+          : 'Delete failed — ';
       setActionError(`${prefix}${result.message}`);
       return;
     }
