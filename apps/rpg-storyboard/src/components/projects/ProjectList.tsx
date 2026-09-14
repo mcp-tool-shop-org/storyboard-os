@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import {
   listProjects,
   getLastReadWarning,
+  getRawStoreBlob,
   deleteProject,
   type ReadWarning,
 } from '../../lib/storyboard/projectStorage';
+import { resolveProjectsEmptyCopy } from '../../lib/storyboard/projectListEmpty';
 import type { RpgStoryboardProject } from '@storyboard-os/rpg-domain';
 import ErrorBoundary from '../ErrorBoundary';
 
@@ -43,11 +45,27 @@ function readWarningTitle(warning: ReadWarning): string {
   }
 }
 
+function downloadRawStoreBlob(): void {
+  const raw = getRawStoreBlob();
+  if (raw === null || raw === '') {
+    window.alert('No raw storage blob is present for this origin.');
+    return;
+  }
+  const blob = new Blob([raw], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rpg-sb-projects-raw.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function ProjectListInner() {
   const [projects, setProjects] = useState<RpgStoryboardProject[]>([]);
   const [readWarning, setReadWarning] = useState<ReadWarning | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [storeCorruptWrite, setStoreCorruptWrite] = useState(false);
 
   function refresh() {
     setProjects(listProjects());
@@ -78,15 +96,26 @@ function ProjectListInner() {
           ? 'Storage corrupt — '
           : 'Delete failed — ';
       setActionError(`${prefix}${result.message}`);
+      if (result.code === 'STORE_CORRUPT') setStoreCorruptWrite(true);
       return;
     }
     setActionError(null);
+    setStoreCorruptWrite(false);
     refresh();
   }
 
   if (!loaded) {
     return <div style={styles.loading}>Loading…</div>;
   }
+
+  const emptyCopy = resolveProjectsEmptyCopy({
+    projectCount: projects.length,
+    readWarningCode: readWarning?.code ?? null,
+    storeCorruptWrite,
+  });
+  const createDisabled = emptyCopy?.createDisabled === true
+    || readWarning?.code === 'STORE_UNREADABLE'
+    || storeCorruptWrite;
 
   return (
     <div style={styles.root}>
@@ -115,18 +144,36 @@ function ProjectListInner() {
           <p style={styles.sectionLabel}>RPG Authoring</p>
           <h1 style={styles.heading}>Your Projects</h1>
         </div>
-        <a href="/templates" style={styles.newBtn}>+ New Project</a>
+        {createDisabled ? (
+          <span
+            style={styles.newBtnDisabled}
+            aria-disabled="true"
+            title="Create is disabled until browser storage is repaired"
+          >
+            + New Project
+          </span>
+        ) : (
+          <a href="/templates" style={styles.newBtn}>+ New Project</a>
+        )}
       </div>
 
-      {/* ── Empty state ── */}
-      {projects.length === 0 && (
-        <div style={styles.empty}>
-          <p style={styles.emptyTitle}>No projects yet</p>
-          <p style={styles.emptySub}>
-            Create a project from one of the three RPG templates to get started.
-            Projects are saved in this browser.
-          </p>
-          <a href="/templates" style={styles.emptyBtn}>Browse Templates →</a>
+      {/* ── Empty state (first-run vs corrupt recovery) ── */}
+      {emptyCopy && (
+        <div style={styles.empty} data-empty-kind={emptyCopy.kind}>
+          <p style={styles.emptyTitle}>{emptyCopy.title}</p>
+          <p style={styles.emptySub}>{emptyCopy.body}</p>
+          {emptyCopy.offerRawDownload && (
+            <button
+              type="button"
+              onClick={downloadRawStoreBlob}
+              style={styles.emptyBtnSecondary}
+            >
+              Download raw storage blob
+            </button>
+          )}
+          {emptyCopy.createDisabled ? null : (
+            <a href="/templates" style={styles.emptyBtn}>Browse Templates →</a>
+          )}
         </div>
       )}
 
@@ -266,6 +313,19 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap',
     alignSelf: 'flex-start',
   },
+  newBtnDisabled: {
+    fontSize: 12,
+    fontWeight: 700,
+    padding: '8px 16px',
+    borderRadius: 6,
+    background: '#0f172a',
+    color: '#475569',
+    border: '1px solid rgba(255,255,255,0.06)',
+    whiteSpace: 'nowrap',
+    alignSelf: 'flex-start',
+    cursor: 'not-allowed',
+    opacity: 0.7,
+  },
   empty: {
     display: 'flex',
     flexDirection: 'column',
@@ -283,7 +343,7 @@ const styles: Record<string, React.CSSProperties> = {
   emptySub: {
     fontSize: 14,
     color: '#475569',
-    maxWidth: 400,
+    maxWidth: 480,
     margin: 0,
     lineHeight: 1.6,
   },
@@ -296,6 +356,17 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#f1f5f9',
     border: '1px solid rgba(255,255,255,0.12)',
     textDecoration: 'none',
+    marginTop: 8,
+  },
+  emptyBtnSecondary: {
+    fontSize: 13,
+    fontWeight: 700,
+    padding: '10px 20px',
+    borderRadius: 6,
+    background: 'transparent',
+    color: '#fdba74',
+    border: '1px solid rgba(249,115,22,0.35)',
+    cursor: 'pointer',
     marginTop: 8,
   },
   list: {
