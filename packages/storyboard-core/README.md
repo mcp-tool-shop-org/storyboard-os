@@ -191,21 +191,23 @@ if (!result.valid) {
 
 | Code | Meaning |
 |---|---|
-| `INVALID_STORYBOARD_SHAPE` | Input is null/undefined or missing `frames`/`connections` arrays |
+| `INVALID_STORYBOARD_SHAPE` | Input is null/undefined or missing `frames`/`connections` arrays, or a null/non-object element inside those arrays |
 | `EMPTY_STORYBOARD` | No frames in the storyboard |
+| `INVALID_FRAME_ID` | Frame `id` is missing or not a string |
 | `DUPLICATE_FRAME_ID` | Two frames share the same ID |
-| `MISSING_TITLE` | Frame has no title |
+| `MISSING_TITLE` | Frame has no title (missing, empty, or non-string) |
 | `MISSING_TYPE` | Frame has no type |
-| `MISSING_SUMMARY` | Frame has no summary |
+| `MISSING_SUMMARY` | Frame has no summary (missing, empty, or non-string) |
 | `MISSING_FRAME_SIZE` | Frame is missing its `size` object |
 | `MISSING_FRAME_POSITION` | Frame is missing its `position` object |
 | `INVALID_FRAME_DIMENSION` | Frame width or height is NaN/Infinity or below the 40px minimum |
 | `INVALID_FRAME_POSITION` | Frame `position.x` or `position.y` is NaN/Infinity |
+| `INVALID_CONNECTION_ID` | Connection `id` is missing or not a string |
 | `DUPLICATE_CONNECTION_ID` | Two connections share the same ID |
 | `SELF_LOOP_CONNECTION` | Connection's `fromFrameId` equals its `toFrameId` |
 | `DUPLICATE_CONNECTION_EDGE` | Two connections describe the same `from → to` edge |
-| `BROKEN_CONNECTION_FROM` | Connection `fromFrameId` references a non-existent frame |
-| `BROKEN_CONNECTION_TO` | Connection `toFrameId` references a non-existent frame |
+| `BROKEN_CONNECTION_FROM` | Connection `fromFrameId` is non-string or references a non-existent frame |
+| `BROKEN_CONNECTION_TO` | Connection `toFrameId` is non-string or references a non-existent frame |
 
 Domain packages call `validateStoryboard` first, then layer their own domain rules on top. `@storyboard-os/rpg-domain` exports `validateRpgStoryboard` which does exactly this — and emits additional `RPG_*` codes (e.g., `RPG_MISSING_STATE_CHANGES`).
 

@@ -123,7 +123,10 @@ interface Props {
   /** Called whenever zoom or pan state changes. Use for displaying scale in parent controls. */
   onViewStateChange?: (v: ViewState) => void;
 
-  /** Fit all frames to the viewport on first mount. Default: false. */
+  /**
+   * Fit all frames on first ready measure with at least one frame present.
+   * An empty async load does not consume the one-shot guard. Default: false.
+   */
   autoFit?: boolean;
 
   /**
@@ -131,8 +134,25 @@ interface Props {
    * Use this to persist layout changes. Template preview boards can omit this.
    */
   onFramePositionChange?: (frameId: string, position: { x: number; y: number }) => void;
+
+  /**
+   * Bump to force re-seed of internal drag positions from `frames[].position`
+   * (reset-layout / undo batches without remounting). When swapping boards,
+   * prefer remounting with `key={storyboard.id}` so viewport + positions reset.
+   */
+  positionEpoch?: number | string;
 }
 ```
+
+### Position reconcile
+
+Internal drag state is reconciled against `frames[].position` on every frames update:
+
+- New ids are seeded; removed ids are pruned.
+- When a frame's `position` prop changes relative to the last-seen baseline, the prop value is adopted (parent-driven undo/redo / reset-layout).
+- When the prop baseline is unchanged, local drag coordinates are kept.
+
+If you replace board data in place with overlapping ids and identical coordinates, remount the canvas (`key={storyboard.id}`) or bump `positionEpoch` — otherwise the prior drag map wins.
 
 ---
 

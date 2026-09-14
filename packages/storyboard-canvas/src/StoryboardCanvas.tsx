@@ -51,6 +51,7 @@ import ConnectionLayer from './ConnectionLayer';
 import FrameCard from './FrameCard';
 import AccessibleFrameList from './AccessibleFrameList';
 import { DEFAULT_FRAME_STYLE } from './defaults';
+import { reconcilePositions, shouldAutoFit, type PropPositionMap } from './positions';
 
 // ─── Public handle exposed via ref ────────────────────────────────────────────
 
@@ -85,7 +86,9 @@ interface Props {
    */
   onViewStateChange?: (v: ViewState) => void;
   /**
-   * Fit all frames into the viewport on first mount (after container is measured).
+   * Fit all frames into the viewport on first mount (after container is measured
+   * and at least one frame is present). An empty first measure does not consume
+   * the one-shot guard — frames arriving later still get a single auto-fit.
    * Default: false.
    */
   autoFit?: boolean;
@@ -95,6 +98,12 @@ interface Props {
    * Template preview boards can omit this to remain non-persistent.
    */
   onFramePositionChange?: (frameId: string, position: { x: number; y: number }) => void;
+  /**
+   * Bump to force the internal position map to re-seed from `frames[].position`
+   * (undo/redo batches, reset-layout, replacing board data without remounting).
+   * Prefer remounting with `key={storyboard.id}` when swapping boards entirely.
+   */
+  positionEpoch?: number | string;
 }
 
 // ─── Internal constants ───────────────────────────────────────────────────────
@@ -138,6 +147,7 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       onViewStateChange,
       autoFit = false,
       onFramePositionChange,
+      positionEpoch,
     },
     ref,
   ) {
@@ -161,32 +171,34 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
     const panStart   = useRef({ clientX: 0, clientY: 0, stageX: 0, stageY: 0 });
     const hasFitted  = useRef(false);
 
+    // Last-seen frames[].position values — distinguishes parent-driven updates
+    // (undo/redo, reset-layout) from local drag state that must be preserved.
+    const propBaselinesRef = useRef<PropPositionMap | null>(null);
+    if (propBaselinesRef.current === null) {
+      propBaselinesRef.current = Object.fromEntries(
+        frames.map(f => [f.id, { ...f.position }]),
+      );
+    }
+    const lastPositionEpochRef = useRef(positionEpoch);
+
     // ── Reconcile positions with frames prop ───────────────────────────────
-    // When the parent adds, removes, or replaces frames, prune orphaned ids
-    // and seed new ids from frame.position. Existing dragged positions for
-    // frames that still exist are preserved untouched.
+    // Prune orphans, seed new ids, and adopt frames[].position when it differs
+    // from the last prop baseline. Local drag is preserved when the baseline
+    // is unchanged. Bumping positionEpoch forces a full re-seed.
     useEffect(() => {
+      const forceResync = lastPositionEpochRef.current !== positionEpoch;
+      lastPositionEpochRef.current = positionEpoch;
       setPositions(prev => {
-        const next: PositionMap = {};
-        let changed = false;
-        const prevKeys = Object.keys(prev);
-        if (prevKeys.length !== frames.length) {
-          changed = true;
-        }
-        for (const f of frames) {
-          if (prev[f.id]) {
-            next[f.id] = prev[f.id];
-          } else {
-            next[f.id] = { ...f.position };
-            changed = true;
-          }
-        }
-        // If we wrote the same number of keys but any old key disappeared,
-        // the length check above caught it. Return prev when nothing changed
-        // to avoid an unnecessary re-render.
-        return changed ? next : prev;
+        const result = reconcilePositions(
+          prev,
+          frames,
+          propBaselinesRef.current ?? {},
+          forceResync,
+        );
+        propBaselinesRef.current = result.propBaselines;
+        return result.positions;
       });
-    }, [frames]);
+    }, [frames, positionEpoch]);
 
     // ── Duplicate frame id warning (F-CV-006) ──────────────────────────────
     // Duplicate ids silently corrupt position tracking (PositionMap keys
@@ -243,10 +255,22 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       return () => ro.disconnect();
     }, []);
 
-    // ── Auto-fit on first measurement ──────────────────────────────────────
+    // ── Auto-fit on first measurement with frames ──────────────────────────
+    // Wait until frames.length > 0 so an async empty→loaded transition still
+    // gets one fit. After a successful fit, the one-shot guard holds so later
+    // drag/pan is not stolen.
     useEffect(() => {
-      if (!autoFit || hasFitted.current) return;
-      if (containerSize.width <= 0) return;
+      if (
+        !shouldAutoFit({
+          autoFit,
+          hasFitted: hasFitted.current,
+          containerWidth: containerSize.width,
+          containerHeight: containerSize.height,
+          frameCount: frames.length,
+        })
+      ) {
+        return;
+      }
 
       hasFitted.current = true;
       const rects = frames.map(f => ({
@@ -254,9 +278,9 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
         size: f.size,
       }));
       applyView(fitViewToFrames(rects, containerSize.width, containerSize.height));
-      // Intentionally not including positions/frames in deps — this fires once
+      // frames.length is the empty→non-empty trigger; positions read at fit time
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [containerSize.width, containerSize.height, autoFit]);
+    }, [containerSize.width, containerSize.height, autoFit, frames.length]);
 
     // ── Center-on-frame (shared by ref handle + keyboard activation) ─────────
     // HU-001: extracted so the accessible frame list can center the canvas on a
