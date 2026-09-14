@@ -152,17 +152,31 @@ function computeAudioBurden(storyboard: Storyboard): AudioBurdenSummary {
   return { totalFramesWithAudio: shots.length, totalRequirements: totalReqs, shots };
 }
 
+/** Explicit static / locked-off language — not a moving camera. */
+const STATIC_MOVEMENT = /^(static\b|none|locked\s*off)\b/i;
+/** Tokens that mean the camera is actually moving. */
+const COMPLEX_MOVEMENT =
+  /\b(dolly|pan|track(?:ing)?|crane|push(?:-?in)?|pull(?:-?back)?|handheld|tilt|zoom|orbit|whip|boom|truck|pedestal|arc|reframe)\b/i;
+
+function isComplexCameraMovement(movement: string | undefined): boolean {
+  if (!movement || !movement.trim()) return false;
+  const m = movement.trim();
+  // Leading "Static…" / "none" / "locked off" wins even if later words mention zoom.
+  if (STATIC_MOVEMENT.test(m)) return false;
+  return COMPLEX_MOVEMENT.test(m);
+}
+
 function computeCameraComplexity(storyboard: Storyboard): CameraComplexitySummary {
   const complexShots: CameraComplexityShot[] = [];
   let staticShots = 0;
 
   for (const frame of storyboard.frames) {
     const movement = frame.content?.cameraMovement;
-    if (movement) {
+    if (isComplexCameraMovement(movement)) {
       complexShots.push({
         frameId: frame.id,
         frameTitle: frame.title,
-        movement,
+        movement: movement!,
         angle: frame.content?.cameraAngle,
         framing: frame.content?.framing,
       });
