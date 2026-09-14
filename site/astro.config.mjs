@@ -10,7 +10,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Storyboard OS',
-      description: 'Visual story-structure platform. rpg-storyboard is the first vertical.',
+      description: 'Visual story-structure platform with three shipped verticals — rpg, marketing, and cinematic.',
       logo: {
         src: './src/assets/logo.png',
         alt: 'Storyboard OS',

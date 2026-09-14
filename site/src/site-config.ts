@@ -37,7 +37,7 @@ export const config: SiteConfig = {
       kind: 'features',
       id: 'platform',
       title: 'A platform, not a tool',
-      subtitle: 'Five focused packages. Each owns one concern. Nothing leaks across the boundary.',
+      subtitle: 'Six focused packages. Each owns one concern. Nothing leaks across the boundary.',
       features: [
         {
           title: '@storyboard-os/core',

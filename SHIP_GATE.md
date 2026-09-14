@@ -21,7 +21,7 @@
 
 ## B. Error Handling
 
-- [x] `[all]` Errors follow the Structured Error Shape: `code`, `message`, `hint`, `cause?`, `retryable?` (2026-05-04)
+- [x] `[all]` Errors follow the repo validator shape: `StoryboardValidationError` is `{ code, message, frameId?, connectionId? }` (`@storyboard-os/core`). Studio-wide `hint` / `cause?` / `retryable?` fields are not used here — browser-static packages surface validation via Result errors, not CLI/MCP retry envelopes (checked 2026-09-14)
 - [ ] `[cli]` SKIP: not a CLI tool
 - [ ] `[mcp]` SKIP: not an MCP server
 - [ ] `[desktop]` SKIP: not a desktop app — browser-only; errors surface as inline UI states (notFound, loading) rather than OS-level error dialogs
@@ -39,7 +39,7 @@
 
 - [x] `[all]` `verify` script exists (test + build + smoke in one command) (2026-05-04)
 - [x] `[all]` Version in manifest matches git tag (2026-05-04)
-- [x] `[all]` Dependency scanning runs in CI — `pnpm audit --prod --audit-level=high` gates every run (ci.yml); two SSR-only astro advisories are documented-and-ignored in `pnpm-workspace.yaml` (structurally unreachable in static output) (2026-07-07)
+- [x] `[all]` Dependency scanning runs in CI — `pnpm audit --prod --audit-level=high` gates every run (ci.yml) with **no** `auditConfig.ignoreGhsas`; apps pin `astro ^7.3.1` and the former SSR-only GHSA suppressions were removed on that bump (checked 2026-09-14)
 - [x] `[all]` Automated dependency update mechanism exists (2026-05-04)
 - [x] `[npm]` Six `@storyboard-os/*` packages publish to npm publicly via `.github/workflows/publish.yml` on release (core, routing, rpg-domain, canvas, marketing-domain, cinematic-domain) (2026-05-12)
 - [x] `[npm]` `engines.node` is set in root and per-package `package.json` (`>=20`) (2026-05-12)
