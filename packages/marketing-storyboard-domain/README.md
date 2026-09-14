@@ -70,8 +70,8 @@ import {
 - **Frame signals** — `getMarketingFrameSignal(frame)` / `getMarketingFrameBadges(frame)` derive per-frame state, readiness, and canvas badges; `marketingColors` is the canonical badge palette (shared status swatches from core + `gate` amber and `critical`).
 - **Readiness model** — `getCampaignBeatStatus(frame)` classifies a beat as `ready | partial | draft | blocked`; `getCampaignReadiness(board)` rolls the beats up into a campaign readiness summary.
 - **Launch readiness** — `getCampaignLaunchReadiness`, `getCampaignCriticalPath`, `getApprovalGateSignals`, and `getMeasurementLoopSignals` surface what blocks launch: gated approvals (blocked vs pending), the critical path to the launch event, and open measurement loops.
-- **Handoff** — `generateCampaignHandoff(board)` and `generateCampaignMarkdown(board)` (plus the project-level `generateProjectCampaignHandoff` / `…Markdown`) emit a campaign-implementation brief carrying `HANDOFF_FORMAT_VERSION` for downstream consumers. User text is neutralized before interpolation.
-- **Project helpers** — `createCampaignProject`, `updateFrameContent`, `setChecklistItemComplete`, `getProjectProgress`, … manage a persisted campaign project (used by the marketing-storyboard app's localStorage layer).
+- **Handoff** — `generateCampaignHandoff(board)` returns a `CampaignHandoff`; pass that to `generateCampaignMarkdown(handoff)` (plus the project-level `generateProjectCampaignHandoff` / `…Markdown`) to emit a campaign-implementation brief carrying `HANDOFF_FORMAT_VERSION` for downstream consumers. User text is neutralized before interpolation.
+- **Project helpers** — `createCampaignProject`, `updateFrameContent`, `setChecklistItemComplete`, `getProjectProgress`, … manage a campaign project model for a future app persistence layer. The current marketing-storyboard app is demo-SSG only and does not yet wire these helpers to localStorage.
 - **Demo** — `launchRpgStoryboardCampaign` is a complete example campaign for tests and previews.
 
 ## Trust model

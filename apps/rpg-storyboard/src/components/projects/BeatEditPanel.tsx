@@ -62,24 +62,29 @@ interface Props {
 
 export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
   const accent = TYPE_COLORS[frame.type];
+  // Null-normalize so NEWER_SCHEMA / corrupt loads with null content do not throw.
+  const existing = (frame.content ?? {}) as FrameContent;
 
   // Basics
   const [title,   setTitle]   = useState(frame.title);
   const [summary, setSummary] = useState(frame.summary ?? '');
 
   // String content fields
-  const [designerNotes,     setDesignerNotes]     = useState(frame.content.designerNotes     ?? '');
-  const [playerVisibleText, setPlayerVisibleText] = useState(frame.content.playerVisibleText ?? '');
-  const [stakes,            setStakes]            = useState(frame.content.stakes            ?? '');
+  const [designerNotes,     setDesignerNotes]     = useState(existing.designerNotes     ?? '');
+  const [playerVisibleText, setPlayerVisibleText] = useState(existing.playerVisibleText ?? '');
+  const [stakes,            setStakes]            = useState(existing.stakes            ?? '');
 
   // Array content fields (stored as one-per-line strings)
-  const [entryConditions,        setEntryConditions]        = useState(arrToLines(frame.content.entryConditions));
-  const [exitConditions,         setExitConditions]         = useState(arrToLines(frame.content.exitConditions));
-  const [stateChanges,           setStateChanges]           = useState(arrToLines(frame.content.stateChanges));
-  const [requiredAssets,         setRequiredAssets]         = useState(arrToLines(frame.content.requiredAssets));
-  const [testCriteria,           setTestCriteria]           = useState(arrToLines(frame.content.testCriteria));
-  const [implementationChecklist,setImplementationChecklist] = useState(arrToLines(frame.content.implementationChecklist));
-  const [authorOnlyNotes,        setAuthorOnlyNotes]        = useState(arrToLines(frame.content.authorOnlyNotes));
+  const [entryConditions,        setEntryConditions]        = useState(arrToLines(existing.entryConditions));
+  const [exitConditions,         setExitConditions]         = useState(arrToLines(existing.exitConditions));
+  const [stateChanges,           setStateChanges]           = useState(arrToLines(existing.stateChanges));
+  const [possibleOutcomes,       setPossibleOutcomes]       = useState(arrToLines(existing.possibleOutcomes));
+  const [involvedCharacters,     setInvolvedCharacters]     = useState(arrToLines(existing.involvedCharacters));
+  const [involvedFactions,       setInvolvedFactions]       = useState(arrToLines(existing.involvedFactions));
+  const [requiredAssets,         setRequiredAssets]         = useState(arrToLines(existing.requiredAssets));
+  const [testCriteria,           setTestCriteria]           = useState(arrToLines(existing.testCriteria));
+  const [implementationChecklist,setImplementationChecklist] = useState(arrToLines(existing.implementationChecklist));
+  const [authorOnlyNotes,        setAuthorOnlyNotes]        = useState(arrToLines(existing.authorOnlyNotes));
 
   function handleSave() {
     const basics: FrameBasicsPatch = {};
@@ -93,6 +98,9 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
       entryConditions:        linesToArr(entryConditions),
       exitConditions:         linesToArr(exitConditions),
       stateChanges:           linesToArr(stateChanges),
+      possibleOutcomes:       linesToArr(possibleOutcomes),
+      involvedCharacters:     linesToArr(involvedCharacters),
+      involvedFactions:       linesToArr(involvedFactions),
       requiredAssets:         linesToArr(requiredAssets),
       testCriteria:           linesToArr(testCriteria),
       implementationChecklist:linesToArr(implementationChecklist),
@@ -220,6 +228,36 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
             rows={3}
             style={taStyle}
             placeholder="quest_state = active"
+          />
+        </Section>
+
+        <Section label="Possible Outcomes (one per line)" accent={accent}>
+          <textarea
+            value={possibleOutcomes}
+            onChange={e => setPossibleOutcomes(e.target.value)}
+            rows={3}
+            style={taStyle}
+            placeholder="Player accepts the quest"
+          />
+        </Section>
+
+        <Section label="Involved Characters (one per line)" accent={accent}>
+          <textarea
+            value={involvedCharacters}
+            onChange={e => setInvolvedCharacters(e.target.value)}
+            rows={3}
+            style={taStyle}
+            placeholder="Orvyn Kett"
+          />
+        </Section>
+
+        <Section label="Involved Factions (one per line)" accent={accent}>
+          <textarea
+            value={involvedFactions}
+            onChange={e => setInvolvedFactions(e.target.value)}
+            rows={3}
+            style={taStyle}
+            placeholder="The Compact"
           />
         </Section>
 

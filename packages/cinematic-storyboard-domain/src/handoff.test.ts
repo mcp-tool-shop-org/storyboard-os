@@ -174,6 +174,26 @@ describe('generateProductionMarkdown', () => {
 
     expect(md).toContain('**Continuity:**');
   });
+
+  it('emits Framing when framing is set without cameraAngle/cameraMovement', () => {
+    const storyboard: Storyboard = {
+      id: 'framing-only',
+      title: 'Framing Only',
+      frames: [
+        makeFrame('f1', 'shot', {
+          visualDescription: 'Subject centered',
+          framing: 'Medium close-up, rule of thirds',
+        }),
+      ],
+      connections: [],
+    };
+    const brief = generateProductionBrief(storyboard);
+    expect(brief.shots[0].camera).toBeNull();
+    expect(brief.shots[0].framing).toBe('Medium close-up, rule of thirds');
+    const md = generateProductionMarkdown(brief);
+    expect(md).toContain('**Framing:** Medium close-up, rule of thirds');
+    expect(md).not.toContain('**Camera:**');
+  });
 });
 
 // ─── DM-004 — markdown escapes user text ──────────────────────────────────────

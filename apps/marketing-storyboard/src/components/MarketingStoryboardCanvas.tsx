@@ -36,7 +36,7 @@ import {
 } from '@storyboard-os/marketing-domain';
 import type { Storyboard } from '@storyboard-os/marketing-domain';
 import { statusColors, textColors, typeScale } from '@storyboard-os/core';
-import { categorizeApprovalSignals } from '../lib/launchBlockers';
+import { categorizeApprovalSignals, shouldShowLaunchBlockersPanel } from '../lib/launchBlockers';
 import MarketingFrameInspector from './MarketingFrameInspector';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -74,6 +74,10 @@ const MARKETING_CANVAS_CONFIG: StoryboardCanvasConfig = {
         // The "Approval Gate" connection reads the same amber as the GATE badge.
         approval: { stroke: marketingColors.gate, dash: [6, 3], strokeWidth: 2 },
         optional: { stroke: SLATE_LINE_DIM, dash: [4, 4], strokeWidth: 1.5 },
+        // Segment paths from audience beats (schema MarketingConnectionType).
+        choice: { stroke: statusColors.accent, dash: [8, 4], strokeWidth: 2.5 },
+        // Load-bearing gate outcomes (e.g. demo approval → launch announcement).
+        consequence: { stroke: statusColors.blocked, strokeWidth: 2.5 },
     },
     // Byte-identical to the canvas package's exported fallback frame style —
     // reuse it verbatim rather than hand-copying the literal.
@@ -88,6 +92,8 @@ const CONNECTION_TYPE_LABELS: Record<string, string> = {
     dependency: 'Dependency',
     approval: 'Approval Gate',
     optional: 'Optional Path',
+    choice: 'Segment Path',
+    consequence: 'Consequence',
 };
 
 const CONNECTION_TYPE_COLORS: Record<string, string> = {
@@ -95,6 +101,8 @@ const CONNECTION_TYPE_COLORS: Record<string, string> = {
     dependency: statusColors.blocked,
     approval: marketingColors.gate,
     optional: SLATE_LINE_DIM,
+    choice: statusColors.accent,
+    consequence: statusColors.blocked,
 };
 
 const CONNECTION_EXPLANATIONS: Record<string, string> = {
@@ -102,6 +110,8 @@ const CONNECTION_EXPLANATIONS: Record<string, string> = {
     dependency: 'This beat cannot start until the upstream dependency is resolved.',
     approval: 'This beat requires formal approval before the downstream work can begin.',
     optional: 'This path is optional — the campaign can proceed without it.',
+    choice: 'Audience segment branch — one of several paths this segment can take through the campaign.',
+    consequence: 'Outcome of an upstream gate or decision — the downstream beat fires because that condition resolved.',
 };
 
 // ─── Legend ───────────────────────────────────────────────────────────────────
@@ -111,6 +121,8 @@ const LEGEND = [
     { type: 'dependency', color: statusColors.blocked, label: 'Dependency', dashed: true, weight: 2 },
     { type: 'approval', color: marketingColors.gate, label: 'Approval', dashed: true, weight: 2 },
     { type: 'optional', color: SLATE_LINE_DIM, label: 'Optional', dashed: true, weight: 1.5 },
+    { type: 'choice', color: statusColors.accent, label: 'Segment', dashed: true, weight: 2.5 },
+    { type: 'consequence', color: statusColors.blocked, label: 'Consequence', dashed: false, weight: 2.5 },
 ];
 
 // ─── Badge legend ───────────────────────────────────────────────────────────
@@ -383,12 +395,14 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
 
                 {/* Launch blockers panel — visible when issues exist and no frame/connection is selected.
                     Pending approvals count as an issue: they must surface here even when
-                    nothing is hard-blocked (AP-006 #4). */}
-                {!selectedFrame && !selectedConnection && (
-                    launchReadiness.blockedFrameIds.length > 0 ||
-                    launchReadiness.missingMeasurementFrameIds.length > 0 ||
-                    approvalCategories.pending.length > 0
-                ) && (
+                    nothing is hard-blocked (AP-006 #4). Open measurement loops also gate
+                    visibility so a clean-but-unlooped campaign still mounts the panel. */}
+                {!selectedFrame && !selectedConnection && shouldShowLaunchBlockersPanel({
+                    blockedFrameIds: launchReadiness.blockedFrameIds,
+                    missingMeasurementFrameIds: launchReadiness.missingMeasurementFrameIds,
+                    pendingApprovals: approvalCategories.pending,
+                    measurementSignals,
+                }) && (
                     <LaunchBlockersPanel
                         blockedApprovals={approvalCategories.blocked}
                         pendingApprovals={approvalCategories.pending}

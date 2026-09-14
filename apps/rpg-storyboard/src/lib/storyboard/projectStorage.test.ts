@@ -424,6 +424,60 @@ describe('schema versioning — a NEWER-schema envelope is preserved, not droppe
     // Read must not have rewritten (downgraded) the newer store.
     expect(backing.get(STORAGE_KEY)).toBe(raw);
   });
+
+  // F-64bc9e89: soft-sanitize crash-shaped frames/connections on NEWER_SCHEMA.
+  it('drops crash-shaped frames/connections but keeps the project and valid beats', () => {
+    const goodFrame = {
+      id: 'ok-f1',
+      type: 'scene',
+      title: 'Good',
+      position: { x: 0, y: 0 },
+      size: { width: 220, height: 120 },
+      content: { designerNotes: 'fine' },
+      annotations: [],
+    };
+    const nullContentFrame = {
+      id: 'null-c',
+      type: 'choice',
+      title: 'Null content',
+      position: { x: 10, y: 10 },
+      size: { width: 220, height: 120 },
+      content: null,
+      annotations: [],
+    };
+    const crashFrame = { id: 'crash', title: 'no type/pos' };
+    const goodConn = {
+      id: 'c1', fromFrameId: 'ok-f1', toFrameId: 'null-c', type: 'sequence',
+    };
+    seed({
+      schemaVersion: 999,
+      projects: [{
+        id: 'newer-soft',
+        title: 'Newer Soft',
+        createdAt: '2026-07-01T00:00:00.000Z',
+        updatedAt: '2026-07-01T00:00:00.000Z',
+        storyboard: {
+          id: 'sb-newer',
+          title: 'Board',
+          frames: [goodFrame, nullContentFrame, crashFrame, null],
+          connections: [goodConn, null, { id: 'bad' }],
+        },
+        progress: { frames: {} },
+        // Extra newer-only field must not cause a drop.
+        futureField: { anything: true },
+      }],
+    });
+
+    const projects = listProjects();
+    expect(projects).toHaveLength(1);
+    expect(projects[0].id).toBe('newer-soft');
+    expect((projects[0] as unknown as { futureField?: unknown }).futureField).toEqual({ anything: true });
+    expect(projects[0].storyboard.frames.map(f => f.id)).toEqual(['ok-f1', 'null-c']);
+    expect(projects[0].storyboard.frames.find(f => f.id === 'null-c')!.content).toEqual({});
+    expect(projects[0].storyboard.connections).toHaveLength(1);
+    expect(projects[0].storyboard.connections[0].id).toBe('c1');
+    expect(getLastReadWarning()?.code).toBe('NEWER_SCHEMA');
+  });
 });
 
 describe('schema versioning — migration and validation compose', () => {

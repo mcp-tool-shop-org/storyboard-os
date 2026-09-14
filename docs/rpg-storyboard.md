@@ -143,10 +143,8 @@ Stroke weight distinguishes game-state branches (`choice`, `consequence`) from n
 |---|---|
 | `ready` | All spec sections present. Spec score ≥ 3 (designerNotes, requiredAssets, testCriteria, implementationChecklist). No domain violations. |
 | `partial` | Some spec present but incomplete. Spec score 1–2. |
-| `draft` | No spec present (score = 0). The beat exists structurally but carries no implementation depth. |
-| `blocked` | Domain violation: a `choice`/`consequence` frame missing `stateChanges`, or a `reveal` missing both `entryConditions` and `stateChanges`. Content is present but violates RPG contract. |
-
-Note: an empty `choice` frame (score = 0) is `draft`, not `blocked`. A frame must have at least some content before domain rules apply.
+| `draft` | Spec score is 0 **and** no domain blocker. Empty shells of non-domain-required types only (`hook`, `scene`, `encounter`, `npc_beat`). |
+| `blocked` | Any `BLOCKING_REASONS` hit (missing type-required fields), **regardless of spec score** — an empty `choice`/`consequence`/`reveal` is `blocked`, not `draft`. |
 
 ### Missing reasons
 

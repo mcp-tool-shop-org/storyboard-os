@@ -8,13 +8,37 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { ApprovalGateSignal } from '@storyboard-os/marketing-domain';
+import type { ApprovalGateSignal, MeasurementLoopSignal } from '@storyboard-os/marketing-domain';
 
 export interface ApprovalSignalCategories {
     /** Gates that cannot pass at all — approval requirements are missing. */
     blocked: ApprovalGateSignal[];
     /** Gates that are defined but not yet fully specced/signed off. */
     pending: ApprovalGateSignal[];
+}
+
+/** Measurement frames that have metrics but no outgoing feedback edge. */
+export function hasOpenMeasurementLoops(signals: readonly MeasurementLoopSignal[]): boolean {
+    return signals.some(s => s.hasMetrics && !s.isLoop);
+}
+
+/**
+ * Outer visibility gate for the Launch Blockers panel.
+ * Must include open loops — otherwise a clean campaign whose only issue is an
+ * unclosed measurement loop never mounts the panel that would surface it.
+ */
+export function shouldShowLaunchBlockersPanel(input: {
+    blockedFrameIds: readonly string[];
+    missingMeasurementFrameIds: readonly string[];
+    pendingApprovals: readonly ApprovalGateSignal[];
+    measurementSignals: readonly MeasurementLoopSignal[];
+}): boolean {
+    return (
+        input.blockedFrameIds.length > 0 ||
+        input.missingMeasurementFrameIds.length > 0 ||
+        input.pendingApprovals.length > 0 ||
+        hasOpenMeasurementLoops(input.measurementSignals)
+    );
 }
 
 /**

@@ -8,7 +8,7 @@ sidebar:
 ## Prerequisites
 
 - Node.js 20+
-- pnpm 9+
+- pnpm 10+
 
 ## Install
 

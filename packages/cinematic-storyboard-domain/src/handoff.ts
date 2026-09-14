@@ -236,7 +236,11 @@ export function generateProductionMarkdown(brief: ProductionBrief): string {
 
     if (shot.camera) {
       lines.push(`**Camera:** ${esc(shot.camera)}`);
-      if (shot.framing) lines.push(`  **Framing:** ${esc(shot.framing)}`);
+      lines.push('');
+    }
+
+    if (shot.framing) {
+      lines.push(`**Framing:** ${esc(shot.framing)}`);
       lines.push('');
     }
 

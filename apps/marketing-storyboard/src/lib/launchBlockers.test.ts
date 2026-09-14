@@ -12,8 +12,13 @@ import type { ApprovalGateSignal } from '@storyboard-os/marketing-domain';
 import {
     launchRpgStoryboardCampaign,
     getApprovalGateSignals,
+    type MeasurementLoopSignal,
 } from '@storyboard-os/marketing-domain';
-import { categorizeApprovalSignals } from './launchBlockers';
+import {
+    categorizeApprovalSignals,
+    hasOpenMeasurementLoops,
+    shouldShowLaunchBlockersPanel,
+} from './launchBlockers';
 
 function signal(overrides: Partial<ApprovalGateSignal>): ApprovalGateSignal {
     return {
@@ -108,5 +113,67 @@ describe('categorizeApprovalSignals — demo campaign fixture', () => {
     it('no gate lands in both buckets', () => {
         const blockedIds = new Set(blocked.map(s => s.frameId));
         for (const s of pending) expect(blockedIds.has(s.frameId)).toBe(false);
+    });
+});
+
+// ─── Open-loop visibility gate (F-d6c0bd9d) ───────────────────────────────────
+
+function loopSignal(overrides: Partial<MeasurementLoopSignal>): MeasurementLoopSignal {
+    return {
+        frameId: 'meas-1',
+        title: 'Post-launch metrics',
+        hasMetrics: true,
+        metricsCount: 2,
+        hasIncomingConnection: false,
+        hasOutgoingConnection: false,
+        isLoop: false,
+        ...overrides,
+    };
+}
+
+describe('hasOpenMeasurementLoops / shouldShowLaunchBlockersPanel', () => {
+    it('detects measurement frames with metrics but no feedback loop', () => {
+        expect(hasOpenMeasurementLoops([loopSignal({ isLoop: false })])).toBe(true);
+        expect(hasOpenMeasurementLoops([loopSignal({ isLoop: true })])).toBe(false);
+        expect(hasOpenMeasurementLoops([loopSignal({ hasMetrics: false, isLoop: false })])).toBe(false);
+    });
+
+    it('shows the panel when the only issue is an open measurement loop', () => {
+        expect(shouldShowLaunchBlockersPanel({
+            blockedFrameIds: [],
+            missingMeasurementFrameIds: [],
+            pendingApprovals: [],
+            measurementSignals: [loopSignal({ hasMetrics: true, isLoop: false })],
+        })).toBe(true);
+    });
+
+    it('hides the panel when there are no blockers, pending approvals, or open loops', () => {
+        expect(shouldShowLaunchBlockersPanel({
+            blockedFrameIds: [],
+            missingMeasurementFrameIds: [],
+            pendingApprovals: [],
+            measurementSignals: [loopSignal({ hasMetrics: true, isLoop: true })],
+        })).toBe(false);
+    });
+
+    it('still shows for blocked frames / missing metrics / pending approvals', () => {
+        expect(shouldShowLaunchBlockersPanel({
+            blockedFrameIds: ['conv-1'],
+            missingMeasurementFrameIds: [],
+            pendingApprovals: [],
+            measurementSignals: [],
+        })).toBe(true);
+        expect(shouldShowLaunchBlockersPanel({
+            blockedFrameIds: [],
+            missingMeasurementFrameIds: ['meas-1'],
+            pendingApprovals: [],
+            measurementSignals: [],
+        })).toBe(true);
+        expect(shouldShowLaunchBlockersPanel({
+            blockedFrameIds: [],
+            missingMeasurementFrameIds: [],
+            pendingApprovals: [signal({ status: 'partial' })],
+            measurementSignals: [],
+        })).toBe(true);
     });
 });

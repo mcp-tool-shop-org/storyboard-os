@@ -178,6 +178,73 @@ function isValidStoredConnection(value: unknown): boolean {
 }
 
 /**
+ * Soft frame check for NEWER_SCHEMA loads: same crash-shape gates as
+ * isValidStoredFrame, but null/missing content is normalized to `{}` instead
+ * of rejecting the frame (inspectors dereference content.* without null guards).
+ */
+function softSanitizeStoredFrame(value: unknown): RpgStoryboardProject['storyboard']['frames'][number] | null {
+  if (!isRecord(value)) return null;
+  const frame = value as {
+    id?: unknown; type?: unknown; title?: unknown;
+    position?: unknown; size?: unknown; content?: unknown;
+  };
+  if (typeof frame.id !== 'string' || frame.id.length === 0) return null;
+  if (typeof frame.type !== 'string') return null;
+  if (typeof frame.title !== 'string') return null;
+  const pos = frame.position as { x?: unknown; y?: unknown } | undefined;
+  if (!isRecord(pos) || typeof pos.x !== 'number' || typeof pos.y !== 'number') return null;
+  const size = frame.size as { width?: unknown; height?: unknown } | undefined;
+  if (!isRecord(size) || typeof size.width !== 'number' || typeof size.height !== 'number') return null;
+  // Reject non-object content (e.g. a string) — only null/missing get normalized.
+  if (frame.content !== null && frame.content !== undefined && !isRecord(frame.content)) return null;
+  return {
+    ...(value as object),
+    content: isRecord(frame.content) ? frame.content : {},
+  } as unknown as RpgStoryboardProject['storyboard']['frames'][number];
+}
+
+/**
+ * Soft-sanitize a NEWER_SCHEMA project for render safety without applying the
+ * full current-schema validity predicate (a newer field must not drop the
+ * project). Keeps the project shell when id/title/storyboard look usable;
+ * drops only crash-shaped frames/connections. Returns null only when the
+ * project shell itself is unusable.
+ */
+function softSanitizeNewerProject(value: unknown): RpgStoryboardProject | null {
+  if (!isRecord(value)) return null;
+  const p = value as {
+    id?: unknown; title?: unknown; createdAt?: unknown; updatedAt?: unknown;
+    storyboard?: unknown;
+  };
+  if (typeof p.id !== 'string' || p.id.length === 0) return null;
+  if (typeof p.title !== 'string') return null;
+  if (!isRecord(p.storyboard)) return null;
+  const sb = p.storyboard as { frames?: unknown; connections?: unknown };
+  const rawFrames = Array.isArray(sb.frames) ? sb.frames : [];
+  const rawConns = Array.isArray(sb.connections) ? sb.connections : [];
+
+  const frames = rawFrames
+    .map(softSanitizeStoredFrame)
+    .filter((f): f is RpgStoryboardProject['storyboard']['frames'][number] => f !== null);
+  const connections = rawConns.filter(
+    isValidStoredConnection,
+  ) as RpgStoryboardProject['storyboard']['connections'];
+
+  return {
+    ...(value as object),
+    id: p.id,
+    title: p.title,
+    createdAt: typeof p.createdAt === 'string' ? p.createdAt : '',
+    updatedAt: typeof p.updatedAt === 'string' ? p.updatedAt : '',
+    storyboard: {
+      ...(sb as object),
+      frames,
+      connections,
+    },
+  } as RpgStoryboardProject;
+}
+
+/**
  * Per-record validity predicate. Checks exactly the fields the app
  * dereferences on render (ProjectList card, board canvas, handoff generator,
  * and the updatedAt sort comparator). A record failing this is DROPPED from
@@ -335,11 +402,14 @@ function readAll(): RpgStoryboardProject[] {
     return [];
   }
 
-  // "Saved by a newer version" guard: do NOT downgrade or drop. Return the
-  // records best-effort as-is and surface a NEWER_SCHEMA warning. The raw store
-  // is left untouched (reads never write) so the newer deploy keeps its data.
+  // "Saved by a newer version" guard: do NOT downgrade or drop whole projects.
+  // Soft-sanitize crash-shaped frames/connections (null content, missing
+  // position/size, null connection elements) so FrameInspector / BeatEditPanel
+  // do not throw mid-render, but keep the project shell and any valid beats.
+  // The raw store is left untouched (reads never write) so the newer deploy
+  // keeps its data. A newer *field* must not read as "invalid" here.
   if (store.schemaVersion > CURRENT_SCHEMA_VERSION) {
-    devWarn('newer schema encountered — returning records as-is, not downgrading', {
+    devWarn('newer schema encountered — soft-sanitizing crash shapes, not downgrading', {
       storedVersion: store.schemaVersion,
       currentVersion: CURRENT_SCHEMA_VERSION,
       projectCount: store.projects.length,
@@ -351,10 +421,9 @@ function readAll(): RpgStoryboardProject[] {
         'save from this older version only if you understand it may drop newer fields.',
       dropped: 0,
     };
-    // Best-effort: return everything that at least looks like a project record,
-    // without dropping (a newer field must not read as "invalid" here). Cast via
-    // unknown — these are newer-shape records we deliberately do not validate.
-    return store.projects.filter(isRecord) as unknown as RpgStoryboardProject[];
+    return store.projects
+      .map(softSanitizeNewerProject)
+      .filter((p): p is RpgStoryboardProject => p !== null);
   }
 
   // Migrate FIRST (stepwise up the ladder), then validate — so the validity

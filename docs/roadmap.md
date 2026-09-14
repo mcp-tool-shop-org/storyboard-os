@@ -99,12 +99,13 @@ Mirror `apps/rpg-storyboard/src/`:
 |---|---|---|---|
 | F-CT-004 / F-CT-206 | MED | SHA-pin all GitHub Actions (currently floating @v3/@v4/@v6 tags) | Dependabot github-actions ecosystem was added in v1.1.0 — let dependabot drive the SHA-pin adoption rather than a manual bulk pin |
 | F-CT-211 | LOW | Dependabot groups all npm updates into a single PR — security PRs can stall behind major bumps | Split into patch/security/major groups |
-| Astro SSR advisories | MED | Remove the two `auditConfig.ignoreGhsas` entries in `pnpm-workspace.yaml` (`GHSA-2pvr-wf23-7pc7` host-header SSRF, `GHSA-8hv8-536x-4wqp` slot-name XSS) once the apps adopt astro 6 — both are patched there. Ignored today because both are SSR/server-island-only and structurally unreachable in static `astro build` output. | Blocked on the astro 5→6 major; revisit at that bump (this is the tracked trigger the ignore-list comment points to) |
 | Shipcheck soft gap | — | `[npm]` SBOM generation — no CycloneDX/SPDX attached to releases | Tooling decision (which SBOM generator); not a Dependabot blocker because npm `--provenance` provides comparable supply-chain signal |
 
 **Why deferred (as a group):** None blocks ship. All are accumulated polish where the gap is "we don't do X yet" rather than "we do X wrong."
 
 > **Closed by the 2026-07 dogfood swarm** (removed from this table): F-CT-208 (astro version split — apps migrated to astro 5.18.1), F-CT-209 (marketing/cinematic test scripts — vitest rigs added), F-CT-210 (workspace-protocol drift — standardized to `workspace:^`). Dependency scanning is now enforced in CI (`pnpm audit --prod --audit-level=high`).
+>
+> **Closed by the astro 7 bump** (in-tree; apps pin `astro ^7.3.1`): Astro SSR advisories row — `auditConfig.ignoreGhsas` entries for `GHSA-2pvr-wf23-7pc7` and `GHSA-8hv8-536x-4wqp` removed from `pnpm-workspace.yaml`; CI audit runs unsuppressed.
 
 ---
 

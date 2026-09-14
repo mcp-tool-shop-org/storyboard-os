@@ -29,6 +29,7 @@ export type KnownStoryboardValidationCode =
   | 'MISSING_FRAME_POSITION'
   | 'INVALID_FRAME_DIMENSION'
   | 'INVALID_FRAME_POSITION'
+  | 'INVALID_CONNECTION_ID'
   | 'DUPLICATE_CONNECTION_ID'
   | 'SELF_LOOP_CONNECTION'
   | 'DUPLICATE_CONNECTION_EDGE'
@@ -198,14 +199,28 @@ export function validateStoryboard(
       continue;
     }
 
-    if (seenConnectionIds.has(conn.id)) {
+    // Non-string connection ids never enter the id sets: two connections with
+    // `id: undefined` would otherwise collide as a bogus DUPLICATE_CONNECTION_ID
+    // (same failure mode CR-003 fixed for frames). Field errors below carry
+    // connectionId only when it is a real string.
+    const connectionId = typeof conn.id === 'string' ? conn.id : undefined;
+    const connLabel = connectionId ?? `connections[${connIndex}]`;
+
+    if (connectionId === undefined) {
       errors.push({
-        code: 'DUPLICATE_CONNECTION_ID',
-        message: `Duplicate connection id: "${conn.id}".`,
-        connectionId: conn.id,
+        code: 'INVALID_CONNECTION_ID',
+        message: `connections[${connIndex}] has a non-string id (got ${describeType(conn.id)}).`,
       });
+    } else {
+      if (seenConnectionIds.has(connectionId)) {
+        errors.push({
+          code: 'DUPLICATE_CONNECTION_ID',
+          message: `Duplicate connection id: "${connectionId}".`,
+          connectionId,
+        });
+      }
+      seenConnectionIds.add(connectionId);
     }
-    seenConnectionIds.add(conn.id);
 
     // Refs are only meaningful as strings. Identity-based checks (self-loop,
     // duplicate edge) are gated on both refs being strings — otherwise
@@ -218,8 +233,8 @@ export function validateStoryboard(
       if (fromRef === toRef) {
         errors.push({
           code: 'SELF_LOOP_CONNECTION',
-          message: `Connection "${conn.id}" loops a frame to itself ("${fromRef}").`,
-          connectionId: conn.id,
+          message: `Connection "${connLabel}" loops a frame to itself ("${fromRef}").`,
+          connectionId,
         });
       }
 
@@ -227,11 +242,11 @@ export function validateStoryboard(
       if (seenEdges.has(edgeKey)) {
         errors.push({
           code: 'DUPLICATE_CONNECTION_EDGE',
-          message: `Connection "${conn.id}" duplicates edge from "${fromRef}" to "${toRef}" (already covered by "${seenEdges.get(edgeKey)}").`,
-          connectionId: conn.id,
+          message: `Connection "${connLabel}" duplicates edge from "${fromRef}" to "${toRef}" (already covered by "${seenEdges.get(edgeKey)}").`,
+          connectionId,
         });
       } else {
-        seenEdges.set(edgeKey, conn.id);
+        seenEdges.set(edgeKey, connLabel);
       }
     }
 
@@ -241,27 +256,27 @@ export function validateStoryboard(
     if (fromRef === undefined) {
       errors.push({
         code: 'BROKEN_CONNECTION_FROM',
-        message: `Connection "${conn.id}" has a non-string fromFrameId (got ${describeType(conn.fromFrameId)}); expected a frame id.`,
-        connectionId: conn.id,
+        message: `Connection "${connLabel}" has a non-string fromFrameId (got ${describeType(conn.fromFrameId)}); expected a frame id.`,
+        connectionId,
       });
     } else if (!frameIds.has(fromRef)) {
       errors.push({
         code: 'BROKEN_CONNECTION_FROM',
-        message: `Connection "${conn.id}" references unknown fromFrameId "${fromRef}".`,
-        connectionId: conn.id,
+        message: `Connection "${connLabel}" references unknown fromFrameId "${fromRef}".`,
+        connectionId,
       });
     }
     if (toRef === undefined) {
       errors.push({
         code: 'BROKEN_CONNECTION_TO',
-        message: `Connection "${conn.id}" has a non-string toFrameId (got ${describeType(conn.toFrameId)}); expected a frame id.`,
-        connectionId: conn.id,
+        message: `Connection "${connLabel}" has a non-string toFrameId (got ${describeType(conn.toFrameId)}); expected a frame id.`,
+        connectionId,
       });
     } else if (!frameIds.has(toRef)) {
       errors.push({
         code: 'BROKEN_CONNECTION_TO',
-        message: `Connection "${conn.id}" references unknown toFrameId "${toRef}".`,
-        connectionId: conn.id,
+        message: `Connection "${connLabel}" references unknown toFrameId "${toRef}".`,
+        connectionId,
       });
     }
   }
