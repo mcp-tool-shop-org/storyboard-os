@@ -2,7 +2,9 @@
 //
 // Shared humanization for handoff markdown + HTML so Type / Status / Sequence
 // Flow / missing-reason copy cannot drift. JSON keeps the raw enums/codes.
+// VP-005: ready renders as SPEC on board chrome and the brief (not READY).
 
+import { statusLabels } from '@storyboard-os/core';
 import type { CinematicConnectionType, CinematicFrameType } from './schema';
 import type { CinematicBeatStatusLevel } from './beatStatus';
 
@@ -22,19 +24,19 @@ export function humanizeFrameType(type: string): string {
   return FRAME_TYPE_LABELS[type as CinematicFrameType] ?? type.replace(/_/g, ' ');
 }
 
-export function humanizeStatus(status: string): string {
-  return status.toUpperCase();
-}
-
-/** Beat-status words as they appear on HTML badges (READY / PARTIAL / …). */
+/** Beat-status words as they appear on badges (SPEC / PARTIAL / …). VP-005. */
 export const STATUS_LABELS: Record<CinematicBeatStatusLevel, string> = {
-  ready: 'READY',
-  partial: 'PARTIAL',
-  draft: 'DRAFT',
-  blocked: 'BLOCKED',
+  ready: statusLabels.ready,     // 'SPEC'
+  partial: statusLabels.partial, // 'PARTIAL'
+  draft: statusLabels.draft,     // 'DRAFT'
+  blocked: statusLabels.blocked, // 'BLOCKED'
 };
 
-/** Sequence Flow labels — match handoff.astro CONN_LABELS (not canvas Title Case). */
+export function humanizeStatus(status: string): string {
+  return STATUS_LABELS[status as CinematicBeatStatusLevel] ?? status.toUpperCase();
+}
+
+/** Sequence Flow + canvas connection labels — one word per type. */
 export const CONNECTION_TYPE_LABELS: Record<CinematicConnectionType, string> = {
   sequence: 'sequence',
   match_cut: 'match cut',
@@ -42,7 +44,7 @@ export const CONNECTION_TYPE_LABELS: Record<CinematicConnectionType, string> = {
   reaction: 'reaction',
   transition: 'transition',
   continuity: 'continuity',
-  parallel_action: 'parallel',
+  parallel_action: 'Parallel Action',
   fallback: 'fallback',
 };
 

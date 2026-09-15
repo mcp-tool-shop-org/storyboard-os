@@ -133,4 +133,46 @@ describe('ProductionSignalPanel', () => {
     expect(html).toContain('rack focus');
     expect(html).not.toContain('Camera Complexity');
   });
+
+  it('surfaces unparsable duration samples on the duration row', () => {
+    const html = renderToStaticMarkup(
+      createElement(ProductionSignalPanel, {
+        signals: makeSignals({
+          health: 'yellow',
+          healthReason: 'unparsable duration estimates',
+          pressureSummary: ['1 duration estimate could not be parsed (use Ns, N-Ms, N seconds, or m:ss).'],
+          durationRollup: {
+            estimatedLowSeconds: 0,
+            estimatedHighSeconds: 0,
+            formatted: 'Unknown',
+            coveredFrames: 0,
+            uncoveredFrames: 0,
+            unparsableSamples: ['TBD', 'a beat'],
+          },
+        }),
+        onClose: () => {},
+      }),
+    );
+    expect(html).toContain('0 timed');
+    expect(html).toContain('2 unparsed');
+    expect(html).toContain('TBD');
+    expect(html).toContain('a beat');
+    expect(html).not.toContain('untimed');
+  });
+
+  it('sets aria-expanded on collapsible SignalSection headers', () => {
+    const html = renderToStaticMarkup(
+      createElement(ProductionSignalPanel, {
+        signals: makeSignals({
+          blockedShots: [
+            { frameId: 'f1', frameTitle: 'Hook', reasons: ['no_visualDescription'] },
+          ],
+        }),
+        onClose: () => {},
+      }),
+    );
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('aria-controls="signal-section-pressure"');
+    expect(html).toContain('id="signal-section-pressure"');
+  });
 });

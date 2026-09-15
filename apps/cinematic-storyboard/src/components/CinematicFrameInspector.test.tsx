@@ -6,12 +6,16 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
+const beatStatusMock = vi.hoisted(() => ({
+  getCinematicBeatStatus: vi.fn(() => ({ level: 'draft' as const, missingReasons: [] as string[] })),
+}));
+
 vi.mock('@storyboard-os/cinematic-domain', () => ({
-  getCinematicBeatStatus: () => ({ level: 'draft', missingReasons: [] }),
+  getCinematicBeatStatus: beatStatusMock.getCinematicBeatStatus,
   getCinematicFrameSignal: () => ({
     hasVfx: false,
     hasAudio: false,
@@ -19,6 +23,7 @@ vi.mock('@storyboard-os/cinematic-domain', () => ({
     cameraSummary: null,
   }),
   cinematicColors: { vfx: '#A855F7' },
+  STATUS_LABELS: { ready: 'SPEC', partial: 'PARTIAL', draft: 'DRAFT', blocked: 'BLOCKED' },
 }));
 
 import CinematicFrameInspector from './CinematicFrameInspector';
@@ -37,6 +42,10 @@ function makeNullContentFrame() {
 }
 
 describe('CinematicFrameInspector', () => {
+  beforeEach(() => {
+    beatStatusMock.getCinematicBeatStatus.mockReturnValue({ level: 'draft', missingReasons: [] });
+  });
+
   it('renders without throwing when frame.content is null', () => {
     expect(() => {
       renderToStaticMarkup(
@@ -56,5 +65,31 @@ describe('CinematicFrameInspector', () => {
       }),
     );
     expect(html).toContain('Null Content Shot');
+  });
+
+  it('paints the VFX type chip with cinematicColors.vfx, not pink #EC4899', () => {
+    const html = renderToStaticMarkup(
+      createElement(CinematicFrameInspector, {
+        frame: { ...makeNullContentFrame(), type: 'vfx' as const, title: 'Architecture Diagram' } as never,
+        onClose: () => {},
+      }),
+    );
+    expect(html).toContain('#A855F7');
+    expect(html).not.toContain('#EC4899');
+    expect(html).toContain('VFX');
+  });
+
+  it('ready copy names the ≥3 spec-field threshold, not full coverage', () => {
+    beatStatusMock.getCinematicBeatStatus.mockReturnValue({ level: 'ready', missingReasons: [] });
+    const html = renderToStaticMarkup(
+      createElement(CinematicFrameInspector, {
+        frame: makeNullContentFrame() as never,
+        onClose: () => {},
+      }),
+    );
+    expect(html).toContain('SPEC');
+    expect(html).toContain('spec score ≥ 3');
+    expect(html).toContain('no blockers');
+    expect(html).not.toContain('full spec coverage');
   });
 });

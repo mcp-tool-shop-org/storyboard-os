@@ -278,8 +278,9 @@ describe('handoff humanization and Sequence Flow', () => {
     expect(brief.shots[0].status).toBe('ready');
     const md = generateProductionMarkdown(brief);
     expect(md).toContain('**Type:** Camera Move');
-    expect(md).toContain('**Status:** READY');
+    expect(md).toContain('**Status:** SPEC');
     expect(md).not.toContain('**Type:** camera_move');
+    expect(md).not.toContain('**Status:** READY');
   });
 
   it('stamps connections on the brief and emits Sequence Flow in markdown', () => {
@@ -292,7 +293,7 @@ describe('handoff humanization and Sequence Flow', () => {
     const md = generateProductionMarkdown(brief);
     expect(md).toContain('## Sequence Flow');
     expect(md).toContain('match cut');
-    expect(md).toContain('parallel');
+    expect(md).toContain('Parallel Action');
     expect(md).not.toMatch(/\| match_cut \|/);
     expect(md).not.toMatch(/\| parallel_action \|/);
   });
@@ -358,9 +359,10 @@ describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
     expect(md).toContain('assets/tollhouse-exterior.png');
     expect(md).toContain('Block the establishing shot');
     expect(md).toContain('Framing matches the boards');
-    // Humanized type/status labels (JSON keeps the enums).
+    // Humanized type/status labels (JSON keeps the enums). VP-005: ready → SPEC.
     expect(md).toContain('**Type:** Shot');
-    expect(md).toContain('**Status:** READY');
+    expect(md).toContain('**Status:** SPEC');
+    expect(md).not.toContain('**Status:** READY');
     // No collateral damage from escaping a string that needed none.
     expect(md).not.toContain('\\');
     expect(md).not.toContain('&lt;');
