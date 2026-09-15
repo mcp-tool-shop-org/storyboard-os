@@ -10,6 +10,8 @@ export type {
     MarketingAnnotationType,
     MarketingTemplateId,
     MarketingFrameContent,
+    MarketingConversionEvent,
+    MarketingMeasurementEvent,
     FrameAnnotation,
     StoryboardFrame,
     Storyboard,
@@ -67,10 +69,12 @@ export {
     CONNECTION_TYPE_LABELS,
     MISSING_REASON_LABELS,
     BEAT_STATUS_LABELS,
+    ANNOTATION_TYPE_LABELS,
     humanizeFrameType,
     humanizeConnectionType,
     humanizeMissingReason,
     humanizeBeatStatus,
+    humanizeAnnotationType,
 } from './labels';
 
 export type {
@@ -92,6 +96,7 @@ export {
 
 export type {
     HandoffBranch,
+    CampaignHandoffAnnotation,
     CampaignHandoffBeat,
     CampaignHandoffReadiness,
     CampaignHandoffLaunch,
@@ -101,6 +106,20 @@ export type {
     ProjectCampaignHandoffBeat,
     ProjectCampaignHandoff,
 } from './handoff';
+
+export {
+    adaptCampaignHandoffToAssetPack,
+    adaptCampaignHandoffToEventMap,
+    adaptCampaignHandoffToChecklistPack,
+    fallbackEventId,
+    InvalidCampaignHandoffError,
+} from './adapters';
+
+export type {
+    CampaignAssetRow,
+    CampaignEventMap,
+    CampaignEventMapEntry,
+} from './adapters';
 
 export {
     createCampaignProject,

@@ -73,6 +73,47 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "conversionEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "description": "Author-committed conversion id. Adapters compile this; they do not invent analytics names or auto-wire GA.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "measurementEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "source"],
+      "description": "Author-committed measurement id plus where it is observed. `source` is not a GA property.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "text"],
+      "description": "Legal, brand, and other implementation constraints copied from the frame. Not card badges.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "owner_note",
+            "stakeholder_note",
+            "brand_guideline",
+            "legal_constraint",
+            "timing",
+            "budget_note"
+          ]
+        },
+        "text": { "type": "string", "minLength": 1 }
+      }
+    },
     "branch": {
       "type": "object",
       "additionalProperties": false,
@@ -137,6 +178,7 @@
         "metrics",
         "testCriteria",
         "implementationChecklist",
+        "annotations",
         "outgoingBranches",
         "incomingFromIds"
       ],
@@ -162,10 +204,19 @@
         "approvalRequirements": { "$ref": "#/$defs/stringArray" },
         "launchDependencies": { "$ref": "#/$defs/stringArray" },
         "conversionGoal": { "type": "string" },
+        "conversionEvent": { "$ref": "#/$defs/conversionEvent" },
         "metrics": { "$ref": "#/$defs/stringArray" },
+        "measurementEvents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/measurementEvent" }
+        },
         "testCriteria": { "$ref": "#/$defs/stringArray" },
         "implementationChecklist": { "$ref": "#/$defs/stringArray" },
         "ownerNotes": { "type": "string" },
+        "annotations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/annotation" }
+        },
         "outgoingBranches": {
           "type": "array",
           "items": { "$ref": "#/$defs/branch" }

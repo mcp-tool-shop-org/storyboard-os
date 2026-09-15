@@ -10,16 +10,25 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, StoryboardFrame, MarketingFrameContent, StoryboardConnection } from './schema';
+import type {
+    Storyboard,
+    StoryboardFrame,
+    MarketingFrameContent,
+    StoryboardConnection,
+    MarketingConversionEvent,
+    MarketingMeasurementEvent,
+} from './schema';
 import { getCampaignBeatStatus, getCampaignReadiness, BLOCKING_REASONS } from './beatStatus';
 import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
 import type { MarketingStoryboardProject, ProjectProgressSummary } from './project';
 import { getFrameProgress, getProjectProgress } from './project';
 import {
+    humanizeAnnotationType,
     humanizeBeatStatus,
     humanizeConnectionType,
     humanizeFrameType,
     humanizeMissingReason,
+    ANNOTATION_TYPE_LABELS,
     MISSING_REASON_LABELS,
 } from './labels';
 import {
@@ -76,6 +85,12 @@ export interface HandoffBranch {
     toTitle: string;
 }
 
+/** Frame annotation carried into the handoff (type + text; ids are authoring-only). */
+export interface CampaignHandoffAnnotation {
+    type: string;
+    text: string;
+}
+
 export interface CampaignHandoffBeat {
     id: string;
     type: string;
@@ -101,15 +116,23 @@ export interface CampaignHandoffBeat {
     approvalRequirements: string[];
     launchDependencies: string[];
 
-    // Outcomes
+    // Outcomes — display strings plus optional author-committed ids (F-684f138c)
     conversionGoal?: string;
+    conversionEvent?: MarketingConversionEvent;
     metrics: string[];
+    measurementEvents?: MarketingMeasurementEvent[];
 
     // Implementation
     testCriteria: string[];
     implementationChecklist: string[];
     /** Author-only notes (mirrors RPG authorOnlyNotes on the handoff beat). */
     ownerNotes?: string;
+
+    /**
+     * Legal / brand / timing constraints copied from the frame.
+     * Inspector Constraints section; not card badges (F-2cdce1c8).
+     */
+    annotations: CampaignHandoffAnnotation[];
 
     // Graph context
     outgoingBranches: HandoffBranch[];
@@ -284,10 +307,16 @@ function buildBeat(
         approvalRequirements: content.approvalRequirements ?? [],
         launchDependencies: content.launchDependencies ?? [],
         conversionGoal: content.conversionGoal,
+        conversionEvent: content.conversionEvent,
         metrics: content.metrics ?? [],
+        measurementEvents: content.measurementEvents,
         testCriteria: content.testCriteria ?? [],
         implementationChecklist: content.implementationChecklist ?? [],
         ownerNotes: content.ownerNotes,
+        annotations: (frame.annotations ?? []).map(a => ({
+            type: a.type,
+            text: a.text,
+        })),
         outgoingBranches: outgoing,
         incomingFromIds: incoming,
     };
@@ -313,6 +342,7 @@ function buildLaunch(storyboard: Storyboard): CampaignHandoffLaunch {
 const MISSING_SPEC_REASONS = new Set<string>(Object.keys(MISSING_REASON_LABELS));
 const LAUNCH_LEVELS = new Set<string>(Object.keys(LAUNCH_READINESS_LABELS));
 const BEAT_STATUS_LEVELS = new Set(['ready', 'partial', 'draft', 'blocked']);
+const ANNOTATION_TYPES = new Set<string>(Object.keys(ANNOTATION_TYPE_LABELS));
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -320,6 +350,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isStringArray(value: unknown): value is string[] {
     return Array.isArray(value) && value.every(item => typeof item === 'string');
+}
+
+function isNonEmptyString(value: unknown): value is string {
+    return typeof value === 'string' && value.length > 0;
+}
+
+function isConversionEvent(value: unknown): value is MarketingConversionEvent {
+    return isRecord(value) && isNonEmptyString(value.id) && isNonEmptyString(value.name);
+}
+
+function isMeasurementEvent(value: unknown): value is MarketingMeasurementEvent {
+    return isRecord(value)
+        && isNonEmptyString(value.id)
+        && isNonEmptyString(value.name)
+        && isNonEmptyString(value.source);
 }
 
 function pushError(
@@ -439,6 +484,35 @@ export function validateCampaignHandoff(input: unknown): CampaignHandoffValidati
                         || typeof branch.toId !== 'string'
                         || typeof branch.toTitle !== 'string') {
                         pushError(errors, `${path}.outgoingBranches[${j}]`, 'must have type, toId, toTitle');
+                    }
+                });
+            }
+            if (beat.conversionEvent !== undefined && !isConversionEvent(beat.conversionEvent)) {
+                pushError(errors, `${path}.conversionEvent`, 'must have non-empty id and name');
+            }
+            if (beat.measurementEvents !== undefined) {
+                if (!Array.isArray(beat.measurementEvents)
+                    || !beat.measurementEvents.every(isMeasurementEvent)) {
+                    pushError(
+                        errors,
+                        `${path}.measurementEvents`,
+                        'must be an array of { id, name, source }',
+                    );
+                }
+            }
+            if (!Array.isArray(beat.annotations)) {
+                pushError(errors, `${path}.annotations`, 'must be an array');
+            } else {
+                beat.annotations.forEach((ann, j) => {
+                    if (!isRecord(ann)
+                        || typeof ann.type !== 'string'
+                        || !ANNOTATION_TYPES.has(ann.type)
+                        || !isNonEmptyString(ann.text)) {
+                        pushError(
+                            errors,
+                            `${path}.annotations[${j}]`,
+                            'must have a MarketingAnnotationType and non-empty text',
+                        );
                     }
                 });
             }
@@ -608,6 +682,11 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
             lines.push('');
         }
 
+        if (beat.conversionEvent) {
+            lines.push(`**Conversion Event:** \`${esc(beat.conversionEvent.id)}\` — ${esc(beat.conversionEvent.name)}`);
+            lines.push('');
+        }
+
         if (beat.customerStateBefore.length > 0) {
             lines.push('**Customer State Before:**');
             for (const s of beat.customerStateBefore) lines.push(`- ${esc(s)}`);
@@ -641,6 +720,22 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
         if (beat.metrics.length > 0) {
             lines.push('**Metrics:**');
             for (const m of beat.metrics) lines.push(`- ${esc(m)}`);
+            lines.push('');
+        }
+
+        if ((beat.measurementEvents?.length ?? 0) > 0) {
+            lines.push('**Measurement Events:**');
+            for (const ev of beat.measurementEvents ?? []) {
+                lines.push(`- \`${esc(ev.id)}\` — ${esc(ev.name)} (${esc(ev.source)})`);
+            }
+            lines.push('');
+        }
+
+        if (beat.annotations.length > 0) {
+            lines.push('**Constraints:**');
+            for (const a of beat.annotations) {
+                lines.push(`- **${esc(humanizeAnnotationType(a.type))}:** ${esc(a.text)}`);
+            }
             lines.push('');
         }
 
@@ -756,6 +851,27 @@ export function generateProjectCampaignMarkdown(handoff: ProjectCampaignHandoff)
 
         if (beat.objective) {
             lines.push(`**Objective:** ${esc(beat.objective)}`);
+            lines.push('');
+        }
+
+        if (beat.conversionEvent) {
+            lines.push(`**Conversion Event:** \`${esc(beat.conversionEvent.id)}\` — ${esc(beat.conversionEvent.name)}`);
+            lines.push('');
+        }
+
+        if ((beat.measurementEvents?.length ?? 0) > 0) {
+            lines.push('**Measurement Events:**');
+            for (const ev of beat.measurementEvents ?? []) {
+                lines.push(`- \`${esc(ev.id)}\` — ${esc(ev.name)} (${esc(ev.source)})`);
+            }
+            lines.push('');
+        }
+
+        if (beat.annotations.length > 0) {
+            lines.push('**Constraints:**');
+            for (const a of beat.annotations) {
+                lines.push(`- **${esc(humanizeAnnotationType(a.type))}:** ${esc(a.text)}`);
+            }
             lines.push('');
         }
 

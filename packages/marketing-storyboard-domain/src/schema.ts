@@ -64,6 +64,24 @@ export type MarketingTemplateId =
     | 'campaign_funnel'
     | 'content_to_conversion';
 
+// ─── Outcome event ids (author-committed; adapters never invent these) ────────
+
+/** Conversion the beat drives toward. Display string `conversionGoal` stays for humans. */
+export interface MarketingConversionEvent {
+    id: string;
+    name: string;
+}
+
+/**
+ * Measurement the beat observes. `source` is where the count is read
+ * (github, npm, pages, …) — not a GA property and not an auto-wired account.
+ */
+export interface MarketingMeasurementEvent {
+    id: string;
+    name: string;
+    source: string;
+}
+
 // ─── Marketing Frame Content ──────────────────────────────────────────────────
 // Carries the full implementation depth for each campaign beat.
 
@@ -85,9 +103,11 @@ export interface MarketingFrameContent {
     approvalRequirements?: string[];
     launchDependencies?: string[];
 
-    // Outcomes
+    // Outcomes — display strings plus optional author-committed ids (F-684f138c)
     conversionGoal?: string;
+    conversionEvent?: MarketingConversionEvent;
     metrics?: string[];
+    measurementEvents?: MarketingMeasurementEvent[];
 
     // Implementation
     testCriteria?: string[];

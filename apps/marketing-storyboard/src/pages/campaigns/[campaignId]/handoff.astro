@@ -4,6 +4,9 @@ import {
   generateCampaignHandoff,
   generateCampaignMarkdown,
   validateCampaignHandoff,
+  adaptCampaignHandoffToAssetPack,
+  adaptCampaignHandoffToEventMap,
+  adaptCampaignHandoffToChecklistPack,
   LAUNCH_READINESS_LABELS,
   BLOCKING_REASONS,
   FRAME_TYPE_LABELS,
@@ -11,6 +14,7 @@ import {
   humanizeFrameType,
   humanizeConnectionType,
   humanizeBeatStatus,
+  humanizeAnnotationType,
   type Storyboard,
   type MissingSpecReason,
   type MarketingFrameType,
@@ -37,6 +41,9 @@ if (!validation.valid) {
 }
 const markdownText  = generateCampaignMarkdown(handoff);
 const jsonText      = JSON.stringify(handoff, null, 2);
+const assetCsvText  = adaptCampaignHandoffToAssetPack(handoff);
+const eventMapText  = JSON.stringify(adaptCampaignHandoffToEventMap(handoff), null, 2);
+const checklistText = adaptCampaignHandoffToChecklistPack(handoff);
 const launchLabel   = LAUNCH_READINESS_LABELS[handoff.launch.level];
 const titleFor      = (id: string) => handoff.beats.find(b => b.id === id)?.title ?? id;
 const listTitles    = (ids: string[]) => ids.length === 0 ? 'none' : ids.map(titleFor).join(', ');
@@ -121,8 +128,8 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
       background: rgba(11,17,32,0.97);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       padding: 0 24px;
-      height: 48px;
-      display: flex; align-items: center; gap: 16px;
+      min-height: 48px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
     .topbar-back { font-size: 12px; color: var(--textSecondary); text-decoration: none; display: flex; align-items: center; gap: 4px; }
     .topbar-back:hover { color: var(--textHeading); }
@@ -226,6 +233,9 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
     <span class="topbar-label">Campaign Implementation Brief</span>
     <button id="btn-md" class="btn-download">↓ Markdown</button>
     <button id="btn-json" class="btn-download">↓ JSON</button>
+    <button id="btn-assets" class="btn-download">↓ Assets CSV</button>
+    <button id="btn-events" class="btn-download">↓ Event map</button>
+    <button id="btn-checklist" class="btn-download">↓ Checklist</button>
   </nav>
 
   <main class="page">
@@ -394,6 +404,13 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                 </div>
               )}
 
+              {beat.conversionEvent && (
+                <div class="field">
+                  <span class="field-label">Conversion Event</span>
+                  <span class="field-value" style="font-family: ui-monospace, monospace">{beat.conversionEvent.id} — {beat.conversionEvent.name}</span>
+                </div>
+              )}
+
               {beat.customerStateBefore.length > 0 && (
                 <div class="field">
                   <span class="field-label">Customer State — Before</span>
@@ -478,6 +495,34 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
                 </div>
               )}
 
+              {(beat.measurementEvents?.length ?? 0) > 0 && (
+                <div class="field">
+                  <span class="field-label">Measurement Events</span>
+                  <div class="item-list">
+                    {beat.measurementEvents!.map(ev => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #EC4899">◎</span>
+                        <span class="item-text" style="font-family: ui-monospace, monospace">{ev.id} — {ev.name} ({ev.source})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {beat.annotations.length > 0 && (
+                <div class="field">
+                  <span class="field-label">Constraints</span>
+                  <div class="item-list">
+                    {beat.annotations.map(a => (
+                      <div class="item-row">
+                        <span class="item-bullet" style="color: #F59E0B">⊘</span>
+                        <span class="item-text"><strong>{humanizeAnnotationType(a.type)}:</strong> {a.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {beat.implementationChecklist.length > 0 && (
                 <div class="field">
                   <span class="field-label">Implementation Checklist</span>
@@ -535,18 +580,21 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
     </div>
   </main>
 
-  <script define:vars={{ markdownText, jsonText, filename }}>
-    function download(content, ext, mime) {
+  <script define:vars={{ markdownText, jsonText, assetCsvText, eventMapText, checklistText, filename, campaignId }}>
+    function download(content, name, mime) {
       const blob = new Blob([content], { type: mime });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${filename}.${ext}`;
+      a.download = name;
       a.click();
       URL.revokeObjectURL(url);
     }
-    document.getElementById('btn-md')?.addEventListener('click', () => download(markdownText, 'md', 'text/markdown'));
-    document.getElementById('btn-json')?.addEventListener('click', () => download(jsonText, 'json', 'application/json'));
+    document.getElementById('btn-md')?.addEventListener('click', () => download(markdownText, `${filename}.md`, 'text/markdown'));
+    document.getElementById('btn-json')?.addEventListener('click', () => download(jsonText, `${filename}.json`, 'application/json'));
+    document.getElementById('btn-assets')?.addEventListener('click', () => download(assetCsvText, `${campaignId}-assets.csv`, 'text/csv'));
+    document.getElementById('btn-events')?.addEventListener('click', () => download(eventMapText, `${campaignId}-events.json`, 'application/json'));
+    document.getElementById('btn-checklist')?.addEventListener('click', () => download(checklistText, `${campaignId}-checklist.md`, 'text/markdown'));
   </script>
 </body>
 </html>

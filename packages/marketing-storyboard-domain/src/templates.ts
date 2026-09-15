@@ -13,6 +13,7 @@ import type {
     MarketingTemplateId,
     MarketingFrameType,
     MarketingFrameContent,
+    FrameAnnotation,
     StoryboardFrame,
     Storyboard,
     StoryboardTemplateDefinition,
@@ -29,6 +30,7 @@ function makeFrame(
     summary: string,
     content: MarketingFrameContent,
     position: { x: number; y: number },
+    annotations: FrameAnnotation[] = [],
 ): StoryboardFrame {
     return {
         id: `${idPrefix}-${slug}`,
@@ -38,7 +40,7 @@ function makeFrame(
         position,
         size: { width: 260, height: 160 },
         content,
-        annotations: [],
+        annotations,
     };
 }
 
@@ -133,6 +135,11 @@ function productLaunchFrames(idPrefix: string): StoryboardFrame[] {
                 'README answers "what is this?" in ten seconds',
             ],
             metrics: ['Landing visits', 'Demo-board opens', 'Clones from the README'],
+            measurementEvents: [
+                { id: 'landing_visits', name: 'Landing visits', source: 'pages' },
+                { id: 'demo_board_opens', name: 'Demo-board opens', source: 'pages' },
+                { id: 'readme_clones', name: 'Clones from the README', source: 'github' },
+            ],
             testCriteria: [
                 'README answers "what is this?" in ten seconds',
                 'CTA to the demo board is above the fold',
@@ -179,13 +186,25 @@ function productLaunchFrames(idPrefix: string): StoryboardFrame[] {
                 'Schedule the posting window',
                 'Staff comments for the first 48 hours',
             ],
-        }, { x: 980, y: 200 }),
+        }, { x: 980, y: 200 }, [
+            {
+                id: `${idPrefix}-ann-announcement-brand`,
+                type: 'brand_guideline',
+                text: 'Every announcement names the demo board as an implementation contract, never a planner or CRM.',
+            },
+        ]),
 
         makeFrame(idPrefix, 'conversion', 'conversion', 'Primary Conversion', 'Visitor stars the repo and opens the demo campaign board locally or on Pages.', {
             objective: 'Convert launch traffic into people running the marketing board',
             audienceSegment: PRODUCT_LAUNCH_SEGMENT,
             conversionGoal: 'Star the repo AND open /campaigns/campaign-01 (Pages or local pnpm dev)',
+            conversionEvent: { id: 'star_and_open_demo', name: 'Star the repo and open the demo campaign board' },
             metrics: ['Stars in week 1', 'Clones in week 1', 'npm installs of @storyboard-os/marketing-domain'],
+            measurementEvents: [
+                { id: 'stars_week_1', name: 'Stars in week 1', source: 'github' },
+                { id: 'clones_week_1', name: 'Clones in week 1', source: 'github' },
+                { id: 'npm_installs_week_1', name: 'npm installs of @storyboard-os/marketing-domain', source: 'npm' },
+            ],
             customerStateBefore: ['Read the announcement or README, still evaluating'],
             customerStateAfter: ['Running the demo board, inspecting a beat, downloading the campaign brief'],
             proofPoints: [
@@ -245,6 +264,13 @@ function productLaunchFrames(idPrefix: string): StoryboardFrame[] {
                 'npm installs of @storyboard-os/marketing-domain',
                 'Issues opened (engagement signal)',
                 'Demo-board sessions on Pages',
+            ],
+            measurementEvents: [
+                { id: 'github_stars', name: 'GitHub stars (day 7, day 28)', source: 'github' },
+                { id: 'clones', name: 'Clones (day 7, day 28)', source: 'github' },
+                { id: 'npm_installs', name: 'npm installs of @storyboard-os/marketing-domain', source: 'npm' },
+                { id: 'issues_opened', name: 'Issues opened (engagement signal)', source: 'github' },
+                { id: 'demo_board_sessions', name: 'Demo-board sessions on Pages', source: 'pages' },
             ],
             customerStateBefore: ['Launch activity data accumulating with no readout'],
             customerStateAfter: ['Week-1 readout documented; week-4 decides the next campaign (funnel or content path)'],
@@ -317,6 +343,11 @@ function campaignFunnelFrames(idPrefix: string): StoryboardFrame[] {
             customerStateBefore: ['Unaware of @storyboard-os/marketing-domain'],
             customerStateAfter: ['Clicked through to the README or npm page'],
             metrics: ['GitHub unique visitors', 'npm page views', 'community post CTR'],
+            measurementEvents: [
+                { id: 'github_unique_visitors', name: 'GitHub unique visitors', source: 'github' },
+                { id: 'npm_page_views', name: 'npm page views', source: 'npm' },
+                { id: 'community_post_ctr', name: 'community post CTR', source: 'community' },
+            ],
             proofPoints: [
                 'Search snippet includes "campaign implementation"',
                 'Demo GIF shows a beat inspector, not an empty canvas',
@@ -370,8 +401,14 @@ function campaignFunnelFrames(idPrefix: string): StoryboardFrame[] {
             objective: 'Convert qualified visitors into an install of @storyboard-os/marketing-domain',
             audienceSegment: FUNNEL_SEGMENT,
             conversionGoal: 'pnpm add @storyboard-os/marketing-domain succeeds and import { createCampaignFromTemplate } resolves',
+            conversionEvent: { id: 'npm_install_marketing_domain', name: 'Install @storyboard-os/marketing-domain' },
             channel: 'README install block + npm package page',
             metrics: ['npm installs per week', 'README copy-clicks on the install command', 'import errors filed as issues'],
+            measurementEvents: [
+                { id: 'npm_installs_per_week', name: 'npm installs per week', source: 'npm' },
+                { id: 'readme_install_copy_clicks', name: 'README copy-clicks on the install command', source: 'github' },
+                { id: 'import_errors_filed', name: 'import errors filed as issues', source: 'github' },
+            ],
             customerStateBefore: ['Convinced of value, comparing install cost'],
             customerStateAfter: ['Package installed; createCampaignFromTemplate imported in their project'],
             proofPoints: [
@@ -432,6 +469,13 @@ function campaignFunnelFrames(idPrefix: string): StoryboardFrame[] {
                 'npm installs per week',
                 'Issues tagged install or getting-started',
                 'Template-board generations reported in discussions',
+            ],
+            measurementEvents: [
+                { id: 'github_unique_visitors', name: 'GitHub unique visitors', source: 'github' },
+                { id: 'npm_page_views', name: 'npm page views', source: 'npm' },
+                { id: 'npm_installs_per_week', name: 'npm installs per week', source: 'npm' },
+                { id: 'install_issues', name: 'Issues tagged install or getting-started', source: 'github' },
+                { id: 'template_board_generations', name: 'Template-board generations reported in discussions', source: 'github' },
             ],
             customerStateBefore: ['Stage counts exist in three different dashboards'],
             customerStateAfter: ['One weekly readout names the leakiest stage and the next experiment'],
@@ -540,6 +584,11 @@ function contentToConversionFrames(idPrefix: string): StoryboardFrame[] {
             customerStateBefore: ['In a feed or README, not yet reading the essay'],
             customerStateAfter: ['Clicked through and is reading the article'],
             metrics: ['Handbook page views', 'r/marketing CTR', 'README outbound clicks to the article'],
+            measurementEvents: [
+                { id: 'handbook_page_views', name: 'Handbook page views', source: 'pages' },
+                { id: 'rmarketing_ctr', name: 'r/marketing CTR', source: 'community' },
+                { id: 'readme_outbound_clicks', name: 'README outbound clicks to the article', source: 'github' },
+            ],
             proofPoints: [
                 'README "Handbook" link lands on the essay, not a generic index',
                 'Community post includes the demo-board URL as the worked example',
@@ -564,9 +613,14 @@ function contentToConversionFrames(idPrefix: string): StoryboardFrame[] {
             objective: 'Convert essay readers into people inspecting a live campaign board',
             audienceSegment: CONTENT_SEGMENT,
             conversionGoal: 'Click "Open the demo campaign board" and land on /campaigns/campaign-01',
+            conversionEvent: { id: 'open_demo_campaign_board', name: 'Open the demo campaign board' },
             customerStateBefore: ['Finished (or skimmed) the essay, trusts the argument'],
             customerStateAfter: ['Demo board is open; reader is inspecting a beat in the inspector'],
             metrics: ['CTA click rate from the handbook page', 'Demo-board sessions with handbook referrer'],
+            measurementEvents: [
+                { id: 'handbook_cta_click_rate', name: 'CTA click rate from the handbook page', source: 'pages' },
+                { id: 'demo_sessions_handbook_referrer', name: 'Demo-board sessions with handbook referrer', source: 'pages' },
+            ],
             proofPoints: [
                 'CTA copy names the destination ("demo campaign board"), not a generic "learn more"',
                 'Landing route is the published campaign-01 board',
@@ -623,6 +677,12 @@ function contentToConversionFrames(idPrefix: string): StoryboardFrame[] {
                 'CTA clicks to /campaigns/campaign-01',
                 'Demo-board sessions with handbook referrer',
                 'Visits to /campaigns/template-product_launch',
+            ],
+            measurementEvents: [
+                { id: 'handbook_article_page_views', name: 'Handbook article page views', source: 'pages' },
+                { id: 'cta_clicks_campaign_01', name: 'CTA clicks to /campaigns/campaign-01', source: 'pages' },
+                { id: 'demo_sessions_handbook_referrer', name: 'Demo-board sessions with handbook referrer', source: 'pages' },
+                { id: 'template_product_launch_visits', name: 'Visits to /campaigns/template-product_launch', source: 'pages' },
             ],
             customerStateBefore: ['Article is live; conversion path is not yet counted'],
             customerStateAfter: ['Monthly readout shows views → demo → template, and names the next essay'],

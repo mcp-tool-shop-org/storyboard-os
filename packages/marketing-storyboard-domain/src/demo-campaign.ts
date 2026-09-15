@@ -97,6 +97,11 @@ const frames: StoryboardFrame[] = [
             customerStateBefore: ['Found repo via search, link, or community post'],
             customerStateAfter: ['Understands what it is, clones it, runs pnpm dev'],
             metrics: ['GitHub stars', 'Clones', 'Landing page visits'],
+            measurementEvents: [
+                { id: 'github_stars', name: 'GitHub stars', source: 'github' },
+                { id: 'clones', name: 'Clones', source: 'github' },
+                { id: 'landing_page_visits', name: 'Landing page visits', source: 'pages' },
+            ],
             testCriteria: [
                 'README answers "what is this?" in 10 seconds',
                 'Quick start works from a fresh clone',
@@ -145,7 +150,13 @@ const frames: StoryboardFrame[] = [
                 'Confirm landing page live',
             ],
         },
-        annotations: [],
+        annotations: [
+            {
+                id: 'ann-launch-approval-legal',
+                type: 'legal_constraint',
+                text: 'Do not claim "production-ready" until SHIP_GATE.md hard gates are checked and the published npm packages install.',
+            },
+        ],
     },
     {
         id: 'launch-announcement',
@@ -183,7 +194,13 @@ const frames: StoryboardFrame[] = [
                 'Monitor and respond to comments',
             ],
         },
-        annotations: [],
+        annotations: [
+            {
+                id: 'ann-launch-announcement-brand',
+                type: 'brand_guideline',
+                text: 'Lead with "implementable RPG quests", never "AI game master" or generic whiteboard language.',
+            },
+        ],
     },
     {
         id: 'launch-conversion',
@@ -195,7 +212,13 @@ const frames: StoryboardFrame[] = [
         content: {
             objective: 'Convert interested visitors into active users who run the tool',
             conversionGoal: 'User stars repo AND/OR clones and runs pnpm dev successfully',
+            conversionEvent: { id: 'github_star_or_clone', name: 'GitHub star or clone' },
             metrics: ['Stars gained in first week', 'Clones in first week', 'npm installs of @storyboard-os/*'],
+            measurementEvents: [
+                { id: 'stars_week_1', name: 'Stars gained in first week', source: 'github' },
+                { id: 'clones_week_1', name: 'Clones in first week', source: 'github' },
+                { id: 'npm_installs_week_1', name: 'npm installs of @storyboard-os/*', source: 'npm' },
+            ],
             customerStateBefore: ['Read about it, visiting repo'],
             customerStateAfter: ['Running it locally, exploring demo board'],
             testCriteria: [
@@ -255,6 +278,13 @@ const frames: StoryboardFrame[] = [
                 'npm installs',
                 'Issues opened (signal of engagement)',
                 'Community mentions',
+            ],
+            measurementEvents: [
+                { id: 'github_stars', name: 'GitHub stars (week 1, week 4)', source: 'github' },
+                { id: 'github_clones', name: 'Clones (week 1, week 4)', source: 'github' },
+                { id: 'npm_installs', name: 'npm installs', source: 'npm' },
+                { id: 'issues_opened', name: 'Issues opened (signal of engagement)', source: 'github' },
+                { id: 'community_mentions', name: 'Community mentions', source: 'community' },
             ],
             customerStateBefore: ['Launch activity data accumulating'],
             customerStateAfter: ['Learnings documented, next campaign planned'],
