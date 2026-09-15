@@ -202,7 +202,7 @@ function ConnectionLayer({
                 fontSize={LABEL_FONT_SIZE}
                 wrap="none"
                 ellipsis={labelBox.clamped}
-                fill={isSelected ? '#cbd5e1' : '#64748b'}
+                fill={isSelected ? '#cbd5e1' : '#94a3b8'}
                 align="center"
                 onClick={handleClick}
                 onTap={handleClick}

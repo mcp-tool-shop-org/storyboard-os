@@ -23,7 +23,8 @@ import type { CanvasFrameStyle, CanvasConnectionStyle } from './types';
  */
 export const DEFAULT_FRAME_STYLE: CanvasFrameStyle = {
   bg: '#0e1018',
-  accent: '#475569',
+  // textColors.secondary — 1.4.11 ≥3:1 on bgPage / card (replaces #475569 ~2.5:1)
+  accent: '#94a3b8',
   label: 'FRAME',
 };
 
@@ -32,5 +33,6 @@ export const DEFAULT_FRAME_STYLE: CanvasFrameStyle = {
  * Used internally by ConnectionLayer. Exported so app configs can reuse it.
  */
 export const DEFAULT_CONNECTION_STYLE: CanvasConnectionStyle = {
-  stroke: '#475569',
+  // textColors.secondary — 1.4.11 floor; #475569 was ~2.5:1 on navy (and ~1.9:1 at 0.75 opacity)
+  stroke: '#94a3b8',
 };

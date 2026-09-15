@@ -8,6 +8,7 @@
 
 import type { CanvasBadge, CanvasConnection, CanvasFrame } from './types';
 import { DEFAULT_FRAME_STYLE } from './defaults';
+import { humanizeType } from './humanizeType';
 
 export const UNTITLED_FRAME = 'Untitled frame';
 
@@ -60,26 +61,51 @@ export function accessibleFrameName(
   return parts.join(' — ');
 }
 
-/** Visible connection-row label: explicit label, else type, else "Connection". */
+/**
+ * Visible header / listbox name: frames-only, connections-only, or combined.
+ * AccessibleFrameList mirrors this string on the nav landmark and listbox.
+ */
+export function headerLabel(frameCount: number, connectionCount: number): string {
+  if (connectionCount > 0 && frameCount > 0) {
+    return `Board · ${frameCount + connectionCount}`;
+  }
+  if (connectionCount > 0) return `Connections · ${connectionCount}`;
+  return `Frames${frameCount > 0 ? ` · ${frameCount}` : ''}`;
+}
+
+/**
+ * Visible connection-row label: explicit label, else type-label resolver /
+ * humanized type key, else "Connection".
+ */
 export function connectionVisibleLabel(
   conn: Pick<CanvasConnection, 'label' | 'type'>,
+  typeLabelFor?: (type: string) => string,
 ): string {
   if (typeof conn.label === 'string' && conn.label.trim()) return conn.label.trim();
-  if (typeof conn.type === 'string' && conn.type.trim()) return conn.type.trim();
+  const resolved = typeLabelFor?.(typeof conn.type === 'string' ? conn.type : '');
+  if (typeof resolved === 'string' && resolved.trim()) return resolved.trim();
+  const humanized = humanizeType(conn.type);
+  if (humanized) return humanized;
   return 'Connection';
 }
 
 /** Accessible connection name: label — from-title to to-title. */
 export function accessibleConnectionName(
-  conn: Pick<CanvasConnection, 'label' | 'fromFrameId' | 'toFrameId'>,
+  conn: Pick<CanvasConnection, 'fromFrameId' | 'toFrameId'> &
+    Partial<Pick<CanvasConnection, 'label' | 'type'>>,
   frames: ReadonlyArray<Pick<CanvasFrame, 'id' | 'title'>>,
+  typeLabelFor?: (type: string) => string,
 ): string {
   const from = frames.find(f => f.id === conn.fromFrameId);
   const to = frames.find(f => f.id === conn.toFrameId);
   const fromTitle = from ? frameDisplayTitle(from.title) : conn.fromFrameId;
   const toTitle = to ? frameDisplayTitle(to.title) : conn.toFrameId;
   const route = `${fromTitle} to ${toTitle}`;
-  const label =
+  const explicit =
     typeof conn.label === 'string' && conn.label.trim() ? conn.label.trim() : '';
-  return label ? `${label} — ${route}` : route;
+  if (explicit) return `${explicit} — ${route}`;
+  if (typeof conn.type === 'string' && conn.type.trim()) {
+    return `${connectionVisibleLabel(conn, typeLabelFor)} — ${route}`;
+  }
+  return route;
 }

@@ -35,11 +35,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CanvasConnection, CanvasFrame } from './types';
 import { isNavKey, nextFrameIndex } from './a11yNav';
+import { DEFAULT_FRAME_STYLE } from './defaults';
 import {
   accessibleConnectionName,
   accessibleFrameName,
   connectionVisibleLabel,
   frameDisplayTitle,
+  headerLabel,
 } from './frameText';
 
 export { humanizeType } from './humanizeType';
@@ -58,6 +60,11 @@ interface Props {
    * label when omitted.
    */
   typeLabelFor?: (type: string) => string;
+  /**
+   * Resolves a connection type key to the label the list should show when
+   * `conn.label` is missing (humanized key / domain type name).
+   */
+  connectionTypeLabelFor?: (type: string) => string;
   /** Connections listed after frames when `onActivateConnection` is provided. */
   connections?: CanvasConnection[];
   selectedConnectionId?: string | null;
@@ -101,11 +108,11 @@ const PANEL_FOCUSED_STYLE: React.CSSProperties = {
 };
 
 const HEADER_STYLE: React.CSSProperties = {
-  fontSize: 10,
+  fontSize: 12, // typeScale.sm — AA-normal at this size, not 10px muted
   fontWeight: 700,
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  color: '#64748b',
+  color: '#94a3b8', // textColors.secondary
   padding: '6px 10px',
   borderBottom: '1px solid rgba(255,255,255,0.06)',
   userSelect: 'none',
@@ -152,14 +159,6 @@ const EMPTY_STYLE: React.CSSProperties = {
   fontStyle: 'italic',
 };
 
-function headerLabel(frameCount: number, connectionCount: number): string {
-  if (connectionCount > 0 && frameCount > 0) {
-    return `Board · ${frameCount + connectionCount}`;
-  }
-  if (connectionCount > 0) return `Connections · ${connectionCount}`;
-  return `Frames${frameCount > 0 ? ` · ${frameCount}` : ''}`;
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AccessibleFrameList({
@@ -168,6 +167,7 @@ export default function AccessibleFrameList({
   onActivateFrame,
   describedById,
   typeLabelFor,
+  connectionTypeLabelFor,
   connections,
   selectedConnectionId,
   onActivateConnection,
@@ -290,9 +290,11 @@ export default function AccessibleFrameList({
       ? { ...PANEL_STYLE, ...PANEL_FOCUSED_STYLE }
       : PANEL_STYLE;
 
+  const listName = headerLabel(frameCount, connectionCount);
+
   return (
     <nav
-      aria-label="Frame navigation"
+      aria-label={listName}
       style={panelStyle}
       onFocus={() => setFocusWithin(true)}
       onBlur={e => {
@@ -303,7 +305,7 @@ export default function AccessibleFrameList({
       }}
     >
       <div style={HEADER_STYLE} aria-hidden="true">
-        {headerLabel(frameCount, connectionCount)}
+        {listName}
       </div>
 
       {isEmpty ? (
@@ -314,7 +316,7 @@ export default function AccessibleFrameList({
       ) : (
         <ul
           role="listbox"
-          aria-label="Storyboard frames"
+          aria-label={listName}
           aria-describedby={describedById}
           style={LIST_STYLE}
         >
@@ -332,15 +334,15 @@ export default function AccessibleFrameList({
             const name =
               item.kind === 'frame'
                 ? accessibleFrameName(item.frame, typeLabelFor)
-                : accessibleConnectionName(item.connection, frames);
+                : accessibleConnectionName(item.connection, frames, connectionTypeLabelFor);
             const visible =
               item.kind === 'frame'
                 ? frameDisplayTitle(item.frame.title)
-                : connectionVisibleLabel(item.connection);
+                : connectionVisibleLabel(item.connection, connectionTypeLabelFor);
             const swatchColor =
               item.kind === 'frame' && item.frame.badges && item.frame.badges[0]
                 ? item.frame.badges[0].color
-                : '#475569';
+                : DEFAULT_FRAME_STYLE.accent;
             return (
               <li
                 key={`${item.kind}-${item.id}`}

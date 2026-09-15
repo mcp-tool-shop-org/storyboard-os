@@ -6,6 +6,7 @@
 //      two different states to the same swatch).
 //   3. The AA-critical text colors are the CORRECTED values — a regression back
 //      to the failing #475569 / #334155 hexes (HU-003 / HU-004) fails the build.
+//   4. Measured contrast (not just hex inequality) against bgPage / bgChrome.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -30,9 +31,9 @@ describe('token module shape', () => {
     expect(statusColors.state).toBe('#3B82F6');
     expect(statusColors.spec).toBe('#22C55E');
     expect(statusColors.partial).toBe('#F97316');
-    expect(statusColors.draft).toBe('#6B7280');
-    expect(statusColors.blocked).toBe('#EF4444');
-    expect(statusColors.accent).toBe('#8B5CF6');
+    expect(statusColors.draft).toBe('#9CA3AF');
+    expect(statusColors.blocked).toBe('#DC2626');
+    expect(statusColors.accent).toBe('#A78BFA');
   });
 
   it('statusLabels standardizes "ready" to SPEC everywhere (VP-005)', () => {
@@ -102,5 +103,75 @@ describe('text colors are the WCAG-AA-corrected values', () => {
     expect(textColors.muted).toBe('#64748b');
     expect(textColors.primary).toMatch(HEX);
     expect(textColors.muted).toMatch(HEX);
+  });
+});
+
+// ─── Measured contrast (not just hex inequality) ──────────────────────────────
+// WCAG 2 relative-luminance / contrast-ratio. Canvas card fallback is the
+// DEFAULT_FRAME_STYLE bg (#0e1018); badge chips tint that fill at 0.12.
+
+const CARD_BG = '#0e1018';
+const AA_NORMAL = 4.5;
+const NON_TEXT = 3;
+
+function srgbChannel(c: number): number {
+  const s = c / 255;
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+}
+
+function relativeLuminance(hex: string): number {
+  const n = hex.replace('#', '');
+  const r = parseInt(n.slice(0, 2), 16);
+  const g = parseInt(n.slice(2, 4), 16);
+  const b = parseInt(n.slice(4, 6), 16);
+  return 0.2126 * srgbChannel(r) + 0.7152 * srgbChannel(g) + 0.0722 * srgbChannel(b);
+}
+
+function contrastRatio(a: string, b: string): number {
+  const L1 = relativeLuminance(a);
+  const L2 = relativeLuminance(b);
+  const lighter = Math.max(L1, L2);
+  const darker = Math.min(L1, L2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function compositeHex(fg: string, bg: string, opacity: number): string {
+  const fn = fg.replace('#', '');
+  const bn = bg.replace('#', '');
+  const channel = (i: number) => {
+    const f = parseInt(fn.slice(i, i + 2), 16);
+    const b = parseInt(bn.slice(i, i + 2), 16);
+    return Math.round(f * opacity + b * (1 - opacity))
+      .toString(16)
+      .padStart(2, '0');
+  };
+  return `#${channel(0)}${channel(2)}${channel(4)}`;
+}
+
+describe('measured contrast on navy surfaces', () => {
+  it('AA-normal text tokens clear 4.5:1 on bgPage and bgChrome', () => {
+    for (const fg of [textColors.primary, textColors.secondary, textColors.heading]) {
+      expect(contrastRatio(fg, surfaces.bgPage)).toBeGreaterThanOrEqual(AA_NORMAL);
+      expect(contrastRatio(fg, surfaces.bgChrome)).toBeGreaterThanOrEqual(AA_NORMAL);
+    }
+  });
+
+  it('muted is chrome/non-text (≥3:1), not implied AA-normal', () => {
+    expect(contrastRatio(textColors.muted, surfaces.bgPage)).toBeGreaterThanOrEqual(NON_TEXT);
+    expect(contrastRatio(textColors.muted, surfaces.bgChrome)).toBeGreaterThanOrEqual(NON_TEXT);
+  });
+
+  it('onError on blocked is AA-normal (≥4.5:1)', () => {
+    expect(contrastRatio(textColors.onError, statusColors.blocked)).toBeGreaterThanOrEqual(AA_NORMAL);
+  });
+
+  it('draft and accent as badge text clear 4.5:1 on page, chrome, card, and tinted chip', () => {
+    for (const fg of [statusColors.draft, statusColors.accent]) {
+      expect(contrastRatio(fg, surfaces.bgPage)).toBeGreaterThanOrEqual(AA_NORMAL);
+      expect(contrastRatio(fg, surfaces.bgChrome)).toBeGreaterThanOrEqual(AA_NORMAL);
+      expect(contrastRatio(fg, CARD_BG)).toBeGreaterThanOrEqual(AA_NORMAL);
+      const chip = compositeHex(fg, CARD_BG, 0.12);
+      expect(contrastRatio(fg, chip)).toBeGreaterThanOrEqual(AA_NORMAL);
+    }
   });
 });

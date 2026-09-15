@@ -18,11 +18,13 @@ import {
   frameDisplaySummary,
   frameDisplayTitle,
 } from './frameText';
+import { typeBarLabelFill } from './typeBarFill';
 
 const TYPE_BAR_HEIGHT = 26;
 const PADDING = 10;
 const TITLE_Y = TYPE_BAR_HEIGHT + 8;
 const SUMMARY_Y = TYPE_BAR_HEIGHT + 28;
+const TITLE_MAX_HEIGHT = SUMMARY_Y - TITLE_Y; // one line; Konva ellipsis needs height
 
 // Badge row constants
 const BADGE_HEIGHT = 16;
@@ -30,7 +32,7 @@ const BADGE_PADDING_X = 5;
 const BADGE_GAP = 4;
 const BADGE_ROW_GAP = 3;
 const BADGE_BOTTOM_MARGIN = 6;
-const BADGE_FONT_SIZE = 9;
+const BADGE_FONT_SIZE = 11; // typeScale.xs — floor, not a contrast substitute
 const BADGE_LETTER_SPACING = 0.6;
 // VP-010: cap the badge area at two rows. Beyond that, remaining badges are
 // dropped and a "+N" overflow chip communicates the count (never overrun).
@@ -215,6 +217,7 @@ export default function FrameCard({
   // F-CV-004 (preserved): clamp to 0 — a short card would otherwise pass a
   // negative height to the Konva Text node.
   const badgeAreaHeight = hasBadges ? layout.areaHeight + BADGE_BOTTOM_MARGIN : 0;
+  const titleMaxHeight = TITLE_MAX_HEIGHT;
   const summaryMaxHeight = Math.max(0, height - SUMMARY_Y - badgeAreaHeight - 8);
 
   // Top y of the whole badge block (bottom-anchored inside the card).
@@ -262,21 +265,22 @@ export default function FrameCard({
         opacity={0.85}
       />
 
-      {/* Type label */}
+      {/* Type label — fill from composited accent luminance, not unconditional white */}
       <Text
         x={PADDING} y={7}
         width={width - PADDING * 2}
         text={style.label}
         fontSize={10}
         fontStyle="bold"
-        fill="#fff"
+        fill={typeBarLabelFill(style.accent, style.bg)}
         letterSpacing={1.2}
       />
 
-      {/* Frame title */}
+      {/* Frame title — height caps wrap so Konva ellipsis runs (no overlap with summary) */}
       <Text
         x={PADDING} y={TITLE_Y}
         width={width - PADDING * 2}
+        height={titleMaxHeight}
         text={title}
         fontSize={13}
         fontStyle="bold"

@@ -51,6 +51,7 @@ import ConnectionLayer from './ConnectionLayer';
 import FrameCard from './FrameCard';
 import AccessibleFrameList from './AccessibleFrameList';
 import { DEFAULT_FRAME_STYLE } from './defaults';
+import { humanizeType } from './humanizeType';
 import {
   ensureFinitePosition,
   reconcilePositions,
@@ -572,6 +573,7 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
           onActivateFrame={activateFrameById}
           describedById={descId}
           typeLabelFor={typeLabelFor}
+          connectionTypeLabelFor={humanizeType}
           connections={onSelectConnection ? connections : undefined}
           selectedConnectionId={selectedConnectionId ?? null}
           onActivateConnection={
