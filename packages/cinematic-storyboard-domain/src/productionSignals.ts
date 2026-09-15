@@ -207,9 +207,10 @@ function computeAudioBurden(storyboard: Storyboard): AudioBurdenSummary {
 }
 
 /** `arc` is the orbit/arc shot. Accept `orbit` as the same moving-camera token. */
-const MOVING_MOVES = new Set<string>(
-  CINEMATIC_CAMERA_MOVES.filter(m => m !== 'static').concat(['orbit']),
-);
+const MOVING_MOVES = new Set<string>([
+  ...CINEMATIC_CAMERA_MOVES.filter(m => m !== 'static'),
+  'orbit',
+]);
 
 type CameraMovementKind = 'complex' | 'static' | 'unspecified' | 'unknown';
 
