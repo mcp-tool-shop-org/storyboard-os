@@ -1,12 +1,10 @@
 ---
-import { launchRpgStoryboardCampaign } from '@storyboard-os/marketing-domain';
+import { listPublishedCampaigns } from '@storyboard-os/marketing-domain';
 import type { Storyboard } from '@storyboard-os/marketing-domain';
 import MarketingStoryboardCanvas from '../../components/MarketingStoryboardCanvas';
 
 export function getStaticPaths() {
-  const allCampaigns: Storyboard[] = [
-    launchRpgStoryboardCampaign,
-  ];
+  const allCampaigns: Storyboard[] = listPublishedCampaigns();
   return allCampaigns.map(s => ({
     params: { campaignId: s.id },
     props: { storyboard: s },

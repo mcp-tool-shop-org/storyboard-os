@@ -2,12 +2,20 @@
 
 import { describe, it, expect } from 'vitest';
 import { statusLabels } from '@storyboard-os/core';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
     generateCampaignHandoff,
     generateCampaignMarkdown,
     generateProjectCampaignHandoff,
     generateProjectCampaignMarkdown,
+    validateCampaignHandoff,
+    CAMPAIGN_HANDOFF_SCHEMA_ID,
+    HANDOFF_FORMAT_VERSION,
 } from './handoff';
+import { LAUNCH_READINESS_LABELS } from './launchReadiness';
+import { MARKETING_TEMPLATES, createCampaignFromTemplate } from './templates';
 import { launchRpgStoryboardCampaign } from './demo-campaign';
 import { createCampaignProject, setChecklistItemComplete, updateFrameContent } from './project';
 import type { Storyboard, StoryboardFrame, MarketingFrameContent } from './schema';
@@ -49,6 +57,21 @@ describe('generateCampaignHandoff', () => {
             id: 'v', title: 'V', frames: [makeFrame('f1', 'audience')], connections: [],
         };
         expect(generateCampaignHandoff(storyboard).formatVersion).toBe(1);
+    });
+
+    it('stamps $schema and a launch object (F-359ea7ff, F-ed056938)', () => {
+        const storyboard: Storyboard = {
+            id: 'v', title: 'V', frames: [makeFrame('f1', 'audience')], connections: [],
+        };
+        const handoff = generateCampaignHandoff(storyboard);
+        expect(handoff.$schema).toBe(CAMPAIGN_HANDOFF_SCHEMA_ID);
+        expect(handoff.launch.level).toBeTruthy();
+        expect(typeof handoff.launch.summary).toBe('string');
+        expect(Array.isArray(handoff.launch.criticalPathFrameIds)).toBe(true);
+        expect(Array.isArray(handoff.launch.approvalGateFrameIds)).toBe(true);
+        expect(Array.isArray(handoff.launch.missingMeasurementFrameIds)).toBe(true);
+        expect(Array.isArray(handoff.launch.openLoopFrameIds)).toBe(true);
+        expect(validateCampaignHandoff(handoff).valid).toBe(true);
     });
 
     it('returns beats in topological order', () => {
@@ -137,6 +160,17 @@ describe('generateCampaignMarkdown', () => {
         expect(md).toContain(`| ${statusLabels.draft} |`);
         expect(md).toContain(`| ${statusLabels.blocked} |`);
         expect(md).not.toContain('| Ready |');
+    });
+
+    it('renders a Launch section matching the board badge (F-ed056938)', () => {
+        const handoff = generateCampaignHandoff(launchRpgStoryboardCampaign);
+        const md = generateCampaignMarkdown(handoff);
+        expect(md).toContain('## Launch');
+        expect(md).toContain(`**${LAUNCH_READINESS_LABELS[handoff.launch.level]}** — ${handoff.launch.summary}`);
+        expect(md).toContain('Critical path:');
+        expect(md).toContain('Approval gates:');
+        expect(md).toContain('Missing measurement:');
+        expect(md).toContain('Open loops:');
     });
 
     it('includes beat sections', () => {
@@ -401,6 +435,39 @@ describe('DM-004 — markdown escapes user text', () => {
 // The escaping tests above prove hostile input is neutralized. This guards the
 // other direction: ordinary text with NO markdown-special characters must
 // survive the render byte-for-byte — no stray backslashes, no &lt;, no mangling.
+
+describe('validateCampaignHandoff (F-359ea7ff)', () => {
+    const schemaPath = join(dirname(fileURLToPath(import.meta.url)), '../schema/campaign-handoff.schema.json');
+
+    it('publishes a 2020-12 schema whose $id matches CAMPAIGN_HANDOFF_SCHEMA_ID', () => {
+        const schema = JSON.parse(readFileSync(schemaPath, 'utf8')) as {
+            $schema: string;
+            $id: string;
+            properties: { formatVersion: { const: number } };
+        };
+        expect(schema.$schema).toBe('https://json-schema.org/draft/2020-12/schema');
+        expect(schema.$id).toBe(CAMPAIGN_HANDOFF_SCHEMA_ID);
+        expect(schema.properties.formatVersion.const).toBe(HANDOFF_FORMAT_VERSION);
+    });
+
+    it('accepts generated handoffs for the demo and every template', () => {
+        expect(validateCampaignHandoff(generateCampaignHandoff(launchRpgStoryboardCampaign)).valid).toBe(true);
+        for (const template of MARKETING_TEMPLATES) {
+            const board = createCampaignFromTemplate(template.id, { id: `gold-${template.id}`, title: template.name });
+            const result = validateCampaignHandoff(generateCampaignHandoff(board));
+            expect(result.valid).toBe(true);
+        }
+    });
+
+    it('rejects a payload missing $schema and launch', () => {
+        const handoff = generateCampaignHandoff(launchRpgStoryboardCampaign);
+        const { $schema: _s, launch: _l, ...stripped } = handoff;
+        const result = validateCampaignHandoff(stripped);
+        expect(result.valid).toBe(false);
+        expect(result.errors.some(e => e.path === '$schema')).toBe(true);
+        expect(result.errors.some(e => e.path === 'launch')).toBe(true);
+    });
+});
 
 describe('V3-001 — benign text renders unchanged (no over-escaping)', () => {
     function makeBoardWith(frame: StoryboardFrame): Storyboard {

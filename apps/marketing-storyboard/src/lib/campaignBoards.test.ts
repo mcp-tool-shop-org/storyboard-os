@@ -11,10 +11,13 @@ import {
     MARKETING_TEMPLATES,
     getMarketingTemplate,
     createCampaignFromTemplate,
+    listPublishedCampaigns,
+    PUBLISHED_TEMPLATE_CAMPAIGN_IDS,
     validateStoryboard,
     launchRpgStoryboardCampaign,
     getCampaignReadiness,
     getCampaignLaunchReadiness,
+    BOARD_SCHEMA_VERSION,
 } from '@storyboard-os/marketing-domain';
 
 const INPUT = { id: 'test-campaign', title: 'Test Campaign', description: 'Vitest fixture' };
@@ -100,8 +103,32 @@ describe('createCampaignFromTemplate', () => {
                     expect(APP_FRAME_TYPES).toContain(frame.type);
                 }
             });
+
+            it('stamps schemaVersion for future load paths', () => {
+                expect(campaign.schemaVersion).toBe(BOARD_SCHEMA_VERSION);
+            });
         });
     }
+});
+
+describe('listPublishedCampaigns', () => {
+    const catalog = listPublishedCampaigns();
+
+    it('is the SSG catalog: demo + all three templates with stable ids', () => {
+        expect(catalog.map(c => c.id)).toEqual([
+            launchRpgStoryboardCampaign.id,
+            PUBLISHED_TEMPLATE_CAMPAIGN_IDS.product_launch,
+            PUBLISHED_TEMPLATE_CAMPAIGN_IDS.campaign_funnel,
+            PUBLISHED_TEMPLATE_CAMPAIGN_IDS.content_to_conversion,
+        ]);
+    });
+
+    it('every published board is structurally valid', () => {
+        for (const board of catalog) {
+            expect(validateStoryboard(board).valid).toBe(true);
+            expect(board.schemaVersion).toBe(BOARD_SCHEMA_VERSION);
+        }
+    });
 });
 
 // ─── Demo campaign (the board [campaignId].astro publishes) ──────────────────
@@ -110,6 +137,10 @@ describe('launchRpgStoryboardCampaign', () => {
     it('has a routable id and title', () => {
         expect(launchRpgStoryboardCampaign.id).toBeTruthy();
         expect(launchRpgStoryboardCampaign.title).toBeTruthy();
+    });
+
+    it('stamps schemaVersion for future load paths', () => {
+        expect(launchRpgStoryboardCampaign.schemaVersion).toBe(BOARD_SCHEMA_VERSION);
     });
 
     it('passes structural validation', () => {

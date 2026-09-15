@@ -24,12 +24,14 @@ import {
 } from '@storyboard-os/canvas';
 import {
     getMarketingFrameBadges,
+    getMarketingFrameSignal,
     getCampaignReadiness,
     getCampaignLaunchReadiness,
     getCampaignCriticalPath,
     getApprovalGateSignals,
     getMeasurementLoopSignals,
     marketingColors,
+    LAUNCH_READINESS_LABELS,
     FRAME_TYPE_LABELS,
     CONNECTION_TYPE_LABELS,
     humanizeConnectionType,
@@ -265,11 +267,13 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
             if (criticalPathIds.has(frame.id)) {
                 badges.push({ text: 'CRITICAL', color: marketingColors.critical });
             }
+            const signal = getMarketingFrameSignal(frame);
+            const objectiveLine = frame.content?.objective?.trim().split(/\r?\n/)[0]?.trim() ?? '';
             return {
                 id: frame.id,
                 type: frame.type,
                 title: frame.title,
-                summary: frame.summary,
+                summary: signal.channelSummary || signal.customerStateSummary || objectiveLine,
                 position: frame.position,
                 size: frame.size,
                 badges,
@@ -734,13 +738,6 @@ const LAUNCH_BADGE_COLORS: Record<LaunchReadinessLevel, string> = {
     draft: statusColors.draft,
 };
 
-const LAUNCH_BADGE_LABELS: Record<LaunchReadinessLevel, string> = {
-    ready: 'READY',
-    at_risk: 'AT RISK',
-    blocked: 'BLOCKED',
-    draft: 'DRAFT',
-};
-
 function LaunchReadinessBadge({ level, summary }: { level: LaunchReadinessLevel; summary: string }) {
     const color = LAUNCH_BADGE_COLORS[level];
     return (
@@ -754,7 +751,7 @@ function LaunchReadinessBadge({ level, summary }: { level: LaunchReadinessLevel;
                 color,
             }}
         >
-            ⚡ {LAUNCH_BADGE_LABELS[level]}
+            ⚡ {LAUNCH_READINESS_LABELS[level]}
         </span>
     );
 }
