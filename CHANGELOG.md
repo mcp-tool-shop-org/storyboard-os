@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Docs
+
+- Handbook Feature Pass C1–C5: cinematic **playlist/reel** (ordered sequence ids, optional take labels, SSG — not an RPG project clone); marketing + cinematic **authoring loops** on Pages; **Handoff JSON contract** (`formatVersion` discriminators, C4 fields, Markdown vs JSON, engine-native as adapter); **card vs inspector** C2 law + density warn/over (~50 / ~100); encounter stays quest-logic (no 4-beat motion frame); **no AI auto-wire** of frames or connections; **AccessibleFrameList** keyboard (Arrow Up/Down, Enter/Space) in handbook tables.
+- Copied Wave 1 domain JSON Schemas into `docs/schemas/` and `site/public/schemas/` (quest/project handoff, campaign handoff, production brief). Cinematic `ProductionBrief` is `formatVersion` 2 in the published file and may bump for structured camera — consumers must switch on the discriminator.
+- Roadmap §1 rewritten off `CinematicStoryboardProject` / `localStorage` / `pages/projects/*`.
+
 ### Security / Dependencies
 
 - Apps pin **astro ^7.3.1**. The two SSR-only `auditConfig.ignoreGhsas` suppressions (`GHSA-2pvr-wf23-7pc7`, `GHSA-8hv8-536x-4wqp`) are removed from `pnpm-workspace.yaml`; `pnpm audit --prod --audit-level=high` runs unsuppressed in CI.
