@@ -1,6 +1,7 @@
 // ─── marketing-domain / handoff.test.ts ──────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
+import { statusLabels } from '@storyboard-os/core';
 import {
     generateCampaignHandoff,
     generateCampaignMarkdown,
@@ -131,7 +132,11 @@ describe('generateCampaignMarkdown', () => {
         const md = generateCampaignMarkdown(handoff);
         expect(md).toContain('# Campaign Implementation Brief');
         expect(md).toContain('## Readiness');
-        expect(md).toContain('| Ready |');
+        expect(md).toContain(`| ${statusLabels.ready} |`);
+        expect(md).toContain(`| ${statusLabels.partial} |`);
+        expect(md).toContain(`| ${statusLabels.draft} |`);
+        expect(md).toContain(`| ${statusLabels.blocked} |`);
+        expect(md).not.toContain('| Ready |');
     });
 
     it('includes beat sections', () => {

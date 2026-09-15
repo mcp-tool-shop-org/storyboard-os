@@ -85,6 +85,7 @@ describe('getCampaignLaunchReadiness', () => {
         ];
         const result = getCampaignLaunchReadiness(makeCampaign(frames, conns));
         expect(result.level).toBe('ready');
+        expect(result.summary).toBe('Campaign implementation spec complete');
         expect(result.blockedFrameIds).toEqual([]);
         expect(result.missingMeasurementFrameIds).toEqual([]);
     });
@@ -198,8 +199,16 @@ describe('getCampaignLaunchReadiness', () => {
         expect(result.summary).not.toMatch(/open measurement loop/i);
         expect(getMeasurementLoopSignals(launchRpgStoryboardCampaign).every(s => s.isLoop)).toBe(true);
         if (result.blockedFrameIds.length === 0 && result.missingMeasurementFrameIds.length === 0) {
-            expect(result.level).toBe('ready');
+            expect(result.level).not.toBe('blocked');
         }
+    });
+
+    it('does not claim spec complete while partial beats remain (F-4001f5ff)', () => {
+        const result = getCampaignLaunchReadiness(launchRpgStoryboardCampaign);
+        expect(result.summary).not.toBe('Campaign implementation spec complete');
+        expect(result.summary).not.toMatch(/spec complete/i);
+        expect(result.level).toBe('at_risk');
+        expect(result.summary).toMatch(/partial/i);
     });
 });
 

@@ -30,6 +30,9 @@ import {
     getApprovalGateSignals,
     getMeasurementLoopSignals,
     marketingColors,
+    FRAME_TYPE_LABELS,
+    CONNECTION_TYPE_LABELS,
+    humanizeConnectionType,
     type CampaignBeatStatusLevel,
     type LaunchReadinessLevel,
     type ApprovalGateSignal,
@@ -44,6 +47,8 @@ import {
     shouldShowLaunchBlockersPanel,
     collectBlockedBeatEntries,
     launchBlockersPanelHasContent,
+    launchBlockersRailTitle,
+    pendingGatePathDetail,
     type BlockedBeatEntry,
 } from '../lib/launchBlockers';
 import MarketingFrameInspector from './MarketingFrameInspector';
@@ -72,7 +77,7 @@ const MARKETING_CANVAS_CONFIG: StoryboardCanvasConfig = {
         touchpoint: { bg: '#071a0c', accent: statusColors.spec, label: 'TOUCHPOINT' },
         asset: { bg: '#1f0e00', accent: statusColors.partial, label: 'ASSET' },
         approval: { bg: '#1f0808', accent: statusColors.blocked, label: 'APPROVAL' },
-        launch_event: { bg: '#1a1500', accent: marketingColors.critical, label: 'LAUNCH' },
+        launch_event: { bg: '#1a1500', accent: marketingColors.critical, label: FRAME_TYPE_LABELS.launch_event.toUpperCase() },
         conversion: { bg: '#0e1a1a', accent: '#06B6D4', label: 'CONVERSION' },
         follow_up: { bg: '#0e0e1a', accent: '#6366F1', label: 'FOLLOW-UP' },
         measurement: { bg: '#1a0e1a', accent: '#EC4899', label: 'MEASUREMENT' },
@@ -95,14 +100,16 @@ const MARKETING_CANVAS_CONFIG: StoryboardCanvasConfig = {
 };
 
 // ─── Connection type display config ──────────────────────────────────────────
-// Exhaustive over MarketingConnectionType — a new schema variant is a compile error.
+// Labels come from domain CONNECTION_TYPE_LABELS / humanizeConnectionType
+// (F-e40ab66e) so the selected-edge panel matches HTML/markdown. Legend may
+// abbreviate, but the short map is keyed on MarketingConnectionType.
 
-const CONNECTION_TYPE_LABELS: Record<MarketingConnectionType, string> = {
-    sequence: 'Campaign Flow',
+const CONNECTION_TYPE_SHORT_LABELS: Record<MarketingConnectionType, string> = {
+    sequence: 'Flow',
     dependency: 'Dependency',
-    approval: 'Approval Gate',
-    optional: 'Optional Path',
-    choice: 'Segment Path',
+    approval: 'Approval',
+    optional: 'Optional',
+    choice: 'Segment',
     consequence: 'Consequence',
 };
 
@@ -128,10 +135,6 @@ function isMarketingConnectionType(type: string): type is MarketingConnectionTyp
     return Object.prototype.hasOwnProperty.call(CONNECTION_TYPE_LABELS, type);
 }
 
-function connectionTypeLabel(type: string): string {
-    return isMarketingConnectionType(type) ? CONNECTION_TYPE_LABELS[type] : type.toUpperCase();
-}
-
 function connectionTypeColor(type: string): string {
     return isMarketingConnectionType(type) ? CONNECTION_TYPE_COLORS[type] : SLATE_LINE;
 }
@@ -142,13 +145,18 @@ function connectionTypeExplanation(type: string): string | null {
 
 // ─── Legend ───────────────────────────────────────────────────────────────────
 
-const LEGEND = [
-    { type: 'sequence', color: SLATE_LINE, label: 'Flow', dashed: false, weight: 1.5 },
-    { type: 'dependency', color: statusColors.blocked, label: 'Dependency', dashed: true, weight: 2 },
-    { type: 'approval', color: marketingColors.gate, label: 'Approval', dashed: true, weight: 2 },
-    { type: 'optional', color: SLATE_LINE_DIM, label: 'Optional', dashed: true, weight: 1.5 },
-    { type: 'choice', color: statusColors.accent, label: 'Segment', dashed: true, weight: 2.5 },
-    { type: 'consequence', color: statusColors.blocked, label: 'Consequence', dashed: false, weight: 2.5 },
+const LEGEND: Array<{
+    type: MarketingConnectionType;
+    color: string;
+    dashed: boolean;
+    weight: number;
+}> = [
+    { type: 'sequence', color: SLATE_LINE, dashed: false, weight: 1.5 },
+    { type: 'dependency', color: statusColors.blocked, dashed: true, weight: 2 },
+    { type: 'approval', color: marketingColors.gate, dashed: true, weight: 2 },
+    { type: 'optional', color: SLATE_LINE_DIM, dashed: true, weight: 1.5 },
+    { type: 'choice', color: statusColors.accent, dashed: true, weight: 2.5 },
+    { type: 'consequence', color: statusColors.blocked, dashed: false, weight: 2.5 },
 ];
 
 // ─── Badge legend ───────────────────────────────────────────────────────────
@@ -173,6 +181,9 @@ export { BADGE_LEGEND as MARKETING_BADGE_LEGEND };
 // ─── Layout constants ─────────────────────────────────────────────────────────
 
 const HEADER_HEIGHT = 48;
+const FOOTER_HEIGHT = 36;
+
+const HANDBOOK_HREF = 'https://mcp-tool-shop-org.github.io/storyboard-os/handbook/';
 
 // ─── SO wordmark badge ────────────────────────────────────────────────────────
 // VP-014: the shared "SO" (Storyboard OS) mark in the header so all three
@@ -357,7 +368,9 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
                     <ReadinessCounts summary={readinessSummary} />
                     <LaunchReadinessBadge level={launchReadiness.level} summary={launchReadiness.summary} />
                     <a
-                        href="/handbook"
+                        href={HANDBOOK_HREF}
+                        target="_blank"
+                        rel="noreferrer"
                         style={{
                             fontSize: 11, fontWeight: 700, letterSpacing: typeScale.tracking.label,
                             padding: '4px 10px', borderRadius: 4,
@@ -450,12 +463,14 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
             </div>
 
             {/* ── Legend footer ─────────────────────────────────────────────────── */}
+            {/* VP-009 / F-5d85773a: minHeight + flexWrap like the header so the
+                connection/badge key wraps instead of clipping at ~1024–1100px. */}
             <footer style={{
-                height: 36,
-                padding: '0 20px',
+                minHeight: FOOTER_HEIGHT,
+                padding: '6px 20px',
                 background: 'rgba(15,23,42,0.97)',
                 borderTop: '1px solid rgba(255,255,255,0.06)',
-                display: 'flex', alignItems: 'center', gap: 20,
+                display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
                 flexShrink: 0,
             }}>
                 {LEGEND.map(entry => (
@@ -469,10 +484,12 @@ function MarketingStoryboardCanvasInner({ storyboard }: Props) {
                             />
                             <polygon points="22,2 28,5 22,8" fill={entry.color} />
                         </svg>
-                        <span style={{ fontSize: 11, color: textColors.muted }}>{entry.label}</span>
+                        <span style={{ fontSize: 11, color: textColors.muted }}>
+                            {CONNECTION_TYPE_SHORT_LABELS[entry.type]}
+                        </span>
                     </div>
                 ))}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
                     {BADGE_LEGEND.map(b => (
                         <span
                             key={b.text}
@@ -594,7 +611,7 @@ interface ConnectionPanelProps {
 }
 
 function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: ConnectionPanelProps) {
-    const typeLabel = connectionTypeLabel(connection.type);
+    const typeLabel = humanizeConnectionType(connection.type);
     const accentColor = connectionTypeColor(connection.type);
     const explanation = connectionTypeExplanation(connection.type);
 
@@ -791,6 +808,14 @@ function LaunchBlockersPanel({
         return null;
     }
 
+    const railTitle = launchBlockersRailTitle({
+        blockedBeats,
+        blockedApprovals,
+        pendingApprovals,
+        measurementSignals,
+    });
+    const railColor = railTitle === 'Launch Blockers' ? statusColors.blocked : marketingColors.gate;
+
     return (
         <aside style={{
             width: 280,
@@ -805,8 +830,8 @@ function LaunchBlockersPanel({
                 padding: '12px 16px',
                 borderBottom: '1px solid rgba(255,255,255,0.07)',
             }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: statusColors.blocked, textTransform: 'uppercase', letterSpacing: typeScale.tracking.wide }}>
-                    Launch Blockers
+                <span style={{ fontSize: 11, fontWeight: 700, color: railColor, textTransform: 'uppercase', letterSpacing: typeScale.tracking.wide }}>
+                    {railTitle}
                 </span>
             </div>
             <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -831,7 +856,7 @@ function LaunchBlockersPanel({
                 {pendingApprovals.length > 0 && (
                     <BlockerSection title="Approval — Pending" color={marketingColors.gate}>
                         {pendingApprovals.map(s => (
-                            <BlockerItem key={s.frameId} label={frameTitle(s.frameId)} detail={s.blocksLaunch ? 'Blocks launch' : 'Does not block launch'} />
+                            <BlockerItem key={s.frameId} label={frameTitle(s.frameId)} detail={pendingGatePathDetail(s.blocksLaunch)} />
                         ))}
                     </BlockerSection>
                 )}

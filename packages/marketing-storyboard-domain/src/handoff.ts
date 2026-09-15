@@ -300,10 +300,10 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
     lines.push('');
     lines.push(`| Status | Count |`);
     lines.push(`|--------|-------|`);
-    lines.push(`| Ready | ${handoff.readiness.ready} |`);
-    lines.push(`| Partial | ${handoff.readiness.partial} |`);
-    lines.push(`| Draft | ${handoff.readiness.draft} |`);
-    lines.push(`| Blocked | ${handoff.readiness.blocked} |`);
+    lines.push(`| ${humanizeBeatStatus('ready')} | ${handoff.readiness.ready} |`);
+    lines.push(`| ${humanizeBeatStatus('partial')} | ${handoff.readiness.partial} |`);
+    lines.push(`| ${humanizeBeatStatus('draft')} | ${handoff.readiness.draft} |`);
+    lines.push(`| ${humanizeBeatStatus('blocked')} | ${handoff.readiness.blocked} |`);
     lines.push(`| **Total** | **${handoff.readiness.total}** |`);
     lines.push('');
 
@@ -513,10 +513,10 @@ export function generateProjectCampaignMarkdown(handoff: ProjectCampaignHandoff)
     lines.push('');
     lines.push(`| Status | Count |`);
     lines.push(`|--------|-------|`);
-    lines.push(`| Ready | ${handoff.readiness.ready} |`);
-    lines.push(`| Partial | ${handoff.readiness.partial} |`);
-    lines.push(`| Draft | ${handoff.readiness.draft} |`);
-    lines.push(`| Blocked | ${handoff.readiness.blocked} |`);
+    lines.push(`| ${humanizeBeatStatus('ready')} | ${handoff.readiness.ready} |`);
+    lines.push(`| ${humanizeBeatStatus('partial')} | ${handoff.readiness.partial} |`);
+    lines.push(`| ${humanizeBeatStatus('draft')} | ${handoff.readiness.draft} |`);
+    lines.push(`| ${humanizeBeatStatus('blocked')} | ${handoff.readiness.blocked} |`);
     lines.push(`| **Total** | **${handoff.readiness.total}** |`);
     lines.push('');
 
