@@ -33,12 +33,15 @@ import {
   type FrameAnnotation,
 } from '@storyboard-os/rpg-domain';
 import { statusColors, statusLabels, surfaces, textColors, typeScale, spacing } from '@storyboard-os/core';
-import type { Storyboard } from '../lib/storyboard/schema';
+import type { Storyboard, StoryboardFrameType, StoryboardConnectionType } from '../lib/storyboard/schema';
 import type { FrameBasicsPatch, FrameProgress, ProjectProgress, ProjectProgressSummary } from '../lib/storyboard/project';
 import { loadBoardView, saveBoardView } from '../lib/storyboard/boardViewStorage';
+import type { TopologyBanner } from '../lib/storyboard/topology';
+import { CONNECTION_TYPE_OPTIONS } from '../lib/storyboard/topology';
 import FrameInspector from './storyboard/FrameInspector';
 import ViewControls from './storyboard/ViewControls';
 import BeatEditPanel from './projects/BeatEditPanel';
+import TopologyToolbar from './projects/TopologyToolbar';
 import ErrorBoundary from './ErrorBoundary';
 
 // ─── RPG canvas config ────────────────────────────────────────────────────────
@@ -166,6 +169,27 @@ interface Props {
    * the storyboard id.
    */
   viewStorageKey?: string;
+  /**
+   * Manual topology authoring (project boards only). Omit on read-only
+   * template previews. C3: handlers must not propose or auto-wire edges.
+   */
+  topology?: {
+    addDisabled?: boolean;
+    banner?: TopologyBanner | null;
+    onAddFrame: (type: StoryboardFrameType) => boolean;
+    onRemoveFrame: (frameId: string) => boolean;
+    onAddConnection: (input: {
+      fromFrameId: string;
+      toFrameId: string;
+      type: StoryboardConnectionType;
+      label?: string;
+    }) => boolean;
+    onUpdateConnection: (
+      connectionId: string,
+      patch: { type?: StoryboardConnectionType; label?: string | null },
+    ) => boolean;
+    onRemoveConnection: (connectionId: string) => boolean;
+  };
 }
 
 function StoryboardCanvasInner({
@@ -178,6 +202,7 @@ function StoryboardCanvasInner({
   saveStatus,
   handoffHref,
   viewStorageKey,
+  topology,
 }: Props) {
   const resolvedHandoffHref = handoffHref ?? `/storyboards/${storyboard.id}/handoff`;
   const boardViewKey = viewStorageKey ?? storyboard.id;
@@ -187,6 +212,9 @@ function StoryboardCanvasInner({
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [editingFrameId, setEditingFrameId]             = useState<string | null>(null);
   const [scale, setScale]                               = useState(persistedView?.scale ?? 1);
+  const [connectArmed, setConnectArmed]                 = useState(false);
+  const [connectFromId, setConnectFromId]               = useState<string | null>(null);
+  const [connectToId, setConnectToId]                   = useState<string | null>(null);
 
   const canvasRef = useRef<ViewportHandle | null>(null);
   const boardAreaRef = useRef<HTMLDivElement | null>(null);
@@ -236,10 +264,23 @@ function StoryboardCanvasInner({
   }, [persistedView, boardViewKey]);
 
   const handleSelectFrame = useCallback((id: string | null) => {
+    if (connectArmed && id) {
+      if (!connectFromId) {
+        setConnectFromId(id);
+        setSelectedFrameId(id);
+        setSelectedConnectionId(null);
+        return;
+      }
+      if (id !== connectFromId) {
+        setConnectToId(id);
+        setSelectedFrameId(id);
+      }
+      return;
+    }
     setSelectedFrameId(id);
     // Selecting a different frame cancels any open edit
     setEditingFrameId(null);
-  }, []);
+  }, [connectArmed, connectFromId]);
 
   const handleSelectConnection = useCallback((id: string | null) => {
     setSelectedConnectionId(id);
@@ -330,13 +371,30 @@ function StoryboardCanvasInner({
         case 'Escape':
           setSelectedFrameId(null);
           setSelectedConnectionId(null);
+          setConnectArmed(false);
+          setConnectFromId(null);
+          setConnectToId(null);
+          break;
+        case 'Delete':
+          if (!topology || editingFrameId) break;
+          if (selectedConnectionId) {
+            e.preventDefault();
+            if (topology.onRemoveConnection(selectedConnectionId)) {
+              setSelectedConnectionId(null);
+            }
+          } else if (selectedFrameId) {
+            e.preventDefault();
+            if (topology.onRemoveFrame(selectedFrameId)) {
+              setSelectedFrameId(null);
+            }
+          }
           break;
       }
     }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [topology, editingFrameId, selectedFrameId, selectedConnectionId]);
 
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: surfaces.bgChrome }}>
@@ -453,6 +511,44 @@ function StoryboardCanvasInner({
 
           {/* Viewport controls — absolutely positioned over canvas */}
           <ViewControls canvasRef={canvasRef} scale={scale} />
+
+          {topology && (
+            <TopologyToolbar
+              frames={storyboard.frames.map(f => ({ id: f.id, title: f.title }))}
+              selectedFrameId={selectedFrameId}
+              selectedConnectionId={selectedConnectionId}
+              addDisabled={Boolean(topology.addDisabled)}
+              banner={topology.banner ?? null}
+              connectArmed={connectArmed}
+              connectFromId={connectFromId}
+              connectToId={connectToId}
+              onArmConnect={armed => {
+                setConnectArmed(armed);
+                if (!armed) {
+                  setConnectFromId(null);
+                  setConnectToId(null);
+                }
+              }}
+              onConnectFromChange={setConnectFromId}
+              onConnectToChange={setConnectToId}
+              onAddFrame={topology.onAddFrame}
+              onAddConnection={topology.onAddConnection}
+              onDeleteSelected={() => {
+                if (selectedConnectionId) {
+                  if (topology.onRemoveConnection(selectedConnectionId)) {
+                    setSelectedConnectionId(null);
+                  }
+                  return;
+                }
+                if (selectedFrameId) {
+                  if (topology.onRemoveFrame(selectedFrameId)) {
+                    setSelectedFrameId(null);
+                    setEditingFrameId(null);
+                  }
+                }
+              }}
+            />
+          )}
         </div>
 
         {/* Beat edit panel — shown when editing a frame (project boards only) */}
@@ -471,6 +567,14 @@ function StoryboardCanvasInner({
             storyboardId={storyboard.id}
             onClose={() => setSelectedFrameId(null)}
             onEditClick={onFrameContentChange ? handleEditClick : undefined}
+            onDeleteClick={topology && selectedFrameId
+              ? () => {
+                  if (topology.onRemoveFrame(selectedFrameId)) {
+                    setSelectedFrameId(null);
+                    setEditingFrameId(null);
+                  }
+                }
+              : undefined}
             frameProgress={selectedFrameProgress}
             onChecklistChange={onProgressChange && selectedFrameId
               ? (index, complete) => onProgressChange(selectedFrameId, 'checklist', index, complete)
@@ -488,6 +592,16 @@ function StoryboardCanvasInner({
             fromTitle={connFromFrame.title}
             toTitle={connToFrame.title}
             onClose={() => setSelectedConnectionId(null)}
+            onChange={topology
+              ? patch => topology.onUpdateConnection(selectedConnection.id, patch)
+              : undefined}
+            onDelete={topology
+              ? () => {
+                  if (topology.onRemoveConnection(selectedConnection.id)) {
+                    setSelectedConnectionId(null);
+                  }
+                }
+              : undefined}
           />
         )}
       </main>
@@ -688,11 +802,18 @@ interface ConnectionPanelProps {
   fromTitle: string;
   toTitle: string;
   onClose: () => void;
+  onChange?: (patch: { type?: StoryboardConnectionType; label?: string | null }) => void;
+  onDelete?: () => void;
 }
 
-function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: ConnectionPanelProps) {
+function ConnectionPanel({ connection, fromTitle, toTitle, onClose, onChange, onDelete }: ConnectionPanelProps) {
   const typeLabel   = CONNECTION_TYPE_LABELS[connection.type]   ?? connection.type.toUpperCase();
   const accentColor = CONNECTION_TYPE_COLORS[connection.type] ?? SLATE_LINE;
+  const [labelDraft, setLabelDraft] = useState(connection.label ?? '');
+
+  useEffect(() => {
+    setLabelDraft(connection.label ?? '');
+  }, [connection.id, connection.label]);
 
   return (
     <aside
@@ -767,7 +888,70 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
           </div>
         </div>
 
-        {connection.label && (
+        {onChange ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+              Connection Type
+            </span>
+            <select
+              aria-label="Connection type"
+              value={connection.type}
+              onChange={e => onChange({ type: e.target.value as StoryboardConnectionType })}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: `1px solid ${accentColor}55`,
+                borderRadius: 4,
+                color: '#e2e8f0',
+                fontSize: 12,
+                padding: '6px 8px',
+              }}
+            >
+              {CONNECTION_TYPE_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <p style={{ margin: 0, fontSize: 12, color: textColors.muted, lineHeight: 1.5 }}>
+              {connectionTypeDescription(connection.type)}
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+              Connection Type
+            </span>
+            <p style={{ margin: 0, fontSize: 12, color: textColors.muted, lineHeight: 1.5 }}>
+              {connectionTypeDescription(connection.type)}
+            </p>
+          </div>
+        )}
+
+        {onChange ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+              Condition / Result
+            </span>
+            <input
+              aria-label="Connection label"
+              value={labelDraft}
+              placeholder="Optional label"
+              onChange={e => setLabelDraft(e.target.value)}
+              onBlur={() => {
+                const next = labelDraft.trim();
+                const prev = connection.label ?? '';
+                if (next === prev) return;
+                onChange({ label: next.length > 0 ? next : null });
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: `1px solid ${accentColor}33`,
+                borderRadius: 4,
+                color: '#f1f5f9',
+                fontSize: 13,
+                padding: '8px 10px',
+              }}
+            />
+          </div>
+        ) : connection.label ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
               Condition / Result
@@ -782,16 +966,27 @@ function ConnectionPanel({ connection, fromTitle, toTitle, onClose }: Connection
               {connection.label}
             </p>
           </div>
-        )}
+        ) : null}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 10, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-            Connection Type
-          </span>
-          <p style={{ margin: 0, fontSize: 12, color: textColors.muted, lineHeight: 1.5 }}>
-            {connectionTypeDescription(connection.type)}
-          </p>
-        </div>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            style={{
+              marginTop: 4,
+              background: 'rgba(239,68,68,0.12)',
+              border: '1px solid rgba(239,68,68,0.35)',
+              borderRadius: 4,
+              color: '#FCA5A5',
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 700,
+              padding: '8px 10px',
+            }}
+          >
+            Delete connection
+          </button>
+        )}
 
       </div>
     </aside>

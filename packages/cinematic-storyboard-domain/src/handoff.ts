@@ -1,6 +1,13 @@
 // ─── Cinematic Domain — Production Brief Handoff ─────────────────────────────
 
-import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
+import type {
+  Storyboard,
+  StoryboardFrame,
+  StoryboardConnection,
+  CinematicShotSize,
+  CinematicCameraMove,
+  CinematicFrameContent,
+} from './schema';
 import { getCinematicBeatStatus } from './beatStatus';
 import { parseDurationRange } from './productionSignals';
 import { assertValidProductionBrief, PRODUCTION_BRIEF_SCHEMA_ID } from './validateProductionBrief';
@@ -107,6 +114,15 @@ function topologicalSort(
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface ProductionBriefCamera {
+  shotSize?: CinematicShotSize;
+  lensMm?: number;
+  fovDeg?: number;
+  move?: CinematicCameraMove;
+  /** Free-text author notes (legacy cameraAngle / cameraMovement). */
+  notes?: string;
+}
+
 export interface ProductionBriefShot {
   frameId: string;
   shotNumber: number;
@@ -114,7 +130,7 @@ export interface ProductionBriefShot {
   type: string;
   intent: string | null;
   visualDescription: string | null;
-  camera: string | null;
+  camera: ProductionBriefCamera | null;
   framing: string | null;
   duration: string | null;
   dialogue: string[];
@@ -146,8 +162,34 @@ export interface ProductionBriefConnection {
  * a downstream importer must branch on. Stamped onto every generated brief so
  * future consumers have a discriminator (PR-004).
  * 2: connections + optional missingReasons on shots.
+ * 3: camera is a structured object (shotSize, lensMm, fovDeg, move, notes).
  */
-export const HANDOFF_FORMAT_VERSION = 2;
+export const HANDOFF_FORMAT_VERSION = 3;
+
+/** Format structured camera for markdown / HTML. Null when empty. */
+export function formatProductionBriefCamera(camera: ProductionBriefCamera | null | undefined): string | null {
+  if (!camera) return null;
+  const parts: string[] = [];
+  if (camera.shotSize) parts.push(camera.shotSize);
+  if (typeof camera.lensMm === 'number') parts.push(`${camera.lensMm}mm`);
+  if (typeof camera.fovDeg === 'number') parts.push(`FOV ${camera.fovDeg}°`);
+  if (camera.move) parts.push(camera.move);
+  if (camera.notes) parts.push(camera.notes);
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
+function toBriefCamera(content: CinematicFrameContent): ProductionBriefCamera | null {
+  const notesParts: string[] = [];
+  if (content.cameraAngle) notesParts.push(content.cameraAngle);
+  if (content.cameraMovement) notesParts.push(content.cameraMovement);
+  const camera: ProductionBriefCamera = {};
+  if (content.shotSize) camera.shotSize = content.shotSize;
+  if (typeof content.lensMm === 'number') camera.lensMm = content.lensMm;
+  if (typeof content.fovDeg === 'number') camera.fovDeg = content.fovDeg;
+  if (content.move) camera.move = content.move;
+  if (notesParts.length > 0) camera.notes = notesParts.join(' · ');
+  return Object.keys(camera).length > 0 ? camera : null;
+}
 
 export interface ProductionBrief {
   /** Published 2020-12 schema URI so importers can locate the contract. */
@@ -195,10 +237,6 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
     const status = getCinematicBeatStatus(frame);
     summary[status.level]++;
 
-    const cameraParts: string[] = [];
-    if (content.cameraAngle) cameraParts.push(content.cameraAngle);
-    if (content.cameraMovement) cameraParts.push(content.cameraMovement);
-
     const shot: ProductionBriefShot = {
       frameId: frame.id,
       shotNumber: i + 1,
@@ -206,7 +244,7 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
       type: frame.type,
       intent: content.intent ?? null,
       visualDescription: content.visualDescription ?? null,
-      camera: cameraParts.length > 0 ? cameraParts.join(' · ') : null,
+      camera: toBriefCamera(content),
       framing: content.framing ?? null,
       duration: content.durationEstimate ?? null,
       dialogue: content.dialogue ?? [],
@@ -290,8 +328,9 @@ export function generateProductionMarkdown(brief: ProductionBrief): string {
       lines.push('');
     }
 
-    if (shot.camera) {
-      lines.push(`**Camera:** ${esc(shot.camera)}`);
+    const cameraLine = formatProductionBriefCamera(shot.camera);
+    if (cameraLine) {
+      lines.push(`**Camera:** ${esc(cameraLine)}`);
       lines.push('');
     }
 

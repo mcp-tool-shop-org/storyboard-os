@@ -37,6 +37,8 @@ After Phase 2, a designer has a complete local authoring workflow without a back
    - `0` → reset to 100%
    - `+` / `-` → zoom in/out
    - `Escape` → deselect
+   - `Arrow Up` / `Arrow Down` → move through frames and connections in the board list (accessible equivalent of the Konva stage)
+   - `Enter` / `Space` → activate the focused frame or connection
    - Drag background → pan
    - Ctrl/Cmd + scroll → zoom at cursor
    - Plain scroll → pan (natural trackpad)
@@ -105,10 +107,12 @@ Seven types. Each names a specific function in a playable RPG quest or scene.
 | `hook` | Entry point or open thread — quest opener or future-thread seed | Yellow `#EAB308` |
 | `scene` | Narrative or location beat — the "where and what" | Blue `#3B82F6` |
 | `choice` | Player decision point — branches the board, sets state flags | Purple `#8B5CF6` |
-| `encounter` | Combat, puzzle, social conflict, or high-stakes obstacle | Red `#EF4444` |
+| `encounter` | Combat, puzzle, social conflict, or high-stakes obstacle — **quest-logic**, not a motion clip | Red `#EF4444` |
 | `reveal` | Information, twist, clue, or game-state unlock delivered | Orange `#F97316` |
 | `npc_beat` | Character interaction with dialogue branch logic | Green `#22C55E` |
 | `consequence` | World-state outcome — what changes after a choice or event | Gray `#6B7280` |
+
+**Encounter grain (Feature Pass C1):** `encounter` stays quest-logic — a high-stakes obstacle on the quest graph. Do **not** add a 4-beat combat / motion frame type. `combatSpec` is an optional later **attachment** on an encounter if/when it ships (anticipation / hit / follow-through / recovery plus Resource-shaped fields), not a new canvas type. Godot `.tres` is a compile adapter after portable JSON — [Handoff JSON contract](../site/src/content/docs/handbook/handoff-json.md).
 
 **Domain rules (enforced by `validateRpgStoryboard`):**
 - `choice` and `consequence` frames must carry at least one `stateChanges` entry

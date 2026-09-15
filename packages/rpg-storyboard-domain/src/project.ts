@@ -9,8 +9,24 @@
 // Storage is not the domain's concern. The app layer persists projects.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, StoryboardTemplateId, FrameContent, FrameAnnotation } from './schema';
+import type {
+  Storyboard,
+  StoryboardTemplateId,
+  FrameContent,
+  FrameAnnotation,
+  StoryboardFrame,
+  StoryboardFrameType,
+  StoryboardConnection,
+  StoryboardConnectionType,
+} from './schema';
 import { createStoryboardFromTemplate } from './templates';
+import { validateRpgStoryboard, type StoryboardValidationError } from './validate';
+import {
+  measureBoardDensity,
+  DENSITY_SOFT_CAP,
+  DENSITY_HARD_CAP,
+  type BoardDensity,
+} from '@storyboard-os/core';
 
 // ─── Progress types ───────────────────────────────────────────────────────────
 
@@ -451,4 +467,380 @@ export function setTestCriterionComplete(
       },
     },
   };
+}
+
+// ─── Topology authoring (F-e8c70228) ─────────────────────────────────────────
+//
+// Manual add/remove of frames and connections. Callers (the project board)
+// choose every edge — these mutators never propose, fan-out, or auto-wire.
+// Each successful change is validated with validateRpgStoryboard; progress
+// maps are cleaned on frame delete. Density: warn at 50, refuse add at 100.
+
+export const RPG_FRAME_TYPES: readonly StoryboardFrameType[] = [
+  'hook',
+  'scene',
+  'choice',
+  'encounter',
+  'reveal',
+  'npc_beat',
+  'consequence',
+] as const;
+
+export const RPG_CONNECTION_TYPES: readonly StoryboardConnectionType[] = [
+  'sequence',
+  'choice',
+  'consequence',
+  'optional',
+  'fallback',
+] as const;
+
+const FRAME_TYPE_SET: ReadonlySet<string> = new Set(RPG_FRAME_TYPES);
+const CONNECTION_TYPE_SET: ReadonlySet<string> = new Set(RPG_CONNECTION_TYPES);
+
+const NEW_FRAME_W = 220;
+const NEW_FRAME_H = 130;
+const NEW_FRAME_GAP = 280;
+
+export type TopologyFailReason =
+  | 'density_over'
+  | 'validation'
+  | 'unknown_frame'
+  | 'unknown_connection'
+  | 'last_frame'
+  | 'self_loop'
+  | 'duplicate_edge'
+  | 'missing_endpoint'
+  | 'invalid_type';
+
+export interface TopologyOk {
+  ok: true;
+  project: RpgStoryboardProject;
+  density: BoardDensity;
+  warning?: string;
+  frameId?: string;
+  connectionId?: string;
+}
+
+export interface TopologyFail {
+  ok: false;
+  reason: TopologyFailReason;
+  message: string;
+  density?: BoardDensity;
+  errors?: StoryboardValidationError[];
+}
+
+export type TopologyResult = TopologyOk | TopologyFail;
+
+export interface AddFrameInput {
+  type: StoryboardFrameType;
+  title?: string;
+  summary?: string;
+  position?: FramePosition;
+}
+
+export interface AddConnectionInput {
+  fromFrameId: string;
+  toFrameId: string;
+  type: StoryboardConnectionType;
+  label?: string;
+}
+
+export interface ConnectionPatch {
+  type?: StoryboardConnectionType;
+  /** Pass null or '' to clear the label. Omit to leave it unchanged. */
+  label?: string | null;
+}
+
+function failTopology(
+  reason: TopologyFailReason,
+  message: string,
+  extras?: { density?: BoardDensity; errors?: StoryboardValidationError[] },
+): TopologyFail {
+  return { ok: false, reason, message, density: extras?.density, errors: extras?.errors };
+}
+
+function densityWarning(density: BoardDensity): string | undefined {
+  if (density.level === 'over') {
+    return `Board is at the ${DENSITY_HARD_CAP}-frame cap. Additional beats cannot be added.`;
+  }
+  if (density.level === 'warn') {
+    return `Board density is high (${density.frameCount} frames). Path-finding gets harder past ${DENSITY_SOFT_CAP} frames.`;
+  }
+  return undefined;
+}
+
+function defaultFrameTitle(type: StoryboardFrameType): string {
+  switch (type) {
+    case 'hook':        return 'New Hook';
+    case 'scene':       return 'New Scene';
+    case 'choice':      return 'New Choice';
+    case 'encounter':   return 'New Encounter';
+    case 'reveal':      return 'New Reveal';
+    case 'npc_beat':    return 'New NPC Beat';
+    case 'consequence': return 'New Consequence';
+  }
+}
+
+/** Seed type-required fields so a new beat is structurally valid (still draft). */
+function defaultFrameContent(type: StoryboardFrameType): FrameContent {
+  if (type === 'choice' || type === 'consequence') {
+    return { stateChanges: ['Sets: author_to_specify = true'] };
+  }
+  if (type === 'reveal') {
+    return { entryConditions: ['author_to_specify = true'] };
+  }
+  return {};
+}
+
+function nextFramePosition(frames: readonly StoryboardFrame[]): FramePosition {
+  if (frames.length === 0) return { x: 80, y: 240 };
+  let maxX = -Infinity;
+  let yAtMax = 240;
+  for (const frame of frames) {
+    if (frame.position.x >= maxX) {
+      maxX = frame.position.x;
+      yAtMax = frame.position.y;
+    }
+  }
+  return { x: maxX + NEW_FRAME_GAP, y: yAtMax };
+}
+
+function omitFrameProgress(progress: ProjectProgress, frameId: string): ProjectProgress {
+  if (!(frameId in progress.frames)) return progress;
+  const { [frameId]: _removed, ...frames } = progress.frames;
+  return { frames };
+}
+
+function commitTopology(
+  project: RpgStoryboardProject,
+  storyboard: Storyboard,
+  progress: ProjectProgress,
+  extras?: { frameId?: string; connectionId?: string },
+): TopologyResult {
+  const density = measureBoardDensity(storyboard);
+  const validation = validateRpgStoryboard(storyboard);
+  if (!validation.valid) {
+    return failTopology(
+      'validation',
+      validation.errors[0]?.message ?? 'Storyboard is invalid after this change.',
+      { density, errors: validation.errors },
+    );
+  }
+  return {
+    ok: true,
+    project: {
+      ...project,
+      updatedAt: new Date().toISOString(),
+      storyboard,
+      progress,
+    },
+    density,
+    warning: densityWarning(density),
+    frameId: extras?.frameId,
+    connectionId: extras?.connectionId,
+  };
+}
+
+/**
+ * Add a beat of the given type. Allocates a new id. Refuses when the board
+ * is already at the hard density cap (100 frames). Never adds connections.
+ */
+export function addFrame(
+  project: RpgStoryboardProject,
+  input: AddFrameInput,
+): TopologyResult {
+  const densityNow = measureBoardDensity(project.storyboard);
+  if (densityNow.level === 'over') {
+    return failTopology(
+      'density_over',
+      `Cannot add a beat — the board is at the ${DENSITY_HARD_CAP}-frame cap.`,
+      { density: densityNow },
+    );
+  }
+
+  if (!FRAME_TYPE_SET.has(input.type)) {
+    return failTopology('invalid_type', `Unknown frame type "${input.type}".`);
+  }
+
+  const id = `frm-${crypto.randomUUID()}`;
+  const title = input.title?.trim() || defaultFrameTitle(input.type);
+  const summary = input.summary?.trim() || 'Author this beat.';
+  const position = input.position ?? nextFramePosition(project.storyboard.frames);
+
+  const frame: StoryboardFrame = {
+    id,
+    type: input.type,
+    title,
+    summary,
+    position,
+    size: { width: NEW_FRAME_W, height: NEW_FRAME_H },
+    content: defaultFrameContent(input.type),
+    annotations: [],
+  };
+
+  return commitTopology(
+    project,
+    { ...project.storyboard, frames: [...project.storyboard.frames, frame] },
+    project.progress,
+    { frameId: id },
+  );
+}
+
+/**
+ * Remove a beat, drop connections that referenced it, and drop its progress.
+ * Refuses when it is the last remaining beat (empty boards are invalid).
+ */
+export function removeFrame(
+  project: RpgStoryboardProject,
+  frameId: string,
+): TopologyResult {
+  const exists = project.storyboard.frames.some(f => f.id === frameId);
+  if (!exists) {
+    return failTopology('unknown_frame', `No beat with id "${frameId}".`);
+  }
+  if (project.storyboard.frames.length <= 1) {
+    return failTopology(
+      'last_frame',
+      'Cannot delete the last beat — a board must keep at least one.',
+      { density: measureBoardDensity(project.storyboard) },
+    );
+  }
+
+  const frames = project.storyboard.frames.filter(f => f.id !== frameId);
+  const connections = project.storyboard.connections.filter(
+    c => c.fromFrameId !== frameId && c.toFrameId !== frameId,
+  );
+  const progress = omitFrameProgress(project.progress, frameId);
+
+  return commitTopology(
+    project,
+    { ...project.storyboard, frames, connections },
+    progress,
+  );
+}
+
+/**
+ * Add one author-specified connection. Does not propose other edges.
+ */
+export function addConnection(
+  project: RpgStoryboardProject,
+  input: AddConnectionInput,
+): TopologyResult {
+  if (!CONNECTION_TYPE_SET.has(input.type)) {
+    return failTopology('invalid_type', `Unknown connection type "${input.type}".`);
+  }
+  if (input.fromFrameId === input.toFrameId) {
+    return failTopology('self_loop', 'A beat cannot connect to itself.');
+  }
+
+  const fromExists = project.storyboard.frames.some(f => f.id === input.fromFrameId);
+  const toExists = project.storyboard.frames.some(f => f.id === input.toFrameId);
+  if (!fromExists || !toExists) {
+    return failTopology(
+      'missing_endpoint',
+      'Both ends of a connection must be existing beats.',
+    );
+  }
+
+  const duplicate = project.storyboard.connections.some(
+    c => c.fromFrameId === input.fromFrameId && c.toFrameId === input.toFrameId,
+  );
+  if (duplicate) {
+    return failTopology(
+      'duplicate_edge',
+      'That path already exists. Edit the existing connection instead.',
+    );
+  }
+
+  const id = `conn-${crypto.randomUUID()}`;
+  const label = input.label?.trim();
+  const connection: StoryboardConnection = {
+    id,
+    fromFrameId: input.fromFrameId,
+    toFrameId: input.toFrameId,
+    type: input.type,
+    ...(label ? { label } : {}),
+  };
+
+  return commitTopology(
+    project,
+    {
+      ...project.storyboard,
+      connections: [...project.storyboard.connections, connection],
+    },
+    project.progress,
+    { connectionId: id },
+  );
+}
+
+/**
+ * Patch a connection's type and/or label. Does not retarget endpoints.
+ */
+export function updateConnection(
+  project: RpgStoryboardProject,
+  connectionId: string,
+  patch: ConnectionPatch,
+): TopologyResult {
+  const existing = project.storyboard.connections.find(c => c.id === connectionId);
+  if (!existing) {
+    return failTopology('unknown_connection', `No connection with id "${connectionId}".`);
+  }
+
+  if (patch.type !== undefined && !CONNECTION_TYPE_SET.has(patch.type)) {
+    return failTopology('invalid_type', `Unknown connection type "${patch.type}".`);
+  }
+
+  const nextType = patch.type ?? existing.type;
+  const nextLabel = 'label' in patch
+    ? (patch.label?.trim() || undefined)
+    : existing.label;
+
+  if (nextType === existing.type && nextLabel === existing.label) {
+    return {
+      ok: true,
+      project,
+      density: measureBoardDensity(project.storyboard),
+      connectionId,
+    };
+  }
+
+  const updated: StoryboardConnection = {
+    id: existing.id,
+    fromFrameId: existing.fromFrameId,
+    toFrameId: existing.toFrameId,
+    type: nextType,
+    ...(nextLabel ? { label: nextLabel } : {}),
+  };
+
+  return commitTopology(
+    project,
+    {
+      ...project.storyboard,
+      connections: project.storyboard.connections.map(c =>
+        c.id === connectionId ? updated : c,
+      ),
+    },
+    project.progress,
+    { connectionId },
+  );
+}
+
+/** Remove one connection. Frames are left untouched. */
+export function removeConnection(
+  project: RpgStoryboardProject,
+  connectionId: string,
+): TopologyResult {
+  const exists = project.storyboard.connections.some(c => c.id === connectionId);
+  if (!exists) {
+    return failTopology('unknown_connection', `No connection with id "${connectionId}".`);
+  }
+
+  return commitTopology(
+    project,
+    {
+      ...project.storyboard,
+      connections: project.storyboard.connections.filter(c => c.id !== connectionId),
+    },
+    project.progress,
+  );
 }

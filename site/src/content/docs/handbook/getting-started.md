@@ -47,7 +47,7 @@ Runs all 937 tests + builds all 54 pages across all three apps. This is the gate
 1. Start the app: `pnpm dev:marketing`.
 2. Open the index — it lists the demo campaign and any template-derived boards.
 3. Open the demo campaign board: **`/campaigns/campaign-01`** (“Launch rpg-storyboard as First Storyboard OS Vertical”).
-4. Inspect frames for launch-readiness signals (approval gates, critical path, measurement loops).
+4. Inspect frames for launch-readiness signals (approval gates, critical path, measurement loops). Full authoring loop: [Marketing campaigns](./marketing-storyboard/).
 5. Open **`/campaigns/campaign-01/handoff`** and download the campaign brief as Markdown or JSON.
 
 No project list and no browser persistence — edits are not saved across reload in this Phase-0 app. Treat the handoff export as the deliverable.
@@ -59,10 +59,30 @@ No project list and no browser persistence — edits are not saved across reload
 1. Start the app: `pnpm dev:cinematic`.
 2. Open the index — demo trailer plus template sequences.
 3. Open the demo sequence board: **`/sequences/demo-launch-trailer`** (“Storyboard OS Launch Trailer”).
-4. Use the production signal panel (health, continuity risk, VFX/audio burden, camera complexity).
+4. Use the production signal panel (health, continuity risk, VFX/audio burden, camera complexity). Full authoring loop: [Cinematic sequences](./cinematic-storyboard/).
 5. Open **`/sequences/demo-launch-trailer/handoff`** and download the production brief as Markdown or JSON.
 
-Same persistence note as marketing: static boards today; editable localStorage projects for cinematic are future work (roadmap §1).
+Same persistence note as marketing: static SSG boards today. Sequences stay the authored unit. Grouping many sequences is a **playlist / reel** (ordered sequence ids, optional take labels, SSG-loaded) — not an RPG-style `localStorage` project. See [Cinematic playlist](./cinematic-playlist/) and roadmap §1.
+
+---
+
+## Navigate the board
+
+The Konva stage takes pointer gestures. The **board list** (top-left of the canvas, ARIA listbox) is the accessible equivalent of that stage — keyboard and screen-reader users operate the same selection path the mouse uses. `AccessibleFrameList` ships on all three apps (RPG, marketing, cinematic). Connection rows join the **same** listbox when the board is wired; there is not a second surface.
+
+| Action | Gesture / Key |
+|---|---|
+| Pan | Drag background |
+| Zoom at cursor | Ctrl/Cmd + scroll |
+| Pan (trackpad) | Two-finger scroll |
+| Fit to screen | `F` |
+| Reset to 100% | `0` |
+| Zoom in/out | `+` / `-` |
+| Deselect | `Escape` |
+| Move through frames and connections | `Arrow Up` / `Arrow Down` |
+| Activate focused frame or connection | `Enter` or `Space` |
+
+`Arrow Left` / `Arrow Right`, `Home`, and `End` also move within the list. Enter/Space selects and centers the frame (or selects the connection). Screen-reader names: frames as *title — type — badges*; connections as *label — from-title to to-title*. Pointer gestures are unchanged.
 
 ---
 
@@ -102,15 +122,7 @@ Hit **Save** — the panel closes, the board updates, localStorage persists (RPG
 
 ### 5. Navigate the board
 
-| Action | Gesture / Key |
-|---|---|
-| Pan | Drag background |
-| Zoom at cursor | Ctrl/Cmd + scroll |
-| Pan (trackpad) | Two-finger scroll |
-| Fit to screen | `F` |
-| Reset to 100% | `0` |
-| Zoom in/out | `+` / `-` |
-| Deselect | `Escape` |
+Same table as [Navigate the board](#navigate-the-board) above — including Arrow Up/Down through the board list and Enter/Space to activate. Pointer gestures on the stage are unchanged.
 
 ### 6. Generate a handoff
 

@@ -1,5 +1,7 @@
 # Cinematic Storyboard — Product Overview
 
+Pages handbook (authoring loop + playlist): [Cinematic sequences](../site/src/content/docs/handbook/cinematic-storyboard.md) · [Cinematic playlist](../site/src/content/docs/handbook/cinematic-playlist.md).
+
 ## What It Is
 
 A cinematic production storyboard. Every frame on the board is a shot with concrete production requirements: camera language, VFX/audio requirements, continuity constraints, asset lists, and implementation checklists.
@@ -153,6 +155,6 @@ These are not bugs or backlog items — they are deliberate scope boundaries:
 5. **Render pipeline** — no engine integration, no render farm dispatch. Execution is downstream.
 6. **Review workflows** — no "pending review" or "director approved" states. Readiness = spec depth.
 7. **Collaboration** — no multi-user, no comments, no real-time sync. Local-only, single-author.
-8. **Durable projects** — cinematic Phase 0 uses template-based static boards. Editable projects may come in a future phase (as RPG Phase 2 did).
+8. **RPG-style durable projects** — cinematic Phase 0 uses template-based static boards. Grouping many sequences is a **playlist / reel** (ordered sequence ids, optional take labels, SSG-loaded). That is not `CinematicStoryboardProject`, not `localStorage`, and not RPG Phase 2 copied over. See the handbook [Cinematic playlist](../site/src/content/docs/handbook/cinematic-playlist.md) and roadmap §1.
 
 The cinematic vertical answers **"What is this sequence and what makes it hard?"** — not "Who is doing it, when is it due, and what does it cost?"

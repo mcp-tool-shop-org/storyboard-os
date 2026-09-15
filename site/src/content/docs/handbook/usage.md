@@ -6,7 +6,7 @@ sidebar:
 ---
 
 :::note
-This page is the **rpg-storyboard** authoring loop (`/projects`, Edit Beat, localStorage persist). For marketing (`pnpm dev:marketing` → `/campaigns`) and cinematic (`pnpm dev:cinematic` → `/sequences`) first-run paths, see [Getting Started](./getting-started/).
+This page is the **rpg-storyboard** authoring loop (`/projects`, Edit Beat, localStorage persist). Marketing: [Marketing campaigns](./marketing-storyboard/). Cinematic: [Cinematic sequences](./cinematic-storyboard/). First-run URLs: [Getting Started](./getting-started/).
 :::
 
 ## The full authoring loop
@@ -31,7 +31,7 @@ The canvas shows implementation readiness at a glance:
 | `DRAFT` | Gray | No spec depth; exists structurally only |
 | `BLOCKED` | Red | Domain violation — see [Readiness Model](./reference/#implementation-readiness) |
 
-A glance tells you which beats still need work before handoff.
+A glance tells you which beats still need work before handoff. The card itself is only type badge, title, one implementable line, and readiness — full spec fields belong in the inspector, not on the Konva card. See [Card vs inspector](./architecture/#card-vs-inspector).
 
 ### 3. Rearrange the board
 
@@ -39,7 +39,7 @@ Drag any frame to reposition it. Position saves automatically — the save statu
 
 ### 4. Edit a beat
 
-Click a frame → **Edit Beat ✎**. The inline edit form opens with all spec fields:
+Click a frame → **Edit Beat ✎**. The inline edit form (inspector, not the Konva card) opens with all spec fields. These fields do **not** belong on the board card — [Card vs inspector](./architecture/#card-vs-inspector).
 
 **Identity**
 - `Title` — the beat's name on the board
@@ -88,7 +88,7 @@ In the inspector, click any checklist item or test criterion to mark it done. Th
 
 ### 7. Navigate and pan
 
-The board supports full viewport control:
+The Konva stage takes pointer gestures. The **board list** (top-left, ARIA listbox) is the accessible equivalent of that stage: it lists frames and, when wired, connections in one listbox. Screen-reader names match the cards (`title — type — badges`; connections as `label — from to to`).
 
 | Action | Gesture / Key |
 |---|---|
@@ -100,8 +100,10 @@ The board supports full viewport control:
 | Zoom in | `+` or `=` |
 | Zoom out | `-` |
 | Deselect | `Escape` |
+| Move through frames and connections | `Arrow Up` / `Arrow Down` |
+| Activate focused frame or connection | `Enter` or `Space` |
 
-ViewControls overlay (lower-right corner) gives mouse access to Fit, 1:1, Zoom+/-.
+`Arrow Left` / `Arrow Right`, `Home`, and `End` also move within the list. Enter/Space runs the same select + center-on-frame path as a pointer click. ViewControls overlay (lower-right corner) gives mouse access to Fit, 1:1, Zoom+/-. Pointer gestures are unchanged.
 
 ### 8. Inspect connections
 
@@ -119,7 +121,7 @@ Click **Handoff →** in the header. The project handoff page (`/projects/handof
 
 **Download as Markdown** — developer-readable, GitHub-renderable, can go straight into a dev ticket or wiki.
 
-**Download as JSON** — engine-ingestible structure with full typed data.
+**Download as JSON** — schema-validated portable contract (`formatVersion` 1). Shape: [Handoff JSON contract](./handoff-json/). Engine-native (`.tres`) is an adapter after this JSON, not the source of truth.
 
 ---
 

@@ -34,6 +34,7 @@ They do not need:
 - Real-time multiplayer during a design session
 - A full world-building database before they can design one quest
 - AI-generated art or content
+- AI that auto-wires frames or connections (suggestions, if any, are opt-in, contrastive, and author-committed)
 - A session-runner or live game management tool
 
 **This is not a tabletop tool.** There is no GM, no session prep, no initiative tracker, no VTT. The target output is implementable game content, not playable session notes.
@@ -65,7 +66,7 @@ These are the seven frame types. Each one names a specific **function in a playa
 | **Hook**        | Entry point or loose thread — quest opener or future-thread seed  | Yellow     |
 | **Scene**       | Narrative or location beat — the "where and what"                 | Blue       |
 | **Choice**      | Player decision point — branches the board, sets state flags      | Purple     |
-| **Encounter**   | Combat, puzzle, social conflict, or high-stakes obstacle          | Red        |
+| **Encounter**   | Combat, puzzle, social conflict, or high-stakes obstacle — **quest-logic**, not a motion clip | Red        |
 | **Reveal**      | Information, twist, clue, or game-state unlock delivered          | Orange     |
 | **NPC Beat**    | Character interaction or relationship moment with branch logic    | Green      |
 | **Consequence** | World-state outcome — what changes after a choice or event        | Gray       |
@@ -87,7 +88,9 @@ A beat page is not just story notes. It is a spec a developer can build from.
 | Test Criteria        | Pass/fail checks that verify correct implementation                      |
 | Implementation Checklist | Ordered task list for the dev or production pass                   |
 
-The canvas is the planning surface. The beat pages are the implementation spec. The connections are game-state logic made visible.
+The canvas is the planning surface. The beat pages (and the inspector) are the implementation spec. The connections are game-state logic made visible. On-card: type badge, title, one implementable line, readiness. Full spec stays off the Konva card.
+
+**Encounter grain:** the frame type is quest-logic (combat, puzzle, or social conflict as an obstacle on the graph). Do not add a motion / 4-beat frame type. If combat timing ships later, it is an optional `combatSpec` **attachment** on an encounter (anticipation / hit / follow-through / recovery plus Resource-shaped fields) — not a new first-class type. Godot `.tres` is a compile adapter after portable JSON, never the authoring source.
 
 ---
 
@@ -146,6 +149,8 @@ Do not build any of the following in Phase 0:
 - Collaboration or multiplayer editing
 - Login, accounts, or cloud sync
 - AI image or content generation
+- AI auto-wiring of frames or connections (graph edits). Any later assist must be opt-in, contrastive, and author-committed — never a silent rewrite of the board
+- A 4-beat combat / motion frame type. `encounter` stays quest-logic; `combatSpec` is an optional later attachment, not a new canvas vocabulary
 - Full world-building database or lore wiki
 - NPC relationship graph (Phase 3 consideration)
 - Export to PDF or Markdown
@@ -178,6 +183,8 @@ Astro is the shell. Konva is the board engine. Do not invert this.
 | Obsidian / wiki clone          | Canvas is secondary to notes or pages                                      |
 | Dialogue editor only           | Tool handles dialogue trees but not quest flow or state changes             |
 | AI-generation first            | Spectacle before interaction truth                                         |
+| AI auto-wire of the graph      | Frames or connections appear without an opt-in, contrastive, author commit |
+| Motion / 4-beat combat frame   | Encounter promoted to animation vocabulary; combatSpec as a new type       |
 | Export-first                   | PDF/Markdown output before the loop is proven                              |
 | Too many entity types          | More than 7 frame types before Phase 0 closes                              |
 | Frame pages without game logic | Beat pages look like story notes, not implementation specs                 |

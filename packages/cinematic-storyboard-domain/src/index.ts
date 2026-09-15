@@ -3,13 +3,19 @@
 export type {
   CinematicFrameType,
   CinematicFrameContent,
+  CinematicShotSize,
+  CinematicCameraMove,
   CinematicAnnotationType,
   CinematicConnectionType,
   StoryboardFrame,
   Storyboard,
   StoryboardConnection,
 } from './schema';
-export { BOARD_SCHEMA_VERSION } from './schema';
+export {
+  BOARD_SCHEMA_VERSION,
+  CINEMATIC_SHOT_SIZES,
+  CINEMATIC_CAMERA_MOVES,
+} from './schema';
 
 export {
   getCinematicBeatStatus,
@@ -33,6 +39,7 @@ export type { CinematicTemplateId, CinematicTemplateDefinition } from './templat
 export {
   generateProductionBrief,
   generateProductionMarkdown,
+  formatProductionBriefCamera,
   HANDOFF_FORMAT_VERSION,
   parseDurationSeconds,
   humanizeFrameType,
@@ -45,7 +52,12 @@ export {
   CONNECTION_TYPE_LABELS,
   CONNECTION_TYPE_COLORS,
 } from './handoff';
-export type { ProductionBrief, ProductionBriefShot, ProductionBriefConnection } from './handoff';
+export type {
+  ProductionBrief,
+  ProductionBriefShot,
+  ProductionBriefCamera,
+  ProductionBriefConnection,
+} from './handoff';
 
 export {
   validateProductionBrief,
@@ -62,6 +74,7 @@ export { cardBeatLine, CARD_BEAT_MAX_CHARS } from './cardBeat';
 export {
   getSequenceProductionSignals,
   parseDurationRange,
+  classifyCameraMove,
 } from './productionSignals';
 export type {
   ProductionSignals,
@@ -76,3 +89,23 @@ export type {
 } from './productionSignals';
 
 export { storyboardOsLaunchTrailer } from './demo-sequence';
+
+export {
+  createSequencePlaylist,
+  serializeSequencePlaylistJson,
+  listSequencePlaylists,
+  getSequencePlaylist,
+  getPublishedSequence,
+  listPublishedSequences,
+  listReelStaticPaths,
+  listSequenceStaticPaths,
+  storyboardOsDemoReel,
+  CINEMATIC_PLAYLISTS,
+  AUTHORED_SEQUENCE_IDS,
+} from './playlist';
+export type {
+  SequencePlaylist,
+  SequencePlaylistItem,
+  CreateSequencePlaylistInput,
+  AuthoredSequenceId,
+} from './playlist';

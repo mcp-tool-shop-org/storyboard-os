@@ -16,6 +16,7 @@ import {
     marketingColors,
     FRAME_TYPE_LABELS,
     humanizeMissingReason,
+    humanizeAnnotationType,
     type CampaignBeatStatusLevel,
     type StoryboardFrame,
     type MarketingFrameType,
@@ -73,6 +74,13 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
     const blockers = status.missing.filter(r => BLOCKING_REASONS.has(r));
     const specGaps = status.missing.filter(
         r => !BLOCKING_REASONS.has(r) && r !== 'no_proof_points' && r !== 'no_launch_dependencies',
+    );
+    const annotations = frame.annotations ?? [];
+    const hasOutcomes = Boolean(
+        content.conversionGoal
+        || content.conversionEvent
+        || (content.metrics?.length ?? 0) > 0
+        || (content.measurementEvents?.length ?? 0) > 0,
     );
 
     return (
@@ -243,13 +251,6 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                     </ContentSection>
                 )}
 
-                {/* Conversion goal */}
-                {content.conversionGoal && (
-                    <ContentSection title="Conversion Goal">
-                        <p style={{ fontSize: 12, color: '#06B6D4', lineHeight: 1.6 }}>{content.conversionGoal}</p>
-                    </ContentSection>
-                )}
-
                 {/* Proof points */}
                 {content.proofPoints && content.proofPoints.length > 0 && (
                     <ContentSection title="Proof Points">
@@ -305,14 +306,67 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                     </ContentSection>
                 )}
 
-                {/* Metrics */}
-                {content.metrics && content.metrics.length > 0 && (
-                    <ContentSection title="Metrics">
-                        <ul style={{ margin: 0, padding: '0 0 0 14px', listStyle: 'disc' }}>
-                            {content.metrics.map((m, i) => (
-                                <li key={i} style={{ fontSize: 11, color: '#EC4899', lineHeight: 1.5 }}>{m}</li>
+                {/* Constraints — legal / brand annotations (not card badges) */}
+                {annotations.length > 0 && (
+                    <ContentSection title="Constraints">
+                        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {annotations.map((a, i) => (
+                                <li key={a.id || i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <span style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B', letterSpacing: '0.06em' }}>
+                                        {humanizeAnnotationType(a.type)}
+                                    </span>
+                                    <span style={{ fontSize: 11, color: '#cbd5e1', lineHeight: 1.5 }}>{a.text}</span>
+                                </li>
                             ))}
                         </ul>
+                    </ContentSection>
+                )}
+
+                {/* Outcomes — conversion + measurement (inspector only, not the card) */}
+                {hasOutcomes && (
+                    <ContentSection title="Outcomes">
+                        {content.conversionGoal && (
+                            <div style={{ marginBottom: 8 }}>
+                                <span style={{ fontSize: 10, color: '#06B6D4', fontWeight: 600, letterSpacing: '0.06em' }}>CONVERSION GOAL</span>
+                                <p style={{ fontSize: 12, color: '#06B6D4', lineHeight: 1.6, margin: '4px 0 0' }}>{content.conversionGoal}</p>
+                            </div>
+                        )}
+                        {content.conversionEvent && (
+                            <div style={{ marginBottom: 8 }}>
+                                <span style={{ fontSize: 10, color: '#06B6D4', fontWeight: 600, letterSpacing: '0.06em' }}>CONVERSION EVENT</span>
+                                <p style={{ fontSize: 11, color: '#cbd5e1', lineHeight: 1.5, margin: '4px 0 0', fontFamily: 'ui-monospace, monospace' }}>
+                                    {content.conversionEvent.id}
+                                    <span style={{ color: '#94a3b8', fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+                                        {' — '}{content.conversionEvent.name}
+                                    </span>
+                                </p>
+                            </div>
+                        )}
+                        {content.metrics && content.metrics.length > 0 && (
+                            <div style={{ marginBottom: (content.measurementEvents?.length ?? 0) > 0 ? 8 : 0 }}>
+                                <span style={{ fontSize: 10, color: '#EC4899', fontWeight: 600, letterSpacing: '0.06em' }}>METRICS</span>
+                                <ul style={{ margin: '4px 0 0', padding: '0 0 0 14px', listStyle: 'disc' }}>
+                                    {content.metrics.map((m, i) => (
+                                        <li key={i} style={{ fontSize: 11, color: '#EC4899', lineHeight: 1.5 }}>{m}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        {content.measurementEvents && content.measurementEvents.length > 0 && (
+                            <div>
+                                <span style={{ fontSize: 10, color: '#EC4899', fontWeight: 600, letterSpacing: '0.06em' }}>MEASUREMENT EVENTS</span>
+                                <ul style={{ margin: '4px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                    {content.measurementEvents.map((ev, i) => (
+                                        <li key={ev.id || i} style={{ fontSize: 11, color: '#cbd5e1', lineHeight: 1.5, fontFamily: 'ui-monospace, monospace' }}>
+                                            {ev.id}
+                                            <span style={{ color: '#94a3b8', fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+                                                {' — '}{ev.name} ({ev.source})
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </ContentSection>
                 )}
 

@@ -8,6 +8,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
     CINEMATIC_TEMPLATES,
     getCinematicTemplate,
@@ -18,6 +21,11 @@ import {
     generateProductionMarkdown,
     getSequenceReadiness,
     BOARD_SCHEMA_VERSION,
+    storyboardOsDemoReel,
+    listPublishedSequences,
+    listReelStaticPaths,
+    listSequenceStaticPaths,
+    serializeSequencePlaylistJson,
 } from '@storyboard-os/cinematic-domain';
 
 // Frame vocabulary the app's canvas config + handoff color maps cover.
@@ -161,5 +169,56 @@ describe('generateProductionBrief', () => {
         expect(typeof md).toBe('string');
         expect(md.length).toBeGreaterThan(0);
         expect(md).toContain(storyboardOsLaunchTrailer.title);
+    });
+});
+
+// ─── Reel persist (SSG JSON, not localStorage / project clone) ───────────────
+
+describe('SequencePlaylist persist', () => {
+    it('landing catalog follows demo reel order', () => {
+        const boards = listPublishedSequences();
+        expect(boards.map(b => b.id)).toEqual(
+            storyboardOsDemoReel.items.map(item => item.sequenceId),
+        );
+    });
+
+    it('getStaticPaths covers reel ids and sequence ids from the reel', () => {
+        expect(listReelStaticPaths().map(p => p.params.reelId)).toEqual(['demo-launch-reel']);
+        const seqIds = listSequenceStaticPaths().map(p => p.params.sequenceId);
+        for (const item of storyboardOsDemoReel.items) {
+            expect(seqIds).toContain(item.sequenceId);
+        }
+    });
+
+    it('SequencePlaylist JSON does not embed a Storyboard or FrameProgress', () => {
+        const json = serializeSequencePlaylistJson(storyboardOsDemoReel);
+        expect(json).not.toMatch(/"storyboard"/);
+        expect(json).not.toMatch(/FrameProgress/);
+        expect(json).not.toMatch(/"progress"/);
+        expect(storyboardOsDemoReel).not.toHaveProperty('storyboard');
+        expect(storyboardOsDemoReel).not.toHaveProperty('progress');
+    });
+});
+
+describe('cinematic app has zero localStorage', () => {
+    function walk(dir: string): string[] {
+        const out: string[] = [];
+        for (const name of readdirSync(dir)) {
+            if (name === 'node_modules' || name === 'dist') continue;
+            const full = join(dir, name);
+            if (statSync(full).isDirectory()) out.push(...walk(full));
+            else if (/\.(ts|tsx|astro|js|mjs)$/.test(name)) out.push(full);
+        }
+        return out;
+    }
+
+    it('no production file under apps/cinematic-storyboard/src mentions localStorage', () => {
+        const srcRoot = fileURLToPath(new URL('..', import.meta.url));
+        const files = walk(srcRoot).filter(f => !/\.test\.(ts|tsx)$/.test(f));
+        expect(files.length).toBeGreaterThan(0);
+        for (const file of files) {
+            const text = readFileSync(file, 'utf8');
+            expect(text, file).not.toMatch(/\blocalStorage\b/);
+        }
     });
 });

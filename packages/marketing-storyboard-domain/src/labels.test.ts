@@ -7,10 +7,12 @@ import {
     CONNECTION_TYPE_LABELS,
     MISSING_REASON_LABELS,
     BEAT_STATUS_LABELS,
+    ANNOTATION_TYPE_LABELS,
     humanizeFrameType,
     humanizeConnectionType,
     humanizeMissingReason,
     humanizeBeatStatus,
+    humanizeAnnotationType,
 } from './labels';
 
 describe('humanizeFrameType', () => {
@@ -60,5 +62,18 @@ describe('humanizeBeatStatus', () => {
         expect(BEAT_STATUS_LABELS.partial).toBe(statusLabels.partial);
         expect(BEAT_STATUS_LABELS.draft).toBe(statusLabels.draft);
         expect(BEAT_STATUS_LABELS.blocked).toBe(statusLabels.blocked);
+    });
+});
+
+describe('humanizeAnnotationType (F-2cdce1c8)', () => {
+    it('covers every MarketingAnnotationType without leaking snake_case', () => {
+        for (const [type, label] of Object.entries(ANNOTATION_TYPE_LABELS)) {
+            expect(humanizeAnnotationType(type)).toBe(label);
+            expect(label).not.toContain('_');
+        }
+    });
+
+    it('falls back to spaces for unknown types', () => {
+        expect(humanizeAnnotationType('custom_gate')).toBe('custom gate');
     });
 });

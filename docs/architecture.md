@@ -240,6 +240,9 @@ generateProductionMarkdown()    // Markdown for production brief
 
 // Demo sequence
 storyboardOsLaunchTrailer       // 8-frame demo trailer with full production spec
+// Playlist / reel (C5, intended): ordered sequence ids + optional take labels.
+// Not CinematicStoryboardProject. Sequences remain the authored unit.
+
 ```
 
 **Does not import from:** any app, `@storyboard-os/canvas`, `@storyboard-os/routing`, `@storyboard-os/rpg-domain`, or `@storyboard-os/marketing-domain`.
@@ -296,7 +299,17 @@ const RPG_CANVAS_CONFIG: StoryboardCanvasConfig = {
 };
 ```
 
-A second vertical passes its own config. The canvas renders it without knowing what the types mean.
+A second vertical passes its own config. The canvas renders it without knowing what the types mean. Config injection styles the type bar and connection strokes — it is not a license to dump spec fields onto the card.
+
+### Card vs inspector (C2)
+
+On-card: type badge, title, one implementable line, readiness. Inspector / Edit Beat / beat pages: full spec (`content.*`). `CanvasFrame` has no `content` field — do not spread spec onto Konva cards.
+
+Visible-frame density: warn at ~50, over at ~100 (`DENSITY_SOFT_CAP` / `DENSITY_HARD_CAP` in `@storyboard-os/core`). Nest/collapse of consequence fans is the intended response after topology work; **it is not shipped**. The canvas does not auto-hide, nest, or filter.
+
+### No AI auto-wire (C3)
+
+Do not auto-wire frames or connections. Any AI assist is opt-in, contrastive, and author-committed. Phase 0 already excludes AI-generated art or content; this extends that exclusion to graph edits.
 
 ### Viewport model (Phase 1E)
 

@@ -14,6 +14,13 @@ export {
   setTestCriterionComplete,
   getFrameProgress,
   getProjectProgress,
+  addFrame,
+  removeFrame,
+  addConnection,
+  updateConnection,
+  removeConnection,
+  RPG_FRAME_TYPES,
+  RPG_CONNECTION_TYPES,
 } from '@storyboard-os/rpg-domain';
 export type {
   RpgStoryboardProject,
@@ -23,4 +30,11 @@ export type {
   FrameProgress,
   ProjectProgress,
   ProjectProgressSummary,
+  TopologyFailReason,
+  TopologyOk,
+  TopologyFail,
+  TopologyResult,
+  AddFrameInput,
+  AddConnectionInput,
+  ConnectionPatch,
 } from '@storyboard-os/rpg-domain';

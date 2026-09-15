@@ -49,7 +49,9 @@ only. Worked pattern: marketing and cinematic each shipped with zero changes to
 
 Durable `localStorage` projects are **not** required to prove a vertical.
 RPG has them; marketing/cinematic Phase 0 shipped as static boards + handoff.
-Editable persisted projects for cinematic remain roadmap §1.
+Cinematic grouping is a **playlist / reel** (ordered sequence ids, optional take
+labels, SSG-loaded) — not an RPG-parity project store. Roadmap §1. Do not add
+`/projects` or `projectStorage` to cinematic to "catch up."
 
 ---
 

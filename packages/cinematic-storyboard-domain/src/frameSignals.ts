@@ -54,8 +54,16 @@ export function getCinematicFrameBadges(frame: StoryboardFrame): CinematicFrameB
   // normalize to an empty spec instead of throwing (DM-002).
   const content = (frame.content ?? {}) as StoryboardFrame['content'];
 
-  // Camera badge — frame has camera language defined
-  if (isNonEmpty(content.cameraAngle) || isNonEmpty(content.cameraMovement) || isNonEmpty(content.framing)) {
+  // Camera badge — structured Sequencer fields or free-text notes
+  if (
+    isNonEmpty(content.shotSize) ||
+    isNonEmpty(content.move) ||
+    isNonEmpty(content.lensMm) ||
+    isNonEmpty(content.fovDeg) ||
+    isNonEmpty(content.cameraAngle) ||
+    isNonEmpty(content.cameraMovement) ||
+    isNonEmpty(content.framing)
+  ) {
     badges.push({ text: 'CAM', color: cinematicColors.camera });
   }
 
@@ -92,6 +100,10 @@ export function getCinematicFrameSignal(frame: StoryboardFrame): CinematicFrameS
   // Normalize null/missing content to an empty spec (DM-002).
   const content = (frame.content ?? {}) as StoryboardFrame['content'];
   const parts: string[] = [];
+  if (content.shotSize) parts.push(content.shotSize);
+  if (typeof content.lensMm === 'number') parts.push(`${content.lensMm}mm`);
+  if (typeof content.fovDeg === 'number') parts.push(`FOV ${content.fovDeg}°`);
+  if (content.move) parts.push(content.move);
   if (content.cameraAngle) parts.push(content.cameraAngle);
   if (content.cameraMovement) parts.push(content.cameraMovement);
   if (content.framing) parts.push(content.framing);

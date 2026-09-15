@@ -9,47 +9,49 @@
 
 ---
 
-## 1. Cinematic vertical — project model + app routes
+## 1. Cinematic vertical — playlist / reel (C5)
 
-**Findings:** F-VR-002 (HIGH cross-vertical-drift) + F-VR-201 (HIGH proactive carryover)
+**Findings:** F-5ee88c75 (HIGH) — Feature Pass C5. Replaces the v1.1.0 wording that specified an RPG project clone.
 
 **Where:** `packages/cinematic-storyboard-domain/` and `apps/cinematic-storyboard/`
 
 **Current state:**
-- `packages/rpg-storyboard-domain` exports `RpgStoryboardProject`, `createProject`, `getProjectProgress`, `generateProjectHandoff` and the rpg app has full `apps/rpg-storyboard/src/pages/projects/{index,new,board,handoff}.astro` routes plus a `projectStorage.ts` localStorage layer.
-- `packages/marketing-storyboard-domain` exports `MarketingStoryboardProject`, `createCampaignProject`, `getProjectProgress`, `generateProjectCampaignHandoff` — the marketing **package** has parity with rpg — but the marketing **app** routes everything under `campaigns/` and never exposes a project list. Whether "campaigns" *is* marketing's project equivalent (terminology mismatch) or whether the marketing app is itself missing a project list is a product decision, not a code one.
-- `packages/cinematic-storyboard-domain` exports no project type at all. The cinematic app only has `sequences/` routes.
+- **Sequences are the authored unit.** The cinematic app serves `/sequences/:id` boards (demo trailer + templates) as SSG, with per-sequence production-brief handoff. There is no cinematic project store and no `localStorage`.
+- RPG ships durable `RpgStoryboardProject` + `/projects/*` + `projectStorage.ts`. Marketing's *package* has campaign-project helpers; the marketing *app* routes under `/campaigns` and does not persist. Cinematic must not copy either of those as the grouping model.
 
-**Scope to close the gap:**
+**Intended shape (Unreal Sequencer grain):** a **sequence** stays the authored board (shots, camera, continuity, production signals, `/sequences/:id` + handoff). A **playlist / reel** is a thin folder that owns many sequences: an ordered list of sequence ids, optional take labels, optional reel-level brief. The reel is SSG-loaded like today's boards. A take is a label, not a persist fork.
 
-### Package-side (cinematic-domain)
-Mirror the rpg-domain footprint (which is the canonical reference):
+```ts
+// Intended SequencePlaylist — domain JSON, not a Storyboard clone
+{
+  schemaVersion: number, // BOARD_SCHEMA_VERSION as the migration hook
+  id: string,
+  title: string,
+  description?: string,
+  items: Array<{ sequenceId: string; take?: string }>,
+  // optional reel-level brief — not a per-frame progress overlay
+}
+```
 
-- `CinematicStoryboardProject` — project envelope wrapping a `Storyboard<CinematicStoryboardFrame, CinematicStoryboardConnection>` with metadata (id, name, createdAt, updatedAt, schemaVersion)
-- `ProjectProgress` — per-frame checklist + testCriteria + assetCount completion state, mirroring rpg's `ProjectProgress`
-- `createCinematicProject(input: CreateCinematicProjectInput): CinematicStoryboardProject` — constructor; should accept either a `templateId` (string) or a bare `Storyboard` and stamp metadata
-- `getCinematicProjectProgress(project): CinematicProjectProgressSummary` — returns aggregate readiness + per-frame fractions, parity with `getProjectProgress` in rpg
-- `generateCinematicProjectHandoff(project)` — handoff brief generator that wraps the existing sequence-level `generateProductionBrief` with project-level context (project name, total duration estimate aggregated across frames, readiness summary)
-- Demo project — at least one `demo-cinematic-project.ts` for app-level testing (mirroring `demo-project.ts` in rpg)
-- Tests covering each new export
+**In scope when the domain lands:**
+- Domain `SequencePlaylist` factory + one demo reel that references existing sequence ids
+- Landing renders reel order; `/sequences/:id` remains the authored board
+- SSG `getStaticPaths` over reel ids (authored JSON, same load path as today's sequences)
+- Optional take label on an item; optional reel-level brief
 
-### App-side (cinematic-storyboard)
-Mirror `apps/rpg-storyboard/src/`:
+**Out of scope (rejected clone — do not build):**
+- `CinematicStoryboardProject` wrapping a cloned `Storyboard`
+- `projectStorage.ts` / `localStorage` / quota / `NEWER_SCHEMA` / progress overlay
+- `pages/projects/{index,new,board,handoff}.astro`
+- `generateCinematicProjectHandoff`
+- `@storyboard-os/routing` `projectRoute` (RPG-shaped)
+- App-shell extraction — C6 waits on playlist parity; do not invent a third persist stack to "catch up" with RPG
 
-- `lib/storyboard/projectStorage.ts` — localStorage layer returning the `WriteResult` type added in v1.1.0 (don't regress F-AP-201 on this new code)
-- `pages/projects/index.astro` — project list with empty state
-- `pages/projects/new.astro` — new-project form (pick template, name)
-- `pages/projects/board.astro` — wraps the existing `CinematicStoryboardCanvas` for project boards
-- `pages/projects/handoff.astro` — project-level handoff brief (aggregates sequence briefs)
-- Routing: `routes.ts` in `@storyboard-os/routing` may need a `cinematicProjectRoute(projectId)` helper if it's currently rpg-shaped
-- Reuse the v1.1.0 `ErrorBoundary` + canvas loading state + noscript fallback patterns
-- Site nav update if Starlight handbook has a top-level cinematic section
+Handbook: [Cinematic playlist](../site/src/content/docs/handbook/cinematic-playlist.md) (intended-shape now; grows when the domain lands).
 
-**Why deferred:** Both halves are required for a useful feature. Adding only the package would publish a half-feature; adding only the app routes would be impossible without the package. This is real Feature Pass scope, not bug-fix scope.
+**Why deferred from v1.1.0:** Feature Pass scope. The earlier spec cloned RPG projects; that is the wrong product.
 
-**Open question for the maintainer:** does the marketing app's `campaigns/` *replace* `projects/` for marketing, or is marketing also missing app-level project list pages? Answer determines whether the cinematic implementation adds a third UI pattern or copies one of the existing two.
-
-**Effort estimate:** ~1 day package + 2–3 days app integration. Could ship as v1.2.0 (additive minor — no breaking changes).
+**Effort estimate:** small domain JSON + SSG landing. Not a third localStorage stack.
 
 ---
 
@@ -66,7 +68,7 @@ Mirror `apps/rpg-storyboard/src/`:
 - Domain-themable props (accent color, vocabulary labels, handoff route resolver)
 - The per-app vocabularies stay in their respective domain packages
 
-**Why deferred:** Three working copies with documented drift is acceptable for v1.1.0; consolidating is a refactor with its own test surface and would have doubled Stage C scope. Best done after the cinematic vertical reaches feature parity (item 1) so the abstraction is informed by three real implementations, not two.
+**Why deferred:** Three working copies with documented drift is acceptable for v1.1.0; consolidating is a refactor with its own test surface and would have doubled Stage C scope. C6 waits on playlist parity (item 1) so the abstraction is informed by three real implementations, not two. Do not extract an app-shell package in this pass.
 
 **Effort estimate:** ~1–2 days. Net code reduction; no behavior change.
 
@@ -120,7 +122,7 @@ These are MED/LOW findings logged during Stage A or Stage B that weren't worth a
 - F-CI-209 (MED) — `CanvasBadge` / `CanvasFrameStyle` shape has no extensibility seam for verticals to add custom badge categories. Address when a fourth vertical lands.
 
 **verticals**
-- F-VR-208..219 (mix) — Wave 1 carryovers including drift in handoff output format, level-label conventions, error-code naming. None individually justifies a wave; collectively worth a "cross-vertical drift sweep" once cinematic project.ts lands.
+- F-VR-208..219 (mix) — Wave 1 carryovers including drift in handoff output format, level-label conventions, error-code naming. None individually justifies a wave; collectively worth a "cross-vertical drift sweep" once cinematic playlist/reel lands.
 
 **apps**
 - F-AP-207 (LOW) — stale hash links in the rpg app scroll nowhere on navigation.

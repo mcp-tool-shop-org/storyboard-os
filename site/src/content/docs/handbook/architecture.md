@@ -1,8 +1,8 @@
 ---
 title: Architecture
-description: Package map for the three shipped verticals, dependency rules, and how to add a fourth.
+description: Package map for three verticals, C2 card vs inspector, density cap, and no-AI-auto-wire.
 sidebar:
-  order: 3
+  order: 6
 ---
 
 ## Principle
@@ -50,6 +50,42 @@ apps/cinematic-storyboard
 | `apps/cinematic-storyboard` | `cinematic-domain`, `canvas`, `routing` |
 
 The three domain packages do not import from each other. Cross-package imports in the wrong direction break the isolation and must not be added.
+
+---
+
+## Card vs inspector
+
+Feature Pass C2 is product law, not a canvas-package suggestion. The Konva **card** is a glance surface. The **inspector** (and Edit Beat / beat pages) is the spec.
+
+**On the card:** type badge, title, **one implementable line**, readiness (SPEC / PARTIAL / DRAFT / BLOCKED, plus vertical chips such as STATE, GATE, CAM, VFX). That is the entire on-card contract.
+
+**In the inspector:** the rest — entry conditions, state changes, required assets, test criteria, checklists, designer notes, camera language, VFX lists, approval requirements, metrics, continuity, duration. Full field lists stay on [Reference](./reference/) and the per-vertical authoring pages. Do not put wiki prose on Konva cards.
+
+`CanvasFrame` has no `content` field. Wrappers must not spread `content.*` onto the canvas; pass those fields to the app inspector.
+
+### Density
+
+Visible-frame count is a soft cap, measured in `@storyboard-os/core` (`DENSITY_SOFT_CAP` / `DENSITY_HARD_CAP`) and shown as a chrome chip on the canvas:
+
+| Level | Visible frames | Meaning |
+|---|---|---|
+| `ok` | under 50 | Board is still path-findable |
+| `warn` | ≥ 50 | Soft cap — nest/collapse of consequence fans is the intended response |
+| `over` | ≥ 100 | Hard cap — the board is a hairball |
+
+Caps are **node counts** (frames), not edges. The canvas still paints every frame and every edge; it does not auto-hide, nest, or filter. **Nest / collapse of consequence fans is intended after topology work; it is not shipped.** Feature Pass must not treat “put more prose on the card” as the density fix.
+
+---
+
+## No AI auto-wire
+
+Phase 0 already excludes AI-generated art or content. Feature Pass C3 extends that exclusion to **graph edits**.
+
+- Do **not** auto-wire frames or connections. A later assist must not silently insert beats or edges.
+- Any AI suggestion is **opt-in** and **contrastive** (show alternatives; do not apply a single rewrite as a fait accompli).
+- The **author commits**. Suggestions that land on the board without an explicit accept are out of charter.
+
+This page does not design an AI feature. It documents the constraint so Feature Pass cannot skip it. See also [product-brief exclusions](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/product-brief.md#phase-0-non-goals).
 
 ---
 
@@ -153,6 +189,8 @@ Does not import from any app, `@storyboard-os/canvas`, `@storyboard-os/routing`,
 - Validation: `validateCinematicStoryboard()`
 - Handoff: `generateProductionBrief()`, `generateProductionMarkdown()`
 
+Sequences are the authored unit. Grouping many sequences is a thin **playlist / reel** (ordered sequence ids, optional take labels, SSG) — not `CinematicStoryboardProject` and not `localStorage`. See [Cinematic playlist](./cinematic-playlist/).
+
 ### What the cinematic domain is NOT
 
 | Excluded | Why |
@@ -186,7 +224,7 @@ const RPG_CANVAS_CONFIG: StoryboardCanvasConfig = {
 };
 ```
 
-A second vertical passes its own config. The canvas renders it without knowing what the types mean.
+A second vertical passes its own config. The canvas renders it without knowing what the types mean. Config injection styles the type bar and connection strokes — it is not a license to dump spec fields onto the card. See [Card vs inspector](#card-vs-inspector).
 
 **Viewport control:** The app holds an imperative `ViewportHandle` ref:
 

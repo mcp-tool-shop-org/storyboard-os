@@ -103,13 +103,21 @@ describe('CINEMATIC_TEMPLATES', () => {
         const lensOrFov = /\d{2,3}mm|FOV\s*\d{1,3}°/i;
         const move = /\b(static|dolly|pan|tilt|track|crane|handheld|zoom|arc|whip|push|pull|reframe|locked)\b/i;
         const spriteOrbit = /35\s*°[\s\S]*orbit|sprite[\s-]*orbit|turnaround/i;
+        const sizes = ['EWS', 'WS', 'MS', 'MCU', 'CU', 'ECU', 'POV', 'insert'];
+        const moves = ['static', 'dolly', 'pan', 'tilt', 'track', 'crane', 'handheld', 'steadicam', 'zoom', 'arc'];
         for (const frame of storyboard.frames) {
           const c = frame.content;
           expect(c.cameraAngle, `${frame.title} cameraAngle`).toMatch(shotSize);
           expect(c.cameraAngle, `${frame.title} lens/FOV`).toMatch(lensOrFov);
           expect(c.cameraMovement, `${frame.title} move`).toMatch(move);
+          expect(sizes, `${frame.title} shotSize`).toContain(c.shotSize);
+          expect(typeof c.lensMm, `${frame.title} lensMm`).toBe('number');
+          expect(typeof c.fovDeg, `${frame.title} fovDeg`).toBe('number');
+          expect(moves, `${frame.title} structured move`).toContain(c.move);
           expect(c.cameraAngle ?? '').not.toMatch(spriteOrbit);
           expect(c.cameraMovement ?? '').not.toMatch(spriteOrbit);
+          expect(c).not.toHaveProperty('azimuth');
+          expect(c).not.toHaveProperty('turnaround');
         }
       });
     });

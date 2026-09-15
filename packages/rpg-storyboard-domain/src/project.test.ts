@@ -9,8 +9,17 @@ import {
   setTestCriterionComplete,
   getFrameProgress,
   getProjectProgress,
+  addFrame,
+  removeFrame,
+  addConnection,
+  updateConnection,
+  removeConnection,
+  RPG_FRAME_TYPES,
 } from './project';
+import type { RpgStoryboardProject, TopologyOk } from './project';
 import { generateProjectMarkdown, generateProjectHandoff } from './handoff';
+import { validateRpgStoryboard } from './validate';
+import { DENSITY_SOFT_CAP, DENSITY_HARD_CAP } from '@storyboard-os/core';
 
 describe('createProject', () => {
   it('initializes an empty progress record', () => {
@@ -651,5 +660,322 @@ describe('DM-001 through-render — insert / delete / duplicate (V3-003)', () =>
     const undoneLines = md.split('\n').filter(l => l === '- [ ] dup');
     expect(doneLines).toHaveLength(1);
     expect(undoneLines).toHaveLength(2);
+  });
+});
+
+// ─── F-e8c70228 — topology authoring ─────────────────────────────────────────
+
+function addedFrame(before: RpgStoryboardProject, after: RpgStoryboardProject) {
+  const known = new Set(before.storyboard.frames.map(f => f.id));
+  return after.storyboard.frames.find(f => !known.has(f.id));
+}
+
+function unwrapOk(result: ReturnType<typeof addFrame>): TopologyOk {
+  expect(result.ok).toBe(true);
+  if (!result.ok) throw new Error(result.message);
+  return result;
+}
+
+function projectWithNFrames(n: number): RpgStoryboardProject {
+  const p = createProject({ title: 'Density', templateId: 'quest_flow' });
+  const proto = p.storyboard.frames[0];
+  const frames = Array.from({ length: n }, (_, i) => ({
+    ...proto,
+    id: `frm-d-${i}`,
+    title: `Beat ${i + 1}`,
+    position: { x: 80 + (i % 10) * 280, y: 80 + Math.floor(i / 10) * 160 },
+    content: { ...proto.content },
+    annotations: [],
+  }));
+  return {
+    ...p,
+    storyboard: { ...p.storyboard, frames, connections: [] },
+  };
+}
+
+describe('addFrame', () => {
+  it('appends a beat with an allocated id and default size', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const beforeCount = p.storyboard.frames.length;
+    const result = unwrapOk(addFrame(p, { type: 'scene' }));
+    expect(result.project).not.toBe(p);
+    expect(result.project.storyboard.frames).toHaveLength(beforeCount + 1);
+    const frame = addedFrame(p, result.project)!;
+    expect(frame.id).toMatch(/^frm-/);
+    expect(frame.type).toBe('scene');
+    expect(frame.title).toBe('New Scene');
+    expect(frame.summary).toBe('Author this beat.');
+    expect(frame.size).toEqual({ width: 220, height: 130 });
+    expect(frame.annotations).toEqual([]);
+    expect(result.frameId).toBe(frame.id);
+  });
+
+  it('does not mutate the original project or add any connection', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const connCount = p.storyboard.connections.length;
+    addFrame(p, { type: 'hook' });
+    expect(p.storyboard.frames).toHaveLength(8);
+    expect(p.storyboard.connections).toHaveLength(connCount);
+    const result = unwrapOk(addFrame(p, { type: 'hook' }));
+    expect(result.project.storyboard.connections).toHaveLength(connCount);
+  });
+
+  it('seeds stateChanges so a new choice beat validates', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const result = unwrapOk(addFrame(p, { type: 'choice' }));
+    const frame = addedFrame(p, result.project)!;
+    expect(frame.content.stateChanges?.length).toBeGreaterThan(0);
+    expect(validateRpgStoryboard(result.project.storyboard).valid).toBe(true);
+  });
+
+  it('seeds entryConditions so a new reveal beat validates', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const result = unwrapOk(addFrame(p, { type: 'reveal' }));
+    const frame = addedFrame(p, result.project)!;
+    expect(frame.content.entryConditions?.length).toBeGreaterThan(0);
+    expect(validateRpgStoryboard(result.project.storyboard).valid).toBe(true);
+  });
+
+  it('places the new beat to the right of the rightmost existing beat', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const rightmost = p.storyboard.frames.reduce((a, b) =>
+      a.position.x >= b.position.x ? a : b,
+    );
+    const result = unwrapOk(addFrame(p, { type: 'scene' }));
+    const frame = addedFrame(p, result.project)!;
+    expect(frame.position.x).toBe(rightmost.position.x + 280);
+    expect(frame.position.y).toBe(rightmost.position.y);
+  });
+
+  it('honors an explicit title, summary, and position', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const result = unwrapOk(addFrame(p, {
+      type: 'npc_beat',
+      title: 'Marel Dyn',
+      summary: 'The merchant steps out.',
+      position: { x: 12, y: 34 },
+    }));
+    const frame = addedFrame(p, result.project)!;
+    expect(frame.title).toBe('Marel Dyn');
+    expect(frame.summary).toBe('The merchant steps out.');
+    expect(frame.position).toEqual({ x: 12, y: 34 });
+  });
+
+  it('rejects an unknown frame type without changing the project', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const result = addFrame(p, { type: 'combat' as typeof RPG_FRAME_TYPES[number] });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe('invalid_type');
+    expect(p.storyboard.frames).toHaveLength(8);
+  });
+
+  it('warns when adding onto a board at the soft density cap', () => {
+    const p = projectWithNFrames(DENSITY_SOFT_CAP);
+    const result = unwrapOk(addFrame(p, { type: 'scene' }));
+    expect(result.density.level).toBe('warn');
+    expect(result.warning).toMatch(/50/);
+    expect(result.project.storyboard.frames).toHaveLength(DENSITY_SOFT_CAP + 1);
+  });
+
+  it('refuses add when the board is already at the hard density cap', () => {
+    const p = projectWithNFrames(DENSITY_HARD_CAP);
+    const result = addFrame(p, { type: 'scene' });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe('density_over');
+    expect(result.density?.frameCount).toBe(DENSITY_HARD_CAP);
+    expect(p.storyboard.frames).toHaveLength(DENSITY_HARD_CAP);
+  });
+
+  it('still allows the 100th beat (99 is warn, not over)', () => {
+    const p = projectWithNFrames(DENSITY_HARD_CAP - 1);
+    const result = unwrapOk(addFrame(p, { type: 'scene' }));
+    expect(result.project.storyboard.frames).toHaveLength(DENSITY_HARD_CAP);
+    expect(result.density.level).toBe('over');
+    expect(result.warning).toMatch(/100/);
+  });
+});
+
+describe('removeFrame', () => {
+  it('removes the beat, incident connections, and progress', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const fid = p.storyboard.frames[0].id;
+    const incident = p.storyboard.connections.filter(
+      c => c.fromFrameId === fid || c.toFrameId === fid,
+    );
+    expect(incident.length).toBeGreaterThan(0);
+    const withProgress = setChecklistItemComplete(p, fid, 0, true);
+    expect(getFrameProgress(withProgress, fid).checklist['0']).toBe(true);
+
+    const result = unwrapOk(removeFrame(withProgress, fid));
+    expect(result.project.storyboard.frames.find(f => f.id === fid)).toBeUndefined();
+    expect(result.project.storyboard.connections.some(
+      c => c.fromFrameId === fid || c.toFrameId === fid,
+    )).toBe(false);
+    expect(result.project.progress.frames[fid]).toBeUndefined();
+    expect(validateRpgStoryboard(result.project.storyboard).valid).toBe(true);
+    expect(withProgress.storyboard.frames.find(f => f.id === fid)).toBeDefined();
+  });
+
+  it('leaves unrelated progress and connections intact', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const keep = p.storyboard.frames[1].id;
+    const drop = p.storyboard.frames[0].id;
+    const seeded = setChecklistItemComplete(p, keep, 0, true);
+    const result = unwrapOk(removeFrame(seeded, drop));
+    expect(getFrameProgress(result.project, keep).checklist['0']).toBe(true);
+  });
+
+  it('refuses to delete the last remaining beat', () => {
+    let p = createProject({ title: 'T', templateId: 'cutscene_beat' });
+    while (p.storyboard.frames.length > 1) {
+      const next = unwrapOk(removeFrame(p, p.storyboard.frames[0].id));
+      p = next.project;
+    }
+    const lastId = p.storyboard.frames[0].id;
+    const result = removeFrame(p, lastId);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe('last_frame');
+    expect(p.storyboard.frames).toHaveLength(1);
+  });
+
+  it('returns unknown_frame when the id is missing', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const result = removeFrame(p, 'no-such-frame');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe('unknown_frame');
+  });
+});
+
+describe('addConnection / updateConnection / removeConnection', () => {
+  it('adds one labelled connection between existing beats', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const from = p.storyboard.frames[0].id;
+    const to = p.storyboard.frames[2].id;
+    const already = p.storyboard.connections.some(
+      c => c.fromFrameId === from && c.toFrameId === to,
+    );
+    expect(already).toBe(false);
+    const before = p.storyboard.connections.length;
+    const result = unwrapOk(addConnection(p, {
+      fromFrameId: from,
+      toFrameId: to,
+      type: 'optional',
+      label: 'If the player waits',
+    }));
+    expect(result.project.storyboard.connections).toHaveLength(before + 1);
+    const conn = result.project.storyboard.connections.find(c => c.id === result.connectionId)!;
+    expect(conn.type).toBe('optional');
+    expect(conn.label).toBe('If the player waits');
+    expect(conn.fromFrameId).toBe(from);
+    expect(conn.toFrameId).toBe(to);
+    expect(validateRpgStoryboard(result.project.storyboard).valid).toBe(true);
+    expect(p.storyboard.connections).toHaveLength(before);
+  });
+
+  it('does not auto-complete a fan — only the requested edge is added', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_branch' });
+    const from = p.storyboard.frames[0].id;
+    const others = p.storyboard.frames.slice(1).filter(f =>
+      !p.storyboard.connections.some(c => c.fromFrameId === from && c.toFrameId === f.id),
+    );
+    expect(others.length).toBeGreaterThan(1);
+    const result = unwrapOk(addConnection(p, {
+      fromFrameId: from,
+      toFrameId: others[0].id,
+      type: 'choice',
+      label: 'Ask about the window',
+    }));
+    expect(result.project.storyboard.connections).toHaveLength(
+      p.storyboard.connections.length + 1,
+    );
+  });
+
+  it('refuses a self-loop', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const id = p.storyboard.frames[0].id;
+    const result = addConnection(p, {
+      fromFrameId: id,
+      toFrameId: id,
+      type: 'sequence',
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe('self_loop');
+  });
+
+  it('refuses a duplicate from→to edge', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const existing = p.storyboard.connections[0];
+    const result = addConnection(p, {
+      fromFrameId: existing.fromFrameId,
+      toFrameId: existing.toFrameId,
+      type: 'fallback',
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe('duplicate_edge');
+  });
+
+  it('refuses a connection to an unknown beat', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const result = addConnection(p, {
+      fromFrameId: p.storyboard.frames[0].id,
+      toFrameId: 'missing-beat',
+      type: 'sequence',
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe('missing_endpoint');
+  });
+
+  it('updates type and label without retargeting', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const conn = p.storyboard.connections[0];
+    const result = unwrapOk(updateConnection(p, conn.id, {
+      type: 'fallback',
+      label: 'If the hatch is blocked',
+    }));
+    const updated = result.project.storyboard.connections.find(c => c.id === conn.id)!;
+    expect(updated.type).toBe('fallback');
+    expect(updated.label).toBe('If the hatch is blocked');
+    expect(updated.fromFrameId).toBe(conn.fromFrameId);
+    expect(updated.toFrameId).toBe(conn.toFrameId);
+    expect(validateRpgStoryboard(result.project.storyboard).valid).toBe(true);
+  });
+
+  it('clears the label when patch.label is null', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const labelled = p.storyboard.connections.find(c => c.label);
+    expect(labelled).toBeDefined();
+    const result = unwrapOk(updateConnection(p, labelled!.id, { label: null }));
+    const updated = result.project.storyboard.connections.find(c => c.id === labelled!.id)!;
+    expect(updated.label).toBeUndefined();
+  });
+
+  it('is a no-op when the patch changes nothing', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const conn = p.storyboard.connections[0];
+    const result = unwrapOk(updateConnection(p, conn.id, { type: conn.type }));
+    expect(result.project).toBe(p);
+  });
+
+  it('removes a connection and leaves frames in place', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const conn = p.storyboard.connections[0];
+    const frameCount = p.storyboard.frames.length;
+    const result = unwrapOk(removeConnection(p, conn.id));
+    expect(result.project.storyboard.connections.find(c => c.id === conn.id)).toBeUndefined();
+    expect(result.project.storyboard.frames).toHaveLength(frameCount);
+    expect(validateRpgStoryboard(result.project.storyboard).valid).toBe(true);
+  });
+
+  it('returns unknown_connection for missing ids', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    expect(updateConnection(p, 'no-conn', { type: 'sequence' }).ok).toBe(false);
+    expect(removeConnection(p, 'no-conn').ok).toBe(false);
   });
 });

@@ -82,6 +82,33 @@ describe('CinematicFrameInspector', () => {
     expect(html).toContain('VFX');
   });
 
+  it('renders structured camera row and keeps cameraAngle as author note', () => {
+    const html = renderToStaticMarkup(
+      createElement(CinematicFrameInspector, {
+        frame: {
+          ...makeNullContentFrame(),
+          content: {
+            shotSize: 'CU',
+            lensMm: 85,
+            fovDeg: 24,
+            move: 'dolly',
+            cameraAngle: 'Author note: low angle on the keeper',
+          },
+        } as never,
+        onClose: () => {},
+      }),
+    );
+    expect(html).toContain('CU');
+    expect(html).toContain('85mm');
+    expect(html).toContain('FOV 24°');
+    expect(html).toContain('dolly');
+    expect(html).toContain('Author note: low angle on the keeper');
+    expect(html).toContain('Note');
+    expect(html).not.toContain('turnaround');
+    expect(html).not.toContain('azimuth');
+    expect(html).not.toContain('35°');
+  });
+
   it('ready copy names the ≥3 spec-field threshold, not full coverage', () => {
     beatStatusMock.getCinematicBeatStatus.mockReturnValue({ level: 'ready', missingReasons: [] });
     const html = renderToStaticMarkup(

@@ -1,5 +1,7 @@
 # Marketing Storyboard — Product Overview
 
+Pages handbook (authoring loop): [Marketing campaigns](../site/src/content/docs/handbook/marketing-storyboard.md).
+
 ## What It Is
 
 A campaign implementation storyboard. Every frame on the board is a campaign beat with concrete implementation requirements: objectives, audience segments, customer state transitions, required assets, test criteria, and implementation checklists.
