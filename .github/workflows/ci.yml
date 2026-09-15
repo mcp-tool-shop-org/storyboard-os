@@ -13,6 +13,7 @@ on:
       - '.npmrc'
       - 'pnpm-workspace.yaml'
       - '.github/workflows/ci.yml'
+      - '.github/scripts/**'
   pull_request:
     branches: [master, main]
 
@@ -53,6 +54,9 @@ jobs:
 
       - name: Build packages
         run: pnpm run build:packages
+
+      - name: Packed-tarball contents proof
+        run: pnpm run pack:smoke
 
       - name: Typecheck packages + apps
         run: pnpm run check
