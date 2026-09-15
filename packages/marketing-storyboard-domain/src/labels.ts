@@ -8,7 +8,11 @@
 
 import { statusLabels } from '@storyboard-os/core';
 import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
-import type { MarketingConnectionType, MarketingFrameType } from './schema';
+import type {
+    MarketingAnnotationType,
+    MarketingConnectionType,
+    MarketingFrameType,
+} from './schema';
 
 export const FRAME_TYPE_LABELS: Record<MarketingFrameType, string> = {
     audience: 'Audience',
@@ -55,6 +59,15 @@ export const BEAT_STATUS_LABELS: Record<CampaignBeatStatusLevel, string> = {
     blocked: statusLabels.blocked,
 };
 
+export const ANNOTATION_TYPE_LABELS: Record<MarketingAnnotationType, string> = {
+    owner_note: 'Owner Note',
+    stakeholder_note: 'Stakeholder Note',
+    brand_guideline: 'Brand Guideline',
+    legal_constraint: 'Legal Constraint',
+    timing: 'Timing',
+    budget_note: 'Budget Note',
+};
+
 export function humanizeFrameType(type: string): string {
     if (Object.prototype.hasOwnProperty.call(FRAME_TYPE_LABELS, type)) {
         return FRAME_TYPE_LABELS[type as MarketingFrameType];
@@ -81,4 +94,11 @@ export function humanizeBeatStatus(level: string): string {
         return BEAT_STATUS_LABELS[level as CampaignBeatStatusLevel];
     }
     return level;
+}
+
+export function humanizeAnnotationType(type: string): string {
+    if (Object.prototype.hasOwnProperty.call(ANNOTATION_TYPE_LABELS, type)) {
+        return ANNOTATION_TYPE_LABELS[type as MarketingAnnotationType];
+    }
+    return type.replace(/_/g, ' ');
 }

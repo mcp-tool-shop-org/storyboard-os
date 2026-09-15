@@ -147,6 +147,54 @@ describe('generateCampaignHandoff', () => {
         expect(handoff.beats.length).toBe(8);
         expect(handoff.title).toContain('rpg-storyboard');
     });
+
+    it('copies frame.annotations onto CampaignHandoffBeat (F-2cdce1c8)', () => {
+        const frame = makeFrame('gate', 'approval', { approvalRequirements: ['Legal sign-off'] });
+        frame.annotations = [
+            { id: 'ann-1', type: 'legal_constraint', text: 'Do not claim production-ready.' },
+        ];
+        const beat = generateCampaignHandoff({
+            id: 'ann', title: 'Ann', frames: [frame], connections: [],
+        }).beats[0];
+        expect(beat.annotations).toEqual([
+            { type: 'legal_constraint', text: 'Do not claim production-ready.' },
+        ]);
+    });
+
+    it('copies conversionEvent and measurementEvents onto the beat (F-684f138c)', () => {
+        const frame = makeFrame('conv', 'conversion', {
+            conversionGoal: 'Signup',
+            conversionEvent: { id: 'signup_complete', name: 'Signup complete' },
+            metrics: ['Weekly trials'],
+            measurementEvents: [
+                { id: 'weekly_trials', name: 'Weekly trials', source: 'product' },
+            ],
+        });
+        const beat = generateCampaignHandoff({
+            id: 'ev', title: 'Ev', frames: [frame], connections: [],
+        }).beats[0];
+        expect(beat.conversionEvent).toEqual({ id: 'signup_complete', name: 'Signup complete' });
+        expect(beat.measurementEvents).toEqual([
+            { id: 'weekly_trials', name: 'Weekly trials', source: 'product' },
+        ]);
+    });
+
+    it('seeds demo approval/launch_event constraints and conversion ids', () => {
+        const handoff = generateCampaignHandoff(launchRpgStoryboardCampaign);
+        const approval = handoff.beats.find(b => b.id === 'launch-approval')!;
+        expect(approval.annotations).toEqual([
+            expect.objectContaining({
+                type: 'legal_constraint',
+                text: expect.stringContaining('production-ready'),
+            }),
+        ]);
+        const launch = handoff.beats.find(b => b.id === 'launch-announcement')!;
+        expect(launch.annotations.some(a => a.type === 'brand_guideline')).toBe(true);
+        const conversion = handoff.beats.find(b => b.id === 'launch-conversion')!;
+        expect(conversion.conversionEvent?.id).toBe('github_star_or_clone');
+        const measurement = handoff.beats.find(b => b.id === 'launch-measurement')!;
+        expect(measurement.measurementEvents?.some(e => e.id === 'npm_installs')).toBe(true);
+    });
 });
 
 describe('generateCampaignMarkdown', () => {
@@ -212,6 +260,33 @@ describe('generateCampaignMarkdown', () => {
         expect(md).toContain('- Too expensive → ROI calculator');
         expect(md).toContain('**Owner Notes:**');
         expect(md).toContain('Do not promise enterprise SLA yet');
+    });
+
+    it('emits Constraints and structured outcome events (F-2cdce1c8, F-684f138c)', () => {
+        const frame = makeFrame('gate', 'approval', {
+            approvalRequirements: ['Legal'],
+            conversionGoal: 'Signup',
+            conversionEvent: { id: 'signup_complete', name: 'Signup complete' },
+            metrics: ['Weekly trials'],
+            measurementEvents: [
+                { id: 'weekly_trials', name: 'Weekly trials', source: 'product' },
+            ],
+        });
+        frame.annotations = [
+            { id: 'ann-1', type: 'legal_constraint', text: 'Substantiate every claim.' },
+        ];
+        const md = generateCampaignMarkdown(generateCampaignHandoff({
+            id: 'c', title: 'C', frames: [frame], connections: [],
+        }));
+        expect(md).toContain('**Constraints:**');
+        expect(md).toContain('**Legal Constraint:**');
+        expect(md).toContain('Substantiate every claim.');
+        expect(md).toContain('**Conversion Event:**');
+        expect(md).toContain('signup\\_complete');
+        expect(md).toContain('**Measurement Events:**');
+        expect(md).toContain('weekly\\_trials');
+        expect(md).toContain('(product)');
+        expect(md).not.toContain('legal_constraint');
     });
 
     it('lists only true launch blockers under ### Blocked Beats (F-1157926f)', () => {

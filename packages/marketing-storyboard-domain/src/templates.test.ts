@@ -198,6 +198,37 @@ describe('createCampaignFromTemplate', () => {
     });
 });
 
+describe('seeded outcome ids and constraints (F-684f138c, F-2cdce1c8)', () => {
+    it('every conversion frame on published boards has a conversionEvent id', () => {
+        for (const board of listPublishedCampaigns()) {
+            const conversions = board.frames.filter(f => f.type === 'conversion');
+            expect(conversions.length).toBeGreaterThan(0);
+            for (const frame of conversions) {
+                expect(frame.content.conversionEvent?.id).toBeTruthy();
+                expect(frame.content.conversionGoal).toBeTruthy();
+            }
+        }
+    });
+
+    it('every measurement frame on published boards has measurementEvents', () => {
+        for (const board of listPublishedCampaigns()) {
+            const measurements = board.frames.filter(f => f.type === 'measurement');
+            expect(measurements.length).toBeGreaterThan(0);
+            for (const frame of measurements) {
+                expect((frame.content.measurementEvents?.length ?? 0)).toBeGreaterThan(0);
+                expect((frame.content.metrics?.length ?? 0)).toBeGreaterThan(0);
+            }
+        }
+    });
+
+    it('demo approval carries a legal_constraint and launch_event a brand_guideline', () => {
+        const approval = launchRpgStoryboardCampaign.frames.find(f => f.id === 'launch-approval')!;
+        expect(approval.annotations.some(a => a.type === 'legal_constraint')).toBe(true);
+        const launch = launchRpgStoryboardCampaign.frames.find(f => f.id === 'launch-announcement')!;
+        expect(launch.annotations.some(a => a.type === 'brand_guideline')).toBe(true);
+    });
+});
+
 describe('listPublishedCampaigns (F-a493df51)', () => {
     const catalog = listPublishedCampaigns();
 
