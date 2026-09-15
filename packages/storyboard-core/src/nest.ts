@@ -25,12 +25,9 @@ function framesOf(
     | undefined,
 ): readonly NestableFrame[] {
   if (Array.isArray(storyboardOrFrames)) return storyboardOrFrames;
-  if (
-    storyboardOrFrames != null &&
-    typeof storyboardOrFrames === 'object' &&
-    Array.isArray(storyboardOrFrames.frames)
-  ) {
-    return storyboardOrFrames.frames;
+  if (storyboardOrFrames != null && typeof storyboardOrFrames === 'object' && 'frames' in storyboardOrFrames) {
+    const frames = (storyboardOrFrames as Pick<Storyboard<AnyStoryboardFrame>, 'frames'>).frames;
+    if (Array.isArray(frames)) return frames;
   }
   return [];
 }
