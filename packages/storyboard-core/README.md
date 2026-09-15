@@ -54,6 +54,7 @@ interface StoryboardFrame<
   size: { width: number; height: number };
   content: TContent;
   annotations: FrameAnnotation<TAnnotationType>[];
+  parentFrameId?: string; // optional; one nest level
 }
 ```
 
@@ -127,6 +128,7 @@ interface Storyboard<
   $schema?: string;
   frames: TFrame[];
   connections: TConnection[];
+  collapsedIds?: string[]; // author-owned; absent = all expanded
   canvasWidth?: number;
   canvasHeight?: number;
 }
@@ -189,6 +191,21 @@ import { STORYBOARD_JSON_SCHEMA_ID, DEFAULT_SCHEMA_VERSION } from '@storyboard-o
 
 `measureBoardDensity({ frames, connections })` returns `{ frameCount, connectionCount, edgeRatio, level }` with `level` `'ok' | 'warn' | 'over'`. Caps are `DENSITY_SOFT_CAP = 50` and `DENSITY_HARD_CAP = 100` (Yoghourdjian). The helper measures; it does not hide edges, nest, or filter.
 
+## Nest (one level)
+
+Optional `parentFrameId` on a frame groups children under a parent. Collapse is a board-level `collapsedIds: string[]` so toggling a fan does not mutate frame records. Absent `collapsedIds` means all expanded — nothing auto-collapses.
+
+```ts
+import { childIds, collapseFan, expandFan, visibleFrames } from '@storyboard-os/core';
+
+childIds(storyboard, 'choice');          // direct children
+const hidden = collapseFan(storyboard, 'choice');
+const shown = expandFan(hidden, 'choice');
+visibleFrames(hidden);                   // parent stays; children drop
+```
+
+`validateStoryboard` rejects unknown `parentFrameId`, self-parent, and parent cycles. There is no RPG-specific fan type in core.
+
 ## Structural validation
 
 `validateStoryboard` checks invariants that hold for **any** storyboard regardless of domain: duplicate frame IDs, broken connection references, missing required fields, and invalid frame dimensions.
@@ -229,6 +246,9 @@ if (!result.valid) {
 | `DUPLICATE_CONNECTION_EDGE` | Two connections describe the same `from → to` edge |
 | `BROKEN_CONNECTION_FROM` | Connection `fromFrameId` is non-string or references a non-existent frame |
 | `BROKEN_CONNECTION_TO` | Connection `toFrameId` is non-string or references a non-existent frame |
+| `UNKNOWN_PARENT_FRAME_ID` | `parentFrameId` is non-string, empty, or not a frame on the board |
+| `SELF_PARENT_FRAME` | Frame lists itself as `parentFrameId` |
+| `PARENT_CYCLE` | `parentFrameId` walk loops |
 
 Domain packages call `validateStoryboard` first, then layer their own domain rules on top. `@storyboard-os/rpg-domain` exports `validateRpgStoryboard` which does exactly this — and emits additional `RPG_*` codes (e.g., `RPG_MISSING_STATE_CHANGES`).
 

@@ -33,6 +33,17 @@ export {
   measureBoardDensity,
 } from './density';
 
+export {
+  childIds,
+  collapseFan,
+  expandFan,
+  visibleFrames,
+} from './nest';
+
+export type {
+  NestableFrame,
+} from './nest';
+
 export type {
   BoardDensity,
   BoardDensityInput,

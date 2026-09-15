@@ -15,11 +15,12 @@ export type {
   PositionMap,
 } from './types';
 
-export type { ViewState } from './viewport';
+export type { ViewState, FitViewResult } from './viewport';
 export {
   DEFAULT_VIEW_STATE,
   MIN_SCALE,
   MAX_SCALE,
+  MIN_READABLE_SCALE,
   fitViewToFrames,
   centerOnFrame,
   zoomAtPoint,
@@ -30,7 +31,19 @@ export {
 // VP-011: single source of truth for the neutral fallback styles. App canvas
 // configs should reference these instead of hand-copying the same literals into
 // each `defaultFrameStyle` / `defaultConnectionStyle`.
-export { DEFAULT_FRAME_STYLE, DEFAULT_CONNECTION_STYLE } from './defaults';
+export {
+  DEFAULT_FRAME_STYLE,
+  DEFAULT_CONNECTION_STYLE,
+  TYPE_BAR_HEIGHT,
+  READABLE_TYPE_PX,
+} from './defaults';
+
+export { applyCanvasVisibility, childIds, toIdSet } from './visibility';
+export type {
+  CanvasVisibility,
+  CanvasVisibilityInput,
+  IdCollection,
+} from './visibility';
 
 // HU-001: pure roving-tabindex navigation logic, exported for reuse/testing.
 export { nextFrameIndex, isNavKey } from './a11yNav';

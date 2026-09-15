@@ -73,6 +73,11 @@ export interface CanvasFrame {
   position: { x: number; y: number };
   size: { width: number; height: number };
   /**
+   * Optional parent for one nest level. StoryboardCanvas hides children of
+   * ids in `collapsedIds`; this is topology, not a collapsed flag.
+   */
+  parentFrameId?: string;
+  /**
    * Optional badge chips rendered at the bottom of the card.
    * Domains provide these; the canvas renders them without needing to know
    * what they mean.

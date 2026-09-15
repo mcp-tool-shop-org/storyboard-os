@@ -70,6 +70,13 @@ interface Props {
   selectedConnectionId?: string | null;
   /** Activate a connection by id — same path as a pointer click on the arrow. */
   onActivateConnection?: (id: string) => void;
+  /**
+   * Author-owned collapsed parent ids. Hidden children must already be omitted
+   * from `frames`; this set only drives aria-expanded on remaining parents.
+   */
+  collapsedIds?: readonly string[];
+  /** Direct child counts (not filter-hidden), keyed by parent id. */
+  childCountById?: Readonly<Record<string, number>>;
 }
 
 type ListItem =
@@ -171,6 +178,8 @@ export default function AccessibleFrameList({
   connections,
   selectedConnectionId,
   onActivateConnection,
+  collapsedIds,
+  childCountById,
 }: Props) {
   const includeConnections = !!onActivateConnection;
   const items: ListItem[] = useMemo(() => {
@@ -331,14 +340,20 @@ export default function AccessibleFrameList({
               ...(isSelected ? OPTION_SELECTED_STYLE : null),
               ...(isActive && focusWithin ? OPTION_FOCUSED_OUTLINE : null),
             };
+            const childCount =
+              item.kind === 'frame' ? childCountById?.[item.id] ?? 0 : 0;
+            const isFanParent = childCount > 0;
+            const isCollapsedParent =
+              isFanParent && (collapsedIds ?? []).includes(item.id);
+            const fanSuffix = isCollapsedParent ? ` +${childCount}` : '';
             const name =
               item.kind === 'frame'
-                ? accessibleFrameName(item.frame, typeLabelFor)
+                ? accessibleFrameName(item.frame, typeLabelFor) + fanSuffix
                 : accessibleConnectionName(item.connection, frames, connectionTypeLabelFor);
             const visible =
-              item.kind === 'frame'
+              (item.kind === 'frame'
                 ? frameDisplayTitle(item.frame.title)
-                : connectionVisibleLabel(item.connection, connectionTypeLabelFor);
+                : connectionVisibleLabel(item.connection, connectionTypeLabelFor)) + fanSuffix;
             const swatchColor =
               item.kind === 'frame' && item.frame.badges && item.frame.badges[0]
                 ? item.frame.badges[0].color
@@ -352,6 +367,7 @@ export default function AccessibleFrameList({
                 role="option"
                 aria-selected={isSelected}
                 aria-current={isSelected ? 'true' : undefined}
+                aria-expanded={isFanParent ? !isCollapsedParent : undefined}
                 aria-label={name}
                 title={name}
                 // Roving tabindex: exactly one option is tabbable at a time.

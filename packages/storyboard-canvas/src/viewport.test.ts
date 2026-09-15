@@ -8,8 +8,10 @@ import {
   DEFAULT_VIEW_STATE,
   MIN_SCALE,
   MAX_SCALE,
+  MIN_READABLE_SCALE,
   type ViewState,
 } from './viewport';
+import { TYPE_BAR_HEIGHT, READABLE_TYPE_PX } from './defaults';
 
 // ─── clampScale ───────────────────────────────────────────────────────────────
 
@@ -44,7 +46,10 @@ describe('clampScale', () => {
 
 describe('fitViewToFrames', () => {
   it('returns DEFAULT_VIEW_STATE when frames array is empty', () => {
-    expect(fitViewToFrames([], 1000, 800)).toEqual(DEFAULT_VIEW_STATE);
+    expect(fitViewToFrames([], 1000, 800)).toEqual({
+      view: DEFAULT_VIEW_STATE,
+      overflow: false,
+    });
   });
 
   it('centers content horizontally and vertically', () => {
@@ -52,35 +57,38 @@ describe('fitViewToFrames', () => {
     // Container: 1000×800, padding: 40
     // availW=920, availH=720; scaleW=920/200=4.6, scaleH=720/100=7.2 → min=4.6 → clamped to MAX=4
     const frame = { position: { x: 0, y: 0 }, size: { width: 200, height: 100 } };
-    const result = fitViewToFrames([frame], 1000, 800, 40);
+    const { view, overflow } = fitViewToFrames([frame], 1000, 800, 40);
 
-    expect(result.scale).toBe(MAX_SCALE);
+    expect(overflow).toBe(false);
+    expect(view.scale).toBe(MAX_SCALE);
     // x = (1000 - 200*4) / 2 - 0*4 = 100
-    expect(result.x).toBeCloseTo(100);
+    expect(view.x).toBeCloseTo(100);
     // y = (800 - 100*4) / 2 - 0*4 = 200
-    expect(result.y).toBeCloseTo(200);
+    expect(view.y).toBeCloseTo(200);
   });
 
   it('constrains scale by width for a wide board', () => {
     // 2000×300 board in 1000×800 container, padding=40
     // availW=920, availH=720; scaleW=920/2000=0.46, scaleH=720/300=2.4 → min=0.46
     const frame = { position: { x: 0, y: 0 }, size: { width: 2000, height: 300 } };
-    const result = fitViewToFrames([frame], 1000, 800, 40);
+    const { view, overflow } = fitViewToFrames([frame], 1000, 800, 40);
 
-    expect(result.scale).toBeCloseTo(0.46, 2);
+    expect(overflow).toBe(false);
+    expect(view.scale).toBeCloseTo(0.46, 2);
     // Content is centered: x = (1000 - 2000*0.46) / 2 = (1000 - 920) / 2 = 40
-    expect(result.x).toBeCloseTo(40, 0);
+    expect(view.x).toBeCloseTo(40, 0);
   });
 
-  it('constrains scale by height for a tall board', () => {
+  it('floors a tall board at MIN_READABLE_SCALE and reports overflow', () => {
     // 200×2000 board in 1000×800 container, padding=40
-    // availW=920, availH=720; scaleW=920/200=4.6→clamped=4, scaleH=720/2000=0.36 → min=0.36
+    // availW=920, availH=720; scaleW=920/200=4.6, scaleH=720/2000=0.36 → min=0.36
+    // 0.36 < MIN_READABLE_SCALE ≈ 0.423 → overflow; do not shrink past readable
     const frame = { position: { x: 0, y: 0 }, size: { width: 200, height: 2000 } };
-    const result = fitViewToFrames([frame], 1000, 800, 40);
+    const { view, overflow } = fitViewToFrames([frame], 1000, 800, 40);
 
-    expect(result.scale).toBeCloseTo(0.36, 2);
-    // y = (800 - 2000*0.36) / 2 = (800 - 720) / 2 = 40
-    expect(result.y).toBeCloseTo(40, 0);
+    expect(overflow).toBe(true);
+    expect(view.scale).toBe(MIN_READABLE_SCALE);
+    expect(view.scale).toBeGreaterThan(MIN_SCALE);
   });
 
   it('handles frames offset from the origin', () => {
@@ -92,12 +100,12 @@ describe('fitViewToFrames', () => {
       { position: { x: 100, y: 50 }, size: { width: 200, height: 100 } },
       { position: { x: 400, y: 50 }, size: { width: 200, height: 100 } },
     ];
-    const result = fitViewToFrames(frames, 1000, 600, 40);
+    const { view } = fitViewToFrames(frames, 1000, 600, 40);
 
     // availW=920, availH=520; scaleW=920/500=1.84, scaleH=520/100=5.2 → min=1.84
-    expect(result.scale).toBeCloseTo(1.84, 1);
+    expect(view.scale).toBeCloseTo(1.84, 1);
     // x = (1000 - 500*1.84)/2 - 100*1.84 = 40 - 184 = -144
-    expect(result.x).toBeCloseTo((1000 - 500 * 1.84) / 2 - 100 * 1.84, 0);
+    expect(view.x).toBeCloseTo((1000 - 500 * 1.84) / 2 - 100 * 1.84, 0);
   });
 
   it('larger padding → smaller scale', () => {
@@ -105,33 +113,42 @@ describe('fitViewToFrames', () => {
     const withPad80 = fitViewToFrames([frame], 1000, 800, 80);
     const withPad20 = fitViewToFrames([frame], 1000, 800, 20);
 
-    expect(withPad80.scale).toBeLessThan(withPad20.scale);
+    expect(withPad80.view.scale).toBeLessThan(withPad20.view.scale);
+    expect(withPad80.overflow).toBe(false);
+    expect(withPad20.overflow).toBe(false);
   });
 
   it('clamps tiny frames to MAX_SCALE', () => {
     const frame = { position: { x: 0, y: 0 }, size: { width: 10, height: 10 } };
     const result = fitViewToFrames([frame], 1000, 800, 40);
 
-    expect(result.scale).toBe(MAX_SCALE);
+    expect(result.view.scale).toBe(MAX_SCALE);
+    expect(result.overflow).toBe(false);
   });
 
-  it('clamps huge boards to MIN_SCALE', () => {
+  it('floors huge boards at MIN_READABLE_SCALE (not MIN_SCALE) and sets overflow', () => {
     const frame = { position: { x: 0, y: 0 }, size: { width: 100000, height: 50000 } };
     const result = fitViewToFrames([frame], 1000, 800, 40);
 
-    expect(result.scale).toBe(MIN_SCALE);
+    expect(result.overflow).toBe(true);
+    expect(result.view.scale).toBe(MIN_READABLE_SCALE);
+    expect(result.view.scale).toBeGreaterThan(MIN_SCALE);
+  });
+
+  it('locks MIN_READABLE_SCALE to type-bar 26px vs xs 11px', () => {
+    expect(TYPE_BAR_HEIGHT).toBe(26);
+    expect(READABLE_TYPE_PX).toBe(11);
+    expect(MIN_READABLE_SCALE).toBeCloseTo(11 / 26);
   });
 
   it('works with a single frame at a large offset', () => {
     const frame = { position: { x: 500, y: 500 }, size: { width: 200, height: 100 } };
-    const result = fitViewToFrames([frame], 800, 600, 40);
+    const { view } = fitViewToFrames([frame], 800, 600, 40);
 
     // Content extent is still 200×100 regardless of offset
-    // x offset should shift so frame is centered
-    const bboxCenterX = 500 + 100; // 600 in content space
     // x = (800 - 200*scale)/2 - 500*scale
-    const expectedX = (800 - 200 * result.scale) / 2 - 500 * result.scale;
-    expect(result.x).toBeCloseTo(expectedX, 1);
+    const expectedX = (800 - 200 * view.scale) / 2 - 500 * view.scale;
+    expect(view.x).toBeCloseTo(expectedX, 1);
   });
 });
 
@@ -277,9 +294,9 @@ describe('fitViewToFrames — poisoned frames (F-CV-001)', () => {
     const result = fitViewToFrames([...valid, poisoned], 1000, 800, 40);
 
     expect(result).toEqual(fitViewToFrames(valid, 1000, 800, 40));
-    expect(Number.isFinite(result.scale)).toBe(true);
-    expect(Number.isFinite(result.x)).toBe(true);
-    expect(Number.isFinite(result.y)).toBe(true);
+    expect(Number.isFinite(result.view.scale)).toBe(true);
+    expect(Number.isFinite(result.view.x)).toBe(true);
+    expect(Number.isFinite(result.view.y)).toBe(true);
   });
 
   it('ignores a frame with Infinity size and fits the valid frames', () => {
@@ -294,13 +311,22 @@ describe('fitViewToFrames — poisoned frames (F-CV-001)', () => {
       { position: { x: NaN, y: NaN }, size: { width: NaN, height: NaN } },
       { position: { x: 0, y: 0 }, size: { width: 100, height: -Infinity } },
     ];
-    expect(fitViewToFrames(frames, 1000, 800)).toEqual(DEFAULT_VIEW_STATE);
+    expect(fitViewToFrames(frames, 1000, 800)).toEqual({
+      view: DEFAULT_VIEW_STATE,
+      overflow: false,
+    });
   });
 
   it('returns DEFAULT_VIEW_STATE for non-finite container dimensions', () => {
     const frame = { position: { x: 0, y: 0 }, size: { width: 200, height: 100 } };
-    expect(fitViewToFrames([frame], NaN, 800)).toEqual(DEFAULT_VIEW_STATE);
-    expect(fitViewToFrames([frame], 1000, Infinity)).toEqual(DEFAULT_VIEW_STATE);
+    expect(fitViewToFrames([frame], NaN, 800)).toEqual({
+      view: DEFAULT_VIEW_STATE,
+      overflow: false,
+    });
+    expect(fitViewToFrames([frame], 1000, Infinity)).toEqual({
+      view: DEFAULT_VIEW_STATE,
+      overflow: false,
+    });
   });
 });
 

@@ -114,7 +114,7 @@ const frames = storyboard.frames.map(f => ({
 }));
 ```
 
-A density **level chip** may appear at warn (≥50 frames) / over (≥100 frames). The canvas still paints every frame and every edge; it does not auto-hide, nest, or filter.
+A density **level chip** may appear at warn (≥50 frames) / over (≥100 frames). Nest and filter are separate **controlled** props (`collapsedIds`, `hiddenFrameIds`, `hiddenConnectionTypes`); default is show-all. Fans are never auto-collapsed on load.
 
 ## Props
 
@@ -162,6 +162,18 @@ interface Props {
    * prefer remounting with `key={storyboard.id}` so viewport + positions reset.
    */
   positionEpoch?: number | string;
+
+  /** Author-owned collapsed parent ids. Default: all expanded. */
+  collapsedIds?: readonly string[];
+
+  /** Toggle a parent id in the author's collapsed set. */
+  onToggleCollapse?: (id: string) => void;
+
+  /** Non-hierarchical hide set. Default: show-all. */
+  hiddenFrameIds?: ReadonlySet<string> | readonly string[];
+
+  /** Hide connections by type. Default: show-all. */
+  hiddenConnectionTypes?: ReadonlySet<string> | readonly string[];
 }
 ```
 
@@ -229,6 +241,7 @@ interface CanvasFrame {
   summary: string;
   position: { x: number; y: number };
   size: { width: number; height: number };
+  parentFrameId?: string;  // optional — one nest level
   badges?: CanvasBadge[];  // optional — rendered at the bottom of the card
 }
 
@@ -262,6 +275,9 @@ interface ViewportHandle {
 
   /** Center the viewport on a specific frame at the current scale. */
   centerOnFrame(frame: CanvasFrame): void;
+
+  /** Fit only these frames (visible/collapsed set) at the readable-scale floor. */
+  focusSubgraph(frames: CanvasFrame[]): void;
 
   /** Return the current scale factor (1 = 100%). */
   getScale(): number;
@@ -320,12 +336,13 @@ import {
   zoomFromCenter,
   clampScale,
   DEFAULT_VIEW_STATE,
-  MIN_SCALE,  // 0.1
+  MIN_SCALE,  // 0.1 — wheel-zoom floor
+  MIN_READABLE_SCALE, // 11/26 — auto-fit floor (type-bar vs xs)
   MAX_SCALE,  // 4
 } from '@storyboard-os/canvas';
 
-// Compute the ViewState that fits all frames within a container
-const view = fitViewToFrames(frames, containerWidth, containerHeight, padding);
+// Auto-fit uses the readable floor and reports overflow instead of shrinking past it
+const { view, overflow } = fitViewToFrames(frames, containerWidth, containerHeight, padding);
 
 // Zoom toward a screen point (pointer stays visually fixed)
 const zoomed = zoomAtPoint(currentView, pointerX, pointerY, zoomFactor);

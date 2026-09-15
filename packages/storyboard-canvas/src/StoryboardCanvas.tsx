@@ -30,6 +30,7 @@ import React, {
   useRef,
   useEffect,
   useImperativeHandle,
+  useMemo,
 } from 'react';
 import { Stage, Layer } from 'react-konva';
 import type Konva from 'konva';
@@ -62,6 +63,7 @@ import {
   canvasDensityLevel,
   densityChipLabel,
 } from './densityChip';
+import { applyCanvasVisibility, type IdCollection } from './visibility';
 
 // ─── Public handle exposed via ref ────────────────────────────────────────────
 
@@ -76,6 +78,11 @@ export interface ViewportHandle {
   zoomOut(): void;
   /** Center the viewport on a specific frame, preserving current scale. */
   centerOnFrame(frame: CanvasFrame): void;
+  /**
+   * Fit only the given frames (typically the collapsed-visible set) using the
+   * readable-scale floor. Does not shrink past MIN_READABLE_SCALE.
+   */
+  focusSubgraph(frames: CanvasFrame[]): void;
   /** Return the current scale factor. */
   getScale(): number;
 }
@@ -114,6 +121,22 @@ interface Props {
    * Prefer remounting with `key={storyboard.id}` when swapping boards entirely.
    */
   positionEpoch?: number | string;
+  /**
+   * Author-owned collapsed parent ids. Controlled; the canvas never
+   * auto-collapses fans on load (C3). Default: all expanded.
+   */
+  collapsedIds?: readonly string[];
+  /** Toggle a parent id in the author's collapsed set. */
+  onToggleCollapse?: (id: string) => void;
+  /**
+   * Non-hierarchical filter. Frames in this set are omitted from cards, edges,
+   * and the accessible list. Default: show-all.
+   */
+  hiddenFrameIds?: IdCollection;
+  /**
+   * Omit connections whose `type` is in this set. Default: show-all.
+   */
+  hiddenConnectionTypes?: IdCollection;
 }
 
 // ─── Internal constants ───────────────────────────────────────────────────────
@@ -158,6 +181,10 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       autoFit = false,
       onFramePositionChange,
       positionEpoch,
+      collapsedIds,
+      onToggleCollapse,
+      hiddenFrameIds,
+      hiddenConnectionTypes,
     },
     ref,
   ) {
@@ -211,6 +238,25 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
         return result.positions;
       });
     }, [frames, positionEpoch]);
+
+    // Visible set: nest (collapsedIds) then filter (hiddenFrameIds /
+    // hiddenConnectionTypes). Default is show-all; nothing auto-collapses.
+    const visible = useMemo(
+      () =>
+        applyCanvasVisibility({
+          frames,
+          connections,
+          collapsedIds,
+          hiddenFrameIds,
+          hiddenConnectionTypes,
+        }),
+      [frames, connections, collapsedIds, hiddenFrameIds, hiddenConnectionTypes],
+    );
+
+    const collapsedSet = useMemo(
+      () => new Set(collapsedIds ?? []),
+      [collapsedIds],
+    );
 
     // ── Duplicate frame id warning (F-CV-006) ──────────────────────────────
     // Duplicate ids silently corrupt position tracking (PositionMap keys
@@ -305,11 +351,11 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       }
 
       hasFitted.current = true;
-      const rects = frames.map(f => ({
+      const rects = visible.frames.map(f => ({
         position: positions[f.id] ?? f.position,
         size: f.size,
       }));
-      applyView(fitViewToFrames(rects, containerSize.width, containerSize.height));
+      applyView(fitViewToFrames(rects, containerSize.width, containerSize.height).view);
       // frames.length is the empty→non-empty trigger; positions read at fit time
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [containerSize.width, containerSize.height, autoFit, frames.length]);
@@ -333,11 +379,11 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
     // ── Viewport handle ────────────────────────────────────────────────────
     useImperativeHandle(ref, () => ({
       fitToFrames() {
-        const rects = frames.map(f => ({
+        const rects = visible.frames.map(f => ({
           position: positions[f.id] ?? f.position,
           size: f.size,
         }));
-        applyView(fitViewToFrames(rects, containerSize.width, containerSize.height));
+        applyView(fitViewToFrames(rects, containerSize.width, containerSize.height).view);
       },
       resetView() {
         applyView(DEFAULT_VIEW_STATE);
@@ -356,6 +402,14 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
       },
       centerOnFrame(frame: CanvasFrame) {
         centerViewOnFrame(frame);
+      },
+      focusSubgraph(subgraph: CanvasFrame[]) {
+        const list = Array.isArray(subgraph) ? subgraph : [];
+        const rects = list.map(f => ({
+          position: positions[f.id] ?? f.position,
+          size: f.size,
+        }));
+        applyView(fitViewToFrames(rects, containerSize.width, containerSize.height).view);
       },
       getScale() {
         return stageRef.current?.scaleX() ?? viewState.scale;
@@ -551,7 +605,8 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
     }
     const descId = `${idBaseRef.current}-desc`;
 
-    // Density chip is chrome only — every frame and edge still paints.
+    // Density chip is chrome only. Nest/filter are separate controlled props
+    // applied below so FrameCard, ConnectionLayer, and AccessibleFrameList agree.
     const densityLevel = canvasDensityLevel(frames.length);
     const densityLabel = densityChipLabel(densityLevel, frames.length, connections.length);
 
@@ -576,17 +631,19 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
             (canvas pixels cannot hold focus). Co-located with the Stage so all
             consuming apps inherit keyboard + screen-reader access for free. */}
         <AccessibleFrameList
-          frames={frames}
+          frames={visible.frames}
           selectedFrameId={selectedFrameId ?? null}
           onActivateFrame={activateFrameById}
           describedById={descId}
           typeLabelFor={typeLabelFor}
           connectionTypeLabelFor={humanizeType}
-          connections={onSelectConnection ? connections : undefined}
+          connections={onSelectConnection ? visible.connections : undefined}
           selectedConnectionId={selectedConnectionId ?? null}
           onActivateConnection={
             onSelectConnection ? activateConnectionById : undefined
           }
+          collapsedIds={collapsedIds}
+          childCountById={visible.childCountById}
         />
 
         {densityLevel !== 'ok' && (
@@ -630,8 +687,8 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
             {/* Connections below frames — interactive when onSelectConnection is provided */}
             <Layer listening={!!onSelectConnection}>
               <ConnectionLayer
-                connections={connections}
-                frames={frames}
+                connections={visible.connections}
+                frames={visible.frames}
                 positions={positions}
                 config={config}
                 selectedConnectionId={selectedConnectionId}
@@ -639,9 +696,9 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
               />
             </Layer>
 
-            {/* Frame cards */}
+            {/* Frame cards — visible set only (nest + filter already applied) */}
             <Layer>
-              {frames.map(frame => (
+              {visible.frames.map(frame => (
                 <FrameCard
                   key={frame.id}
                   frame={frame}
@@ -650,6 +707,9 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
                   isSelected={selectedFrameId === frame.id}
                   onSelect={handleSelectFrame}
                   onDragEnd={handleDragEnd}
+                  fanCount={visible.childCountById[frame.id] ?? 0}
+                  collapsed={collapsedSet.has(frame.id)}
+                  onToggleCollapse={onToggleCollapse}
                 />
               ))}
             </Layer>
