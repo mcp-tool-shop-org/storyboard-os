@@ -11,8 +11,8 @@ describe('typeBarLabelFill', () => {
     expect(typeBarLabelFill('#F97316', '#1a0e00')).toBe(NAVY); // REVEAL
   });
 
-  it('keeps white on the secondary slate default', () => {
-    expect(typeBarLabelFill('#94a3b8', '#0e1018')).toBe(WHITE);
+  it('uses navy on secondary slate (#94a3b8) — white fails AA-normal on that bar', () => {
+    expect(typeBarLabelFill('#94a3b8', '#0e1018')).toBe(NAVY);
   });
 
   it('falls back to white when a color is not hex', () => {
