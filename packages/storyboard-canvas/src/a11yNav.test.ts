@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { nextFrameIndex, isNavKey } from './a11yNav';
 
-// ─── AccessibleFrameList landmark labels (F-78162158) ─────────────────────────
+// ─── AccessibleFrameList landmark labels ──────────────────────────────────────
 // Source pin: package vitest is node-env (no jsdom), so DOM render is out of
-// reach — assert the TSX keeps distinct nav vs listbox accessible names.
+// reach — assert nav + listbox names mirror headerLabel().
 
 function readSrc(name: string): string {
   return readFileSync(
@@ -16,12 +16,20 @@ function readSrc(name: string): string {
 }
 
 describe('AccessibleFrameList aria labels', () => {
-  it('keeps distinct nav landmark and listbox names', () => {
+  it('mirrors headerLabel() on the nav landmark and listbox', () => {
     const src = readSrc('AccessibleFrameList.tsx');
-    expect(src).toContain('aria-label="Frame navigation"');
-    expect(src).toContain('aria-label="Storyboard frames"');
-    expect(src.match(/aria-label="Frame navigation"/g)?.length).toBe(1);
-    expect(src.match(/aria-label="Storyboard frames"/g)?.length).toBe(1);
+    expect(src).toContain('const listName = headerLabel(frameCount, connectionCount)');
+    expect(src).toContain('aria-label={listName}');
+    expect(src.match(/aria-label=\{listName\}/g)?.length).toBe(2);
+    expect(src).not.toContain('aria-label="Frame navigation"');
+    expect(src).not.toContain('aria-label="Storyboard frames"');
+  });
+
+  it('paints the chrome header with secondary at 12px, not muted at 10px', () => {
+    const src = readSrc('AccessibleFrameList.tsx');
+    expect(src).toMatch(/HEADER_STYLE[\s\S]*fontSize: 12/);
+    expect(src).toMatch(/HEADER_STYLE[\s\S]*color: '#94a3b8'/);
+    expect(src).not.toMatch(/HEADER_STYLE[\s\S]*color: '#64748b'/);
   });
 
   it('uses config type labels (not humanizeType of the raw key)', () => {
@@ -35,6 +43,7 @@ describe('AccessibleFrameList aria labels', () => {
     expect(src).toContain('onActivateConnection');
     expect(src).toContain("kind: 'connection'");
     expect(src).toContain('accessibleConnectionName');
+    expect(src).toContain('connectionTypeLabelFor');
   });
 
   it('uses secondary text and opaque empty-board panel', () => {
@@ -54,6 +63,11 @@ describe('StoryboardCanvas a11y wiring', () => {
   it('does not expose the keyboard-help span in browse order', () => {
     const src = readSrc('StoryboardCanvas.tsx');
     expect(src).toMatch(/id=\{descId\}[^>]*aria-hidden="true"/);
+  });
+
+  it('passes a connection type-label resolver into the frames list', () => {
+    const src = readSrc('StoryboardCanvas.tsx');
+    expect(src).toContain('connectionTypeLabelFor={humanizeType}');
   });
 });
 
@@ -78,6 +92,21 @@ describe('FrameCard seawall', () => {
     expect(src).toContain('ensureFiniteSize(frame.size, frame.id)');
     expect(src).toContain('frameDisplayTitle(frame.title)');
     expect(src).toContain('badgesWithText(frame.badges)');
+  });
+
+  it('caps title height so wrap+ellipsis truncates, and sizes badges at xs', () => {
+    const src = readSrc('FrameCard.tsx');
+    expect(src).toContain('height={titleMaxHeight}');
+    expect(src).toContain('BADGE_FONT_SIZE = 11');
+    expect(src).toContain('typeBarLabelFill(style.accent, style.bg)');
+  });
+});
+
+describe('ConnectionLayer unselected labels', () => {
+  it('paints resting labels with secondary, not muted', () => {
+    const src = readSrc('ConnectionLayer.tsx');
+    expect(src).toContain("fill={isSelected ? '#cbd5e1' : '#94a3b8'}");
+    expect(src).not.toContain("'#64748b'");
   });
 });
 

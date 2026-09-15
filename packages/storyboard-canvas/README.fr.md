@@ -63,10 +63,10 @@ const MY_CONFIG: StoryboardCanvasConfig = {
     consequence:{ bg: '#111318', accent: '#6B7280', label: 'CONSEQUENCE' },
   },
   connectionTypeStyles: {
-    sequence:    { stroke: '#475569', strokeWidth: 1.5 },
+    sequence:    { stroke: '#94a3b8', strokeWidth: 1.5 },
     choice:      { stroke: '#8B5CF6', dash: [8, 4], strokeWidth: 2.5 },
     consequence: { stroke: '#EF4444', strokeWidth: 2.5 },
-    optional:    { stroke: '#334155', dash: [6, 4], strokeWidth: 1.5 },
+    optional:    { stroke: '#64748b', dash: [6, 4], strokeWidth: 1.5 },
     fallback:    { stroke: '#F97316', dash: [6, 4], strokeWidth: 2 },
   },
 };
