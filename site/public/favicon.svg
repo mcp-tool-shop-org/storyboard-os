@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Storyboard OS">
+  <rect width="128" height="128" rx="0" fill="none"/>
+  <rect x="4" y="4" width="120" height="120" rx="22" fill="#0C1E33"/>
+  <rect x="18" y="16" width="16" height="7" rx="3.5" fill="#F4F2EF"/>
+  <rect x="40" y="16" width="16" height="7" rx="3.5" fill="#F4F2EF"/>
+  <rect x="62" y="16" width="16" height="7" rx="3.5" fill="#F4F2EF"/>
+  <defs>
+    <clipPath id="mountain">
+      <rect x="14" y="32" width="54" height="80" rx="10"/>
+    </clipPath>
+  </defs>
+  <rect x="14" y="32" width="54" height="80" rx="10" fill="#185287"/>
+  <g clip-path="url(#mountain)">
+    <path d="M14 112 L14 80 L34 50 L46 64 L68 42 L68 112 Z" fill="#0C1E33"/>
+    <path d="M30 112 C32 90 34 76 40 52" fill="none" stroke="#F7F8FA" stroke-width="7" stroke-linecap="round"/>
+    <path d="M40 50 L40 34" stroke="#F7F8FA" stroke-width="3" stroke-linecap="round"/>
+    <path d="M40 34 L52 38.5 L40 43 Z" fill="#F7F8FA"/>
+  </g>
+  <rect x="74" y="32" width="36" height="36" rx="8" fill="#BBD7EC"/>
+  <g fill="none" stroke="#0C1E33" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="85" cy="50" r="4.2"/>
+    <circle cx="99" cy="42" r="4.2"/>
+    <circle cx="99" cy="58" r="4.2"/>
+    <path d="M88.6 47.6 L95.2 43.8"/>
+    <path d="M88.6 52.4 L95.2 56.2"/>
+  </g>
+  <rect x="74" y="76" width="36" height="36" rx="8" fill="#9B8CCE"/>
+  <g fill="none" stroke="#0C1E33" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M92 83 L104 83 L104 96.5 C104 102.5 92 107 92 107 C92 107 80 102.5 80 96.5 L80 83 Z"/>
+    <path d="M92 86.5 L92 103.5"/>
+    <path d="M86.5 91 L97.5 91"/>
+  </g>
+</svg>

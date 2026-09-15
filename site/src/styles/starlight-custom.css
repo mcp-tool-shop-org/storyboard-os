@@ -1,5 +1,15 @@
+/* Light tokens on :root — accent-high must be ≥4.5:1 on white.
+   #5b21b6 on #fff is ~8.9:1. Unlayered :root beats Starlight's layered defaults. */
 :root {
+  --sl-color-accent-low: #ede9fe;
+  --sl-color-accent: #7c3aed;
+  --sl-color-accent-high: #5b21b6;
+  --sl-color-text-accent: var(--sl-color-accent-high);
+}
+
+:root[data-theme='dark'] {
   --sl-color-accent-low: #2e1065;
   --sl-color-accent: #8b5cf6;
   --sl-color-accent-high: #a78bfa;
+  --sl-color-text-accent: var(--sl-color-accent-high);
 }

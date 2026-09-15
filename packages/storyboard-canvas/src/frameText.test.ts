@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_FRAME_STYLE } from './defaults';
+import { DEFAULT_FRAME_STYLE, DEFAULT_CONNECTION_STYLE } from './defaults';
 import {
   UNTITLED_FRAME,
   frameDisplayTitle,
@@ -9,6 +9,7 @@ import {
   accessibleFrameName,
   connectionVisibleLabel,
   accessibleConnectionName,
+  headerLabel,
 } from './frameText';
 
 describe('frameDisplayTitle', () => {
@@ -104,11 +105,38 @@ describe('accessibleFrameName', () => {
   });
 });
 
+describe('default styles meet 1.4.11', () => {
+  it('uses secondary slate, not retired #475569', () => {
+    expect(DEFAULT_FRAME_STYLE.accent.toLowerCase()).toBe('#94a3b8');
+    expect(DEFAULT_CONNECTION_STYLE.stroke.toLowerCase()).toBe('#94a3b8');
+    expect(DEFAULT_FRAME_STYLE.accent.toLowerCase()).not.toBe('#475569');
+    expect(DEFAULT_CONNECTION_STYLE.stroke.toLowerCase()).not.toBe('#475569');
+  });
+});
+
+describe('headerLabel', () => {
+  it('names frames-only, connections-only, and combined lists', () => {
+    expect(headerLabel(3, 0)).toBe('Frames · 3');
+    expect(headerLabel(0, 0)).toBe('Frames');
+    expect(headerLabel(0, 2)).toBe('Connections · 2');
+    expect(headerLabel(3, 2)).toBe('Board · 5');
+  });
+});
+
 describe('connectionVisibleLabel', () => {
   it('prefers a trimmed label, then type, then Connection', () => {
     expect(connectionVisibleLabel({ label: 'then', type: 'sequence' })).toBe('then');
     expect(connectionVisibleLabel({ type: 'choice' })).toBe('choice');
     expect(connectionVisibleLabel({ type: '' })).toBe('Connection');
+  });
+
+  it('humanizes type keys and honors a type-label resolver', () => {
+    expect(connectionVisibleLabel({ type: 'match_cut' })).toBe('match cut');
+    expect(
+      connectionVisibleLabel({ type: 'sequence' }, type =>
+        type === 'sequence' ? 'SEQUENCE' : type,
+      ),
+    ).toBe('SEQUENCE');
   });
 });
 
@@ -143,5 +171,21 @@ describe('accessibleConnectionName', () => {
         frames,
       ),
     ).toBe('gone to Reveal');
+  });
+
+  it('includes a resolved type label when conn.label is missing', () => {
+    expect(
+      accessibleConnectionName(
+        { type: 'match_cut', fromFrameId: 'a', toFrameId: 'b' },
+        frames,
+      ),
+    ).toBe('match cut — Hook to Reveal');
+    expect(
+      accessibleConnectionName(
+        { type: 'sequence', fromFrameId: 'a', toFrameId: 'b' },
+        frames,
+        type => (type === 'sequence' ? 'SEQUENCE' : type),
+      ),
+    ).toBe('SEQUENCE — Hook to Reveal');
   });
 });

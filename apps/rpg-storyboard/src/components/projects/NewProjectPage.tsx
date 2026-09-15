@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import CreateProjectForm from './CreateProjectForm';
 import type { StoryboardTemplateId } from '@storyboard-os/rpg-domain';
+import { textColors } from '@storyboard-os/core';
 
 const VALID_TEMPLATE_IDS: StoryboardTemplateId[] = ['quest_flow', 'quest_branch', 'cutscene_beat'];
 
@@ -51,11 +52,11 @@ const styles: Record<string, React.CSSProperties> = {
   errorTitle: {
     fontSize: 20,
     fontWeight: 700,
-    color: '#334155',
+    color: textColors.heading,
   },
   errorSub: {
     fontSize: 14,
-    color: '#475569',
+    color: textColors.secondary,
     maxWidth: 360,
     lineHeight: 1.6,
   },

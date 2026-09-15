@@ -20,9 +20,9 @@ export const statusColors = {
   state:   '#3B82F6', // blue   — frame carries a state transition
   spec:    '#22C55E', // green  — fully specced ("SPEC" / ready)
   partial: '#F97316', // orange — partially specced
-  draft:   '#6B7280', // gray   — empty shell / draft
-  blocked: '#EF4444', // red    — domain rule violation (RESERVED for blocked)
-  accent:  '#8B5CF6', // violet — shared highlight / selection
+  draft:   '#9CA3AF', // gray   — empty shell / draft (≥4.5:1 on bgPage / card)
+  blocked: '#DC2626', // red    — domain rule violation (RESERVED for blocked)
+  accent:  '#A78BFA', // violet — shared highlight / selection (≥4.5:1 as badge text)
 } as const;
 
 // ─── Status labels ────────────────────────────────────────────────────────────
@@ -51,23 +51,31 @@ export const surfaces = {
 } as const;
 
 // ─── Text colors ──────────────────────────────────────────────────────────────
-// WCAG-AA-compliant on the dark navy surfaces (bgPage #0b1120). HU-003 / HU-004:
-// the previous `secondary` (#475569 ≈ 2.4:1) and `heading` (#334155 ≈ 1.5:1)
-// FAILED contrast; these corrected values replace them. Approx contrast ratios
-// vs #0b1120 are noted on the two load-bearing values as a regression guard.
+// AA-normal (≥4.5:1) copy on the dark navy surfaces is `primary` / `secondary` /
+// `heading` only. HU-003 / HU-004: the previous `secondary` (#475569 ≈ 2.4:1)
+// and `heading` (#334155 ≈ 1.5:1) FAILED contrast; these corrected values
+// replace them. Ratios are asserted in tokens.test.ts against bgPage and
+// bgChrome — do not treat this object as uniformly AA.
+//
+// `muted` is chrome / non-text (borders, 1.4.11 graphical objects). It is ≥3:1
+// on bgPage but typeScale has no large-text step (≥24px / ~19px bold), so it
+// is not legal for body, labels, or badges. `onError` is AA-normal on
+// `statusColors.blocked` (white on the darkened red).
 
 export const textColors = {
-  primary:   '#e2e8f0', // body text — high contrast
-  secondary: '#94a3b8', // ≈ 7.0:1 on #0b1120 (AA — replaces failing #475569 ~2.4:1)
-  muted:     '#64748b', // least-important text — ≥ 3:1 (AA large only)
+  primary:   '#e2e8f0', // body text — AA-normal on bgPage / bgChrome
+  secondary: '#94a3b8', // ≈ 7.3:1 on #0b1120 (AA-normal — replaces failing #475569 ~2.4:1)
+  muted:     '#64748b', // chrome / non-text only — ≥3:1 (1.4.11); not AA-normal text
   heading:   '#f1f5f9', // ≈ 15.8:1 on #0b1120 (replaces near-invisible #334155 ~1.5:1)
-  onError:   '#ffffff', // text on a `blocked`/error fill
+  onError:   '#ffffff', // AA-normal text on `statusColors.blocked`
 } as const;
 
 // ─── Type scale ───────────────────────────────────────────────────────────────
 // VP-007: one ramp kills the 8 ad-hoc letter-spacings scattered across the apps.
 // `fontFamily` is a real system stack; `tracking` holds the only three named
 // letter-spacings anyone should reach for.
+// `xs` (11px) is the floor for painted UI type (badges, chrome labels). There
+// is no large-text step: xl 20px is large only when bold (~18.67px threshold).
 
 export const typeScale = {
   fontFamily:

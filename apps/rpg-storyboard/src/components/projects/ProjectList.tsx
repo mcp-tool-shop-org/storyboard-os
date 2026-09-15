@@ -8,6 +8,7 @@ import {
 } from '../../lib/storyboard/projectStorage';
 import { resolveProjectsEmptyCopy } from '../../lib/storyboard/projectListEmpty';
 import type { RpgStoryboardProject } from '@storyboard-os/rpg-domain';
+import { textColors } from '@storyboard-os/core';
 import ErrorBoundary from '../ErrorBoundary';
 
 const TEMPLATE_LABELS: Record<string, string> = {
@@ -235,7 +236,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '40px 24px 80px',
   },
   loading: {
-    color: '#475569',
+    color: textColors.secondary,
     fontSize: 14,
     padding: 40,
   },
@@ -287,13 +288,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
-    color: '#334155',
+    color: textColors.secondary,
     marginBottom: 8,
   },
   heading: {
     fontSize: 28,
     fontWeight: 800,
-    color: '#f1f5f9',
+    color: textColors.heading,
     margin: 0,
   },
   newBtn: {
@@ -332,12 +333,12 @@ const styles: Record<string, React.CSSProperties> = {
   emptyTitle: {
     fontSize: 20,
     fontWeight: 700,
-    color: '#334155',
+    color: textColors.heading,
     margin: 0,
   },
   emptySub: {
     fontSize: 14,
-    color: '#475569',
+    color: textColors.secondary,
     maxWidth: 480,
     margin: 0,
     lineHeight: 1.6,
@@ -396,14 +397,14 @@ const styles: Record<string, React.CSSProperties> = {
   cardTitle: {
     fontSize: 15,
     fontWeight: 700,
-    color: '#f1f5f9',
+    color: textColors.heading,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
   cardDesc: {
     fontSize: 12,
-    color: '#475569',
+    color: textColors.secondary,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -429,11 +430,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   metaDetail: {
     fontSize: 11,
-    color: '#334155',
+    color: textColors.secondary,
   },
   cardArrow: {
     fontSize: 14,
-    color: '#334155',
+    color: textColors.secondary,
     flexShrink: 0,
   },
   deleteBtn: {

@@ -242,13 +242,18 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
         };
     }
 
-    // Compute per-frame status
+    // Compute per-frame status. PARTIAL beats demote launch (F-4001f5ff) —
+    // "spec complete" is only true when every beat is SPEC.
     const blockedFrameIds: string[] = [];
+    let draftCount = 0;
+    let partialCount = 0;
+    let readyCount = 0;
     for (const frame of frames) {
         const status = getCampaignBeatStatus(frame);
-        if (status.level === 'blocked') {
-            blockedFrameIds.push(frame.id);
-        }
+        if (status.level === 'blocked') blockedFrameIds.push(frame.id);
+        else if (status.level === 'draft') draftCount++;
+        else if (status.level === 'partial') partialCount++;
+        else if (status.level === 'ready') readyCount++;
     }
 
     // Approval gates
@@ -279,13 +284,6 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
     const hasAnyBlocked = blockedFrameIds.length > 0;
     const hasMeasurementGap = missingMeasurementFrameIds.length > 0;
 
-    // Count total draft frames
-    let draftCount = 0;
-    for (const frame of frames) {
-        const status = getCampaignBeatStatus(frame);
-        if (status.level === 'draft') draftCount++;
-    }
-
     let level: LaunchReadinessLevel;
     let summary: string;
 
@@ -293,10 +291,15 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
         level = 'blocked';
         const blockerCount = blockedFrameIds.length;
         summary = `${blockerCount} launch ${blockerCount === 1 ? 'blocker' : 'blockers'} — campaign cannot ship`;
-    } else if (hasAnyBlocked || hasMeasurementGap || hasOpenMeasurementLoops) {
+    } else if (hasAnyBlocked || hasMeasurementGap || hasOpenMeasurementLoops || partialCount > 0) {
         level = 'at_risk';
         const issues: string[] = [];
         if (hasAnyBlocked) issues.push(`${blockedFrameIds.length} blocked`);
+        if (partialCount > 0) {
+            issues.push(
+                partialCount === 1 ? '1 beat still partial' : `${partialCount} beats still partial`,
+            );
+        }
         if (hasMeasurementGap) issues.push('measurement gaps');
         if (hasOpenMeasurementLoops) {
             issues.push(
@@ -307,9 +310,13 @@ export function getCampaignLaunchReadiness(campaign: Storyboard): LaunchReadines
     } else if (draftCount > frames.length / 2) {
         level = 'draft';
         summary = `Campaign in draft — ${draftCount}/${frames.length} beats underspecified`;
-    } else {
+    } else if (readyCount === frames.length) {
         level = 'ready';
         summary = 'Campaign implementation spec complete';
+    } else {
+        // No blocked / measurement / partial issues, but not every beat is SPEC.
+        level = 'ready';
+        summary = 'No hard launch blockers';
     }
 
     return {

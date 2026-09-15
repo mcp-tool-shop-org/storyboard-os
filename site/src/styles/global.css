@@ -1,3 +1,21 @@
 @import "tailwindcss";
 @import "@mcptoolshop/site-theme/styles/theme.css";
 @source "../../node_modules/@mcptoolshop/site-theme";
+
+/* Brand violet — not site-theme mint. Handbook uses the same hue. */
+@theme {
+  --color-accent: #8b5cf6;
+}
+
+/* BaseLayout only accepts a string letter-tile; swap it for the board-icon. */
+header a > span.inline-flex.h-8.w-8 {
+  background-color: transparent;
+  background-image: url("/storyboard-os/favicon.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+}

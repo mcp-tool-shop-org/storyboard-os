@@ -131,11 +131,17 @@ export default function ProductionSignalPanel({ signals, onClose }: Props) {
             </span>
             <span style={{ fontSize: 11, color: '#475569' }}>estimated</span>
           </div>
-          <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#64748b' }}>
+          <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#64748b', flexWrap: 'wrap' }}>
             <span>{signals.durationRollup.coveredFrames} timed</span>
             {signals.durationRollup.uncoveredFrames > 0 && (
               <span style={{ color: '#EAB308' }}>
                 {signals.durationRollup.uncoveredFrames} untimed ⚠
+              </span>
+            )}
+            {signals.durationRollup.unparsableSamples.length > 0 && (
+              <span style={{ color: '#EAB308' }}>
+                {signals.durationRollup.unparsableSamples.length} unparsed ⚠
+                {' '}({signals.durationRollup.unparsableSamples.join(', ')})
               </span>
             )}
           </div>
@@ -310,9 +316,13 @@ interface SignalSectionProps {
 }
 
 function SignalSection({ title, sectionKey, expanded, onToggle, accentColor, children }: SignalSectionProps) {
+  const regionId = `signal-section-${sectionKey}`;
   return (
     <div>
       <button
+        type="button"
+        aria-expanded={expanded}
+        aria-controls={regionId}
         onClick={() => onToggle(sectionKey)}
         style={{
           ...SECTION_LABEL,
@@ -335,11 +345,13 @@ function SignalSection({ title, sectionKey, expanded, onToggle, accentColor, chi
           flexShrink: 0,
         }} />
         <span style={{ flex: 1 }}>{title}</span>
-        <span style={{ fontSize: 12, color: '#334155' }}>
+        <span style={{ fontSize: 12, color: '#334155' }} aria-hidden="true">
           {expanded ? '▾' : '▸'}
         </span>
       </button>
-      {expanded && <div style={{ marginTop: 6 }}>{children}</div>}
+      <div id={regionId} hidden={!expanded} role="region" aria-label={title}>
+        {expanded && <div style={{ marginTop: 6 }}>{children}</div>}
+      </div>
     </div>
   );
 }

@@ -21,11 +21,12 @@
 import {
     getCinematicBeatStatus,
     getCinematicFrameSignal,
+    cinematicColors,
+    STATUS_LABELS,
     type CinematicBeatStatusLevel,
     type StoryboardFrame,
     type CinematicFrameType,
 } from '@storyboard-os/cinematic-domain';
-import { cinematicColors } from '@storyboard-os/cinematic-domain';
 import { humanizeReason } from '../lib/humanizeReason';
 
 // ─── Type display config ──────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ const TYPE_COLORS: Record<CinematicFrameType, string> = {
     action: '#F97316',
     dialogue: '#A855F7',
     transition: '#6366F1',
-    vfx: '#EC4899',
+    vfx: cinematicColors.vfx,
     audio: '#22C55E',
     edit_beat: '#EAB308',
 };
@@ -61,13 +62,6 @@ const STATUS_COLORS: Record<CinematicBeatStatusLevel, string> = {
     partial: '#F97316',
     draft: '#6B7280',
     blocked: '#EF4444',
-};
-
-const STATUS_LABELS: Record<CinematicBeatStatusLevel, string> = {
-    ready: 'SPEC',
-    partial: 'PARTIAL',
-    draft: 'DRAFT',
-    blocked: 'BLOCKED',
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -165,7 +159,7 @@ export default function CinematicFrameInspector({ frame, onClose }: Props) {
                 )}
 
                 {status.level === 'ready' && (
-                    <span style={{ fontSize: 11, color: '#22C55E' }}>✓ Production-ready — full spec coverage</span>
+                    <span style={{ fontSize: 11, color: '#22C55E' }}>✓ Production-ready — spec score ≥ 3, no blockers</span>
                 )}
             </div>
 

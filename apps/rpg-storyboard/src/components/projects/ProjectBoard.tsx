@@ -19,6 +19,7 @@ import {
 import type { RpgStoryboardProject, FrameContent, FrameAnnotation } from '@storyboard-os/rpg-domain';
 import type { FrameBasicsPatch } from '../../lib/storyboard/project';
 import StoryboardCanvas, { type SaveStatus } from '../StoryboardCanvas';
+import { textColors } from '@storyboard-os/core';
 import ErrorBoundary from '../ErrorBoundary';
 import CorruptStoreRecovery from './CorruptStoreRecovery';
 
@@ -222,11 +223,11 @@ const styles: Record<string, React.CSSProperties> = {
   stateTitle: {
     fontSize: 20,
     fontWeight: 700,
-    color: '#334155',
+    color: textColors.heading,
   },
   stateText: {
     fontSize: 14,
-    color: '#475569',
+    color: textColors.secondary,
   },
   stateLink: {
     fontSize: 13,

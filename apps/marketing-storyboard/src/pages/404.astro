@@ -1,5 +1,6 @@
 ---
 import { launchRpgStoryboardCampaign } from '@storyboard-os/marketing-domain';
+import { textColors, surfaces } from '@storyboard-os/core';
 
 // Same published boards as campaigns/[campaignId].astro getStaticPaths (demo id + title).
 const campaigns = [
@@ -13,12 +14,18 @@ const campaigns = [
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:" />
-  <title>Campaign not found — Marketing Storyboard</title>
-  <style>
+  <title>Page not found — Marketing Storyboard</title>
+  <style define:vars={{
+    textHeading: textColors.heading,
+    textSecondary: textColors.secondary,
+    textMuted: textColors.muted,
+    bgPage: surfaces.bgPage,
+    bgChrome: surfaces.bgChrome,
+  }}>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #0b1120;
-      color: #f1f5f9;
+      background: var(--bgPage);
+      color: var(--textHeading);
       font-family: ui-sans-serif, system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       min-height: 100vh;
@@ -35,22 +42,22 @@ const campaigns = [
     .card {
       width: 100%;
       max-width: 560px;
-      background: #0f1825;
+      background: var(--bgChrome);
       border: 1px solid rgba(255,255,255,0.07);
       border-radius: 10px;
       padding: 32px;
     }
     .label {
       font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
-      text-transform: uppercase; color: #475569; margin-bottom: 12px;
+      text-transform: uppercase; color: var(--textSecondary); margin-bottom: 12px;
     }
     h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
-    p { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 24px; }
+    p { font-size: 14px; color: var(--textMuted); line-height: 1.6; margin-bottom: 24px; }
     ul { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
     li a {
       display: block;
       text-decoration: none;
-      color: #f1f5f9;
+      color: var(--textHeading);
       font-size: 14px; font-weight: 600;
       padding: 12px 14px;
       border-radius: 6px;
@@ -58,19 +65,19 @@ const campaigns = [
       border: 1px solid rgba(255,255,255,0.07);
     }
     li a:hover { border-color: rgba(255,255,255,0.18); }
-    .id { display: block; font-size: 11px; color: #475569; font-weight: 500; margin-top: 2px; }
+    .id { display: block; font-size: 11px; color: var(--textSecondary); font-weight: 500; margin-top: 2px; }
     .home {
-      font-size: 12px; color: #64748b; text-decoration: none;
+      font-size: 12px; color: var(--textMuted); text-decoration: none;
     }
-    .home:hover { color: #94a3b8; }
+    .home:hover { color: var(--textSecondary); }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="label">404</div>
-    <h1>Campaign not found</h1>
-    <p>
-      That campaign id is not published in this build. Pick a known campaign below,
+    <h1 id="nf-title">Page not found</h1>
+    <p id="nf-body">
+      That URL is not a published page in this build. Pick a known campaign below,
       or return to the campaign list.
     </p>
     <ul>
@@ -85,5 +92,20 @@ const campaigns = [
     </ul>
     <a class="home" href="/">← All campaigns</a>
   </div>
+  <script>
+    // SSG 404 is one page for every miss. Default copy is generic so a dead
+    // Handbook click is not diagnosed as a missing campaign id (F-23d5709a).
+    const path = window.location.pathname;
+    if (/^\/campaigns(\/|$)/.test(path)) {
+      document.title = 'Campaign not found — Marketing Storyboard';
+      const title = document.getElementById('nf-title');
+      const body = document.getElementById('nf-body');
+      if (title) title.textContent = 'Campaign not found';
+      if (body) {
+        body.textContent =
+          'That campaign id is not published in this build. Pick a known campaign below, or return to the campaign list.';
+      }
+    }
+  </script>
 </body>
 </html>

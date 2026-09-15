@@ -6,7 +6,8 @@ import rootPkg from '../../package.json' with { type: 'json' };
 export const config: SiteConfig = {
   title: 'Storyboard OS',
   description: 'Visual story-structure authoring platform for interactive narrative. Design implementable beats with game-state signals, handoff export, and a clean multi-vertical architecture.',
-  logoBadge: 'SO',
+  // Empty: BaseLayout only accepts a string tile; global.css paints the board-icon.
+  logoBadge: '',
   brandName: 'Storyboard OS',
   repoUrl: 'https://github.com/mcp-tool-shop-org/storyboard-os',
   footerText: 'MIT Licensed — built by <a href="https://mcp-tool-shop.github.io/" style="color:var(--color-muted);text-decoration:underline">MCP Tool Shop</a>',
@@ -26,7 +27,7 @@ export const config: SiteConfig = {
     //   ls packages/ | wc -l # package count
     // See docs/snapshot-checklist.md for every doc location that holds these snapshots.
     previews: [
-      { label: 'Install', code: 'git clone mcp-tool-shop-org/storyboard-os\npnpm install && pnpm dev' },
+      { label: 'Install', code: 'git clone https://github.com/mcp-tool-shop-org/storyboard-os\npnpm install && pnpm dev' },
       { label: 'Verify', code: 'pnpm verify  # 937 tests · 54 pages · 3 apps' },
       { label: 'Packages', code: '@storyboard-os/core\n@storyboard-os/rpg-domain\n@storyboard-os/marketing-domain\n@storyboard-os/cinematic-domain\n@storyboard-os/canvas\n@storyboard-os/routing' },
     ],

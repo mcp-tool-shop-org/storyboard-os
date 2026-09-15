@@ -32,7 +32,7 @@ import {
   type FrameContent,
   type FrameAnnotation,
 } from '@storyboard-os/rpg-domain';
-import { statusColors, surfaces, textColors, typeScale, spacing } from '@storyboard-os/core';
+import { statusColors, statusLabels, surfaces, textColors, typeScale, spacing } from '@storyboard-os/core';
 import type { Storyboard } from '../lib/storyboard/schema';
 import type { FrameBasicsPatch, FrameProgress, ProjectProgress, ProjectProgressSummary } from '../lib/storyboard/project';
 import { loadBoardView, saveBoardView } from '../lib/storyboard/boardViewStorage';
@@ -664,7 +664,7 @@ function ReadinessCounts({ summary }: { summary: ReturnType<typeof getStoryboard
       {chips.map(({ level, count }) => (
         <span
           key={level}
-          title={`${count} ${level}`}
+          title={`${count} ${statusLabels[level]}`}
           style={{
             fontSize: 10, fontWeight: 700,
             padding: '2px 6px', borderRadius: 3,
@@ -674,7 +674,7 @@ function ReadinessCounts({ summary }: { summary: ReturnType<typeof getStoryboard
             letterSpacing: '0.04em',
           }}
         >
-          {count} {level.toUpperCase()}
+          {count} {statusLabels[level]}
         </span>
       ))}
     </div>

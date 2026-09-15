@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from 'react';
+import { textColors } from '@storyboard-os/core';
 
 interface Props {
   children: React.ReactNode;
@@ -111,7 +112,7 @@ const fallbackStyles: Record<string, React.CSSProperties> = {
     alignSelf: 'flex-start',
     padding: '8px 0',
   },
-  details: { fontSize: 11, color: '#475569', marginTop: 4 },
+  details: { fontSize: 11, color: textColors.secondary, marginTop: 4 },
   summary: { cursor: 'pointer', color: '#64748b', fontSize: 11, fontWeight: 600 },
   pre: {
     background: '#0a0e18',
