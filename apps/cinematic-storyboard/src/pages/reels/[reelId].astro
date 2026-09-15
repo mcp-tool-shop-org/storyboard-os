@@ -15,7 +15,7 @@ const { playlist } = Astro.props;
 const sequences = playlist.items.map(item => {
   const board = getPublishedSequence(item.sequenceId);
   return board ? { board, take: item.take } : null;
-}).filter((row): row is { board: NonNullable<ReturnType<typeof getPublishedSequence>>; take?: string } => row !== null);
+}).filter((row): row is { board: NonNullable<ReturnType<typeof getPublishedSequence>>; take: string | undefined } => row !== null);
 ---
 
 <!DOCTYPE html>
