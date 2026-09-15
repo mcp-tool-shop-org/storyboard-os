@@ -113,6 +113,13 @@ export {
   setTestCriterionComplete,
   getFrameProgress,
   getProjectProgress,
+  addFrame,
+  removeFrame,
+  addConnection,
+  updateConnection,
+  removeConnection,
+  RPG_FRAME_TYPES,
+  RPG_CONNECTION_TYPES,
 } from './project';
 
 export type {
@@ -123,4 +130,11 @@ export type {
   FrameProgress,
   ProjectProgress,
   ProjectProgressSummary,
+  TopologyFailReason,
+  TopologyOk,
+  TopologyFail,
+  TopologyResult,
+  AddFrameInput,
+  AddConnectionInput,
+  ConnectionPatch,
 } from './project';
