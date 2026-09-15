@@ -3,7 +3,8 @@
 import type { StoryboardFrame } from './schema';
 import { getCinematicBeatStatus } from './beatStatus';
 import type { CinematicBeatStatusLevel } from './beatStatus';
-import { statusColors, statusLabels } from '@storyboard-os/core';
+import { statusColors } from '@storyboard-os/core';
+import { STATUS_LABELS } from './labels';
 
 export interface CinematicFrameBadge {
   text: string;
@@ -37,13 +38,6 @@ const STATUS_COLORS: Record<CinematicBeatStatusLevel, string> = {
   partial: cinematicColors.partial,
   draft:   cinematicColors.draft,
   blocked: cinematicColors.blocked,
-};
-
-const STATUS_LABELS: Record<CinematicBeatStatusLevel, string> = {
-  ready:   statusLabels.ready,   // 'SPEC'
-  partial: statusLabels.partial, // 'PARTIAL'
-  draft:   statusLabels.draft,   // 'DRAFT'
-  blocked: statusLabels.blocked, // 'BLOCKED'
 };
 
 // ─── Signal functions ─────────────────────────────────────────────────────────

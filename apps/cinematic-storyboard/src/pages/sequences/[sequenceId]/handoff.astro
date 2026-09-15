@@ -11,6 +11,8 @@ import {
   humanizeConnectionType,
   humanizeMissingReason,
   getConnectionTypeColor,
+  cinematicColors,
+  STATUS_LABELS,
   type Storyboard,
 } from '@storyboard-os/cinematic-domain';
 
@@ -51,7 +53,7 @@ const TYPE_COLORS: Record<string, string> = {
   action:       '#F97316',
   dialogue:     '#A855F7',
   transition:   '#6366F1',
-  vfx:          '#EC4899',
+  vfx:          cinematicColors.vfx,
   audio:        '#22C55E',
   edit_beat:    '#EAB308',
 };
@@ -210,22 +212,22 @@ const TYPE_COLORS: Record<string, string> = {
     <div class="summary-bar">
       {readiness.ready > 0 && (
         <span class="summary-chip" style={`background: ${STATUS_COLORS.ready}18; border: 1px solid ${STATUS_COLORS.ready}44; color: ${STATUS_COLORS.ready};`}>
-          {readiness.ready} READY
+          {readiness.ready} {STATUS_LABELS.ready}
         </span>
       )}
       {readiness.partial > 0 && (
         <span class="summary-chip" style={`background: ${STATUS_COLORS.partial}18; border: 1px solid ${STATUS_COLORS.partial}44; color: ${STATUS_COLORS.partial};`}>
-          {readiness.partial} PARTIAL
+          {readiness.partial} {STATUS_LABELS.partial}
         </span>
       )}
       {readiness.draft > 0 && (
         <span class="summary-chip" style={`background: ${STATUS_COLORS.draft}18; border: 1px solid ${STATUS_COLORS.draft}44; color: ${STATUS_COLORS.draft};`}>
-          {readiness.draft} DRAFT
+          {readiness.draft} {STATUS_LABELS.draft}
         </span>
       )}
       {readiness.blocked > 0 && (
         <span class="summary-chip" style={`background: ${STATUS_COLORS.blocked}18; border: 1px solid ${STATUS_COLORS.blocked}44; color: ${STATUS_COLORS.blocked};`}>
-          {readiness.blocked} BLOCKED
+          {readiness.blocked} {STATUS_LABELS.blocked}
         </span>
       )}
     </div>

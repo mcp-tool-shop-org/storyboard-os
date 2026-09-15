@@ -96,13 +96,13 @@ const frames: StoryboardFrame[] = [
   },
   {
     id: 'demo-stats', type: 'edit_beat', title: 'Stats Montage',
-    summary: 'Quick-cut stats: 511 tests, 45 pages, 5 packages, 2 apps, 0 cross-domain imports.',
+    summary: 'Quick-cut stats: 6 packages, 3 apps, 0 cross-domain imports.',
     position: { x: 1130, y: 340 }, size: { width: 220, height: 140 },
     content: {
       intent: 'Land credibility through concrete numbers',
       durationEstimate: '3s',
       editNotes: 'Rapid-fire text cards: each stat appears for 0.5s. Music syncs to each card hit.',
-      requiredAssets: ['Stat card designs × 5', 'Music beat sync points'],
+      requiredAssets: ['Stat card designs × 3', 'Music beat sync points'],
       audioRequirements: ['Percussive hits on each stat reveal'],
       implementationChecklist: ['Design stat cards', 'Time to music beats', 'Test readability at 0.5s/card'],
       testCriteria: ['Each stat readable', 'Pacing feels punchy not rushed'],

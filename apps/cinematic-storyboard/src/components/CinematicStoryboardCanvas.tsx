@@ -24,11 +24,13 @@ import {
     getCinematicFrameBadges,
     getSequenceReadiness,
     getSequenceProductionSignals,
+    cinematicColors,
+    STATUS_LABELS,
+    CONNECTION_TYPE_LABELS as DOMAIN_CONNECTION_TYPE_LABELS,
     type CinematicBeatStatusLevel,
     type SequenceHealthLevel,
 } from '@storyboard-os/cinematic-domain';
 import type { Storyboard } from '@storyboard-os/cinematic-domain';
-import { cinematicColors } from '@storyboard-os/cinematic-domain';
 import { statusColors } from '@storyboard-os/core';
 import CinematicFrameInspector from './CinematicFrameInspector';
 import ProductionSignalPanel from './ProductionSignalPanel';
@@ -44,7 +46,7 @@ const CINEMATIC_CANVAS_CONFIG: StoryboardCanvasConfig = {
         action:       { bg: '#1f0e00', accent: '#F97316', label: 'ACTION' },
         dialogue:     { bg: '#14092e', accent: '#A855F7', label: 'DIALOGUE' },
         transition:   { bg: '#0e0e1a', accent: '#6366F1', label: 'TRANSITION' },
-        vfx:          { bg: '#1a0e1a', accent: '#EC4899', label: 'VFX' },
+        vfx:          { bg: '#1a0e1a', accent: cinematicColors.vfx, label: 'VFX' },
         audio:        { bg: '#071a0c', accent: '#22C55E', label: 'AUDIO' },
         edit_beat:    { bg: '#1a1500', accent: '#EAB308', label: 'EDIT' },
     },
@@ -71,7 +73,7 @@ const CONNECTION_TYPE_LABELS: Record<string, string> = {
     reaction:        'Reaction',
     transition:      'Transition',
     continuity:      'Continuity',
-    parallel_action: 'Parallel Action',
+    parallel_action: DOMAIN_CONNECTION_TYPE_LABELS.parallel_action,
     fallback:        'Fallback',
 };
 
@@ -103,7 +105,7 @@ const LEGEND = [
     { type: 'sequence', color: '#475569', label: 'Sequence', dashed: false, weight: 1.5 },
     { type: 'match_cut', color: '#3B82F6', label: 'Match Cut', dashed: true, weight: 2 },
     { type: 'reaction', color: '#A855F7', label: 'Reaction', dashed: true, weight: 2 },
-    { type: 'parallel_action', color: '#EAB308', label: 'Parallel', dashed: true, weight: 2 },
+    { type: 'parallel_action', color: '#EAB308', label: DOMAIN_CONNECTION_TYPE_LABELS.parallel_action, dashed: true, weight: 2 },
     { type: 'continuity', color: '#22C55E', label: 'Continuity', dashed: true, weight: 1.5 },
 ];
 
@@ -244,14 +246,16 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                     </span>
                 )}
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 11, color: '#334155' }}>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>
                         {storyboard.frames.length} shots · {storyboard.connections.length} connections
                     </span>
                     <ReadinessCounts summary={readiness} />
                     <HealthBadge health={productionSignals.health} reason={productionSignals.healthReason} />
                     <button
+                        type="button"
                         onClick={() => setShowSignals(s => !s)}
                         title="Production Signals (P)"
+                        aria-pressed={showSignals}
                         style={{
                             fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
                             padding: '4px 10px', borderRadius: 4,
@@ -376,7 +380,7 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                             {b.text}
                         </span>
                     ))}
-                    <span style={{ fontSize: 11, color: '#1e293b' }}>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>
                         drag to pan · scroll to pan · ctrl+scroll to zoom · F fit · 0 reset · P signals
                     </span>
                 </div>
@@ -457,7 +461,7 @@ function ReadinessCounts({ summary }: { summary: { ready: number; partial: numbe
             {chips.map(({ level, count }) => (
                 <span
                     key={level}
-                    title={`${count} ${level}`}
+                    title={`${count} ${STATUS_LABELS[level]}`}
                     style={{
                         fontSize: 10, fontWeight: 700,
                         padding: '2px 6px', borderRadius: 3,
@@ -467,7 +471,7 @@ function ReadinessCounts({ summary }: { summary: { ready: number; partial: numbe
                         letterSpacing: '0.04em',
                     }}
                 >
-                    {count} {level.toUpperCase()}
+                    {count} {STATUS_LABELS[level]}
                 </span>
             ))}
         </div>
