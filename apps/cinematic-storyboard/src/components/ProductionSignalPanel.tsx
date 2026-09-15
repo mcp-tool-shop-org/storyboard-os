@@ -56,12 +56,27 @@ const ITEM_CHIP: React.CSSProperties = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+export interface TypeFilterOption {
+  type: string;
+  label: string;
+}
+
 interface Props {
   signals: ProductionSignals;
   onClose: () => void;
+  /** Board-level type filter. Not extra cards — hides types from the canvas set. */
+  typeFilterOptions?: TypeFilterOption[];
+  activeTypeFilter?: string[] | null;
+  onTypeFilterChange?: (next: string[] | null) => void;
 }
 
-export default function ProductionSignalPanel({ signals, onClose }: Props) {
+export default function ProductionSignalPanel({
+  signals,
+  onClose,
+  typeFilterOptions,
+  activeTypeFilter = null,
+  onTypeFilterChange,
+}: Props) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['pressure', 'blocked', 'camera-unknown']));
 
   const toggle = (section: string) => {
@@ -122,6 +137,56 @@ export default function ProductionSignalPanel({ signals, onClose }: Props) {
       </div>
 
       <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+        {/* ── Type filter (visible-set, not extra cards) ───────────────────── */}
+        {typeFilterOptions && typeFilterOptions.length > 0 && onTypeFilterChange && (
+          <div>
+            <div style={SECTION_LABEL}>Filter by type</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <button
+                type="button"
+                onClick={() => onTypeFilterChange(null)}
+                aria-pressed={activeTypeFilter == null}
+                style={{
+                  ...ITEM_CHIP,
+                  cursor: 'pointer',
+                  color: activeTypeFilter == null ? '#f1f5f9' : '#94a3b8',
+                  border: activeTypeFilter == null ? '1px solid rgba(148,163,184,0.5)' : ITEM_CHIP.border,
+                }}
+              >
+                All
+              </button>
+              {typeFilterOptions.map(opt => {
+                const on = activeTypeFilter != null && activeTypeFilter.includes(opt.type);
+                return (
+                  <button
+                    key={opt.type}
+                    type="button"
+                    onClick={() => {
+                      if (activeTypeFilter == null) {
+                        onTypeFilterChange([opt.type]);
+                        return;
+                      }
+                      const next = on
+                        ? activeTypeFilter.filter(t => t !== opt.type)
+                        : [...activeTypeFilter, opt.type];
+                      onTypeFilterChange(next.length === 0 ? null : next);
+                    }}
+                    aria-pressed={on}
+                    style={{
+                      ...ITEM_CHIP,
+                      cursor: 'pointer',
+                      color: on ? '#f1f5f9' : '#94a3b8',
+                      border: on ? '1px solid rgba(59,130,246,0.5)' : ITEM_CHIP.border,
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── Duration rollup ──────────────────────────────────────────────── */}
         <div>

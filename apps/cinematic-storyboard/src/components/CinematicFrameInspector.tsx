@@ -66,12 +66,29 @@ const STATUS_COLORS: Record<CinematicBeatStatusLevel, string> = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+export interface NestedChildPreview {
+    id: string;
+    title: string;
+    type: string;
+}
+
 interface Props {
     frame: StoryboardFrame;
     onClose: () => void;
+    nestedChildren?: NestedChildPreview[];
+    nestedKind?: 'sequence' | 'fan';
+    nestedExpanded?: boolean;
+    onToggleNested?: () => void;
 }
 
-export default function CinematicFrameInspector({ frame, onClose }: Props) {
+export default function CinematicFrameInspector({
+    frame,
+    onClose,
+    nestedChildren,
+    nestedKind,
+    nestedExpanded = false,
+    onToggleNested,
+}: Props) {
     const accent = TYPE_COLORS[frame.type];
     const status = getCinematicBeatStatus(frame);
     const signal = getCinematicFrameSignal(frame);
@@ -120,6 +137,38 @@ export default function CinematicFrameInspector({ frame, onClose }: Props) {
             <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                 <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.65 }}>{frame.summary}</p>
             </div>
+
+            {/* ── One-level nest (sequence group or cutaway/reaction fan) ─────────── */}
+            {nestedChildren && nestedChildren.length > 0 && onToggleNested && (
+                <div style={{
+                    padding: '14px 18px',
+                    borderBottom: '1px solid rgba(255,255,255,0.07)',
+                    display: 'flex', flexDirection: 'column', gap: 8,
+                }}>
+                    <button
+                        type="button"
+                        aria-expanded={nestedExpanded}
+                        onClick={onToggleNested}
+                        style={{
+                            fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+                            padding: '6px 10px', borderRadius: 4, cursor: 'pointer',
+                            background: nestedExpanded ? 'rgba(59,130,246,0.15)' : 'rgba(71,85,105,0.2)',
+                            border: nestedExpanded ? '1px solid rgba(59,130,246,0.4)' : '1px solid #1e293b',
+                            color: nestedExpanded ? '#93c5fd' : '#94a3b8',
+                            textAlign: 'left',
+                        }}
+                    >
+                        {nestedExpanded ? 'Hide' : 'Show'} {nestedChildren.length} nested {nestedKind === 'fan' ? 'cutaway/reaction' : 'shots'}
+                    </button>
+                    <ul style={{ margin: 0, padding: '0 0 0 16px', fontSize: 12, color: '#94a3b8' }}>
+                        {nestedChildren.map(child => (
+                            <li key={child.id} style={{ marginBottom: 4 }}>
+                                {child.title}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             {/* ── Production readiness status ──────────────────────────────────────── */}
             <div style={{

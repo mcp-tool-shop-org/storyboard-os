@@ -151,5 +151,46 @@ describe('validateCinematicStoryboard', () => {
       // No legacy `reason` field.
       expect((err as any).reason).toBeUndefined();
     });
+
+    it('accepts parentSequenceId pointing at a sequence header', () => {
+      const seq = makeFrame('seq-1', 'sequence');
+      const child = makeFrame('s1', 'shot', { visualDescription: 'Visual' });
+      child.parentSequenceId = 'seq-1';
+      const result = validateCinematicStoryboard(makeStoryboard([seq, child]));
+      expect(result.valid).toBe(true);
+    });
+
+    it('rejects unknown parentSequenceId', () => {
+      const child = makeFrame('s1', 'shot', { visualDescription: 'Visual' });
+      child.parentSequenceId = 'missing';
+      const result = validateCinematicStoryboard(makeStoryboard([child]));
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.code === 'CINEMATIC_UNKNOWN_PARENT_SEQUENCE')).toBe(true);
+    });
+
+    it('rejects parentSequenceId that is not a sequence header', () => {
+      const parent = makeFrame('p1', 'shot', { visualDescription: 'Visual' });
+      const child = makeFrame('s1', 'shot', { visualDescription: 'Visual' });
+      child.parentSequenceId = 'p1';
+      const result = validateCinematicStoryboard(makeStoryboard([parent, child]));
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.code === 'CINEMATIC_PARENT_NOT_SEQUENCE')).toBe(true);
+    });
+
+    it('rejects self-parent and nest depth greater than one', () => {
+      const self = makeFrame('s1', 'shot', { visualDescription: 'Visual' });
+      self.parentSequenceId = 's1';
+      expect(validateCinematicStoryboard(makeStoryboard([self])).errors.some(
+        e => e.code === 'CINEMATIC_SELF_PARENT',
+      )).toBe(true);
+
+      const seq = makeFrame('seq-1', 'sequence');
+      seq.parentSequenceId = 'seq-outer';
+      const outer = makeFrame('seq-outer', 'sequence');
+      const child = makeFrame('s1', 'shot', { visualDescription: 'Visual' });
+      child.parentSequenceId = 'seq-1';
+      const deep = validateCinematicStoryboard(makeStoryboard([outer, seq, child]));
+      expect(deep.errors.some(e => e.code === 'CINEMATIC_NEST_TOO_DEEP')).toBe(true);
+    });
   });
 });
