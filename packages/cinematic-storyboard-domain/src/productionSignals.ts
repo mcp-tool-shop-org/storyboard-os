@@ -7,7 +7,8 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
+import type { Storyboard, StoryboardFrame, StoryboardConnection, CinematicShotSize } from './schema';
+import { CINEMATIC_CAMERA_MOVES } from './schema';
 import { getCinematicBeatStatus } from './beatStatus';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -34,7 +35,9 @@ export interface AudioBurdenSummary {
 export interface CameraComplexityShot {
   frameId: string;
   frameTitle: string;
+  /** Structured Sequencer move token. */
   movement: string;
+  shotSize?: CinematicShotSize;
   angle?: string;
   framing?: string;
 }
@@ -203,20 +206,22 @@ function computeAudioBurden(storyboard: Storyboard): AudioBurdenSummary {
   return { totalFramesWithAudio: shots.length, totalRequirements: totalReqs, shots };
 }
 
-/** Explicit static / locked-off language — not a moving camera. */
-const STATIC_MOVEMENT = /^(static\b|none|locked\s*off)\b/i;
-/** Tokens that mean the camera is actually moving. */
-const COMPLEX_MOVEMENT =
-  /\b(dolly|pan|track(?:ing)?|crane|push(?:-?in)?|pull(?:-?back)?|handheld|tilt|zoom|orbit|whip|boom|truck|pedestal|arc|reframe)\b/i;
+/** `arc` is the orbit/arc shot. Accept `orbit` as the same moving-camera token. */
+const MOVING_MOVES = new Set<string>(
+  CINEMATIC_CAMERA_MOVES.filter(m => m !== 'static').concat(['orbit']),
+);
 
 type CameraMovementKind = 'complex' | 'static' | 'unspecified' | 'unknown';
 
-function classifyCameraMovement(movement: string | undefined): CameraMovementKind {
-  if (!movement || !movement.trim()) return 'unspecified';
-  const m = movement.trim();
-  // Leading "Static…" / "none" / "locked off" wins even if later words mention zoom.
-  if (STATIC_MOVEMENT.test(m)) return 'static';
-  if (COMPLEX_MOVEMENT.test(m)) return 'complex';
+/**
+ * Classify from structured `move`, not regex-on-prose `cameraMovement`.
+ * `orbit` aliases `arc`. Invalid tokens are unknown, not static.
+ */
+export function classifyCameraMove(move: string | undefined): CameraMovementKind {
+  if (!move || !move.trim()) return 'unspecified';
+  const token = move.trim().toLowerCase();
+  if (token === 'static') return 'static';
+  if (MOVING_MOVES.has(token)) return 'complex';
   return 'unknown';
 }
 
@@ -228,13 +233,15 @@ function computeCameraComplexity(storyboard: Storyboard): CameraComplexitySummar
   const unknownMovementSamples: string[] = [];
 
   for (const frame of storyboard.frames) {
-    const movement = frame.content?.cameraMovement;
-    const kind = classifyCameraMovement(movement);
+    const rawMove = frame.content?.move as string | undefined;
+    const kind = classifyCameraMove(rawMove);
     if (kind === 'complex') {
+      const movement = rawMove?.trim().toLowerCase() === 'orbit' ? 'arc' : String(rawMove);
       complexShots.push({
         frameId: frame.id,
         frameTitle: frame.title,
-        movement: movement!,
+        movement,
+        shotSize: frame.content?.shotSize,
         angle: frame.content?.cameraAngle,
         framing: frame.content?.framing,
       });
@@ -244,7 +251,7 @@ function computeCameraComplexity(storyboard: Storyboard): CameraComplexitySummar
       unspecifiedShots++;
     } else {
       unknownShots++;
-      const sample = movement!.trim();
+      const sample = String(rawMove).trim();
       if (unknownMovementSamples.length < 5 && !unknownMovementSamples.includes(sample)) {
         unknownMovementSamples.push(sample);
       }

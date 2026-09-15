@@ -1,21 +1,12 @@
 ---
 import {
-  storyboardOsLaunchTrailer,
-  CINEMATIC_TEMPLATES,
-  createCinematicStoryboard,
+  listSequenceStaticPaths,
   type Storyboard,
 } from '@storyboard-os/cinematic-domain';
 import CinematicStoryboardCanvas from '../../components/CinematicStoryboardCanvas';
 
 export function getStaticPaths() {
-  const allSequences: Storyboard[] = [
-    storyboardOsLaunchTrailer,
-    ...CINEMATIC_TEMPLATES.map(t => createCinematicStoryboard(t.id)),
-  ];
-  return allSequences.map(s => ({
-    params: { sequenceId: s.id },
-    props: { storyboard: s },
-  }));
+  return listSequenceStaticPaths();
 }
 
 interface Props { storyboard: Storyboard; }

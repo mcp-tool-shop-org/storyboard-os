@@ -68,6 +68,20 @@ describe('validateProductionBrief', () => {
     const version = validateProductionBrief({ ...brief, formatVersion: 1 });
     expect(version.valid).toBe(false);
     expect(version.errors.some(e => e.keyword === 'const')).toBe(true);
+
+    const v2 = validateProductionBrief({ ...brief, formatVersion: 2 });
+    expect(v2.valid).toBe(false);
+  });
+
+  it('rejects a string camera (formatVersion 2 shape)', () => {
+    const brief = generateProductionBrief(createCinematicStoryboard('trailer_flow'));
+    const stringCam = {
+      ...brief,
+      shots: brief.shots.map(shot => ({ ...shot, camera: 'EWS · dolly' })),
+    };
+    const result = validateProductionBrief(stringCam);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.instancePath.includes('/camera'))).toBe(true);
   });
 
   it('does not throw on garbage input', () => {
@@ -82,7 +96,7 @@ describe('serializeProductionBriefJson', () => {
     const json = serializeProductionBriefJson(brief);
     const parsed = JSON.parse(json);
     expect(validateProductionBrief(parsed).valid).toBe(true);
-    expect(parsed.formatVersion).toBe(2);
+    expect(parsed.formatVersion).toBe(3);
   });
 
   it('fails closed on an invalid payload', () => {
