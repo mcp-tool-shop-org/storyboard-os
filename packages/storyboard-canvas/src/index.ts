@@ -39,3 +39,7 @@ export type { NavKey } from './a11yNav';
 // Position reconcile + autoFit guards (pure; safe to unit-test without Konva).
 export { reconcilePositions, shouldAutoFit } from './positions';
 export type { PropPositionMap, ReconcilePositionsResult } from './positions';
+
+// C2 card contract: one-line beat. Wrappers (*StoryboardCanvas) should pass
+// summaries through this; FrameCard also applies it as a seawall.
+export { cardBeatLine } from './frameText';

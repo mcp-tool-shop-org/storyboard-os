@@ -95,11 +95,32 @@ const canvasRef = useRef<ViewportHandle>(null);
 
 ---
 
+## C2 card contract
+
+On-card surface is **type badge, title, one-line beat, readiness**. The inspector (implementation spec, `content.*` fields) lives in the consuming app, not in this package.
+
+- `cardBeatLine(summary)` truncates to a single sentence/line. FrameCard applies it as a seawall; the three `*StoryboardCanvas` wrappers should use it when mapping domain copy onto `CanvasFrame.summary`.
+- FrameCard title and summary Text nodes are each capped at one line (`TITLE_MAX_HEIGHT` / mirrored summary height). Badges stay at `BADGE_MAX_ROWS = 2` (readiness row, not spec dump).
+- `CanvasFrame` has no `content` field. **This canvas does not accept `content.*` fields** — pass them to an app inspector, not to `StoryboardCanvas`.
+- There is no inspector component here (that would be app-shell).
+
+```ts
+import { cardBeatLine } from '@storyboard-os/canvas';
+
+const frames = storyboard.frames.map(f => ({
+  ...f,
+  summary: cardBeatLine(f.summary),
+  // do not spread f.content onto the canvas frame
+}));
+```
+
+A density **level chip** may appear at warn (≥50 frames) / over (≥100 frames). The canvas still paints every frame and every edge; it does not auto-hide, nest, or filter.
+
 ## Props
 
 ```ts
 interface Props {
-  /** Frames to render. Domain types are structurally compatible with CanvasFrame. */
+  /** Frames to render. Domain types are structurally compatible with CanvasFrame. No content.* fields. */
   frames: CanvasFrame[];
 
   /** Connections to render. Domain types are structurally compatible with CanvasConnection. */

@@ -123,6 +123,8 @@ interface Storyboard<
   title: string;
   description?: string;
   templateId?: string;
+  schemaVersion?: number; // additive; omit = 1
+  $schema?: string;
   frames: TFrame[];
   connections: TConnection[];
   canvasWidth?: number;
@@ -139,6 +141,7 @@ interface StoryboardProject<TStoryboard extends Storyboard = Storyboard> {
   id: string;
   title: string;
   description?: string;
+  schemaVersion?: number; // additive; omit = 1
   storyboards: TStoryboard[];
 }
 ```
@@ -169,6 +172,23 @@ interface CreateStoryboardInput {
 
 ---
 
+## JSON Schema (C4)
+
+The portable envelope is published as JSON Schema 2020-12 at `schema/storyboard.schema.json` and exported as `@storyboard-os/core/schema/storyboard.json`. The envelope is closed (`additionalProperties: false`) and requires `id`, `title`, `frames`, and `connections`. Domain content belongs in `frames[].content` — this file has no RPG, marketing, or cinematic fields.
+
+`validateStoryboard` remains the no-throw runtime seawall. **Do not add Ajv** (or any validator) as a runtime dependency of this package; consumers may run Ajv against the published file.
+
+```ts
+import { STORYBOARD_JSON_SCHEMA_ID, DEFAULT_SCHEMA_VERSION } from '@storyboard-os/core';
+// import schema from '@storyboard-os/core/schema/storyboard.json' assert { type: 'json' };
+```
+
+`schemaVersion` is additive (default `1`). Absent is accepted as version 1 so existing fixtures stay valid. The published schema's `const` / `minimum` is `1`.
+
+## Board density
+
+`measureBoardDensity({ frames, connections })` returns `{ frameCount, connectionCount, edgeRatio, level }` with `level` `'ok' | 'warn' | 'over'`. Caps are `DENSITY_SOFT_CAP = 50` and `DENSITY_HARD_CAP = 100` (Yoghourdjian). The helper measures; it does not hide edges, nest, or filter.
+
 ## Structural validation
 
 `validateStoryboard` checks invariants that hold for **any** storyboard regardless of domain: duplicate frame IDs, broken connection references, missing required fields, and invalid frame dimensions.
@@ -191,8 +211,9 @@ if (!result.valid) {
 
 | Code | Meaning |
 |---|---|
-| `INVALID_STORYBOARD_SHAPE` | Input is null/undefined or missing `frames`/`connections` arrays, or a null/non-object element inside those arrays |
+| `INVALID_STORYBOARD_SHAPE` | Input is null/undefined or missing `id`/`title`/`frames`/`connections`, or a null/non-object element inside those arrays |
 | `EMPTY_STORYBOARD` | No frames in the storyboard |
+| `INVALID_SCHEMA_VERSION` | `schemaVersion` is present but not an integer ≥ 1 |
 | `INVALID_FRAME_ID` | Frame `id` is missing, empty/whitespace-only, or not a string |
 | `DUPLICATE_FRAME_ID` | Two frames share the same ID |
 | `MISSING_TITLE` | Frame has no title (missing, empty, or non-string) |

@@ -12,6 +12,11 @@ export type {
 } from './schema';
 
 export {
+  DEFAULT_SCHEMA_VERSION,
+  STORYBOARD_JSON_SCHEMA_ID,
+} from './schema';
+
+export {
   validateStoryboard,
 } from './validate';
 
@@ -21,6 +26,18 @@ export type {
   StoryboardValidationError,
   StoryboardValidationResult,
 } from './validate';
+
+export {
+  DENSITY_SOFT_CAP,
+  DENSITY_HARD_CAP,
+  measureBoardDensity,
+} from './density';
+
+export type {
+  BoardDensity,
+  BoardDensityInput,
+  BoardDensityLevel,
+} from './density';
 
 export {
   statusColors,

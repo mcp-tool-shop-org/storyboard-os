@@ -60,6 +60,16 @@ export type AnyStoryboardFrame = StoryboardFrame<string, unknown, string>;
 
 // ─── Storyboard ───────────────────────────────────────────────────────────────
 
+/** Current envelope generation. Absent `schemaVersion` is treated as this value. */
+export const DEFAULT_SCHEMA_VERSION = 1;
+
+/**
+ * Published JSON Schema export path (`package.json` `./schema/storyboard.json`).
+ * Stamp on C4 handoff instances as `$schema` when writing portable JSON.
+ */
+export const STORYBOARD_JSON_SCHEMA_ID =
+  'https://unpkg.com/@storyboard-os/core/schema/storyboard.json';
+
 export interface Storyboard<
   TFrame extends AnyStoryboardFrame = AnyStoryboardFrame,
   TConnection extends AnyStoryboardConnection = StoryboardConnection,
@@ -69,6 +79,13 @@ export interface Storyboard<
   description?: string;
   /** Set by template creation; domain defines its own template ID type. */
   templateId?: string;
+  /**
+   * Envelope generation. Additive; omit for version 1 (existing fixtures).
+   * The published JSON Schema `const`/`minimum` is 1.
+   */
+  schemaVersion?: number;
+  /** Optional instance pointer at the published core envelope schema. */
+  $schema?: string;
   frames: TFrame[];
   connections: TConnection[];
   canvasWidth?: number;
@@ -84,6 +101,11 @@ export interface StoryboardProject<
   id: string;
   title: string;
   description?: string;
+  /**
+   * Envelope generation. Additive; omit for version 1 (existing fixtures).
+   * Not a domain formatVersion (ProductionBrief.formatVersion stays cinematic).
+   */
+  schemaVersion?: number;
   storyboards: TStoryboard[];
 }
 
