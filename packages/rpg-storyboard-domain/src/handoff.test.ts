@@ -60,6 +60,11 @@ describe('generateHandoff — metadata', () => {
     expect(handoff.formatVersion).toBe(1);
   });
 
+  it('stamps $schema to the published QuestHandoff JSON Schema $id', () => {
+    const handoff = generateHandoff(makeBoard([]));
+    expect(handoff.$schema).toBe('https://storyboard-os.dev/schemas/rpg/quest-handoff.json');
+  });
+
   it('carries the storyboard id and title', () => {
     const board = makeBoard([], []);
     board.id = 'quest-01';
@@ -577,6 +582,12 @@ describe('generateProjectHandoff — metadata', () => {
     const p = createProject({ title: 'T', templateId: 'quest_flow' });
     const h = generateProjectHandoff(p);
     expect(h.formatVersion).toBe(1);
+  });
+
+  it('stamps $schema to the published ProjectHandoff JSON Schema $id', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const h = generateProjectHandoff(p);
+    expect(h.$schema).toBe('https://storyboard-os.dev/schemas/rpg/project-handoff.json');
   });
 
   it('carries projectId, title, createdAt, updatedAt', () => {

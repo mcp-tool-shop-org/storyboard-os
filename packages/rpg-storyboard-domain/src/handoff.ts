@@ -19,6 +19,12 @@ import { getBeatStatus, getStoryboardReadiness } from './beatStatus';
 import type { BeatStatusLevel, MissingSpecReason } from './beatStatus';
 import type { RpgStoryboardProject, ProjectProgressSummary } from './project';
 import { getFrameProgress, getProjectProgress } from './project';
+import {
+  QUEST_HANDOFF_SCHEMA_ID,
+  PROJECT_HANDOFF_SCHEMA_ID,
+  assertValidHandoff,
+  assertValidProjectHandoff,
+} from './handoffValidate';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,6 +116,8 @@ export const HANDOFF_FORMAT_VERSION = 1;
 
 /** The complete quest handoff artifact. */
 export interface QuestHandoff {
+  /** JSON Schema 2020-12 $id for this artifact. Stamped on every generate. */
+  $schema: typeof QUEST_HANDOFF_SCHEMA_ID;
   /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
   formatVersion: 1;
   id: string;
@@ -147,6 +155,8 @@ export interface ProjectHandoffBeat extends HandoffBeat {
  * This is the bridge between the living authoring project and the implementation pass.
  */
 export interface ProjectHandoff {
+  /** JSON Schema 2020-12 $id for this artifact. Stamped on every generate. */
+  $schema: typeof PROJECT_HANDOFF_SCHEMA_ID;
   /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
   formatVersion: 1;
   /** Stable project ID (separate from the storyboard ID). */
@@ -305,7 +315,8 @@ export function generateHandoff(storyboard: Storyboard): QuestHandoff {
   const blockedBeatIds = beats.filter(b => b.status === 'blocked').map(b => b.id);
   const partialBeatIds = beats.filter(b => b.status === 'partial').map(b => b.id);
 
-  return {
+  const handoff: QuestHandoff = {
+    $schema:      QUEST_HANDOFF_SCHEMA_ID,
     formatVersion: HANDOFF_FORMAT_VERSION,
     id:           storyboard.id,
     title:        storyboard.title,
@@ -316,6 +327,12 @@ export function generateHandoff(storyboard: Storyboard): QuestHandoff {
     blockedBeatIds,
     partialBeatIds,
   };
+
+  // Fail closed on envelope/shape errors. Markdown generation is a separate
+  // function and does not run this check, so a schema miss cannot blank the
+  // human brief.
+  assertValidHandoff(handoff);
+  return handoff;
 }
 
 // ─── Markdown renderer ────────────────────────────────────────────────────────
@@ -704,7 +721,8 @@ export function generateProjectHandoff(project: RpgStoryboardProject): ProjectHa
     return { ...beat, checklistProgress, testProgress };
   });
 
-  return {
+  const handoff: ProjectHandoff = {
+    $schema:          PROJECT_HANDOFF_SCHEMA_ID,
     formatVersion:    HANDOFF_FORMAT_VERSION,
     projectId:        project.id,
     storyboardId:     storyboard.id,
@@ -720,6 +738,9 @@ export function generateProjectHandoff(project: RpgStoryboardProject): ProjectHa
     blockedBeatIds:   questHandoff.blockedBeatIds,
     partialBeatIds:   questHandoff.partialBeatIds,
   };
+
+  assertValidProjectHandoff(handoff);
+  return handoff;
 }
 
 // ─── Project markdown renderer ────────────────────────────────────────────────
