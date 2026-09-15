@@ -78,7 +78,7 @@ export function headerLabel(frameCount: number, connectionCount: number): string
  * humanized type key, else "Connection".
  */
 export function connectionVisibleLabel(
-  conn: Pick<CanvasConnection, 'label' | 'type'>,
+  conn: Partial<Pick<CanvasConnection, 'label' | 'type'>>,
   typeLabelFor?: (type: string) => string,
 ): string {
   if (typeof conn.label === 'string' && conn.label.trim()) return conn.label.trim();
