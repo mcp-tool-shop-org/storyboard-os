@@ -10,6 +10,8 @@ export type {
   FrameAnnotationType,
   StoryboardTemplateId,
   FrameContent,
+  CombatSpec,
+  CombatAbilityRef,
   FrameAnnotation,
   StoryboardFrame,
   Storyboard,
@@ -20,6 +22,38 @@ export type {
   StoryboardConnection,
   CreateStoryboardInput,
 } from './schema';
+
+export {
+  normalizeCombatSpec,
+  isEmptyCombatSpec,
+} from './combatSpec';
+
+export {
+  listChoiceFans,
+  visibleRpgBoard,
+} from './choiceFans';
+
+export type {
+  ChoiceFan,
+  RpgBoardView,
+  RpgBoardViewOptions,
+} from './choiceFans';
+
+export { compileHandoffToTres } from './compileTres';
+
+export {
+  compileHandoffToWorldForgePack,
+  WORLD_FORGE_PACK_FORMAT,
+  WORLD_FORGE_PACK_VERSION,
+} from './worldForge';
+
+export type {
+  WorldForgePack,
+  WorldForgePackSource,
+  WorldForgePackNode,
+  WorldForgePackBranch,
+  WorldForgePackCombat,
+} from './worldForge';
 
 export {
   STORYBOARD_TEMPLATES,

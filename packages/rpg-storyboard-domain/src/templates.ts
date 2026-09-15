@@ -670,6 +670,7 @@ const QUEST_BRANCH: StoryboardTemplateDefinition = {
           authorOnlyNotes: [
             'Path A players arrive first but with least information. Preket has not left. That is the cost.',
           ],
+          parentFrameId: fid(id, 'decision-point'),
         },
         annotations: [
           { id: fid(id, 'ann-a-1'), type: 'designer_note', text: 'Path A players arrive first but with least information.' },
@@ -721,6 +722,7 @@ const QUEST_BRANCH: StoryboardTemplateDefinition = {
           authorOnlyNotes: [
             'Path B players arrive last-ish but know the most. The schedule is the unique intel A and C cannot get.',
           ],
+          parentFrameId: fid(id, 'decision-point'),
         },
         annotations: [
           { id: fid(id, 'ann-b-1'), type: 'designer_note', text: 'Path B players arrive later but know the most.' },
@@ -771,6 +773,7 @@ const QUEST_BRANCH: StoryboardTemplateDefinition = {
           authorOnlyNotes: [
             'The duplicate is what The Name in the Ledger cutscene can later prove Velthari still holds.',
           ],
+          parentFrameId: fid(id, 'decision-point'),
         },
         annotations: [
           { id: fid(id, 'ann-c-1'), type: 'branch_note', text: 'Honor lateral thinking. This path should feel rewarding, not like a design trap.' },

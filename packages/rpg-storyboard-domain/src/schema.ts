@@ -51,6 +51,31 @@ export type StoryboardTemplateId =
   | 'quest_branch'
   | 'cutscene_beat';
 
+// ─── Optional combat attachment (encounter only) ──────────────────────────────
+// Quest-logic stays on the encounter card. Combat timing is an optional spec
+// attachment, never a new StoryboardFrameType.
+
+/** Resource-shaped ability id + action-point cost (Godot Resource compile input). */
+export interface CombatAbilityRef {
+  /** Engine Resource id (e.g. `res://abilities/slash.tres`). */
+  id: string;
+  /** Action-point cost. Omitted when the ability has no AP cost. */
+  ap?: number;
+}
+
+/**
+ * Optional 4-beat combat timing on an encounter.
+ * Empty object is valid — the encounter remains quest-logic.
+ * Only copied onto the handoff when `frame.type === 'encounter'`.
+ */
+export interface CombatSpec {
+  anticipation?: string;
+  hit?: string;
+  followThrough?: string;
+  recovery?: string;
+  ability?: CombatAbilityRef;
+}
+
 // ─── RPG Frame Content ────────────────────────────────────────────────────────
 // Carries the full implementation depth for each beat.
 // Serves both the canvas summary label and the full detail page.
@@ -76,6 +101,19 @@ export interface FrameContent {
   implementationChecklist?: string[];
   requiredAssets?: string[];
   testCriteria?: string[];
+
+  /**
+   * Authoring nest parent for choice→consequence fans.
+   * String field on content (core has no parentFrameId in this worktree).
+   * Not a pack/layout field and not copied onto the portable handoff.
+   */
+  parentFrameId?: string;
+
+  /**
+   * Encounter-only combat attachment. Ignored on other frame types.
+   * Absent and `{}` are both valid quest-logic.
+   */
+  combatSpec?: CombatSpec;
 }
 
 // ─── Concrete RPG Types ───────────────────────────────────────────────────────

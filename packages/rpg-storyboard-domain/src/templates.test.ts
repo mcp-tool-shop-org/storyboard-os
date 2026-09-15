@@ -155,6 +155,17 @@ describe('createStoryboardFromTemplate', () => {
       const tmpl = getStoryboardTemplate('quest_branch')!;
       expect(sb.frames).toHaveLength(tmpl.frameCount);
     });
+
+    it('stamps parentFrameId on path-a/b/c under the decision choice (F-b0fe9ec9)', () => {
+      const choice = sb.frames.find(f => f.type === 'choice')!;
+      const paths = sb.frames.filter(f => f.id.endsWith('path-a') || f.id.endsWith('path-b') || f.id.endsWith('path-c'));
+      expect(paths).toHaveLength(3);
+      for (const path of paths) {
+        expect(path.content.parentFrameId).toBe(choice.id);
+      }
+      const convergence = sb.frames.find(f => f.id.endsWith('convergence'));
+      expect(convergence?.content.parentFrameId).toBeUndefined();
+    });
   });
 
   // ── Cutscene Beat ───────────────────────────────────────────────────────────
