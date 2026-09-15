@@ -15,6 +15,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   generateProjectMarkdown,
   generateProjectHandoff,
+  serializeProjectHandoffJson,
   type ProjectHandoff,
   type ProjectHandoffBeat,
   type BeatStatusLevel,
@@ -147,8 +148,17 @@ function ProjectHandoffPageInner() {
 
   const handleDownloadJson = useCallback(() => {
     if (!handoff) return;
-    const name = `${handoff.projectId}-handoff`;
-    download(JSON.stringify(handoff, null, 2), `${name}.json`, 'application/json');
+    // Fail closed on envelope/shape errors — do not emit structurally invalid JSON.
+    // Markdown download is independent and does not run this check.
+    try {
+      const json = serializeProjectHandoffJson(handoff);
+      const name = `${handoff.projectId}-handoff`;
+      download(json, `${name}.json`, 'application/json');
+    } catch (err) {
+      if (typeof console !== 'undefined') {
+        console.error('[ProjectHandoffPage] JSON handoff failed schema validation; download aborted.', err);
+      }
+    }
   }, [handoff]);
 
   if (loading) return <StateScreen text="Generating handoff…" />;

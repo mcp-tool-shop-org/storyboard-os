@@ -323,6 +323,36 @@ describe('createStoryboardFromTemplate', () => {
           }
         }
       });
+
+      it(`${tid}: gold SPEC — no fill-in placeholders`, () => {
+        const sb = createStoryboardFromTemplate(tid, INPUT);
+        const blob = JSON.stringify(sb).toLowerCase();
+        expect(blob).not.toContain('[fill in]');
+        expect(blob).not.toContain('fill in');
+        expect(blob).not.toContain('define segment here');
+      });
+
+      it(`${tid}: gold SPEC — C4 arrays are non-empty concrete strings`, () => {
+        const sb = createStoryboardFromTemplate(tid, INPUT);
+        const c4 = [
+          'entryConditions',
+          'stateChanges',
+          'requiredAssets',
+          'testCriteria',
+          'implementationChecklist',
+        ] as const;
+        for (const frame of sb.frames) {
+          for (const key of c4) {
+            const arr = frame.content[key];
+            expect(arr, `${frame.id}.${key}`).toBeDefined();
+            expect(arr!.length, `${frame.id}.${key} empty`).toBeGreaterThan(0);
+            for (const item of arr!) {
+              expect(item.trim().length, `${frame.id}.${key} blank item`).toBeGreaterThan(0);
+              expect(item.toLowerCase()).not.toContain('fill in');
+            }
+          }
+        }
+      });
     }
   });
 });

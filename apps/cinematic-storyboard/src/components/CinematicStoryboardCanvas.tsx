@@ -24,6 +24,7 @@ import {
     getCinematicFrameBadges,
     getSequenceReadiness,
     getSequenceProductionSignals,
+    cardBeatLine,
     cinematicColors,
     STATUS_LABELS,
     CONNECTION_TYPE_LABELS as DOMAIN_CONNECTION_TYPE_LABELS,
@@ -159,7 +160,10 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                 id: frame.id,
                 type: frame.type,
                 title: frame.title,
-                summary: frame.summary,
+                // C2: one implementable beat on the card (intent or truncated
+                // summary). Camera, VFX, continuity, checklist, tests, and
+                // duration stay inspector-only.
+                summary: cardBeatLine(frame),
                 position: frame.position,
                 size: frame.size,
                 badges,

@@ -9,13 +9,15 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./schema/campaign-handoff.json": "./schema/campaign-handoff.schema.json"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "schema",
     "README.md",
     "LICENSE"
   ],

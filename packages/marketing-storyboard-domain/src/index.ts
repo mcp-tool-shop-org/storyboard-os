@@ -20,10 +20,14 @@ export type {
     CreateStoryboardInput,
 } from './schema';
 
+export { BOARD_SCHEMA_VERSION } from './schema';
+
 export {
     MARKETING_TEMPLATES,
     getMarketingTemplate,
     createCampaignFromTemplate,
+    listPublishedCampaigns,
+    PUBLISHED_TEMPLATE_CAMPAIGN_IDS,
 } from './templates';
 
 export {
@@ -40,6 +44,7 @@ export { launchRpgStoryboardCampaign } from './demo-campaign';
 
 export {
     getMarketingFrameSignal,
+    getMarketingCardLine,
     getMarketingFrameBadges,
     getSegmentPathCount,
     marketingColors,
@@ -80,14 +85,19 @@ export {
     generateCampaignMarkdown,
     generateProjectCampaignHandoff,
     generateProjectCampaignMarkdown,
+    validateCampaignHandoff,
     HANDOFF_FORMAT_VERSION,
+    CAMPAIGN_HANDOFF_SCHEMA_ID,
 } from './handoff';
 
 export type {
     HandoffBranch,
     CampaignHandoffBeat,
     CampaignHandoffReadiness,
+    CampaignHandoffLaunch,
     CampaignHandoff,
+    CampaignHandoffValidationError,
+    CampaignHandoffValidationResult,
     ProjectCampaignHandoffBeat,
     ProjectCampaignHandoff,
 } from './handoff';
@@ -118,6 +128,7 @@ export {
     getCampaignCriticalPath,
     getApprovalGateSignals,
     getMeasurementLoopSignals,
+    LAUNCH_READINESS_LABELS,
 } from './launchReadiness';
 
 export type {

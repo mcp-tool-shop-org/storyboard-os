@@ -15,7 +15,7 @@ import { DEFAULT_FRAME_STYLE } from './defaults';
 import { ensureFiniteSize } from './positions';
 import {
   badgesWithText,
-  frameDisplaySummary,
+  cardBeatLine,
   frameDisplayTitle,
 } from './frameText';
 import { typeBarLabelFill } from './typeBarFill';
@@ -25,6 +25,7 @@ const PADDING = 10;
 const TITLE_Y = TYPE_BAR_HEIGHT + 8;
 const SUMMARY_Y = TYPE_BAR_HEIGHT + 28;
 const TITLE_MAX_HEIGHT = SUMMARY_Y - TITLE_Y; // one line; Konva ellipsis needs height
+const SUMMARY_MAX_HEIGHT = TITLE_MAX_HEIGHT; // C2: one-line beat, mirror title cap
 
 // Badge row constants
 const BADGE_HEIGHT = 16;
@@ -204,7 +205,7 @@ export default function FrameCard({
 }: Props) {
   const { width, height } = ensureFiniteSize(frame.size, frame.id);
   const title = frameDisplayTitle(frame.title);
-  const summary = frameDisplaySummary(frame.summary);
+  const summary = cardBeatLine(frame.summary);
   const badges = badgesWithText(frame.badges);
   const innerWidth = width - PADDING * 2;
 
@@ -218,7 +219,11 @@ export default function FrameCard({
   // negative height to the Konva Text node.
   const badgeAreaHeight = hasBadges ? layout.areaHeight + BADGE_BOTTOM_MARGIN : 0;
   const titleMaxHeight = TITLE_MAX_HEIGHT;
-  const summaryMaxHeight = Math.max(0, height - SUMMARY_Y - badgeAreaHeight - 8);
+  // One-line cap (C2). Still clamp so a short card cannot overlap the badge row.
+  const summaryMaxHeight = Math.min(
+    SUMMARY_MAX_HEIGHT,
+    Math.max(0, height - SUMMARY_Y - badgeAreaHeight - 8),
+  );
 
   // Top y of the whole badge block (bottom-anchored inside the card).
   const badgeBlockY = height - layout.areaHeight - BADGE_BOTTOM_MARGIN;
@@ -290,7 +295,7 @@ export default function FrameCard({
         ellipsis
       />
 
-      {/* Summary — height shrinks when badge rows are present */}
+      {/* Summary — C2 one-line beat; leftover card body is not a spec dump */}
       <Text
         x={PADDING} y={SUMMARY_Y}
         width={width - PADDING * 2}

@@ -58,6 +58,10 @@ import {
   shouldAutoFit,
   type PropPositionMap,
 } from './positions';
+import {
+  canvasDensityLevel,
+  densityChipLabel,
+} from './densityChip';
 
 // ─── Public handle exposed via ref ────────────────────────────────────────────
 
@@ -547,6 +551,10 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
     }
     const descId = `${idBaseRef.current}-desc`;
 
+    // Density chip is chrome only — every frame and edge still paints.
+    const densityLevel = canvasDensityLevel(frames.length);
+    const densityLabel = densityChipLabel(densityLevel, frames.length, connections.length);
+
     // ── Render ─────────────────────────────────────────────────────────────
     return (
       <div
@@ -580,6 +588,32 @@ const StoryboardCanvas = React.forwardRef<ViewportHandle, Props>(
             onSelectConnection ? activateConnectionById : undefined
           }
         />
+
+        {densityLevel !== 'ok' && (
+          <div
+            role="status"
+            aria-live="polite"
+            data-density-level={densityLevel}
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 14,
+              pointerEvents: 'none',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              color: densityLevel === 'over' ? '#DC2626' : '#F97316',
+              background: 'rgba(15,23,42,0.92)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              borderRadius: 6,
+              padding: '6px 10px',
+            }}
+          >
+            {densityLabel}
+          </div>
+        )}
 
         {/* Opaque Konva board — equivalent is the frames list above. */}
         <div aria-hidden="true" style={{ width: '100%', height: '100%' }}>

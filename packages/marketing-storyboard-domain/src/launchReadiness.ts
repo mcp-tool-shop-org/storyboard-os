@@ -23,6 +23,14 @@ import type { CampaignBeatStatusLevel, MissingSpecReason } from './beatStatus';
 
 export type LaunchReadinessLevel = 'ready' | 'at_risk' | 'blocked' | 'draft';
 
+/** Board-badge labels — markdown Launch section must match these strings. */
+export const LAUNCH_READINESS_LABELS: Record<LaunchReadinessLevel, string> = {
+    ready: 'READY',
+    at_risk: 'AT RISK',
+    blocked: 'BLOCKED',
+    draft: 'DRAFT',
+};
+
 export interface LaunchReadinessSummary {
     level: LaunchReadinessLevel;
     blockedFrameIds: string[];

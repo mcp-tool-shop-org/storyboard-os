@@ -22,6 +22,20 @@ export function frameDisplaySummary(summary: unknown): string {
   return typeof summary === 'string' ? summary : '';
 }
 
+/**
+ * C2 card beat: one implementable line. Inspector holds the rest of the spec.
+ * First line, then first sentence. Non-strings coerce to empty (never throw).
+ */
+export function cardBeatLine(summary: unknown): string {
+  const raw = frameDisplaySummary(summary);
+  if (!raw) return '';
+  const firstLine = raw.split(/\r?\n/, 1)[0] ?? '';
+  const trimmed = firstLine.trim();
+  if (!trimmed) return '';
+  const sentence = trimmed.match(/^.*?[.!?](?:\s|$)/);
+  return sentence ? sentence[0].trim() : trimmed;
+}
+
 /** Badges whose `text` is a non-empty string — skip the rest (F-13e44dcf). */
 export function badgesWithText(
   badges: CanvasBadge[] | undefined,

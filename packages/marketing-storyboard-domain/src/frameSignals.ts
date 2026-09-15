@@ -119,6 +119,20 @@ export function getMarketingFrameSignal(frame: StoryboardFrame): MarketingFrameS
     };
 }
 
+/**
+ * On-card line: channel, else first customer-state-after, else a single-line
+ * objective. Full `frame.summary` and spec fields stay in the inspector.
+ */
+export function getMarketingCardLine(frame: StoryboardFrame): string {
+    const signal = getMarketingFrameSignal(frame);
+    if (signal.channelSummary) return signal.channelSummary;
+    if (signal.customerStateSummary) return signal.customerStateSummary;
+    const content = (frame.content ?? {}) as MarketingFrameContent;
+    const objective = content.objective?.trim();
+    if (!objective) return '';
+    return objective.split(/\r?\n/)[0]!.trim();
+}
+
 export function getMarketingFrameBadges(
     frame: StoryboardFrame,
 ): FrameBadgeDescriptor[] {

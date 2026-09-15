@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Storyboard, AnyStoryboardFrame, AnyStoryboardConnection } from './schema';
+import { DEFAULT_SCHEMA_VERSION } from './schema';
 
 // Codes emitted by `validateStoryboard` itself. Verticals (rpg/marketing/cinematic
 // domains) emit additional vertical-prefixed codes (e.g., `RPG_MISSING_STATE_CHANGES`,
@@ -20,6 +21,7 @@ import type { Storyboard, AnyStoryboardFrame, AnyStoryboardConnection } from './
 export type KnownStoryboardValidationCode =
   | 'INVALID_STORYBOARD_SHAPE'
   | 'EMPTY_STORYBOARD'
+  | 'INVALID_SCHEMA_VERSION'
   | 'INVALID_FRAME_ID'
   | 'DUPLICATE_FRAME_ID'
   | 'MISSING_TITLE'
@@ -84,6 +86,37 @@ export function validateStoryboard(
       message: 'Storyboard is missing required `frames` or `connections` array.',
     });
     return { valid: false, errors };
+  }
+
+  if (typeof storyboard.id !== 'string' || !storyboard.id.trim()) {
+    errors.push({
+      code: 'INVALID_STORYBOARD_SHAPE',
+      message: 'Storyboard is missing required `id` string.',
+    });
+  }
+
+  if (typeof storyboard.title !== 'string' || !storyboard.title.trim()) {
+    errors.push({
+      code: 'INVALID_STORYBOARD_SHAPE',
+      message: 'Storyboard is missing required `title` string.',
+    });
+  }
+
+  // schemaVersion is additive: absent means version 1 so existing fixtures
+  // stay valid. Reject only a *present* non-integer / non-positive value.
+  // A required-version era can tighten this to missing → INVALID_SCHEMA_VERSION.
+  if (Object.hasOwn(storyboard, 'schemaVersion') && storyboard.schemaVersion !== undefined) {
+    const version = storyboard.schemaVersion;
+    if (
+      typeof version !== 'number' ||
+      !Number.isInteger(version) ||
+      version < DEFAULT_SCHEMA_VERSION
+    ) {
+      errors.push({
+        code: 'INVALID_SCHEMA_VERSION',
+        message: `schemaVersion must be an integer >= ${DEFAULT_SCHEMA_VERSION} (got ${describeType(version)}${typeof version === 'number' ? ` ${version}` : ''}).`,
+      });
+    }
   }
 
   if (storyboard.frames.length === 0) {

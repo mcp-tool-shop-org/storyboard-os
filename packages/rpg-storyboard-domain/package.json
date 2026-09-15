@@ -9,7 +9,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./schema/quest-handoff.json": "./schema/quest-handoff.json",
+    "./schema/project-handoff.json": "./schema/project-handoff.json"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -17,7 +19,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "schema"
   ],
   "publishConfig": {
     "access": "public"

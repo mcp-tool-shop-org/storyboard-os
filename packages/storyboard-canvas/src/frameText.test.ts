@@ -4,6 +4,7 @@ import {
   UNTITLED_FRAME,
   frameDisplayTitle,
   frameDisplaySummary,
+  cardBeatLine,
   badgesWithText,
   frameTypeLabel,
   accessibleFrameName,
@@ -36,6 +37,34 @@ describe('frameDisplaySummary', () => {
     expect(frameDisplaySummary(null)).toBe('');
     expect(frameDisplaySummary(42)).toBe('');
     expect(frameDisplaySummary(undefined)).toBe('');
+  });
+});
+
+describe('cardBeatLine', () => {
+  it('keeps a single sentence', () => {
+    expect(cardBeatLine('The smith offers the blade.')).toBe('The smith offers the blade.');
+  });
+
+  it('truncates to the first sentence', () => {
+    expect(cardBeatLine('Beat one. Entry conditions follow. Checklist too.')).toBe('Beat one.');
+  });
+
+  it('truncates to the first line when there is no sentence terminator', () => {
+    expect(cardBeatLine('Implementable beat\nThen a paragraph of spec.')).toBe(
+      'Implementable beat',
+    );
+  });
+
+  it('prefers the first line over a later sentence', () => {
+    expect(cardBeatLine('Line one continues\nSecond. line')).toBe('Line one continues');
+  });
+
+  it('returns empty for blank or non-string input (no throw)', () => {
+    expect(cardBeatLine('')).toBe('');
+    expect(cardBeatLine('   \nmore')).toBe('');
+    expect(cardBeatLine(null)).toBe('');
+    expect(cardBeatLine(42)).toBe('');
+    expect(cardBeatLine(undefined)).toBe('');
   });
 });
 

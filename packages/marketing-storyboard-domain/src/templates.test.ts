@@ -5,9 +5,14 @@ import {
     MARKETING_TEMPLATES,
     getMarketingTemplate,
     createCampaignFromTemplate,
+    listPublishedCampaigns,
+    PUBLISHED_TEMPLATE_CAMPAIGN_IDS,
 } from './templates';
 import { validateMarketingStoryboard } from './validate';
 import { getCampaignLaunchReadiness, getMeasurementLoopSignals } from './launchReadiness';
+import { getCampaignReadiness } from './beatStatus';
+import { BOARD_SCHEMA_VERSION } from './schema';
+import { launchRpgStoryboardCampaign } from './demo-campaign';
 import type { MarketingTemplateId, MarketingFrameType } from './schema';
 
 const VALID_FRAME_TYPES: MarketingFrameType[] = [
@@ -101,6 +106,36 @@ describe('MARKETING_TEMPLATES', () => {
                 }
             });
 
+            it('replaces scaffold placeholders with gold SPEC copy (T1)', () => {
+                const placeholders = [
+                    'define segment here',
+                    'define the single sentence claim',
+                    'define primary distribution channel',
+                    'define the specific action',
+                    'who needs this insight',
+                    'the single insight this content delivers',
+                    'hook that earns attention',
+                    'signup / purchase / waitlist join',
+                    'social proof or data point',
+                ];
+                const blob = JSON.stringify(storyboard).toLowerCase();
+                for (const phrase of placeholders) {
+                    expect(blob).not.toContain(phrase);
+                }
+            });
+
+            it('stamps schemaVersion for future load paths (F-cfa9140d)', () => {
+                expect(storyboard.schemaVersion).toBe(BOARD_SCHEMA_VERSION);
+            });
+
+            it('is gold SPEC — every beat ready and launch not blocked (T1)', () => {
+                const readiness = getCampaignReadiness(storyboard);
+                expect(readiness.blocked).toBe(0);
+                expect(readiness.ready).toBe(storyboard.frames.length);
+                const launch = getCampaignLaunchReadiness(storyboard);
+                expect(launch.level).toBe('ready');
+            });
+
             it('passes structural validation', () => {
                 const result = validateMarketingStoryboard(storyboard);
                 // Template frames should not have blocking validation errors
@@ -160,5 +195,26 @@ describe('createCampaignFromTemplate', () => {
         const template = getMarketingTemplate('campaign_funnel')!;
         const sb = createCampaignFromTemplate('campaign_funnel', { id: 'test', title: 'Test' });
         expect(sb.frames.length).toBe(template.frameCount);
+    });
+});
+
+describe('listPublishedCampaigns (F-a493df51)', () => {
+    const catalog = listPublishedCampaigns();
+
+    it('ships the demo plus one board per template with stable SSG ids', () => {
+        const ids = catalog.map(c => c.id);
+        expect(ids).toEqual([
+            launchRpgStoryboardCampaign.id,
+            PUBLISHED_TEMPLATE_CAMPAIGN_IDS.product_launch,
+            PUBLISHED_TEMPLATE_CAMPAIGN_IDS.campaign_funnel,
+            PUBLISHED_TEMPLATE_CAMPAIGN_IDS.content_to_conversion,
+        ]);
+        expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it('stamps schemaVersion on every published board', () => {
+        for (const board of catalog) {
+            expect(board.schemaVersion).toBe(BOARD_SCHEMA_VERSION);
+        }
     });
 });

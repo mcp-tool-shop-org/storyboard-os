@@ -1,11 +1,9 @@
 ---
-import { launchRpgStoryboardCampaign } from '@storyboard-os/marketing-domain';
+import { listPublishedCampaigns } from '@storyboard-os/marketing-domain';
 import { textColors, surfaces } from '@storyboard-os/core';
 
-// Same published boards as campaigns/[campaignId].astro getStaticPaths (demo id + title).
-const campaigns = [
-  { id: launchRpgStoryboardCampaign.id, title: launchRpgStoryboardCampaign.title },
-];
+// Same published boards as campaigns/[campaignId].astro getStaticPaths.
+const campaigns = listPublishedCampaigns().map(c => ({ id: c.id, title: c.title }));
 ---
 
 <!DOCTYPE html>

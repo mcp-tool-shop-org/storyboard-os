@@ -69,6 +69,9 @@ jobs:
           pnpm test
           pnpm build
 
+      - name: Packed-tarball contents proof
+        run: pnpm run pack:smoke
+
       - name: Tag-vs-version consistency check
         run: |
           EXPECTED_VERSION="${RESOLVED_TAG#v}"

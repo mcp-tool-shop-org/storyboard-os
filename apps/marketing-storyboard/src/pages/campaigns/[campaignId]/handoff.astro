@@ -1,8 +1,10 @@
 ---
 import {
-  launchRpgStoryboardCampaign,
+  listPublishedCampaigns,
   generateCampaignHandoff,
   generateCampaignMarkdown,
+  validateCampaignHandoff,
+  LAUNCH_READINESS_LABELS,
   BLOCKING_REASONS,
   FRAME_TYPE_LABELS,
   humanizeMissingReason,
@@ -16,9 +18,7 @@ import {
 import { statusLabels, textColors, surfaces } from '@storyboard-os/core';
 
 export function getStaticPaths() {
-  const allCampaigns: Storyboard[] = [
-    launchRpgStoryboardCampaign,
-  ];
+  const allCampaigns: Storyboard[] = listPublishedCampaigns();
   return allCampaigns.map(s => ({
     params: { campaignId: s.id },
     props: { storyboard: s },
@@ -29,9 +29,17 @@ interface Props { storyboard: Storyboard; }
 const { storyboard } = Astro.props;
 const { campaignId } = Astro.params;
 
-const handoff       = generateCampaignHandoff(storyboard);
+const handoff = generateCampaignHandoff(storyboard);
+const validation = validateCampaignHandoff(handoff);
+if (!validation.valid) {
+  const detail = validation.errors.map(e => `${e.path}: ${e.message}`).join('; ');
+  throw new Error(`CampaignHandoff failed schema validation before stringify: ${detail}`);
+}
 const markdownText  = generateCampaignMarkdown(handoff);
 const jsonText      = JSON.stringify(handoff, null, 2);
+const launchLabel   = LAUNCH_READINESS_LABELS[handoff.launch.level];
+const titleFor      = (id: string) => handoff.beats.find(b => b.id === id)?.title ?? id;
+const listTitles    = (ids: string[]) => ids.length === 0 ? 'none' : ids.map(titleFor).join(', ');
 const filename      = `${campaignId}-campaign-brief`;
 const boardUrl      = `/campaigns/${campaignId}`;
 const generatedStamp = handoff.generatedAt.endsWith('Z')
@@ -260,6 +268,22 @@ function specGapsFor(missing: readonly MissingSpecReason[]): MissingSpecReason[]
           </span>
         )}
       </div>
+    </div>
+
+    <div class="readiness-block">
+      <p class="section-title">Launch</p>
+      <p class="readiness-fraction">
+        {launchLabel}
+        <span style="font-size: 14px; font-weight: 400; color: var(--textSecondary); margin-left: 8px;">
+          {handoff.launch.summary}
+        </span>
+      </p>
+      <p class="hero-meta" style="margin-top: 8px;">
+        Critical path: {handoff.launch.criticalPathFrameIds.length === 0 ? 'none' : handoff.launch.criticalPathFrameIds.map(titleFor).join(' → ')}
+      </p>
+      <p class="hero-meta">Approval gates: {listTitles(handoff.launch.approvalGateFrameIds)}</p>
+      <p class="hero-meta">Missing measurement: {listTitles(handoff.launch.missingMeasurementFrameIds)}</p>
+      <p class="hero-meta">Open loops: {listTitles(handoff.launch.openLoopFrameIds)}</p>
     </div>
 
     <p class="section-title">Campaign Beats — Implementation Order</p>

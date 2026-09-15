@@ -1,0 +1,330 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mcp-tool-shop-org/storyboard-os/schemas/cinematic/production-brief.json",
+  "title": "Cinematic production brief",
+  "description": "Portable formatVersion 2 shot-list handoff for a cinematic sequence. Markdown is the human twin; this JSON is the runtime contract for downstream Unreal/Godot importers. Engine-native .tres/.uasset files are adapters after this schema gate, not the source of truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "formatVersion",
+    "title",
+    "totalShots",
+    "shots",
+    "connections",
+    "readySummary"
+  ],
+  "properties": {
+    "$schema": {
+      "title": "Schema URI",
+      "description": "Optional JSON Schema identifier stamped on generated briefs so importers can locate this 2020-12 contract.",
+      "type": "string",
+      "minLength": 1
+    },
+    "formatVersion": {
+      "title": "Format version",
+      "description": "Handoff artifact discriminator. Version 2 adds connections and optional missingReasons on shots. Importers must reject any other value.",
+      "type": "integer",
+      "const": 2
+    },
+    "title": {
+      "title": "Sequence title",
+      "description": "Human-readable name of the sequence this brief was generated from.",
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "title": "Sequence description",
+      "description": "Optional synopsis of the sequence. Empty string when the source board has no description.",
+      "type": "string"
+    },
+    "totalShots": {
+      "title": "Total shots",
+      "description": "Count of shots in playback order. Must equal shots.length.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "totalDuration": {
+      "title": "Total duration",
+      "description": "Rolled-up duration estimate across shots (for example '21-32s') or 'Unknown' when no shot carries a parsable duration.",
+      "type": "string",
+      "minLength": 1
+    },
+    "shots": {
+      "title": "Shots",
+      "description": "Shot list in cinematic flow order (graph topology), not authoring-array order. Each entry is one producible beat.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/productionBriefShot" }
+    },
+    "connections": {
+      "title": "Sequence connections",
+      "description": "Directed edit-flow edges between shots (sequence, match cut, reaction, and other cinematic connection types). Raw enum values; humanize only in Markdown.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/productionBriefConnection" }
+    },
+    "readySummary": {
+      "title": "Readiness summary",
+      "description": "Counts of shots at each production-readiness level. The four counts must sum to totalShots.",
+      "$ref": "#/$defs/readySummary"
+    }
+  },
+  "$defs": {
+    "productionBriefShot": {
+      "title": "Production brief shot",
+      "description": "One shot in the portable handoff. Nullables are omitted production fields, not missing keys; arrays are always present (empty when unused).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameId",
+        "shotNumber",
+        "title",
+        "type",
+        "intent",
+        "visualDescription",
+        "camera",
+        "framing",
+        "duration",
+        "dialogue",
+        "actionNotes",
+        "continuity",
+        "requiredAssets",
+        "vfx",
+        "audio",
+        "editNotes",
+        "checklist",
+        "testCriteria",
+        "status"
+      ],
+      "properties": {
+        "frameId": {
+          "title": "Frame id",
+          "description": "Stable id of the source storyboard frame this shot was generated from.",
+          "type": "string",
+          "minLength": 1
+        },
+        "shotNumber": {
+          "title": "Shot number",
+          "description": "1-based playback index after topological sort.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "title": "Shot title",
+          "description": "Short slate name for the shot list (for example 'Hook Shot').",
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "title": "Frame type",
+          "description": "Cinematic frame type enum as stored on the board (shot, camera_move, dialogue, vfx, …). JSON keeps the raw key; Markdown humanizes it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "title": "Intent",
+          "description": "One implementable purpose for the shot, or null when unspecified.",
+          "type": ["string", "null"]
+        },
+        "visualDescription": {
+          "title": "Visual description",
+          "description": "What is on screen — subject, light, and action — or null when unspecified.",
+          "type": ["string", "null"]
+        },
+        "camera": {
+          "title": "Camera",
+          "description": "Shot-list camera line joining angle and movement (shot size, lens/FOV, Sequencer move). Null when both are unspecified. Not a 35° sprite-turnaround orbit.",
+          "type": ["string", "null"]
+        },
+        "framing": {
+          "title": "Framing",
+          "description": "Composition notes (thirds, headroom, eyeline) or null when unspecified.",
+          "type": ["string", "null"]
+        },
+        "duration": {
+          "title": "Duration",
+          "description": "Shot duration estimate as authored (for example '3-5s') or null when unspecified.",
+          "type": ["string", "null"]
+        },
+        "dialogue": {
+          "title": "Dialogue",
+          "description": "Spoken lines and VO cues for this shot. Empty array when the shot has no dialogue.",
+          "type": "array",
+          "items": {
+            "title": "Dialogue line",
+            "description": "One spoken or VO line, including speaker attribution when known.",
+            "type": "string"
+          }
+        },
+        "actionNotes": {
+          "title": "Action notes",
+          "description": "Blocking and on-screen action beats. Empty array when unused.",
+          "type": "array",
+          "items": {
+            "title": "Action note",
+            "description": "One blocking or action instruction for performers or animation.",
+            "type": "string"
+          }
+        },
+        "continuity": {
+          "title": "Continuity requirements",
+          "description": "Spatial, wardrobe, eyeline, and weather matches this shot must keep. Empty array when unused.",
+          "type": "array",
+          "items": {
+            "title": "Continuity requirement",
+            "description": "One match that must hold across the cut into or out of this shot.",
+            "type": "string"
+          }
+        },
+        "requiredAssets": {
+          "title": "Required assets",
+          "description": "Sets, characters, renders, captures, and graphics this shot consumes. Empty array when unused.",
+          "type": "array",
+          "items": {
+            "title": "Required asset",
+            "description": "One named asset a producer can put on a pull list.",
+            "type": "string"
+          }
+        },
+        "vfx": {
+          "title": "VFX requirements",
+          "description": "Compositing, simulation, and motion-graphics needs. Empty array when unused.",
+          "type": "array",
+          "items": {
+            "title": "VFX requirement",
+            "description": "One visual-effects deliverable for this shot.",
+            "type": "string"
+          }
+        },
+        "audio": {
+          "title": "Audio requirements",
+          "description": "Dialogue VO, score, foley, and SFX needs. Empty array when unused.",
+          "type": "array",
+          "items": {
+            "title": "Audio requirement",
+            "description": "One audio deliverable for this shot.",
+            "type": "string"
+          }
+        },
+        "editNotes": {
+          "title": "Edit notes",
+          "description": "Cut points, pacing, and transition instructions, or null when unspecified.",
+          "type": ["string", "null"]
+        },
+        "checklist": {
+          "title": "Implementation checklist",
+          "description": "Producer/implementer tasks that close this shot. Empty array when unused.",
+          "type": "array",
+          "items": {
+            "title": "Checklist item",
+            "description": "One concrete task that must be done before the shot is production-ready.",
+            "type": "string"
+          }
+        },
+        "testCriteria": {
+          "title": "Test criteria",
+          "description": "Acceptance checks for the finished shot. Empty array when unused.",
+          "type": "array",
+          "items": {
+            "title": "Test criterion",
+            "description": "One observable pass/fail check for dailies or an edit review.",
+            "type": "string"
+          }
+        },
+        "status": {
+          "title": "Readiness status",
+          "description": "Beat-status level for this shot. JSON keeps the raw enum; Markdown humanizes ready as SPEC.",
+          "type": "string",
+          "enum": ["ready", "partial", "draft", "blocked"]
+        },
+        "missingReasons": {
+          "title": "Missing reasons",
+          "description": "Beat-status reason codes when the shot is not ready (for example no_visualDescription). Omitted on ready shots so the payload stays quiet.",
+          "type": "array",
+          "items": {
+            "title": "Missing reason code",
+            "description": "Machine reason code from getCinematicBeatStatus; Markdown humanizes it.",
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "productionBriefConnection": {
+      "title": "Production brief connection",
+      "description": "One directed edit-flow edge. Titles are denormalized from the source frames so importers can render a shot list without a second lookup.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fromFrameId", "toFrameId", "fromTitle", "toTitle", "type"],
+      "properties": {
+        "id": {
+          "title": "Connection id",
+          "description": "Stable id of the source storyboard connection.",
+          "type": "string",
+          "minLength": 1
+        },
+        "fromFrameId": {
+          "title": "From frame id",
+          "description": "Id of the outgoing shot.",
+          "type": "string",
+          "minLength": 1
+        },
+        "toFrameId": {
+          "title": "To frame id",
+          "description": "Id of the incoming shot.",
+          "type": "string",
+          "minLength": 1
+        },
+        "fromTitle": {
+          "title": "From title",
+          "description": "Title of the outgoing shot, or the frame id when the title is missing.",
+          "type": "string",
+          "minLength": 1
+        },
+        "toTitle": {
+          "title": "To title",
+          "description": "Title of the incoming shot, or the frame id when the title is missing.",
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "title": "Connection type",
+          "description": "Raw cinematic connection enum (sequence, match_cut, cutaway, reaction, transition, continuity, parallel_action, fallback). Markdown humanizes it.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "readySummary": {
+      "title": "Readiness summary",
+      "description": "Per-level shot counts from getCinematicBeatStatus. Keys match CinematicBeatStatusLevel.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ready", "partial", "draft", "blocked"],
+      "properties": {
+        "ready": {
+          "title": "Ready count",
+          "description": "Number of shots at ready (SPEC) — spec score ≥ 3 and no type blocker.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "partial": {
+          "title": "Partial count",
+          "description": "Number of shots with some spec but not yet ready.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "draft": {
+          "title": "Draft count",
+          "description": "Number of shots with no spec and no type blocker.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "title": "Blocked count",
+          "description": "Number of shots missing a type-required field.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

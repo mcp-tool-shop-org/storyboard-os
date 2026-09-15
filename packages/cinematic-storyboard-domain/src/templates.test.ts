@@ -85,6 +85,33 @@ describe('CINEMATIC_TEMPLATES', () => {
           expect(ids.has(conn.toFrameId)).toBe(true);
         }
       });
+
+      it('every frame is gold SPEC (intent, visual, duration, assets, checklist, tests)', () => {
+        for (const frame of storyboard.frames) {
+          const c = frame.content;
+          expect(c.intent?.trim().length).toBeGreaterThan(0);
+          expect(c.visualDescription?.trim().length).toBeGreaterThan(0);
+          expect(c.durationEstimate?.trim().length).toBeGreaterThan(0);
+          expect(c.requiredAssets?.length).toBeGreaterThan(0);
+          expect(c.implementationChecklist?.length).toBeGreaterThan(0);
+          expect(c.testCriteria?.length).toBeGreaterThan(0);
+        }
+      });
+
+      it('camera language is Sequencer shot-list copy, not a 35° sprite orbit', () => {
+        const shotSize = /\b(EWS|WS|MS|MCU|CU|ECU|POV|insert)\b/i;
+        const lensOrFov = /\d{2,3}mm|FOV\s*\d{1,3}°/i;
+        const move = /\b(static|dolly|pan|tilt|track|crane|handheld|zoom|arc|whip|push|pull|reframe|locked)\b/i;
+        const spriteOrbit = /35\s*°[\s\S]*orbit|sprite[\s-]*orbit|turnaround/i;
+        for (const frame of storyboard.frames) {
+          const c = frame.content;
+          expect(c.cameraAngle, `${frame.title} cameraAngle`).toMatch(shotSize);
+          expect(c.cameraAngle, `${frame.title} lens/FOV`).toMatch(lensOrFov);
+          expect(c.cameraMovement, `${frame.title} move`).toMatch(move);
+          expect(c.cameraAngle ?? '').not.toMatch(spriteOrbit);
+          expect(c.cameraMovement ?? '').not.toMatch(spriteOrbit);
+        }
+      });
     });
   }
 });

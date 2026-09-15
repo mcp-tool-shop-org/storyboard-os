@@ -3,6 +3,7 @@
 import type { Storyboard, StoryboardFrame, StoryboardConnection } from './schema';
 import { getCinematicBeatStatus } from './beatStatus';
 import { parseDurationRange } from './productionSignals';
+import { assertValidProductionBrief, PRODUCTION_BRIEF_SCHEMA_ID } from './validateProductionBrief';
 import {
   humanizeConnectionType,
   humanizeFrameType,
@@ -149,6 +150,8 @@ export interface ProductionBriefConnection {
 export const HANDOFF_FORMAT_VERSION = 2;
 
 export interface ProductionBrief {
+  /** Published 2020-12 schema URI so importers can locate the contract. */
+  $schema?: string;
   /** Schema discriminator for downstream importers (PR-004). */
   formatVersion: number;
   title: string;
@@ -233,7 +236,8 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
     type: conn.type,
   }));
 
-  return {
+  const brief: ProductionBrief = {
+    $schema: PRODUCTION_BRIEF_SCHEMA_ID,
     formatVersion: HANDOFF_FORMAT_VERSION,
     title: storyboard.title,
     description: storyboard.description ?? '',
@@ -243,6 +247,8 @@ export function generateProductionBrief(storyboard: Storyboard): ProductionBrief
     connections,
     readySummary: summary,
   };
+  assertValidProductionBrief(brief);
+  return brief;
 }
 
 // ─── Markdown export ──────────────────────────────────────────────────────────
