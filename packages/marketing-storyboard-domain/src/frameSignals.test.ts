@@ -1,7 +1,7 @@
 // ─── marketing-domain / frameSignals.test.ts ─────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { getMarketingFrameSignal, getMarketingFrameBadges, getSegmentPathCount, marketingColors } from './frameSignals';
+import { getMarketingFrameSignal, getMarketingCardLine, getMarketingFrameBadges, getSegmentPathCount, marketingColors } from './frameSignals';
 import { statusColors, statusLabels } from '@storyboard-os/core';
 import type { StoryboardFrame, MarketingFrameContent } from './schema';
 
@@ -68,6 +68,18 @@ describe('getMarketingFrameSignal', () => {
         const frame = makeFrame('touchpoint', {});
         const signal = getMarketingFrameSignal(frame);
         expect(signal.channelSummary).toBeNull();
+    });
+
+    it('getMarketingCardLine prefers channel, then customer state, then objective (F-6c0112b3)', () => {
+        expect(getMarketingCardLine(makeFrame('touchpoint', { channel: 'GitHub README' })))
+            .toBe('GitHub README');
+        expect(getMarketingCardLine(makeFrame('audience', {
+            customerStateAfter: ['Aware the board exists', 'Wants to try it'],
+        }))).toBe('Aware the board exists (+1)');
+        expect(getMarketingCardLine(makeFrame('message', {
+            objective: 'Lock the single claim\nMore detail on the next line',
+        }))).toBe('Lock the single claim');
+        expect(getMarketingCardLine(makeFrame('message', {}))).toBe('');
     });
 
     it('computes readiness: ready when beat status is ready', () => {

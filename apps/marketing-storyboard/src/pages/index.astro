@@ -1,9 +1,9 @@
 ---
 // Landing page — entry point for the Marketing Campaign tool.
-import { launchRpgStoryboardCampaign } from '@storyboard-os/marketing-domain';
+import { listPublishedCampaigns } from '@storyboard-os/marketing-domain';
 import { textColors, surfaces } from '@storyboard-os/core';
 
-const campaigns = [launchRpgStoryboardCampaign];
+const campaigns = listPublishedCampaigns();
 ---
 
 <!DOCTYPE html>

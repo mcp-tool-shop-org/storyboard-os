@@ -20,7 +20,14 @@ import {
     humanizeConnectionType,
     humanizeFrameType,
     humanizeMissingReason,
+    MISSING_REASON_LABELS,
 } from './labels';
+import {
+    getCampaignLaunchReadiness,
+    getMeasurementLoopSignals,
+    LAUNCH_READINESS_LABELS,
+} from './launchReadiness';
+import type { LaunchReadinessLevel } from './launchReadiness';
 
 // ─── Markdown escaping (DM-004) ───────────────────────────────────────────────
 //
@@ -122,10 +129,28 @@ export interface CampaignHandoffReadiness {
  * Current handoff artifact schema version. Bump when the shape changes in a way
  * a downstream importer must branch on. Stamped onto every generated handoff so
  * future consumers have a discriminator (PR-004).
+ *
+ * Launch-readiness (`launch`) and `$schema` are additive on formatVersion 1 —
+ * importers that ignore unknown keys keep working.
  */
 export const HANDOFF_FORMAT_VERSION = 1;
 
+/** Stable $id of schema/campaign-handoff.schema.json (package export ./schema/campaign-handoff.json). */
+export const CAMPAIGN_HANDOFF_SCHEMA_ID =
+    'https://github.com/mcp-tool-shop-org/storyboard-os/packages/marketing-storyboard-domain/schema/campaign-handoff.json';
+
+export interface CampaignHandoffLaunch {
+    level: LaunchReadinessLevel;
+    summary: string;
+    criticalPathFrameIds: string[];
+    approvalGateFrameIds: string[];
+    missingMeasurementFrameIds: string[];
+    openLoopFrameIds: string[];
+}
+
 export interface CampaignHandoff {
+    /** JSON Schema 2020-12 $id — stamped so importers can fetch the contract. */
+    $schema: typeof CAMPAIGN_HANDOFF_SCHEMA_ID;
     /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
     formatVersion: 1;
     id: string;
@@ -133,8 +158,20 @@ export interface CampaignHandoff {
     description?: string;
     generatedAt: string;
     readiness: CampaignHandoffReadiness;
+    /** Compiled launch-readiness — answers "can this campaign ship?" without the Storyboard graph. */
+    launch: CampaignHandoffLaunch;
     beats: CampaignHandoffBeat[];
     blockedIds: string[];
+}
+
+export interface CampaignHandoffValidationError {
+    path: string;
+    message: string;
+}
+
+export interface CampaignHandoffValidationResult {
+    valid: boolean;
+    errors: CampaignHandoffValidationError[];
 }
 
 export interface ProjectCampaignHandoffBeat extends CampaignHandoffBeat {
@@ -143,6 +180,7 @@ export interface ProjectCampaignHandoffBeat extends CampaignHandoffBeat {
 }
 
 export interface ProjectCampaignHandoff {
+    $schema: typeof CAMPAIGN_HANDOFF_SCHEMA_ID;
     /** Schema discriminator for downstream importers (PR-004). Always 1 for now. */
     formatVersion: 1;
     projectId: string;
@@ -151,6 +189,7 @@ export interface ProjectCampaignHandoff {
     generatedAt: string;
     progress: ProjectProgressSummary;
     readiness: CampaignHandoffReadiness;
+    launch: CampaignHandoffLaunch;
     beats: ProjectCampaignHandoffBeat[];
     blockedIds: string[];
 }
@@ -254,6 +293,161 @@ function buildBeat(
     };
 }
 
+// ─── Launch block ─────────────────────────────────────────────────────────────
+
+function buildLaunch(storyboard: Storyboard): CampaignHandoffLaunch {
+    const summary = getCampaignLaunchReadiness(storyboard);
+    const openLoopFrameIds = getMeasurementLoopSignals(storyboard)
+        .filter(s => s.hasMetrics && !s.isLoop)
+        .map(s => s.frameId);
+    return {
+        level: summary.level,
+        summary: summary.summary,
+        criticalPathFrameIds: summary.criticalPathFrameIds,
+        approvalGateFrameIds: summary.approvalGateFrameIds,
+        missingMeasurementFrameIds: summary.missingMeasurementFrameIds,
+        openLoopFrameIds,
+    };
+}
+
+const MISSING_SPEC_REASONS = new Set<string>(Object.keys(MISSING_REASON_LABELS));
+const LAUNCH_LEVELS = new Set<string>(Object.keys(LAUNCH_READINESS_LABELS));
+const BEAT_STATUS_LEVELS = new Set(['ready', 'partial', 'draft', 'blocked']);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+    return Array.isArray(value) && value.every(item => typeof item === 'string');
+}
+
+function pushError(
+    errors: CampaignHandoffValidationError[],
+    path: string,
+    message: string,
+): void {
+    errors.push({ path, message });
+}
+
+/**
+ * Bounded generate-time / download-time validator for CampaignHandoff.
+ * Checks the fields importers actually consume (C4). Not Ajv — Ajv stays out
+ * of @storyboard-os/core and is not a marketing-domain runtime dep.
+ */
+export function validateCampaignHandoff(input: unknown): CampaignHandoffValidationResult {
+    const errors: CampaignHandoffValidationError[] = [];
+    if (!isRecord(input)) {
+        return { valid: false, errors: [{ path: '', message: 'CampaignHandoff must be an object' }] };
+    }
+
+    if (input.$schema !== CAMPAIGN_HANDOFF_SCHEMA_ID) {
+        pushError(errors, '$schema', `must equal ${CAMPAIGN_HANDOFF_SCHEMA_ID}`);
+    }
+    if (input.formatVersion !== HANDOFF_FORMAT_VERSION) {
+        pushError(errors, 'formatVersion', `must be ${HANDOFF_FORMAT_VERSION}`);
+    }
+    for (const key of ['id', 'title', 'generatedAt'] as const) {
+        if (typeof input[key] !== 'string' || (input[key] as string).length === 0) {
+            pushError(errors, key, 'must be a non-empty string');
+        }
+    }
+    if (input.description !== undefined && typeof input.description !== 'string') {
+        pushError(errors, 'description', 'must be a string when present');
+    }
+
+    if (!isRecord(input.readiness)) {
+        pushError(errors, 'readiness', 'must be an object');
+    } else {
+        for (const key of ['total', 'ready', 'partial', 'draft', 'blocked', 'readyFraction'] as const) {
+            if (typeof input.readiness[key] !== 'number') {
+                pushError(errors, `readiness.${key}`, 'must be a number');
+            }
+        }
+    }
+
+    if (!isRecord(input.launch)) {
+        pushError(errors, 'launch', 'must be an object');
+    } else {
+        if (typeof input.launch.level !== 'string' || !LAUNCH_LEVELS.has(input.launch.level)) {
+            pushError(errors, 'launch.level', 'must be ready | at_risk | blocked | draft');
+        }
+        if (typeof input.launch.summary !== 'string') {
+            pushError(errors, 'launch.summary', 'must be a string');
+        }
+        for (const key of [
+            'criticalPathFrameIds',
+            'approvalGateFrameIds',
+            'missingMeasurementFrameIds',
+            'openLoopFrameIds',
+        ] as const) {
+            if (!isStringArray(input.launch[key])) {
+                pushError(errors, `launch.${key}`, 'must be a string array');
+            }
+        }
+    }
+
+    if (!isStringArray(input.blockedIds)) {
+        pushError(errors, 'blockedIds', 'must be a string array');
+    }
+
+    if (!Array.isArray(input.beats)) {
+        pushError(errors, 'beats', 'must be an array');
+    } else {
+        input.beats.forEach((beat, i) => {
+            const path = `beats[${i}]`;
+            if (!isRecord(beat)) {
+                pushError(errors, path, 'must be an object');
+                return;
+            }
+            for (const key of ['id', 'type', 'title', 'summary'] as const) {
+                if (typeof beat[key] !== 'string') {
+                    pushError(errors, `${path}.${key}`, 'must be a string');
+                }
+            }
+            if (typeof beat.status !== 'string' || !BEAT_STATUS_LEVELS.has(beat.status)) {
+                pushError(errors, `${path}.status`, 'must be ready | partial | draft | blocked');
+            }
+            if (!Array.isArray(beat.missing) || !beat.missing.every(
+                m => typeof m === 'string' && MISSING_SPEC_REASONS.has(m),
+            )) {
+                pushError(errors, `${path}.missing`, 'must be an array of MissingSpecReason');
+            }
+            for (const key of [
+                'customerStateBefore',
+                'customerStateAfter',
+                'proofPoints',
+                'objectionsHandled',
+                'requiredAssets',
+                'approvalRequirements',
+                'launchDependencies',
+                'metrics',
+                'testCriteria',
+                'implementationChecklist',
+                'incomingFromIds',
+            ] as const) {
+                if (!isStringArray(beat[key])) {
+                    pushError(errors, `${path}.${key}`, 'must be a string array');
+                }
+            }
+            if (!Array.isArray(beat.outgoingBranches)) {
+                pushError(errors, `${path}.outgoingBranches`, 'must be an array');
+            } else {
+                beat.outgoingBranches.forEach((branch, j) => {
+                    if (!isRecord(branch)
+                        || typeof branch.type !== 'string'
+                        || typeof branch.toId !== 'string'
+                        || typeof branch.toTitle !== 'string') {
+                        pushError(errors, `${path}.outgoingBranches[${j}]`, 'must have type, toId, toTitle');
+                    }
+                });
+            }
+        });
+    }
+
+    return { valid: errors.length === 0, errors };
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function generateCampaignHandoff(storyboard: Storyboard): CampaignHandoff {
@@ -263,7 +457,8 @@ export function generateCampaignHandoff(storyboard: Storyboard): CampaignHandoff
     const beats = sorted.map(f => buildBeat(f, storyboard.connections, storyboard.frames));
     const blockedIds = beats.filter(b => b.status === 'blocked').map(b => b.id);
 
-    return {
+    const handoff: CampaignHandoff = {
+        $schema: CAMPAIGN_HANDOFF_SCHEMA_ID,
         formatVersion: HANDOFF_FORMAT_VERSION,
         id: storyboard.id,
         title: storyboard.title,
@@ -277,9 +472,17 @@ export function generateCampaignHandoff(storyboard: Storyboard): CampaignHandoff
             blocked: readiness.blocked,
             readyFraction: readiness.readyFraction,
         },
+        launch: buildLaunch(storyboard),
         beats,
         blockedIds,
     };
+
+    const result = validateCampaignHandoff(handoff);
+    if (!result.valid) {
+        const detail = result.errors.map(e => `${e.path}: ${e.message}`).join('; ');
+        throw new Error(`generateCampaignHandoff produced invalid CampaignHandoff: ${detail}`);
+    }
+    return handoff;
 }
 
 export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
@@ -305,6 +508,21 @@ export function generateCampaignMarkdown(handoff: CampaignHandoff): string {
     lines.push(`| ${humanizeBeatStatus('draft')} | ${handoff.readiness.draft} |`);
     lines.push(`| ${humanizeBeatStatus('blocked')} | ${handoff.readiness.blocked} |`);
     lines.push(`| **Total** | **${handoff.readiness.total}** |`);
+    lines.push('');
+
+    // Launch-readiness — same badge strings the board header paints.
+    const launch = handoff.launch;
+    const titleFor = (id: string) => handoff.beats.find(b => b.id === id)?.title ?? id;
+    const listTitles = (ids: string[]) =>
+        ids.length === 0 ? 'none' : ids.map(titleFor).join(', ');
+    lines.push('## Launch');
+    lines.push('');
+    lines.push(`**${LAUNCH_READINESS_LABELS[launch.level]}** — ${esc(launch.summary)}`);
+    lines.push('');
+    lines.push(`- Critical path: ${launch.criticalPathFrameIds.length === 0 ? 'none' : launch.criticalPathFrameIds.map(titleFor).join(' → ')}`);
+    lines.push(`- Approval gates: ${listTitles(launch.approvalGateFrameIds)}`);
+    lines.push(`- Missing measurement: ${listTitles(launch.missingMeasurementFrameIds)}`);
+    lines.push(`- Open loops: ${listTitles(launch.openLoopFrameIds)}`);
     lines.push('');
 
     if (handoff.blockedIds.length > 0) {
@@ -478,6 +696,7 @@ export function generateProjectCampaignHandoff(
     });
 
     return {
+        $schema: CAMPAIGN_HANDOFF_SCHEMA_ID,
         formatVersion: HANDOFF_FORMAT_VERSION,
         projectId: project.id,
         projectTitle: project.title,
@@ -485,6 +704,7 @@ export function generateProjectCampaignHandoff(
         generatedAt: base.generatedAt,
         progress,
         readiness: base.readiness,
+        launch: base.launch,
         beats,
         blockedIds: base.blockedIds,
     };

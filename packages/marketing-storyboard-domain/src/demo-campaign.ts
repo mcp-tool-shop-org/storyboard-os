@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Storyboard, StoryboardFrame } from './schema';
+import { BOARD_SCHEMA_VERSION } from './schema';
 
 const frames: StoryboardFrame[] = [
     {
@@ -276,6 +277,7 @@ export const launchRpgStoryboardCampaign: Storyboard = {
     id: 'campaign-01',
     title: 'Launch rpg-storyboard as First Storyboard OS Vertical',
     description: 'Coordinated launch campaign for rpg-storyboard — from audience definition through measurement. Dogfoods the marketing-storyboard vertical.',
+    schemaVersion: BOARD_SCHEMA_VERSION,
     frames,
     connections: [
         { id: 'conn-01', fromFrameId: 'launch-audience', toFrameId: 'launch-message', type: 'sequence' },

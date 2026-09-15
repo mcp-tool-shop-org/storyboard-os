@@ -99,6 +99,16 @@ export interface MarketingFrameContent {
 
 export type FrameAnnotation = CoreAnnotation<MarketingAnnotationType>;
 export type StoryboardFrame = CoreFrame<MarketingFrameType, MarketingFrameContent, MarketingAnnotationType>;
-export type Storyboard = CoreStoryboard<StoryboardFrame, StoryboardConnection>;
+
+/**
+ * Board schema discriminator for future load/migration paths.
+ * Stamped on demo + template boards. Not a project/persist model.
+ */
+export const BOARD_SCHEMA_VERSION = 1;
+
+export type Storyboard = CoreStoryboard<StoryboardFrame, StoryboardConnection> & {
+    /** Optional board-format version; stamped by createCampaignFromTemplate / demo. */
+    schemaVersion?: number;
+};
 export type StoryboardProject = CoreProject<Storyboard>;
 export type StoryboardTemplateDefinition = CoreTemplateDefinition<MarketingTemplateId, Storyboard>;
