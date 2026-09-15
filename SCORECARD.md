@@ -21,7 +21,7 @@ For the authoritative checkbox gate, see SHIP_GATE.md.
 | A. Security | 7/10 | SECURITY.md + README threat model present; trust model wrongly claimed localStorage for all three verticals; XSS/dependency scope otherwise sound |
 | B. Error Handling | 8/10 | Validator Result shape documented; RPG WriteResult/ReadWarning exist in app code; not a CLI/MCP retry envelope product |
 | C. Operator Docs | 5/10 | README/CHANGELOG/LICENSE strong; getting-started RPG-only; operator playbook absent; Node floor drifted vs `engines.node` |
-| D. Shipping Hygiene | 8/10 | verify script, provenance publish, frozen lockfile, audit gate — see SHIP_GATE.md. Open: SBOM row unchecked |
+| D. Shipping Hygiene | 9/10 | verify script, provenance publish, frozen lockfile, audit gate, CycloneDX SBOM on release — see SHIP_GATE.md |
 | E. Identity (soft) | 9/10 | Logo, translations, Pages landing, org noreply report path; keep home paths / personal mailboxes out of tracked files |
 | **Overall** | **37/50** | |
 
@@ -31,7 +31,7 @@ For the authoritative checkbox gate, see SHIP_GATE.md.
 2. **Trust model overclaim** — SECURITY + README said all verticals use localStorage; only RPG does.
 3. **Getting-started / landing RPG-centric** — no marketing `/campaigns` or cinematic `/sequences` first-run path; site-config implied durable projects for every vertical.
 4. **Node floor drift** — root `engines.node` is `>=22.13.0`; README/handbook/SHIP_GATE still said 20.
-5. **SHIP_GATE soft miss** — `[npm]` SBOM generation still unchecked (CycloneDX/SPDX not attached to releases).
+5. **npm Trusted Publishing** — `publish.yml` uses environment `npm-publish` and OIDC `id-token`; registry auth still `NODE_AUTH_TOKEN` until Trusted Publisher is bound on npmjs.com.
 
 ## Remediation Priority
 
@@ -60,6 +60,6 @@ lines intentionally deferred (Phase 10 polyglot).
 
 ### Still open (see SHIP_GATE.md)
 
-- `[npm]` SBOM generation — not produced or attached to GitHub releases.
+- `[npm]` SBOM generation — CycloneDX JSON attached on GitHub release via `publish.yml` (2026-09-15).
 - CLI/MCP/desktop/vscode rows remain `SKIP` (browser-static product).
 - README.`*` locale Node lines await Phase 10 polyglot refresh.

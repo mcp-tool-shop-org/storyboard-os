@@ -46,7 +46,7 @@
 - [x] `[npm]` Lockfile committed (`pnpm-lock.yaml`); CI installs with `--frozen-lockfile` (2026-05-12)
 - [x] `[npm]` README and LICENSE shipped inside each package tarball via `files` field (2026-05-12)
 - [x] `[npm]` npm provenance — `publish.yml` passes `--provenance` on all six `pnpm publish` steps; npm records the GitHub build attestation for every package (2026-05-12)
-- [ ] `[npm]` SBOM generation — no SBOM (CycloneDX / SPDX) is produced or attached to the GitHub release (2026-05-12)
+- [x] `[npm]` SBOM generation — CycloneDX JSON via `@cyclonedx/cyclonedx-npm` in `publish.yml`; `gh release upload` onto the triggering GitHub release (2026-09-15)
 - [ ] `[vsix]` SKIP: not a VS Code extension
 - [ ] `[desktop]` SKIP: not a desktop app
 

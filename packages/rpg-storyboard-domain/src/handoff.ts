@@ -13,9 +13,10 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Storyboard, StoryboardFrame, FrameContent } from './schema';
+import type { Storyboard, StoryboardFrame, FrameContent, CombatSpec } from './schema';
 import { statusLabels, type StoryboardConnection } from '@storyboard-os/core';
 import { getBeatStatus, getStoryboardReadiness } from './beatStatus';
+import { normalizeCombatSpec } from './combatSpec';
 import type { BeatStatusLevel, MissingSpecReason } from './beatStatus';
 import type { RpgStoryboardProject, ProjectProgressSummary } from './project';
 import { getFrameProgress, getProjectProgress } from './project';
@@ -91,6 +92,12 @@ export interface HandoffBeat {
   outgoingBranches: HandoffBranch[];
   /** IDs of frames that connect INTO this beat. */
   incomingFromIds: string[];
+
+  /**
+   * Encounter-only optional combat attachment. Absent and `{}` are valid.
+   * Never emitted for non-encounter beats.
+   */
+  combatSpec?: CombatSpec;
 }
 
 /**
@@ -252,6 +259,10 @@ function buildBeat(
     .filter(c => c.toFrameId === frame.id && frameMap.has(c.fromFrameId))
     .map(c => c.fromFrameId);
 
+  const combatSpec = frame.type === 'encounter'
+    ? normalizeCombatSpec(content.combatSpec)
+    : undefined;
+
   return {
     id:      frame.id,
     type:    frame.type,
@@ -281,6 +292,7 @@ function buildBeat(
 
     outgoingBranches,
     incomingFromIds,
+    ...(combatSpec !== undefined ? { combatSpec } : {}),
   };
 }
 
@@ -542,6 +554,38 @@ function renderBeat(beat: HandoffBeat, index: number): string {
   }
 
   sections.push(...annotationMarkdown(beat.annotations, esc));
+
+  if (beat.combatSpec) {
+    sections.push('');
+    sections.push('**Combat Spec** (optional encounter attachment):');
+    if (beat.combatSpec.anticipation) {
+      sections.push(`- Anticipation: ${esc(beat.combatSpec.anticipation)}`);
+    }
+    if (beat.combatSpec.hit) {
+      sections.push(`- Hit: ${esc(beat.combatSpec.hit)}`);
+    }
+    if (beat.combatSpec.followThrough) {
+      sections.push(`- Follow-through: ${esc(beat.combatSpec.followThrough)}`);
+    }
+    if (beat.combatSpec.recovery) {
+      sections.push(`- Recovery: ${esc(beat.combatSpec.recovery)}`);
+    }
+    if (beat.combatSpec.ability) {
+      const ap = beat.combatSpec.ability.ap !== undefined
+        ? ` · AP ${beat.combatSpec.ability.ap}`
+        : '';
+      sections.push(`- Ability: ${codeSpan(beat.combatSpec.ability.id)}${ap}`);
+    }
+    if (
+      !beat.combatSpec.anticipation &&
+      !beat.combatSpec.hit &&
+      !beat.combatSpec.followThrough &&
+      !beat.combatSpec.recovery &&
+      !beat.combatSpec.ability
+    ) {
+      sections.push('- _(empty — quest-logic encounter, no 4-beat timing)_');
+    }
+  }
 
   // Outgoing branches
   sections.push('');
@@ -840,6 +884,38 @@ function renderProjectBeat(beat: ProjectHandoffBeat, index: number): string {
   }
 
   sections.push(...annotationMarkdown(beat.annotations, esc));
+
+  if (beat.combatSpec) {
+    sections.push('');
+    sections.push('**Combat Spec** (optional encounter attachment):');
+    if (beat.combatSpec.anticipation) {
+      sections.push(`- Anticipation: ${esc(beat.combatSpec.anticipation)}`);
+    }
+    if (beat.combatSpec.hit) {
+      sections.push(`- Hit: ${esc(beat.combatSpec.hit)}`);
+    }
+    if (beat.combatSpec.followThrough) {
+      sections.push(`- Follow-through: ${esc(beat.combatSpec.followThrough)}`);
+    }
+    if (beat.combatSpec.recovery) {
+      sections.push(`- Recovery: ${esc(beat.combatSpec.recovery)}`);
+    }
+    if (beat.combatSpec.ability) {
+      const ap = beat.combatSpec.ability.ap !== undefined
+        ? ` · AP ${beat.combatSpec.ability.ap}`
+        : '';
+      sections.push(`- Ability: ${codeSpan(beat.combatSpec.ability.id)}${ap}`);
+    }
+    if (
+      !beat.combatSpec.anticipation &&
+      !beat.combatSpec.hit &&
+      !beat.combatSpec.followThrough &&
+      !beat.combatSpec.recovery &&
+      !beat.combatSpec.ability
+    ) {
+      sections.push('- _(empty — quest-logic encounter, no 4-beat timing)_');
+    }
+  }
 
   sections.push('');
   if (beat.outgoingBranches.length === 0) {

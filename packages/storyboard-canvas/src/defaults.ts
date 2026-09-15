@@ -17,6 +17,15 @@
 import type { CanvasFrameStyle, CanvasConnectionStyle } from './types';
 
 /**
+ * Type-bar height in CSS pixels (FrameCard). Paired with typeScale.xs (11px)
+ * to derive MIN_READABLE_SCALE = 11/26.
+ */
+export const TYPE_BAR_HEIGHT = 26;
+
+/** typeScale.xs floor in CSS pixels — smallest painted UI type. */
+export const READABLE_TYPE_PX = 11;
+
+/**
  * Neutral fallback style for a frame whose type has no configured entry.
  * Used internally by StoryboardCanvas (config.defaultFrameStyle fallback) and
  * FrameCard (prop default). Exported so app configs can reuse it verbatim.

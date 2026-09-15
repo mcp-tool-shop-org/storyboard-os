@@ -10,6 +10,8 @@ export type {
   FrameAnnotationType,
   StoryboardTemplateId,
   FrameContent,
+  CombatSpec,
+  CombatAbilityRef,
   FrameAnnotation,
   StoryboardFrame,
   Storyboard,

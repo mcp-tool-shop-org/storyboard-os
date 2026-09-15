@@ -27,7 +27,12 @@ import {
     cardBeatLine,
     cinematicColors,
     STATUS_LABELS,
+    FRAME_TYPE_LABELS,
+    CINEMATIC_FRAME_TYPES,
     CONNECTION_TYPE_LABELS as DOMAIN_CONNECTION_TYPE_LABELS,
+    visibleCinematicBoard,
+    collapsedChildBadgeText,
+    cinematicNestChildIds,
     type CinematicBeatStatusLevel,
     type SequenceHealthLevel,
 } from '@storyboard-os/cinematic-domain';
@@ -129,6 +134,8 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
     const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
     const [showSignals, setShowSignals] = useState(false);
     const [scale, setScale] = useState(1);
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+    const [typeFilter, setTypeFilter] = useState<string[] | null>(null);
 
     const canvasRef = useRef<ViewportHandle | null>(null);
 
@@ -153,9 +160,34 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
         [storyboard],
     );
 
+    const nestView = useMemo(
+        () => visibleCinematicBoard(storyboard, { expandedIds, typeFilter }),
+        [storyboard, expandedIds, typeFilter],
+    );
+
+    const toggleExpand = useCallback((id: string) => {
+        setExpandedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }, []);
+
+    const typeFilterOptions = useMemo(() => {
+        const present = new Set(storyboard.frames.map(f => f.type));
+        return CINEMATIC_FRAME_TYPES
+            .filter(type => present.has(type))
+            .map(type => ({ type, label: FRAME_TYPE_LABELS[type] }));
+    }, [storyboard.frames]);
+
     const canvasFrames = useMemo<CanvasFrame[]>(() => {
-        return storyboard.frames.map(frame => {
-            const badges = getCinematicFrameBadges(frame);
+        return nestView.frames.map(frame => {
+            const badges = [...getCinematicFrameBadges(frame)];
+            const nested = collapsedChildBadgeText(nestView.index, frame.id, expandedIds);
+            if (nested) {
+                badges.push({ text: nested, color: '#94a3b8' });
+            }
             return {
                 id: frame.id,
                 type: frame.type,
@@ -169,7 +201,7 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                 badges,
             };
         });
-    }, [storyboard.frames]);
+    }, [nestView, expandedIds]);
 
     // ── Selected entities ──────────────────────────────────────────────────────
     const selectedFrame = selectedFrameId
@@ -213,6 +245,10 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                 case 'P':
                     setShowSignals(prev => !prev);
                     break;
+                case 'e':
+                case 'E':
+                    if (selectedFrameId) toggleExpand(selectedFrameId);
+                    break;
                 case 'Escape':
                     setSelectedFrameId(null);
                     setSelectedConnectionId(null);
@@ -223,7 +259,7 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [selectedFrameId, toggleExpand]);
 
     return (
         <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#0f172a' }}>
@@ -251,8 +287,22 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                 )}
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 11, color: '#94a3b8' }}>
-                        {storyboard.frames.length} shots · {storyboard.connections.length} connections
+                        {nestView.frames.length} of {storyboard.frames.length} shots · {nestView.connections.length} connections
                     </span>
+                    {nestView.density.level !== 'ok' && (
+                        <span
+                            title={`Visible-card density ${nestView.density.level} (soft-cap 50 / hard-cap 100)`}
+                            style={{
+                                fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+                                padding: '2px 6px', borderRadius: 3,
+                                background: nestView.density.level === 'over' ? 'rgba(239,68,68,0.18)' : 'rgba(234,179,8,0.18)',
+                                border: nestView.density.level === 'over' ? '1px solid rgba(239,68,68,0.44)' : '1px solid rgba(234,179,8,0.44)',
+                                color: nestView.density.level === 'over' ? '#EF4444' : '#EAB308',
+                            }}
+                        >
+                            Density {nestView.density.level}
+                        </span>
+                    )}
                     <ReadinessCounts summary={readiness} />
                     <HealthBadge health={productionSignals.health} reason={productionSignals.healthReason} />
                     <button
@@ -301,7 +351,7 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                     <KonvaBoard
                         ref={canvasRef}
                         frames={canvasFrames}
-                        connections={storyboard.connections}
+                        connections={nestView.connections}
                         config={CINEMATIC_CANVAS_CONFIG}
                         selectedFrameId={selectedFrameId}
                         onSelectFrame={handleSelectFrame}
@@ -320,6 +370,19 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                     <CinematicFrameInspector
                         frame={selectedFrame}
                         onClose={() => setSelectedFrameId(null)}
+                        nestedChildren={cinematicNestChildIds(nestView.index, selectedFrame.id).map(id => {
+                            const child = storyboard.frames.find(f => f.id === id);
+                            return child
+                                ? { id: child.id, title: child.title, type: child.type }
+                                : { id, title: id, type: 'shot' };
+                        })}
+                        nestedKind={nestView.index.kindByParent.get(selectedFrame.id)}
+                        nestedExpanded={expandedIds.has(selectedFrame.id)}
+                        onToggleNested={
+                            cinematicNestChildIds(nestView.index, selectedFrame.id).length > 0
+                                ? () => toggleExpand(selectedFrame.id)
+                                : undefined
+                        }
                     />
                 )}
 
@@ -338,6 +401,9 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                     <ProductionSignalPanel
                         signals={productionSignals}
                         onClose={() => setShowSignals(false)}
+                        typeFilterOptions={typeFilterOptions}
+                        activeTypeFilter={typeFilter}
+                        onTypeFilterChange={setTypeFilter}
                     />
                 )}
             </div>
@@ -385,7 +451,7 @@ function CinematicStoryboardCanvasInner({ storyboard }: Props) {
                         </span>
                     ))}
                     <span style={{ fontSize: 11, color: '#94a3b8' }}>
-                        drag to pan · scroll to pan · ctrl+scroll to zoom · F fit · 0 reset · P signals
+                        drag to pan · scroll to pan · ctrl+scroll to zoom · F fit · 0 reset · P signals · E expand nest
                     </span>
                 </div>
             </footer>

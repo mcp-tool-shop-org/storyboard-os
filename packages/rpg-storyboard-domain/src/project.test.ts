@@ -894,6 +894,26 @@ describe('addConnection / updateConnection / removeConnection', () => {
     );
   });
 
+  it('stamps parentFrameId on a choice-edge destination without adding extra edges (F-b0fe9ec9)', () => {
+    const p = createProject({ title: 'T', templateId: 'quest_flow' });
+    const choice = p.storyboard.frames.find(f => f.type === 'choice')!;
+    const unlinked = p.storyboard.frames.find(f =>
+      f.id !== choice.id &&
+      !p.storyboard.connections.some(c => c.fromFrameId === choice.id && c.toFrameId === f.id),
+    )!;
+    const beforeEdges = p.storyboard.connections.length;
+    const result = unwrapOk(addConnection(p, {
+      fromFrameId: choice.id,
+      toFrameId: unlinked.id,
+      type: 'choice',
+      label: 'Extra path',
+    }));
+    expect(result.project.storyboard.connections).toHaveLength(beforeEdges + 1);
+    const dest = result.project.storyboard.frames.find(f => f.id === unlinked.id)!;
+    expect(dest.content.parentFrameId).toBe(choice.id);
+    expect(p.storyboard.frames.find(f => f.id === unlinked.id)!.content.parentFrameId).toBeUndefined();
+  });
+
   it('refuses a self-loop', () => {
     const p = createProject({ title: 'T', templateId: 'quest_flow' });
     const id = p.storyboard.frames[0].id;

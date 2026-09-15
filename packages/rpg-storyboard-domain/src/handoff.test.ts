@@ -153,6 +153,47 @@ describe('generateHandoff — beat content', () => {
     expect(beat.annotations).toEqual([]);
   });
 
+  it('copies encounter combatSpec (4-beat + ability Resource) onto the beat (F-39baa660)', () => {
+    const frame = makeFrame('enc', 'encounter', {
+      combatSpec: {
+        anticipation: 'Wind up',
+        hit: 'Impact',
+        followThrough: 'Carry through',
+        recovery: 'Reset',
+        ability: { id: 'res://abilities/cleave.tres', ap: 3 },
+      },
+    });
+    const beat = generateHandoff(makeBoard([frame])).beats[0];
+    expect(beat.combatSpec).toEqual({
+      anticipation: 'Wind up',
+      hit: 'Impact',
+      followThrough: 'Carry through',
+      recovery: 'Reset',
+      ability: { id: 'res://abilities/cleave.tres', ap: 3 },
+    });
+  });
+
+  it('keeps an empty combatSpec on an encounter (valid quest-logic)', () => {
+    const beat = generateHandoff(makeBoard([makeFrame('enc', 'encounter', { combatSpec: {} })])).beats[0];
+    expect(beat.combatSpec).toEqual({});
+  });
+
+  it('omits combatSpec on non-encounter beats even if content has one', () => {
+    const beat = generateHandoff(makeBoard([
+      makeFrame('scene-1', 'scene', {
+        combatSpec: { hit: 'should not copy' },
+      }),
+    ])).beats[0];
+    expect(beat.combatSpec).toBeUndefined();
+  });
+
+  it('does not copy parentFrameId nest metadata onto the portable handoff', () => {
+    const beat = generateHandoff(makeBoard([
+      makeFrame('path', 'scene', { parentFrameId: 'choice-1' }),
+    ])).beats[0];
+    expect(beat).not.toHaveProperty('parentFrameId');
+  });
+
   it('carries frame annotations (type + text) onto HandoffBeat', () => {
     const frame = makeFrame('a', 'hook', {});
     frame.annotations = [
@@ -485,6 +526,20 @@ describe('generateMarkdown', () => {
     });
     const md = generateMarkdown(generateHandoff(makeBoard([frame])));
     expect(md).toContain('> The keeper looks at you steadily.');
+  });
+
+  it('renders encounter combatSpec in markdown (F-39baa660)', () => {
+    const frame = makeFrame('enc', 'encounter', {
+      combatSpec: {
+        hit: 'Shield bash',
+        ability: { id: 'res://abilities/bash.tres', ap: 1 },
+      },
+    });
+    const md = generateMarkdown(generateHandoff(makeBoard([frame])));
+    expect(md).toContain('**Combat Spec**');
+    expect(md).toContain('Hit: Shield bash');
+    expect(md).toContain('res://abilities/bash.tres');
+    expect(md).toContain('AP 1');
   });
 
   it('quotes multi-line designer notes as a full blockquote (DM-004)', () => {

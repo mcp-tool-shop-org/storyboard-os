@@ -61,6 +61,8 @@ import {
   getSequenceProductionSignals,
   generateProductionBrief, generateProductionMarkdown, HANDOFF_FORMAT_VERSION,
   validateProductionBrief, serializeProductionBriefJson,
+  visibleCinematicBoard,
+  compileProductionBriefToSequencerShots, compileProductionBriefToGodotResources,
   cardBeatLine,
   storyboardOsLaunchTrailer,
 } from '@storyboard-os/cinematic-domain';
@@ -73,6 +75,8 @@ import productionBriefSchema from '@storyboard-os/cinematic-domain/schema/produc
 - **Readiness model** — `getCinematicBeatStatus(frame)` classifies a shot's readiness; `getSequenceReadiness(board)` rolls the shots up into a sequence readiness summary.
 - **Production signals** — `getSequenceProductionSignals(board)` surfaces sequence **health**, **VFX** and **audio** burden, **camera-complexity** hotspots, **continuity risk**, **blocked shots**, and a **duration rollup** — the "where is the pain" view for a producer.
 - **Handoff** — two-step: `const brief = generateProductionBrief(board)` then `generateProductionMarkdown(brief)`. The markdown helper takes a `ProductionBrief`, not a `Storyboard`. Briefs carry `HANDOFF_FORMAT_VERSION` and `$schema`. `generateProductionBrief` and `serializeProductionBriefJson` run `validateProductionBrief` against the published 2020-12 schema (`./schema/production-brief.json`). Markdown is the human twin; do not treat `.tres`/`.uasset` as the contract.
+- **Nest** — optional `parentSequenceId` groups shots under a `sequence` header (one nest level). `visibleCinematicBoard(board, { expandedIds, typeFilter })` is the default canvas set: sequence headers + ungrouped shots; expand reveals children; cutaway/reaction fans collapse under the parent shot. Type filter is a visible-set (inspector/Signals), not extra cards. Density of that set is `measureBoardDensity` (~50 warn / ~100 over).
+- **Engine adapters** — `compileProductionBriefToSequencerShots` and `compileProductionBriefToGodotResources` map a *validated* ProductionBrief to `{ name, durationSeconds, camera, continuity, vfx, audio }` DTOs. They are **adapters, not the source of truth**: no file I/O, no Unreal/Godot plugins, and they do not replace Markdown/JSON export.
 - **Card beat** — `cardBeatLine(frame)` is the one implementable line for the Konva card (intent, else truncated summary). Inspector keeps the full spec.
 - **Demo** — `storyboardOsLaunchTrailer` is a complete example sequence for tests and previews.
 

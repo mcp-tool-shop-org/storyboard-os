@@ -53,6 +53,11 @@ export interface StoryboardFrame<
   size: { width: number; height: number };
   content: TContent;
   annotations: FrameAnnotation<TAnnotationType>[];
+  /**
+   * Optional parent for one nest level. Collapse hides children of ids in
+   * `Storyboard.collapsedIds`; this field is topology, not a collapsed flag.
+   */
+  parentFrameId?: string;
 }
 
 // Convenience alias for unspecialized use (e.g. in the validator).
@@ -88,6 +93,11 @@ export interface Storyboard<
   $schema?: string;
   frames: TFrame[];
   connections: TConnection[];
+  /**
+   * Author-owned collapsed parent ids (serialized Set). Collapse does not
+   * mutate frame records. Absent / empty = all expanded (nothing auto-collapses).
+   */
+  collapsedIds?: string[];
   canvasWidth?: number;
   canvasHeight?: number;
 }

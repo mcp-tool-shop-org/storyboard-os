@@ -106,6 +106,17 @@ describe('published JSON Schema 2020-12 (F-24fbdeab)', () => {
     expect(questFmt.const).toBe(1);
     expect(projectFmt.const).toBe(1);
   });
+
+  it('names optional combatSpec on beats (F-39baa660) without requiring it', () => {
+    const questBeat = (questHandoffSchemaDocument as { $defs: { handoffBeat: { required: string[]; properties: Record<string, unknown> } } })
+      .$defs.handoffBeat;
+    const projectBeat = (projectHandoffSchemaDocument as { $defs: { projectHandoffBeat: { required: string[]; properties: Record<string, unknown> } } })
+      .$defs.projectHandoffBeat;
+    expect(questBeat.properties.combatSpec).toBeDefined();
+    expect(projectBeat.properties.combatSpec).toBeDefined();
+    expect(questBeat.required).not.toContain('combatSpec');
+    expect(projectBeat.required).not.toContain('combatSpec');
+  });
 });
 
 // ─── Envelope fail-closed ─────────────────────────────────────────────────────
@@ -163,6 +174,13 @@ describe('validateHandoff — envelope (F-8632ec47)', () => {
     const result = validateHandoff(handoff);
     expect(result.valid).toBe(false);
     expect(result.issues.some(i => i.code === 'ADDITIONAL')).toBe(true);
+  });
+
+  it('accepts an empty combatSpec object on an encounter beat', () => {
+    const handoff = generateHandoff(makeBoard([makeFrame('enc', 'encounter', { combatSpec: {} })]));
+    const result = validateHandoff(handoff);
+    expect(result.valid).toBe(true);
+    expect(handoff.beats[0].combatSpec).toEqual({});
   });
 });
 

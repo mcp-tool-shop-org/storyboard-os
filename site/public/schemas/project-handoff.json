@@ -214,7 +214,28 @@
         "testProgress": {
           "type": "array",
           "items": { "$ref": "#/$defs/testProgressItem" }
-        }
+        },
+        "combatSpec": { "$ref": "#/$defs/combatSpec" }
+      }
+    },
+    "combatSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "anticipation": { "type": "string" },
+        "hit": { "type": "string" },
+        "followThrough": { "type": "string" },
+        "recovery": { "type": "string" },
+        "ability": { "$ref": "#/$defs/combatAbility" }
+      }
+    },
+    "combatAbility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "ap": { "type": "number" }
       }
     }
   }

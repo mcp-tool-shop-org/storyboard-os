@@ -13,6 +13,7 @@ export type {
 } from './schema';
 export {
   BOARD_SCHEMA_VERSION,
+  CINEMATIC_FRAME_TYPES,
   CINEMATIC_SHOT_SIZES,
   CINEMATIC_CAMERA_MOVES,
 } from './schema';
@@ -109,3 +110,29 @@ export type {
   CreateSequencePlaylistInput,
   AuthoredSequenceId,
 } from './playlist';
+
+export {
+  indexCinematicNest,
+  visibleCinematicBoard,
+  cinematicNestChildIds,
+  collapsedChildBadgeText,
+  FAN_CONNECTION_TYPES,
+  CINEMATIC_NEST_MAX_DEPTH,
+} from './nest';
+export type {
+  CinematicNestIndex,
+  CinematicNestKind,
+  VisibleCinematicBoard,
+  VisibleCinematicOptions,
+} from './nest';
+
+export {
+  compileProductionBriefToSequencerShots,
+  compileProductionBriefToGodotResources,
+  ENGINE_ADAPTER_CONTRACT,
+} from './adapters';
+export type {
+  EngineShotDto,
+  SequencerShotList,
+  GodotResourceList,
+} from './adapters';

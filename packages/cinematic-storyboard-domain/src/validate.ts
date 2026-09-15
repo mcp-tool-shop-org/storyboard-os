@@ -108,5 +108,54 @@ export function validateCinematicStoryboard(
     }
   }
 
+  const frameById = new Map<string, StoryboardFrame>();
+  for (const frame of storyboard.frames) {
+    if (frame == null || typeof frame !== 'object' || Array.isArray(frame)) continue;
+    if (typeof frame.id === 'string') frameById.set(frame.id, frame);
+  }
+
+  for (const frame of storyboard.frames) {
+    if (frame == null || typeof frame !== 'object' || Array.isArray(frame)) continue;
+    const parentId = typeof frame.parentSequenceId === 'string' ? frame.parentSequenceId.trim() : '';
+    if (!parentId) continue;
+
+    if (parentId === frame.id) {
+      errors.push({
+        code: 'CINEMATIC_SELF_PARENT',
+        message: `Frame "${frame.id}" cannot nest under itself.`,
+        frameId: frame.id,
+      });
+      continue;
+    }
+
+    const parent = frameById.get(parentId);
+    if (!parent) {
+      errors.push({
+        code: 'CINEMATIC_UNKNOWN_PARENT_SEQUENCE',
+        message: `Frame "${frame.id}" parentSequenceId "${parentId}" does not match a frame on this board.`,
+        frameId: frame.id,
+      });
+      continue;
+    }
+
+    if (parent.type !== 'sequence') {
+      errors.push({
+        code: 'CINEMATIC_PARENT_NOT_SEQUENCE',
+        message: `Frame "${frame.id}" parentSequenceId must point at a sequence header, not "${parent.type}".`,
+        frameId: frame.id,
+      });
+      continue;
+    }
+
+    const grandParent = typeof parent.parentSequenceId === 'string' ? parent.parentSequenceId.trim() : '';
+    if (grandParent) {
+      errors.push({
+        code: 'CINEMATIC_NEST_TOO_DEEP',
+        message: `Frame "${frame.id}" nests under "${parentId}" which itself has a parent — one nest level only.`,
+        frameId: frame.id,
+      });
+    }
+  }
+
   return { valid: errors.length === 0, errors };
 }

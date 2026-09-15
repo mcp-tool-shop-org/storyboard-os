@@ -171,6 +171,9 @@ const KNOWN_CODES: KnownStoryboardValidationCode[] = [
   'DUPLICATE_CONNECTION_EDGE',
   'BROKEN_CONNECTION_FROM',
   'BROKEN_CONNECTION_TO',
+  'UNKNOWN_PARENT_FRAME_ID',
+  'SELF_PARENT_FRAME',
+  'PARENT_CYCLE',
 ];
 
 /** Graph-only codes: schema cannot express them; runtime seawall owns them. */
@@ -179,6 +182,9 @@ const RUNTIME_ONLY: ReadonlySet<KnownStoryboardValidationCode> = new Set([
   'DUPLICATE_CONNECTION_ID',
   'SELF_LOOP_CONNECTION',
   'DUPLICATE_CONNECTION_EDGE',
+  'UNKNOWN_PARENT_FRAME_ID',
+  'SELF_PARENT_FRAME',
+  'PARENT_CYCLE',
 ]);
 
 interface LockstepCase {
@@ -295,6 +301,31 @@ const CASES: LockstepCase[] = [
     }),
     schemaOk: true,
   },
+  {
+    code: 'UNKNOWN_PARENT_FRAME_ID',
+    data: board({
+      frames: [{ ...makeFrame('f1'), parentFrameId: 'ghost' }, makeFrame('f2')],
+    }),
+    schemaOk: true,
+  },
+  {
+    code: 'SELF_PARENT_FRAME',
+    data: board({
+      frames: [{ ...makeFrame('f1'), parentFrameId: 'f1' }, makeFrame('f2')],
+    }),
+    schemaOk: true,
+  },
+  {
+    code: 'PARENT_CYCLE',
+    data: board({
+      frames: [
+        { ...makeFrame('f1'), parentFrameId: 'f2' },
+        { ...makeFrame('f2'), parentFrameId: 'f1' },
+      ],
+      connections: [],
+    }),
+    schemaOk: true,
+  },
 ];
 
 describe('published storyboard JSON Schema', () => {
@@ -346,6 +377,19 @@ describe('schema ↔ validateStoryboard lockstep', () => {
     expect(validateStoryboard(stamped as unknown as Storyboard).valid).toBe(true);
   });
 
+  it('accepts optional parentFrameId and collapsedIds', () => {
+    const nested = board({
+      frames: [
+        makeFrame('choice'),
+        { ...makeFrame('a'), parentFrameId: 'choice' },
+      ],
+      connections: [],
+      collapsedIds: ['choice'],
+    });
+    expect(schemaAccepts(nested)).toBe(true);
+    expect(validateStoryboard(nested as unknown as Storyboard).valid).toBe(true);
+  });
+
   it('rejects extra envelope keys (additionalProperties: false)', () => {
     const extra = board({ questId: 'nope' });
     expect(schemaAccepts(extra)).toBe(false);
@@ -360,7 +404,9 @@ describe('schema ↔ validateStoryboard lockstep', () => {
 
       const accepted = schemaAccepts(fixture.data);
       if (fixture.schemaOk) {
-        expect(RUNTIME_ONLY.has(fixture.code) || fixture.code === 'BROKEN_CONNECTION_TO').toBe(true);
+        expect(
+          RUNTIME_ONLY.has(fixture.code) || fixture.code === 'BROKEN_CONNECTION_TO',
+        ).toBe(true);
         expect(accepted).toBe(true);
       } else {
         expect(accepted).toBe(false);

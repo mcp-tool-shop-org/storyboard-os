@@ -6,6 +6,8 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { READABLE_TYPE_PX, TYPE_BAR_HEIGHT } from './defaults';
+
 /** Current zoom / pan state for the canvas viewport. */
 export interface ViewState {
   /** Uniform scale factor (1 = 100%). */
@@ -20,6 +22,20 @@ export const DEFAULT_VIEW_STATE: ViewState = { scale: 1, x: 0, y: 0 };
 
 export const MIN_SCALE = 0.1;
 export const MAX_SCALE = 4;
+
+/**
+ * Auto-fit floor: type-bar 26px on DEFAULT_FRAME_SIZE cards must stay ≥
+ * typeScale.xs 11px ⇒ 11/26 ≈ 0.423. Wheel zoom still uses MIN_SCALE so
+ * authors can zoom out on purpose.
+ */
+export const MIN_READABLE_SCALE = READABLE_TYPE_PX / TYPE_BAR_HEIGHT;
+
+/** Result of fitting frames into a container without shrinking past readable. */
+export interface FitViewResult {
+  view: ViewState;
+  /** True when the scale needed to fit is below MIN_READABLE_SCALE. */
+  overflow: boolean;
+}
 
 // ─── Minimal frame shape ──────────────────────────────────────────────────────
 // Viewport math only needs position + size.
@@ -73,19 +89,25 @@ export function clampScale(
 
 /**
  * Compute a ViewState that fits all frames within the container with padding.
- * Returns DEFAULT_VIEW_STATE when frames is empty or has zero extent.
+ * Scale is floored at MIN_READABLE_SCALE (not MIN_SCALE) so auto-fit never
+ * consumes overflow by shrinking cards unreadably. `overflow` is true when the
+ * unconstrained fit would have gone below that floor.
+ * Returns `{ view: DEFAULT_VIEW_STATE, overflow: false }` when frames is empty
+ * or has zero extent.
  */
 export function fitViewToFrames(
   frames: FrameRect[],
   containerWidth: number,
   containerHeight: number,
   padding = 40,
-): ViewState {
+): FitViewResult {
+  const empty: FitViewResult = { view: DEFAULT_VIEW_STATE, overflow: false };
+
   // F-CV-001: container dims come from ResizeObserver in the component layer
   // (finite there by construction), but this is exported API — a non-finite
   // container would put NaN into x/y below even with healthy frames.
   if (!Number.isFinite(containerWidth) || !Number.isFinite(containerHeight)) {
-    return DEFAULT_VIEW_STATE;
+    return empty;
   }
 
   // F-CV-001: one frame with NaN/Infinity position or size would poison the
@@ -93,7 +115,7 @@ export function fitViewToFrames(
   // blank the whole Stage. Mirror the per-connection guard in ConnectionLayer
   // (F-CI-208): fit to the healthy frames, ignore the poisoned ones.
   const usable = frames.filter(isFiniteRect);
-  if (usable.length === 0) return DEFAULT_VIEW_STATE;
+  if (usable.length === 0) return empty;
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const f of usable) {
@@ -105,18 +127,22 @@ export function fitViewToFrames(
 
   const contentW = maxX - minX;
   const contentH = maxY - minY;
-  if (contentW <= 0 || contentH <= 0) return DEFAULT_VIEW_STATE;
+  if (contentW <= 0 || contentH <= 0) return empty;
 
   const availW = Math.max(1, containerWidth - padding * 2);
   const availH = Math.max(1, containerHeight - padding * 2);
 
-  const scale = clampScale(Math.min(availW / contentW, availH / contentH));
+  const rawScale = Math.min(availW / contentW, availH / contentH);
+  if (!Number.isFinite(rawScale)) return empty;
+
+  const overflow = rawScale < MIN_READABLE_SCALE;
+  const scale = clampScale(rawScale, MIN_READABLE_SCALE, MAX_SCALE);
 
   // Center the content bounding box in the container
   const x = (containerWidth - contentW * scale) / 2 - minX * scale;
   const y = (containerHeight - contentH * scale) / 2 - minY * scale;
 
-  return { scale, x, y };
+  return { view: { scale, x, y }, overflow };
 }
 
 /**

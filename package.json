@@ -17,6 +17,8 @@
     "check:apps": "pnpm --filter rpg-storyboard exec astro check && pnpm --filter marketing-storyboard exec astro check && pnpm --filter cinematic-storyboard exec astro check",
     "check": "pnpm run check:packages && pnpm run check:apps",
     "pack:smoke": "node .github/scripts/check-pack-contents.mjs",
+    "check:site-dist": "node .github/scripts/check-site-dist.mjs",
+    "sbom": "cyclonedx-npm --ignore-npm-errors --omit dev --output-format JSON --output-file storyboard-os.cdx.json",
     "verify": "pnpm run build:packages && pnpm run pack:smoke && pnpm run check && pnpm test && pnpm build"
   },
   "engines": {
@@ -25,6 +27,7 @@
   },
   "packageManager": "pnpm@11.4.0",
   "devDependencies": {
+    "@cyclonedx/cyclonedx-npm": "6.0.1",
     "tsup": "^8.5.1"
   }
 }
