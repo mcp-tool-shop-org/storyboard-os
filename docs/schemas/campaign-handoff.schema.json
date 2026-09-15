@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mcp-tool-shop-org/storyboard-os/packages/marketing-storyboard-domain/schema/campaign-handoff.json",
+  "title": "CampaignHandoff",
+  "description": "Campaign implementation brief — Markdown is the human document; this schema is the machine contract. Engine-native files (HubSpot, ICS, .tres) are adapters, never the source of truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "title",
+    "generatedAt",
+    "readiness",
+    "launch",
+    "beats",
+    "blockedIds"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://github.com/mcp-tool-shop-org/storyboard-os/packages/marketing-storyboard-domain/schema/campaign-handoff.json"
+    },
+    "formatVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Handoff artifact discriminator. Independent of board schemaVersion."
+    },
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "generatedAt": { "type": "string", "minLength": 1 },
+    "readiness": { "$ref": "#/$defs/readiness" },
+    "launch": { "$ref": "#/$defs/launch" },
+    "beats": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/beat" }
+    },
+    "blockedIds": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "missingSpecReason": {
+      "type": "string",
+      "enum": [
+        "no_conversion_goal",
+        "no_required_assets",
+        "no_approval_requirements",
+        "no_metrics",
+        "no_channel",
+        "no_message_claim",
+        "no_objective",
+        "no_audience_segment",
+        "no_customer_state_before",
+        "no_customer_state_after",
+        "no_test_criteria",
+        "no_implementation_checklist",
+        "no_proof_points",
+        "no_launch_dependencies"
+      ]
+    },
+    "launchLevel": {
+      "type": "string",
+      "enum": ["ready", "at_risk", "blocked", "draft"]
+    },
+    "beatStatus": {
+      "type": "string",
+      "enum": ["ready", "partial", "draft", "blocked"]
+    },
+    "stringArray": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "branch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "toId", "toTitle"],
+      "properties": {
+        "type": { "type": "string" },
+        "label": { "type": "string" },
+        "toId": { "type": "string" },
+        "toTitle": { "type": "string" }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "ready", "partial", "draft", "blocked", "readyFraction"],
+      "properties": {
+        "total": { "type": "number" },
+        "ready": { "type": "number" },
+        "partial": { "type": "number" },
+        "draft": { "type": "number" },
+        "blocked": { "type": "number" },
+        "readyFraction": { "type": "number" }
+      }
+    },
+    "launch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "summary",
+        "criticalPathFrameIds",
+        "approvalGateFrameIds",
+        "missingMeasurementFrameIds",
+        "openLoopFrameIds"
+      ],
+      "properties": {
+        "level": { "$ref": "#/$defs/launchLevel" },
+        "summary": { "type": "string" },
+        "criticalPathFrameIds": { "$ref": "#/$defs/stringArray" },
+        "approvalGateFrameIds": { "$ref": "#/$defs/stringArray" },
+        "missingMeasurementFrameIds": { "$ref": "#/$defs/stringArray" },
+        "openLoopFrameIds": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "beat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "title",
+        "summary",
+        "status",
+        "missing",
+        "customerStateBefore",
+        "customerStateAfter",
+        "proofPoints",
+        "objectionsHandled",
+        "requiredAssets",
+        "approvalRequirements",
+        "launchDependencies",
+        "metrics",
+        "testCriteria",
+        "implementationChecklist",
+        "outgoingBranches",
+        "incomingFromIds"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "status": { "$ref": "#/$defs/beatStatus" },
+        "missing": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/missingSpecReason" }
+        },
+        "objective": { "type": "string" },
+        "audienceSegment": { "type": "string" },
+        "customerStateBefore": { "$ref": "#/$defs/stringArray" },
+        "customerStateAfter": { "$ref": "#/$defs/stringArray" },
+        "channel": { "type": "string" },
+        "messageClaim": { "type": "string" },
+        "proofPoints": { "$ref": "#/$defs/stringArray" },
+        "objectionsHandled": { "$ref": "#/$defs/stringArray" },
+        "requiredAssets": { "$ref": "#/$defs/stringArray" },
+        "approvalRequirements": { "$ref": "#/$defs/stringArray" },
+        "launchDependencies": { "$ref": "#/$defs/stringArray" },
+        "conversionGoal": { "type": "string" },
+        "metrics": { "$ref": "#/$defs/stringArray" },
+        "testCriteria": { "$ref": "#/$defs/stringArray" },
+        "implementationChecklist": { "$ref": "#/$defs/stringArray" },
+        "ownerNotes": { "type": "string" },
+        "outgoingBranches": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/branch" }
+        },
+        "incomingFromIds": { "$ref": "#/$defs/stringArray" }
+      }
+    }
+  }
+}

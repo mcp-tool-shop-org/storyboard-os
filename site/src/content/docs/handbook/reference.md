@@ -2,7 +2,7 @@
 title: Reference
 description: Frame types, connection types, readiness model, and full package API.
 sidebar:
-  order: 4
+  order: 7
 ---
 
 ## Frame types
@@ -14,10 +14,14 @@ Seven types. Each names a specific function in a playable RPG quest or scene.
 | `hook` | Entry point or open thread — quest opener or future-thread seed | Yellow `#EAB308` |
 | `scene` | Narrative or location beat — the "where and what" | Blue `#3B82F6` |
 | `choice` | Player decision point — branches the board, sets state flags | Purple `#8B5CF6` |
-| `encounter` | Combat, puzzle, social conflict, or high-stakes obstacle | Red `#EF4444` |
+| `encounter` | Combat, puzzle, social conflict, or high-stakes obstacle — **quest-logic**, not a motion clip | Red `#EF4444` |
 | `reveal` | Information, twist, clue, or game-state unlock delivered | Orange `#F97316` |
 | `npc_beat` | Character interaction with dialogue branch logic | Green `#22C55E` |
 | `consequence` | World-state outcome — what changes after a choice or event | Gray `#6B7280` |
+
+**Encounter grain (Feature Pass C1):** `encounter` stays quest-logic — a high-stakes obstacle on the quest graph (combat, puzzle, or social conflict). It is **not** a first-class motion frame. Do **not** add a 4-beat combat frame type (anticipation / hit / follow-through / recovery) to the canvas vocabulary. `combatSpec` is an optional **later attachment** on an encounter if/when it ships (those four beats plus Resource-shaped fields live on the attachment, not as new frame types). This pass does not spec those attachment fields beyond that grain lock.
+
+Godot `.tres` (and any other engine-native resource) is a **compile adapter** after the portable handoff JSON — never the authoring source of truth. See [Handoff JSON contract](./handoff-json/).
 
 **Domain rules (enforced by `validateRpgStoryboard`):**
 - `choice` and `consequence` frames must carry at least one `stateChanges` entry
@@ -390,6 +394,8 @@ clampScale(scale)  // enforces [MIN_SCALE=0.1, MAX_SCALE=4]
 
 ## Keyboard shortcuts
 
+The Konva stage takes pointer gestures (pan, zoom, drag). The **board list** (`AccessibleFrameList`, top-left ARIA listbox) is the accessible equivalent of that stage on all three apps. Connection rows live in the same listbox.
+
 | Key | Action |
 |---|---|
 | `F` | Fit all frames to viewport |
@@ -397,3 +403,8 @@ clampScale(scale)  // enforces [MIN_SCALE=0.1, MAX_SCALE=4]
 | `+` / `=` | Zoom in |
 | `-` | Zoom out |
 | `Escape` | Deselect frame / connection |
+| `Arrow Up` / `Arrow Down` | Move through frames and connections in the board list |
+| `Enter` / `Space` | Activate the focused frame (select + center) or connection |
+| `Arrow Left` / `Arrow Right` / `Home` / `End` | Also move within the board list |
+
+Operator tables with pointer gestures: [Getting Started](./getting-started/#navigate-the-board), [Authoring Workflow](./usage/).

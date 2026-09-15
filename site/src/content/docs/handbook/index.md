@@ -22,7 +22,7 @@ Most narrative tools capture story. Storyboard OS captures game-state. Every fra
 - **Test criteria** — pass/fail checks that verify correct implementation
 - **Implementation checklist** — ordered tasks for the dev or production pass
 
-A frame without those fields is a story note. Storyboard OS makes the distinction visible: `SPEC` / `PARTIAL` / `DRAFT` badges show implementation depth at a glance without opening a single inspector.
+A frame without those fields is a story note. Storyboard OS makes the distinction visible: `SPEC` / `PARTIAL` / `DRAFT` badges show implementation depth at a glance without opening a single inspector. The card itself stays thin — type, title, one implementable line, readiness. Full spec lives in the inspector. See [Card vs inspector](./architecture/#card-vs-inspector).
 
 ## Three workflows
 
@@ -51,7 +51,7 @@ The marketing board answers: Can this campaign ship, and what blocks it? Boards 
 | **Sequence board** | `/sequences/:id` | Full cinematic canvas with production signals (health, burden, complexity) |
 | **Production brief** | `/sequences/:id/handoff` | Markdown + JSON export for production team |
 
-The cinematic board answers: What makes this sequence hard to shoot, animate, edit, or hand off? Same as marketing: static SSG demos today; durable projects are roadmap work.
+The cinematic board answers: What makes this sequence hard to shoot, animate, edit, or hand off? Same as marketing: static SSG demos today. Sequences are the authored unit; grouping them is a [playlist / reel](./cinematic-playlist/), not an RPG `localStorage` project.
 
 ## The handoff
 
@@ -66,16 +66,20 @@ On an RPG project board, **Handoff →** regenerates from live `localStorage` st
 - All beats in topological quest order (Kahn's algorithm — upstream dependencies before downstream outcomes)
 - Each beat shows edited content, readiness status, and `[x]` / `[ ]` completion
 
-Download as **Markdown** (developer-readable) or **JSON** (engine-ingestible).
+Download as **Markdown** (developer-readable) or **JSON** (schema-validated, `formatVersion` 1). Contract: [Handoff JSON contract](./handoff-json/). Engine-native files are compile adapters, never the authoring source.
 
 ### Marketing and cinematic — SSG briefs
 
-Marketing `/campaigns/:id/handoff` and cinematic `/sequences/:id/handoff` are static SSG campaign / production briefs. There is no project store and no progress overlay — Markdown and JSON are generated from the authored demo or template board at build time, then offered as a download.
+Marketing `/campaigns/:id/handoff` and cinematic `/sequences/:id/handoff` are static SSG campaign / production briefs. There is no project store and no progress overlay — Markdown and JSON are generated from the authored demo or template board at build time, then offered as a download. Cinematic JSON is `formatVersion` 2 today and may bump for structured camera — importers must switch on the discriminator.
 
 ## Next steps
 
 - [Getting Started](./getting-started/) — install and first-run paths for RPG, marketing, and cinematic
 - [Authoring Workflow](./usage/) — the RPG design loop from project creation to handoff
-- [Architecture](./architecture/) — package map for three shipped verticals; adding a fourth
+- [Marketing campaigns](./marketing-storyboard/) — launch readiness, inspect a beat, Launch Blockers, export a brief
+- [Cinematic sequences](./cinematic-storyboard/) — production signals, inspect a shot, export a brief
+- [Cinematic playlist](./cinematic-playlist/) — intended reel (ordered sequence ids); not an RPG project clone
+- [Architecture](./architecture/) — package map, card vs inspector, density cap, no-AI-auto-wire
 - [Reference](./reference/) — frame types, connection types, readiness model, API
+- [Handoff JSON contract](./handoff-json/) — `formatVersion`, C4 fields, Markdown vs JSON, engine adapters
 - [Operator playbook](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/operator-playbook.md) — fourth vertical, release/publish rerun, breaking changes, RPG store recovery

@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://storyboard-os.dev/schemas/rpg/project-handoff.json",
+  "title": "ProjectHandoff",
+  "description": "Project-aware RPG handoff: QuestHandoff beat spec plus identity, provenance, and checklist/test completion. Envelope + C4 HandoffBeat fields. JSON Schema is the consumer contract; not an engine-native resource and not the Konva graph.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "formatVersion",
+    "projectId",
+    "storyboardId",
+    "title",
+    "createdAt",
+    "updatedAt",
+    "generatedAt",
+    "readiness",
+    "progress",
+    "beats",
+    "blockedBeatIds",
+    "partialBeatIds"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://storyboard-os.dev/schemas/rpg/project-handoff.json"
+    },
+    "formatVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "projectId": { "type": "string", "minLength": 1 },
+    "storyboardId": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "sourceTemplateId": {
+      "type": "string",
+      "enum": ["quest_flow", "quest_branch", "cutscene_beat"]
+    },
+    "readiness": { "$ref": "#/$defs/readiness" },
+    "progress": { "$ref": "#/$defs/progress" },
+    "beats": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/projectHandoffBeat" }
+    },
+    "blockedBeatIds": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "partialBeatIds": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "ready", "partial", "draft", "blocked", "readyFraction"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "ready": { "type": "integer", "minimum": 0 },
+        "partial": { "type": "integer", "minimum": 0 },
+        "draft": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "readyFraction": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totalChecklist", "doneChecklist", "totalTests", "doneTests"],
+      "properties": {
+        "totalChecklist": { "type": "integer", "minimum": 0 },
+        "doneChecklist": { "type": "integer", "minimum": 0 },
+        "totalTests": { "type": "integer", "minimum": 0 },
+        "doneTests": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "text"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["designer_note", "player_visible", "author_only", "danger", "timing", "branch_note"]
+        },
+        "text": { "type": "string" }
+      }
+    },
+    "branch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "toId", "toTitle"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["sequence", "choice", "consequence", "optional", "fallback"]
+        },
+        "label": { "type": "string" },
+        "toId": { "type": "string", "minLength": 1 },
+        "toTitle": { "type": "string" }
+      }
+    },
+    "stringArray": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "checklistProgressItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "done"],
+      "properties": {
+        "item": { "type": "string" },
+        "done": { "type": "boolean" }
+      }
+    },
+    "testProgressItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["criterion", "done"],
+      "properties": {
+        "criterion": { "type": "string" },
+        "done": { "type": "boolean" }
+      }
+    },
+    "projectHandoffBeat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "title",
+        "summary",
+        "status",
+        "missing",
+        "entryConditions",
+        "exitConditions",
+        "stateChanges",
+        "involvedCharacters",
+        "involvedFactions",
+        "possibleOutcomes",
+        "requiredAssets",
+        "implementationChecklist",
+        "testCriteria",
+        "authorOnlyNotes",
+        "annotations",
+        "outgoingBranches",
+        "incomingFromIds",
+        "checklistProgress",
+        "testProgress"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "enum": ["hook", "scene", "choice", "encounter", "reveal", "npc_beat", "consequence"]
+        },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["ready", "partial", "draft", "blocked"]
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "no_state_changes",
+              "no_entry_or_state_change",
+              "no_designer_notes",
+              "no_required_assets",
+              "no_test_criteria",
+              "no_implementation_checklist",
+              "no_stakes",
+              "no_possible_outcomes"
+            ]
+          }
+        },
+        "designerNotes": { "type": "string" },
+        "playerVisibleText": { "type": "string" },
+        "stakes": { "type": "string" },
+        "entryConditions": { "$ref": "#/$defs/stringArray" },
+        "exitConditions": { "$ref": "#/$defs/stringArray" },
+        "stateChanges": { "$ref": "#/$defs/stringArray" },
+        "involvedCharacters": { "$ref": "#/$defs/stringArray" },
+        "involvedFactions": { "$ref": "#/$defs/stringArray" },
+        "possibleOutcomes": { "$ref": "#/$defs/stringArray" },
+        "requiredAssets": { "$ref": "#/$defs/stringArray" },
+        "implementationChecklist": { "$ref": "#/$defs/stringArray" },
+        "testCriteria": { "$ref": "#/$defs/stringArray" },
+        "authorOnlyNotes": { "$ref": "#/$defs/stringArray" },
+        "annotations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/annotation" }
+        },
+        "outgoingBranches": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/branch" }
+        },
+        "incomingFromIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "checklistProgress": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/checklistProgressItem" }
+        },
+        "testProgress": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/testProgressItem" }
+        }
+      }
+    }
+  }
+}
