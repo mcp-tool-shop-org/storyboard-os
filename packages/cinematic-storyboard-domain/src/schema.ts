@@ -10,16 +10,19 @@ import type { StoryboardFrame as CoreFrame, Storyboard as CoreStoryboard, Storyb
 
 // ─── Frame types ──────────────────────────────────────────────────────────────
 
-export type CinematicFrameType =
-  | 'sequence'
-  | 'shot'
-  | 'camera_move'
-  | 'action'
-  | 'dialogue'
-  | 'transition'
-  | 'vfx'
-  | 'audio'
-  | 'edit_beat';
+export const CINEMATIC_FRAME_TYPES = [
+  'sequence',
+  'shot',
+  'camera_move',
+  'action',
+  'dialogue',
+  'transition',
+  'vfx',
+  'audio',
+  'edit_beat',
+] as const;
+
+export type CinematicFrameType = (typeof CINEMATIC_FRAME_TYPES)[number];
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 
@@ -90,7 +93,14 @@ export type CinematicConnectionType =
 
 // ─── Composite types ──────────────────────────────────────────────────────────
 
-export type StoryboardFrame = CoreFrame<CinematicFrameType, CinematicFrameContent, CinematicAnnotationType>;
+export type StoryboardFrame = CoreFrame<CinematicFrameType, CinematicFrameContent, CinematicAnnotationType> & {
+  /**
+   * Optional sequence-group parent. Sequence type remains the group.
+   * One nest level (Nielsen). Cutaway/reaction fans are inferred from
+   * connections, not this field. Core parentFrameId is not required.
+   */
+  parentSequenceId?: string;
+};
 
 export type StoryboardConnection = CoreConnection<CinematicConnectionType>;
 

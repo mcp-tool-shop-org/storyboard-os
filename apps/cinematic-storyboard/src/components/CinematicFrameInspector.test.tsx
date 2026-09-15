@@ -122,4 +122,23 @@ describe('CinematicFrameInspector', () => {
     expect(html).toContain('no blockers');
     expect(html).not.toContain('full spec coverage');
   });
+
+  it('shows nested children and an expand control for a sequence header', () => {
+    const html = renderToStaticMarkup(
+      createElement(CinematicFrameInspector, {
+        frame: { ...makeNullContentFrame(), type: 'sequence' as const, title: 'Act I' } as never,
+        onClose: () => {},
+        nestedChildren: [
+          { id: 's1', title: 'Hook Shot', type: 'shot' },
+          { id: 's2', title: 'Feature Reveal', type: 'shot' },
+        ],
+        nestedKind: 'sequence',
+        nestedExpanded: false,
+        onToggleNested: () => {},
+      }),
+    );
+    expect(html).toContain('Show 2 nested shots');
+    expect(html).toContain('Hook Shot');
+    expect(html).toContain('aria-expanded="false"');
+  });
 });

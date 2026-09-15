@@ -93,6 +93,25 @@ describe('ProductionSignalPanel', () => {
       }),
     );
     expect(html).toContain('#A855F7');
+  });
+
+  it('renders type-filter chips in Signals, not as extra cards', () => {
+    const html = renderToStaticMarkup(
+      createElement(ProductionSignalPanel, {
+        signals: makeSignals({ health: 'green', healthReason: 'Production-ready', pressureSummary: [] }),
+        onClose: () => {},
+        typeFilterOptions: [
+          { type: 'shot', label: 'Shot' },
+          { type: 'vfx', label: 'VFX' },
+        ],
+        activeTypeFilter: ['shot'],
+        onTypeFilterChange: () => {},
+      }),
+    );
+    expect(html).toContain('Filter by type');
+    expect(html).toContain('Shot');
+    expect(html).toContain('VFX');
+    expect(html).toContain('aria-pressed="true"');
     expect(html).not.toContain('#EC4899');
   });
 
