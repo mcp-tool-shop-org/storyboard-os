@@ -116,8 +116,8 @@ function conforms(node: JsonSchema, data: unknown, root: JsonSchema): boolean {
         if (obj[key] === undefined) continue;
         if (!allowed.has(key)) return false;
       }
-    } else if (typeof node.additionalProperties === 'object' || node.additionalProperties === false) {
-      // boolean true / omitted → extra keys allowed
+    } else if (typeof node.additionalProperties === 'object') {
+      // object-valued additionalProperties is not used in this schema
     }
   }
   return true;
@@ -340,10 +340,10 @@ describe('schema ↔ validateStoryboard lockstep', () => {
   it('accepts a gold envelope with and without schemaVersion', () => {
     const gold = board();
     expect(schemaAccepts(gold)).toBe(true);
-    expect(validateStoryboard(gold as Storyboard).valid).toBe(true);
+    expect(validateStoryboard(gold as unknown as Storyboard).valid).toBe(true);
     const stamped = board({ schemaVersion: 1, $schema: STORYBOARD_JSON_SCHEMA_ID });
     expect(schemaAccepts(stamped)).toBe(true);
-    expect(validateStoryboard(stamped as Storyboard).valid).toBe(true);
+    expect(validateStoryboard(stamped as unknown as Storyboard).valid).toBe(true);
   });
 
   it('rejects extra envelope keys (additionalProperties: false)', () => {
