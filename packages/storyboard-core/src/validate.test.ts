@@ -10,6 +10,7 @@
 import { describe, it, expect } from 'vitest';
 import { validateStoryboard } from './validate';
 import type { Storyboard, StoryboardConnection, AnyStoryboardFrame, AnyStoryboardConnection } from './schema';
+import { DEFAULT_SCHEMA_VERSION } from './schema';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -787,5 +788,98 @@ describe('validateStoryboard connection invariants', () => {
     const result = validateStoryboard(storyboard);
     expect(result.valid).toBe(false);
     expect(result.errors.some(e => e.code === 'DUPLICATE_CONNECTION_EDGE' && e.connectionId === 'c2')).toBe(true);
+  });
+});
+
+// ─── schemaVersion (F-a4ca64c2) ───────────────────────────────────────────────
+// Additive discriminator. Absent is version 1 so existing fixtures stay valid.
+// Present non-integer / non-positive values are INVALID_SCHEMA_VERSION.
+
+describe('validateStoryboard schemaVersion', () => {
+  it('accepts a board with no schemaVersion (treated as 1)', () => {
+    const storyboard: Storyboard = {
+      id: 'sb',
+      title: 'No version',
+      frames: [makeFrame('f1')],
+      connections: [],
+    };
+    expect(storyboard.schemaVersion).toBeUndefined();
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(true);
+    expect(DEFAULT_SCHEMA_VERSION).toBe(1);
+  });
+
+  it('accepts schemaVersion: 1', () => {
+    const storyboard: Storyboard = {
+      id: 'sb',
+      title: 'v1',
+      schemaVersion: 1,
+      frames: [makeFrame('f1')],
+      connections: [],
+    };
+    expect(validateStoryboard(storyboard).valid).toBe(true);
+  });
+
+  it('accepts a future positive integer (runtime is forward-tolerant until version is required)', () => {
+    const storyboard: Storyboard = {
+      id: 'sb',
+      title: 'v2',
+      schemaVersion: 2,
+      frames: [makeFrame('f1')],
+      connections: [],
+    };
+    expect(validateStoryboard(storyboard).valid).toBe(true);
+  });
+
+  it('rejects non-positive schemaVersion', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'zero',
+      schemaVersion: 0,
+      frames: [makeFrame('f1')],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_SCHEMA_VERSION')).toBe(true);
+  });
+
+  it('rejects non-integer schemaVersion', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'frac',
+      schemaVersion: 1.5,
+      frames: [makeFrame('f1')],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_SCHEMA_VERSION')).toBe(true);
+  });
+
+  it('rejects non-finite schemaVersion', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'nan',
+      schemaVersion: Number.NaN,
+      frames: [makeFrame('f1')],
+      connections: [],
+    } as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_SCHEMA_VERSION')).toBe(true);
+  });
+
+  it('rejects a non-number schemaVersion', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'str',
+      schemaVersion: '1',
+      frames: [makeFrame('f1')],
+      connections: [],
+    } as unknown as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'INVALID_SCHEMA_VERSION')).toBe(true);
   });
 });

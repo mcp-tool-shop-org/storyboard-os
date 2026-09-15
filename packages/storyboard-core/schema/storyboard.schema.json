@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unpkg.com/@storyboard-os/core/schema/storyboard.json",
+  "title": "Storyboard",
+  "description": "Portable Storyboard OS envelope (C4). Domain content lives in frames[].content; this file has no RPG, marketing, or cinematic fields. Graph invariants (duplicate ids, broken refs, self-loops) are enforced by validateStoryboard, not this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "frames", "connections"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional instance pointer at this envelope schema."
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1,
+      "minimum": 1,
+      "description": "Envelope generation. Absent instances are treated as 1 by validateStoryboard."
+    },
+    "id": { "$ref": "#/$defs/nonEmptyString" },
+    "title": { "$ref": "#/$defs/nonEmptyString" },
+    "description": { "type": "string" },
+    "templateId": { "type": "string", "minLength": 1 },
+    "frames": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/frame" }
+    },
+    "connections": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/connection" }
+    },
+    "canvasWidth": { "type": "number" },
+    "canvasHeight": { "type": "number" }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "title", "summary", "position", "size"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "type": { "$ref": "#/$defs/nonEmptyString" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "summary": { "$ref": "#/$defs/nonEmptyString" },
+        "position": { "$ref": "#/$defs/position" },
+        "size": { "$ref": "#/$defs/size" },
+        "content": {
+          "description": "Opaque domain content. Verticals own this value; core does not constrain it."
+        },
+        "annotations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/annotation" }
+        }
+      }
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "minimum": 40 },
+        "height": { "type": "number", "minimum": 40 }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "text"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "type": { "$ref": "#/$defs/nonEmptyString" },
+        "text": { "type": "string" }
+      }
+    },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fromFrameId", "toFrameId", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "fromFrameId": { "$ref": "#/$defs/nonEmptyString" },
+        "toFrameId": { "$ref": "#/$defs/nonEmptyString" },
+        "type": { "$ref": "#/$defs/nonEmptyString" },
+        "label": { "type": "string" }
+      }
+    }
+  }
+}
