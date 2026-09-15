@@ -1,7 +1,7 @@
 // ─── cinematic-domain / handoff.test.ts ──────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { generateProductionBrief, generateProductionMarkdown } from './handoff';
+import { generateProductionBrief, generateProductionMarkdown, formatProductionBriefCamera } from './handoff';
 import { createCinematicStoryboard } from './templates';
 import { storyboardOsLaunchTrailer } from './demo-sequence';
 import type { Storyboard, StoryboardFrame, CinematicFrameContent } from './schema';
@@ -35,9 +35,9 @@ describe('generateProductionBrief', () => {
     expect(brief.readySummary.blocked).toBe(0);
   });
 
-  it('stamps formatVersion: 2 for downstream importers (connections + missingReasons)', () => {
+  it('stamps formatVersion: 3 for downstream importers (structured camera object)', () => {
     const brief = generateProductionBrief(createCinematicStoryboard('trailer_flow'));
-    expect(brief.formatVersion).toBe(2);
+    expect(brief.formatVersion).toBe(3);
     expect(brief.connections).toBeDefined();
   });
 
@@ -49,12 +49,15 @@ describe('generateProductionBrief', () => {
     expect(brief.totalDuration).toContain('s');
   });
 
-  it('shots contain camera language', () => {
+  it('shots contain structured camera language', () => {
     const sb = createCinematicStoryboard('cutscene_sequence');
     const brief = generateProductionBrief(sb);
     const establishShot = brief.shots[0];
     expect(establishShot.camera).not.toBeNull();
-    expect(establishShot.camera).toContain('EWS');
+    expect(establishShot.camera?.shotSize).toBe('EWS');
+    expect(establishShot.camera?.move).toBe('dolly');
+    expect(establishShot.camera?.lensMm).toBe(27);
+    expect(establishShot.camera?.notes).toContain('EWS');
   });
 
   it('stamps $schema on generated briefs', () => {
@@ -162,6 +165,7 @@ describe('generateProductionMarkdown', () => {
     const md = generateProductionMarkdown(brief);
 
     expect(md).toContain('**Camera:**');
+    expect(md).toMatch(/\*\*Camera:\*\* EWS · 27mm · FOV 67° · dolly/);
     expect(md).toContain('**Audio:**');
   });
 
@@ -195,6 +199,7 @@ describe('generateProductionMarkdown', () => {
     };
     const brief = generateProductionBrief(storyboard);
     expect(brief.shots[0].camera).toBeNull();
+    expect(formatProductionBriefCamera(brief.shots[0].camera)).toBeNull();
     expect(brief.shots[0].framing).toBe('Medium close-up, rule of thirds');
     const md = generateProductionMarkdown(brief);
     expect(md).toContain('**Framing:** Medium close-up, rule of thirds');

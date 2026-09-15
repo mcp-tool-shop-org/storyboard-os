@@ -1,7 +1,7 @@
 // ─── Cinematic Domain — Production Signals Tests ─────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { getSequenceProductionSignals } from './productionSignals';
+import { getSequenceProductionSignals, classifyCameraMove } from './productionSignals';
 import type { Storyboard } from './schema';
 import { storyboardOsLaunchTrailer } from './demo-sequence';
 
@@ -32,6 +32,21 @@ function makeFrame(id: string, overrides: Record<string, unknown> = {}) {
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
+
+describe('classifyCameraMove', () => {
+  it('classifies from the structured token, not regex-on-prose', () => {
+    expect(classifyCameraMove(undefined)).toBe('unspecified');
+    expect(classifyCameraMove('')).toBe('unspecified');
+    expect(classifyCameraMove('static')).toBe('static');
+    expect(classifyCameraMove('dolly')).toBe('complex');
+    expect(classifyCameraMove('arc')).toBe('complex');
+    expect(classifyCameraMove('orbit')).toBe('complex');
+    expect(classifyCameraMove('steadicam')).toBe('complex');
+    expect(classifyCameraMove('Slow pan or static hold')).toBe('unknown');
+    expect(classifyCameraMove('azimuth')).toBe('unknown');
+    expect(classifyCameraMove('turnaround')).toBe('unknown');
+  });
+});
 
 describe('getSequenceProductionSignals', () => {
   it('returns yellow health for an empty sequence (not Production-ready)', () => {
@@ -106,55 +121,60 @@ describe('getSequenceProductionSignals', () => {
     expect(signals.audioBurden.totalRequirements).toBe(4);
   });
 
-  it('computes camera complexity', () => {
+  it('computes camera complexity from structured move, not prose', () => {
     const sb = makeStoryboard({
       frames: [
-        makeFrame('c1', { content: { cameraMovement: 'Tracking shot', cameraAngle: 'Low' } }),
-        makeFrame('c2', { content: { cameraMovement: 'Crane up' } }),
-        makeFrame('c3', { content: { cameraAngle: 'Wide' } }), // unspecified (no movement)
+        makeFrame('c1', { content: { move: 'track', cameraMovement: 'Tracking shot', cameraAngle: 'Low' } }),
+        makeFrame('c2', { content: { move: 'crane', cameraMovement: 'Crane up' } }),
+        makeFrame('c3', { content: { cameraAngle: 'Wide', cameraMovement: 'dolly in' } }), // unspecified (no move)
       ],
     });
     const signals = getSequenceProductionSignals(sb);
     expect(signals.cameraComplexity.totalComplexShots).toBe(2);
     expect(signals.cameraComplexity.totalStaticShots).toBe(0);
     expect(signals.cameraComplexity.totalUnspecifiedShots).toBe(1);
-    expect(signals.cameraComplexity.complexShots[0].movement).toBe('Tracking shot');
+    expect(signals.cameraComplexity.complexShots[0].movement).toBe('track');
+    expect(signals.cameraComplexity.complexShots[0].shotSize).toBeUndefined();
   });
 
-  it('treats cameraMovement: "Static" as a static shot, not complex', () => {
+  it('treats move: "static" as a static shot; prose does not classify', () => {
     const sb = makeStoryboard({
       frames: [
-        makeFrame('s1', { content: { cameraMovement: 'Static' } }),
-        makeFrame('s2', { content: { cameraMovement: 'Static then slow zoom into center frame' } }),
-        makeFrame('s3', { content: { cameraMovement: 'none' } }),
-        makeFrame('s4', { content: { cameraMovement: 'locked off' } }),
-        makeFrame('s5', { content: { cameraMovement: 'Slow pan or static hold' } }),
+        makeFrame('s1', { content: { move: 'static', cameraMovement: 'Static' } }),
+        makeFrame('s2', { content: { move: 'static', cameraMovement: 'Static then slow zoom into center frame' } }),
+        makeFrame('s3', { content: { move: 'static' } }),
+        makeFrame('s4', { content: { move: 'static', cameraMovement: 'locked off' } }),
+        makeFrame('s5', { content: { move: 'pan', cameraMovement: 'Slow pan or static hold' } }),
       ],
     });
     const signals = getSequenceProductionSignals(sb);
     expect(signals.cameraComplexity.totalStaticShots).toBe(4);
     expect(signals.cameraComplexity.totalComplexShots).toBe(1);
-    expect(signals.cameraComplexity.complexShots[0].movement).toBe('Slow pan or static hold');
+    expect(signals.cameraComplexity.complexShots[0].movement).toBe('pan');
   });
 
-  it('does not count unknown cameraMovement as static', () => {
+  it('does not count unknown move tokens as static; orbit aliases arc', () => {
     const sb = makeStoryboard({
       frames: [
-        makeFrame('u1', { content: { cameraMovement: 'Steadicam' } }),
-        makeFrame('u2', { content: { cameraMovement: 'gimbal follow subject' } }),
-        makeFrame('u3', { content: { cameraMovement: 'slow drift' } }),
-        makeFrame('u4', { content: { cameraMovement: 'rack focus' } }),
-        makeFrame('u5', { content: { cameraMovement: 'Static' } }),
+        makeFrame('u1', { content: { move: 'steadicam' } }),
+        makeFrame('u2', { content: { move: 'gimbal' as never, cameraMovement: 'gimbal follow subject' } }),
+        makeFrame('u3', { content: { move: 'drift' as never } }),
+        makeFrame('u4', { content: { move: 'rack' as never } }),
+        makeFrame('u5', { content: { move: 'static' } }),
         makeFrame('u6', { content: {} }),
+        makeFrame('u7', { content: { move: 'orbit' as never } }),
       ],
     });
     const signals = getSequenceProductionSignals(sb);
     expect(signals.cameraComplexity.totalStaticShots).toBe(1);
     expect(signals.cameraComplexity.totalUnspecifiedShots).toBe(1);
-    expect(signals.cameraComplexity.totalUnknownShots).toBe(4);
-    expect(signals.cameraComplexity.totalComplexShots).toBe(0);
+    expect(signals.cameraComplexity.totalUnknownShots).toBe(3);
+    expect(signals.cameraComplexity.totalComplexShots).toBe(2);
+    expect(signals.cameraComplexity.complexShots.map(s => s.movement)).toEqual(
+      expect.arrayContaining(['steadicam', 'arc']),
+    );
     expect(signals.cameraComplexity.unknownMovementSamples).toEqual(
-      expect.arrayContaining(['Steadicam', 'gimbal follow subject', 'slow drift', 'rack focus']),
+      expect.arrayContaining(['gimbal', 'drift', 'rack']),
     );
   });
 

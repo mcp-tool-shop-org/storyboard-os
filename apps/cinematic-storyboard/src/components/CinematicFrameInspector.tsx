@@ -179,13 +179,30 @@ export default function CinematicFrameInspector({ frame, onClose }: Props) {
                     </ContentSection>
                 )}
 
-                {/* Camera language */}
-                {signal.cameraSummary && (
+                {/* Camera language — structured Sequencer row, then free-text notes */}
+                {(content.shotSize || content.move || content.lensMm != null || content.fovDeg != null
+                    || content.cameraAngle || content.cameraMovement || content.framing || signal.cameraSummary) && (
                     <ContentSection title="Camera">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            {(content.shotSize || content.move || content.lensMm != null || content.fovDeg != null) && (
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                                    {content.shotSize && (
+                                        <span style={{ fontSize: 11, fontWeight: 700, color: '#67e8f9' }}>{content.shotSize}</span>
+                                    )}
+                                    {typeof content.lensMm === 'number' && (
+                                        <span style={{ fontSize: 11, color: '#cbd5e1' }}>{content.lensMm}mm</span>
+                                    )}
+                                    {typeof content.fovDeg === 'number' && (
+                                        <span style={{ fontSize: 11, color: '#cbd5e1' }}>FOV {content.fovDeg}°</span>
+                                    )}
+                                    {content.move && (
+                                        <span style={{ fontSize: 11, fontWeight: 600, color: '#93c5fd' }}>{content.move}</span>
+                                    )}
+                                </div>
+                            )}
                             {content.cameraAngle && (
                                 <div style={{ display: 'flex', gap: 6 }}>
-                                    <span style={{ fontSize: 10, color: '#475569', minWidth: 60 }}>Angle</span>
+                                    <span style={{ fontSize: 10, color: '#475569', minWidth: 60 }}>Note</span>
                                     <span style={{ fontSize: 12, color: '#cbd5e1' }}>{content.cameraAngle}</span>
                                 </div>
                             )}

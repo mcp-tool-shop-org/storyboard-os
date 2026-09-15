@@ -30,6 +30,16 @@ describe('getCinematicFrameBadges', () => {
     expect(cam!.color).toBe('#3B82F6');
   });
 
+  it('returns CAM badge from structured shotSize/move without free-text', () => {
+    const frame = makeFrame('shot', { shotSize: 'CU', move: 'dolly', lensMm: 85, fovDeg: 24 });
+    const badges = getCinematicFrameBadges(frame);
+    expect(badges.find(b => b.text === 'CAM')).toBeDefined();
+    const signal = getCinematicFrameSignal(frame);
+    expect(signal.cameraSummary).toContain('CU');
+    expect(signal.cameraSummary).toContain('85mm');
+    expect(signal.cameraSummary).toContain('dolly');
+  });
+
   it('returns VFX badge when vfxRequirements present', () => {
     const frame = makeFrame('vfx', { vfxRequirements: ['Particle system'] });
     const badges = getCinematicFrameBadges(frame);

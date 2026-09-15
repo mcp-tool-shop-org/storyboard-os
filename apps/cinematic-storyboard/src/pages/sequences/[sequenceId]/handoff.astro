@@ -1,11 +1,10 @@
 ---
 import {
-  storyboardOsLaunchTrailer,
-  CINEMATIC_TEMPLATES,
-  createCinematicStoryboard,
+  listSequenceStaticPaths,
   generateProductionBrief,
   generateProductionMarkdown,
   serializeProductionBriefJson,
+  formatProductionBriefCamera,
   getSequenceReadiness,
   humanizeFrameType,
   humanizeStatus,
@@ -18,14 +17,7 @@ import {
 } from '@storyboard-os/cinematic-domain';
 
 export function getStaticPaths() {
-  const allSequences: Storyboard[] = [
-    storyboardOsLaunchTrailer,
-    ...CINEMATIC_TEMPLATES.map(t => createCinematicStoryboard(t.id)),
-  ];
-  return allSequences.map(s => ({
-    params: { sequenceId: s.id },
-    props: { storyboard: s },
-  }));
+  return listSequenceStaticPaths();
 }
 
 interface Props { storyboard: Storyboard; }
@@ -279,10 +271,10 @@ const TYPE_COLORS: Record<string, string> = {
           </div>
         )}
 
-        {shot.camera && (
+        {shot.camera && formatProductionBriefCamera(shot.camera) && (
           <div class="shot-field">
             <div class="shot-field-label">Camera</div>
-            <div class="shot-field-value">{shot.camera}</div>
+            <div class="shot-field-value">{formatProductionBriefCamera(shot.camera)}</div>
           </div>
         )}
 

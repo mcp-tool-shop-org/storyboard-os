@@ -67,6 +67,8 @@ const SPEC_FIELDS: (keyof StoryboardFrame['content'])[] = [
   'visualDescription',
   'cameraAngle',
   'cameraMovement',
+  'shotSize',
+  'move',
   'framing',
   'durationEstimate',
   'requiredAssets',
@@ -80,6 +82,8 @@ const SPEC_FIELDS: (keyof StoryboardFrame['content'])[] = [
 const SHOT_HINT_FIELDS: (keyof StoryboardFrame['content'])[] = [
   'cameraAngle',
   'cameraMovement',
+  'shotSize',
+  'move',
   'framing',
   'durationEstimate',
 ];

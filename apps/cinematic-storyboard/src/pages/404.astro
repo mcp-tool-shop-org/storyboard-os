@@ -1,14 +1,7 @@
 ---
-import {
-  storyboardOsLaunchTrailer,
-  CINEMATIC_TEMPLATES,
-  createCinematicStoryboard,
-} from '@storyboard-os/cinematic-domain';
+import { listPublishedSequences } from '@storyboard-os/cinematic-domain';
 
-const sequences = [
-  storyboardOsLaunchTrailer,
-  ...CINEMATIC_TEMPLATES.map(t => createCinematicStoryboard(t.id)),
-].map(s => ({ id: s.id, title: s.title }));
+const sequences = listPublishedSequences().map(s => ({ id: s.id, title: s.title }));
 ---
 
 <!DOCTYPE html>
