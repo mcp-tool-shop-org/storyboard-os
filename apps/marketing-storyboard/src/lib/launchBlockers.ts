@@ -112,6 +112,33 @@ export function launchBlockersPanelHasContent(input: {
 }
 
 /**
+ * Rail heading. Pending-only gates are on the launch path, not hard blockers —
+ * titling that rail "Launch Blockers" contradicted a READY/no-blocker badge
+ * (F-4001f5ff). Hard issues keep "Launch Blockers"; pending-only is
+ * "Launch Readiness Gate".
+ */
+export function launchBlockersRailTitle(input: {
+    blockedBeats: readonly BlockedBeatEntry[];
+    blockedApprovals: readonly ApprovalGateSignal[];
+    pendingApprovals: readonly ApprovalGateSignal[];
+    measurementSignals: readonly MeasurementLoopSignal[];
+}): string {
+    const missingMetrics = input.measurementSignals.filter(s => !s.hasMetrics);
+    const openLoops = input.measurementSignals.filter(s => s.hasMetrics && !s.isLoop);
+    const hasHardBlockers =
+        input.blockedBeats.length > 0 ||
+        input.blockedApprovals.length > 0 ||
+        missingMetrics.length > 0 ||
+        openLoops.length > 0;
+    return hasHardBlockers ? 'Launch Blockers' : 'Launch Readiness Gate';
+}
+
+/** Topology flag for a pending gate — not current status (F-4001f5ff). */
+export function pendingGatePathDetail(blocksLaunch: boolean): string {
+    return blocksLaunch ? 'On launch path' : 'Not on launch path';
+}
+
+/**
  * Split approval gate signals into "blocked" and "pending" buckets for the
  * Launch Blockers panel.
  *

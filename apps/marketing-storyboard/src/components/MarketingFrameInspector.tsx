@@ -108,7 +108,7 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                 <button
                     onClick={onClose}
                     style={{
-                        background: 'none', border: 'none', color: '#475569',
+                        background: 'none', border: 'none', color: textColors.muted,
                         cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 2px',
                         flexShrink: 0,
                     }}
@@ -138,7 +138,7 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                     }}>
                         {STATUS_LABELS[status.level]}
                     </span>
-                    <span style={{ fontSize: 11, color: '#475569' }}>
+                    <span style={{ fontSize: 11, color: textColors.secondary }}>
                         {status.assetCount} {status.assetCount === 1 ? 'asset' : 'assets'}
                         {' · '}
                         {status.metricsCount} {status.metricsCount === 1 ? 'metric' : 'metrics'}
@@ -322,7 +322,7 @@ export default function MarketingFrameInspector({ frame, onClose }: Props) {
                         <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                             {content.implementationChecklist.map((item, i) => (
                                 <li key={i} style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.6, display: 'flex', gap: 6 }}>
-                                    <span style={{ color: '#334155', flexShrink: 0 }}>☐</span>
+                                    <span style={{ color: textColors.heading, flexShrink: 0 }}>☐</span>
                                     <span>{item}</span>
                                 </li>
                             ))}

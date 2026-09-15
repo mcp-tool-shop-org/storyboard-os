@@ -1,6 +1,7 @@
 ---
 // Landing page — entry point for the Marketing Campaign tool.
 import { launchRpgStoryboardCampaign } from '@storyboard-os/marketing-domain';
+import { textColors, surfaces } from '@storyboard-os/core';
 
 const campaigns = [launchRpgStoryboardCampaign];
 ---
@@ -12,12 +13,18 @@ const campaigns = [launchRpgStoryboardCampaign];
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:" />
   <title>Marketing Storyboard — Campaign Implementation Tool</title>
-  <style>
+  <style define:vars={{
+    textHeading: textColors.heading,
+    textSecondary: textColors.secondary,
+    textMuted: textColors.muted,
+    bgPage: surfaces.bgPage,
+    bgChrome: surfaces.bgChrome,
+  }}>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { min-height: 100vh; }
     body {
-      background: #0b1120;
-      color: #f1f5f9;
+      background: var(--bgPage);
+      color: var(--textHeading);
       font-family: ui-sans-serif, system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       display: flex; flex-direction: column;
@@ -41,16 +48,16 @@ const campaigns = [launchRpgStoryboardCampaign];
 
     .label {
       font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
-      text-transform: uppercase; color: #334155; margin-bottom: 16px;
+      text-transform: uppercase; color: var(--textHeading); margin-bottom: 16px;
     }
 
     h1 {
-      font-size: 36px; font-weight: 800; color: #f1f5f9;
+      font-size: 36px; font-weight: 800; color: var(--textHeading);
       line-height: 1.15; margin-bottom: 16px;
     }
 
     .subtitle {
-      font-size: 15px; color: #64748b; line-height: 1.7;
+      font-size: 15px; color: var(--textMuted); line-height: 1.7;
       margin-bottom: 48px; max-width: 520px;
     }
 
@@ -64,7 +71,7 @@ const campaigns = [launchRpgStoryboardCampaign];
     .campaign-card {
       display: flex; flex-direction: column; gap: 8px;
       padding: 24px;
-      background: #0f1825;
+      background: var(--bgChrome);
       border: 1px solid rgba(255,255,255,0.07);
       border-radius: 8px;
       text-decoration: none;
@@ -73,16 +80,16 @@ const campaigns = [launchRpgStoryboardCampaign];
     .campaign-card:hover { border-color: rgba(255,255,255,0.18); }
     .campaign-card-label {
       font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: #334155;
+      text-transform: uppercase; color: var(--textHeading);
     }
     .campaign-card-title {
-      font-size: 17px; font-weight: 700; color: #f1f5f9;
+      font-size: 17px; font-weight: 700; color: var(--textHeading);
     }
     .campaign-card-desc {
-      font-size: 13px; color: #475569; line-height: 1.55;
+      font-size: 13px; color: var(--textSecondary); line-height: 1.55;
     }
     .campaign-card-meta {
-      font-size: 11px; color: #334155; margin-top: 4px;
+      font-size: 11px; color: var(--textHeading); margin-top: 4px;
       display: flex; gap: 12px;
     }
     .campaign-card-cta {

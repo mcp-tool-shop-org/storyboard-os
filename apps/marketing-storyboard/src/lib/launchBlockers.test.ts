@@ -21,6 +21,8 @@ import {
     shouldShowLaunchBlockersPanel,
     collectBlockedBeatEntries,
     launchBlockersPanelHasContent,
+    launchBlockersRailTitle,
+    pendingGatePathDetail,
 } from './launchBlockers';
 
 function signal(overrides: Partial<ApprovalGateSignal>): ApprovalGateSignal {
@@ -275,5 +277,30 @@ describe('collectBlockedBeatEntries / launchBlockersPanelHasContent', () => {
             pendingApprovals: [],
             measurementSignals: [loopSignal({ hasMetrics: true, isLoop: true })],
         })).toBe(false);
+    });
+});
+
+describe('launchBlockersRailTitle / pendingGatePathDetail (F-4001f5ff)', () => {
+    it('retitles pending-only rails so they cannot read as Launch Blockers', () => {
+        expect(launchBlockersRailTitle({
+            blockedBeats: [],
+            blockedApprovals: [],
+            pendingApprovals: [signal({ status: 'partial' })],
+            measurementSignals: [loopSignal({ hasMetrics: true, isLoop: true })],
+        })).toBe('Launch Readiness Gate');
+    });
+
+    it('keeps Launch Blockers when a hard issue is present', () => {
+        expect(launchBlockersRailTitle({
+            blockedBeats: [{ frameId: 'conv-1', title: 'CTA', details: ['Blocked'] }],
+            blockedApprovals: [],
+            pendingApprovals: [signal({ status: 'partial' })],
+            measurementSignals: [],
+        })).toBe('Launch Blockers');
+    });
+
+    it('phrases topology as On launch path, not Blocks launch', () => {
+        expect(pendingGatePathDetail(true)).toBe('On launch path');
+        expect(pendingGatePathDetail(false)).toBe('Not on launch path');
     });
 });
