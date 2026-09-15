@@ -5,7 +5,7 @@
 // Template preview boards (/storyboards/*) are NOT wired here — they remain
 // read-only and never call onFramePositionChange.
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getProject, saveProject, getLastReadWarning } from '../../lib/storyboard/projectStorage';
 import {
   updateFramePosition,
@@ -15,11 +15,18 @@ import {
   setChecklistItemComplete,
   setTestCriterionComplete,
   getProjectProgress,
+  addFrame,
+  removeFrame,
+  addConnection,
+  updateConnection,
+  removeConnection,
 } from '../../lib/storyboard/project';
-import type { RpgStoryboardProject, FrameContent, FrameAnnotation } from '@storyboard-os/rpg-domain';
+import type { RpgStoryboardProject, FrameContent, FrameAnnotation, TopologyResult } from '@storyboard-os/rpg-domain';
 import type { FrameBasicsPatch } from '../../lib/storyboard/project';
+import type { StoryboardFrameType, StoryboardConnectionType } from '../../lib/storyboard/schema';
+import { addBeatBlocked, densityBanner, topologyOpBanner, type TopologyBanner } from '../../lib/storyboard/topology';
 import StoryboardCanvas, { type SaveStatus } from '../StoryboardCanvas';
-import { textColors } from '@storyboard-os/core';
+import { measureBoardDensity, textColors } from '@storyboard-os/core';
 import ErrorBoundary from '../ErrorBoundary';
 import CorruptStoreRecovery from './CorruptStoreRecovery';
 
@@ -29,6 +36,7 @@ function ProjectBoardInner() {
   const [notFound, setNotFound] = useState(false);
   const [storeUnreadable, setStoreUnreadable] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(null);
+  const [topoBanner, setTopoBanner] = useState<TopologyBanner | null>(null);
 
   // Keep a mutable ref to the latest project so handlePositionChange
   // always reads the most current value without a stale closure.
@@ -148,6 +156,53 @@ function ProjectBoardInner() {
     [persistAndNotify],
   );
 
+  // ── Topology (manual only — C3: no proposed edges) ────────────────────────
+  const applyTopology = useCallback((result: TopologyResult): boolean => {
+    const banner = topologyOpBanner(result);
+    setTopoBanner(banner);
+    if (!result.ok) return false;
+    persistAndNotify(result.project);
+    return true;
+  }, [persistAndNotify]);
+
+  const handleAddFrame = useCallback((type: StoryboardFrameType): boolean => {
+    const current = projectRef.current;
+    if (!current) return false;
+    return applyTopology(addFrame(current, { type }));
+  }, [applyTopology]);
+
+  const handleRemoveFrame = useCallback((frameId: string): boolean => {
+    const current = projectRef.current;
+    if (!current) return false;
+    return applyTopology(removeFrame(current, frameId));
+  }, [applyTopology]);
+
+  const handleAddConnection = useCallback((input: {
+    fromFrameId: string;
+    toFrameId: string;
+    type: StoryboardConnectionType;
+    label?: string;
+  }): boolean => {
+    const current = projectRef.current;
+    if (!current) return false;
+    return applyTopology(addConnection(current, input));
+  }, [applyTopology]);
+
+  const handleUpdateConnection = useCallback((
+    connectionId: string,
+    patch: { type?: StoryboardConnectionType; label?: string | null },
+  ): boolean => {
+    const current = projectRef.current;
+    if (!current) return false;
+    return applyTopology(updateConnection(current, connectionId, patch));
+  }, [applyTopology]);
+
+  const handleRemoveConnection = useCallback((connectionId: string): boolean => {
+    const current = projectRef.current;
+    if (!current) return false;
+    return applyTopology(removeConnection(current, connectionId));
+  }, [applyTopology]);
+
   // ── Render states ──────────────────────────────────────────────────────────
 
   if (loading) {
@@ -175,6 +230,25 @@ function ProjectBoardInner() {
   }
 
   const progressSummary = getProjectProgress(project);
+  const density = measureBoardDensity(project.storyboard);
+  const banner = topoBanner ?? densityBanner(density);
+  const topology = useMemo(() => ({
+    addDisabled: addBeatBlocked(density),
+    banner,
+    onAddFrame: handleAddFrame,
+    onRemoveFrame: handleRemoveFrame,
+    onAddConnection: handleAddConnection,
+    onUpdateConnection: handleUpdateConnection,
+    onRemoveConnection: handleRemoveConnection,
+  }), [
+    density,
+    banner,
+    handleAddFrame,
+    handleRemoveFrame,
+    handleAddConnection,
+    handleUpdateConnection,
+    handleRemoveConnection,
+  ]);
 
   return (
     <StoryboardCanvas
@@ -187,6 +261,7 @@ function ProjectBoardInner() {
       saveStatus={saveStatus}
       handoffHref={`/projects/handoff?id=${project.id}`}
       viewStorageKey={project.id}
+      topology={topology}
     />
   );
 }

@@ -94,6 +94,8 @@ interface Props {
   onClose: () => void;
   /** When provided, renders an "Edit Beat" button. Only passed on project boards. */
   onEditClick?: () => void;
+  /** When provided, renders a "Delete beat" button. Project boards only. */
+  onDeleteClick?: () => void;
   /** Completion progress for this frame's checklist + test criteria. Project boards only. */
   frameProgress?: FrameProgress;
   onChecklistChange?: (index: number, complete: boolean) => void;
@@ -102,7 +104,7 @@ interface Props {
 
 const TYPE_FALLBACK_COLOR = '#475569';
 
-export default function FrameInspector({ frame, storyboardId, onClose, onEditClick, frameProgress, onChecklistChange, onTestCriterionChange }: Props) {
+export default function FrameInspector({ frame, storyboardId, onClose, onEditClick, onDeleteClick, frameProgress, onChecklistChange, onTestCriterionChange }: Props) {
   const route  = frameRoute(storyboardId, frame.id);
   const canOpenFramePage = isSsgPreviewStoryboardId(storyboardId);
   const accent = TYPE_COLORS[frame.type] ?? TYPE_FALLBACK_COLOR;
@@ -330,6 +332,21 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
             }}
           >
             Edit Beat ✎
+          </button>
+        )}
+        {onDeleteClick && (
+          <button
+            type="button"
+            onClick={onDeleteClick}
+            style={{
+              display: 'block', width: '100%', padding: '10px 16px', textAlign: 'center',
+              background: 'rgba(239,68,68,0.12)', color: '#FCA5A5',
+              border: '1px solid rgba(239,68,68,0.35)',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              borderRadius: 6, letterSpacing: '0.02em',
+            }}
+          >
+            Delete beat
           </button>
         )}
         {canOpenFramePage && (
