@@ -43,12 +43,12 @@
     "react-konva": ">=18.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
-    "konva": "^9.0.0",
-    "react": "^18.0.0",
-    "react-konva": "^18.2.10",
-    "typescript": "^5.0.0",
-    "vitest": "^3.2.6"
+    "@types/react": "^19.3.0",
+    "konva": "^10.5.0",
+    "react": "^19.3.0",
+    "react-konva": "^19.2.7",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
   },
   "keywords": [
     "storyboard",
