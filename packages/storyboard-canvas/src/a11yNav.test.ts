@@ -80,9 +80,47 @@ describe('package index viewport math re-exports', () => {
       'zoomAtPoint',
       'zoomFromCenter',
       'clampScale',
+      'MIN_READABLE_SCALE',
     ]) {
       expect(src).toContain(name);
     }
+  });
+});
+
+describe('StoryboardCanvas nest + filter (F-7cc8d8a5 / F-e8f5777f)', () => {
+  it('applies visibility before FrameCard, ConnectionLayer, and AccessibleFrameList', () => {
+    const src = readSrc('StoryboardCanvas.tsx');
+    expect(src).toContain('applyCanvasVisibility');
+    expect(src).toContain('frames={visible.frames}');
+    expect(src).toContain('connections={visible.connections}');
+    expect(src).toContain('collapsedIds');
+    expect(src).toContain('onToggleCollapse');
+    expect(src).toContain('hiddenFrameIds');
+    expect(src).toContain('hiddenConnectionTypes');
+    expect(src).toContain('focusSubgraph');
+    expect(src).not.toContain('collapseFan(');
+  });
+
+  it('does not auto-collapse fans on load', () => {
+    const src = readSrc('StoryboardCanvas.tsx');
+    expect(src).toMatch(/Default: all expanded/);
+    expect(src).toContain('nothing auto-collapses');
+  });
+});
+
+describe('AccessibleFrameList nest a11y', () => {
+  it('sets aria-expanded on parent options', () => {
+    const src = readSrc('AccessibleFrameList.tsx');
+    expect(src).toContain('aria-expanded={isFanParent ? !isCollapsedParent : undefined}');
+  });
+});
+
+describe('FrameCard fan chip', () => {
+  it('reuses badge overflow chrome for the collapsed +N chip', () => {
+    const src = readSrc('FrameCard.tsx');
+    expect(src).toContain('fanCount');
+    expect(src).toContain('collapsed ? `+${fanCount}`');
+    expect(src).toContain('BADGE_HEIGHT');
   });
 });
 

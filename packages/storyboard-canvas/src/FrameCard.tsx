@@ -11,7 +11,7 @@ import { Group, Rect, Text } from 'react-konva';
 import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { CanvasFrame, CanvasFrameStyle, CanvasBadge } from './types';
-import { DEFAULT_FRAME_STYLE } from './defaults';
+import { DEFAULT_FRAME_STYLE, TYPE_BAR_HEIGHT } from './defaults';
 import { ensureFiniteSize } from './positions';
 import {
   badgesWithText,
@@ -20,7 +20,6 @@ import {
 } from './frameText';
 import { typeBarLabelFill } from './typeBarFill';
 
-const TYPE_BAR_HEIGHT = 26;
 const PADDING = 10;
 const TITLE_Y = TYPE_BAR_HEIGHT + 8;
 const SUMMARY_Y = TYPE_BAR_HEIGHT + 28;
@@ -75,6 +74,10 @@ interface Props {
   isSelected: boolean;
   onSelect: (id: string) => void;
   onDragEnd: (id: string, x: number, y: number) => void;
+  /** Direct children not hidden by filter. +N chip when collapsed. */
+  fanCount?: number;
+  collapsed?: boolean;
+  onToggleCollapse?: (id: string) => void;
 }
 
 // A badge positioned within the card's badge area.
@@ -202,6 +205,9 @@ export default function FrameCard({
   isSelected,
   onSelect,
   onDragEnd,
+  fanCount = 0,
+  collapsed = false,
+  onToggleCollapse,
 }: Props) {
   const { width, height } = ensureFiniteSize(frame.size, frame.id);
   const title = frameDisplayTitle(frame.title);
@@ -234,6 +240,17 @@ export default function FrameCard({
 
   function handleClick() {
     onSelect(frame.id);
+  }
+
+  const showFanChip = fanCount > 0 && (collapsed || !!onToggleCollapse);
+  const fanLabel = collapsed ? `+${fanCount}` : '−';
+  const fanChipW = showFanChip
+    ? Math.min(badgeWidth(fanLabel), Math.max(0, width - PADDING * 2))
+    : 0;
+
+  function handleFanToggle(e: KonvaEventObject<MouseEvent | TouchEvent>) {
+    e.cancelBubble = true;
+    onToggleCollapse?.(frame.id);
   }
 
   return (
@@ -273,13 +290,46 @@ export default function FrameCard({
       {/* Type label — fill from composited accent luminance, not unconditional white */}
       <Text
         x={PADDING} y={7}
-        width={width - PADDING * 2}
+        width={Math.max(0, width - PADDING * 2 - (showFanChip ? fanChipW + 4 : 0))}
         text={style.label}
         fontSize={10}
         fontStyle="bold"
         fill={typeBarLabelFill(style.accent, style.bg)}
         letterSpacing={1.2}
       />
+
+      {/* Collapsed-fan +N chip — same badge overflow chrome, not a new widget */}
+      {showFanChip && (
+        <Group
+          x={width - PADDING - fanChipW}
+          y={Math.floor((TYPE_BAR_HEIGHT - BADGE_HEIGHT) / 2)}
+          onClick={onToggleCollapse ? handleFanToggle : undefined}
+          onTap={onToggleCollapse ? handleFanToggle : undefined}
+        >
+          <Rect
+            width={fanChipW} height={BADGE_HEIGHT}
+            cornerRadius={3}
+            fill="#94a3b8"
+            opacity={0.12}
+          />
+          <Rect
+            width={fanChipW} height={BADGE_HEIGHT}
+            cornerRadius={3}
+            stroke="#94a3b8"
+            strokeWidth={1}
+            opacity={0.55}
+          />
+          <Text
+            x={BADGE_PADDING_X}
+            y={Math.floor((BADGE_HEIGHT - BADGE_FONT_SIZE) / 2) - 1}
+            text={fanLabel}
+            fontSize={BADGE_FONT_SIZE}
+            fontStyle="bold"
+            fill="#94a3b8"
+            letterSpacing={BADGE_LETTER_SPACING}
+          />
+        </Group>
+      )}
 
       {/* Frame title — height caps wrap so Konva ellipsis runs (no overlap with summary) */}
       <Text

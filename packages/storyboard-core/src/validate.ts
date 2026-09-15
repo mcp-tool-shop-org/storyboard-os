@@ -36,7 +36,10 @@ export type KnownStoryboardValidationCode =
   | 'SELF_LOOP_CONNECTION'
   | 'DUPLICATE_CONNECTION_EDGE'
   | 'BROKEN_CONNECTION_FROM'
-  | 'BROKEN_CONNECTION_TO';
+  | 'BROKEN_CONNECTION_TO'
+  | 'UNKNOWN_PARENT_FRAME_ID'
+  | 'SELF_PARENT_FRAME'
+  | 'PARENT_CYCLE';
 
 // Open extension union: known codes preserve autocomplete, vertical packages
 // may add their own snake_case_upper codes via the `(string & {})` escape hatch.
@@ -222,6 +225,82 @@ export function validateStoryboard(
         code: 'INVALID_FRAME_POSITION',
         message: `Frame position (${frame.position.x}, ${frame.position.y}) is invalid (x and y must be finite numbers).`,
         frameId,
+      });
+    }
+  }
+
+  // Nest: unknown parent, self-parent, cycles. One nest level is enough;
+  // deeper trees are still checked for cycles so a walk cannot hang.
+  const parentOf = new Map<string, string>();
+  for (const [frameIndex, frame] of storyboard.frames.entries()) {
+    if (frame == null || typeof frame !== 'object' || Array.isArray(frame)) continue;
+    if (!Object.hasOwn(frame, 'parentFrameId') || frame.parentFrameId === undefined) {
+      continue;
+    }
+
+    const frameId =
+      typeof frame.id === 'string' && frame.id.trim() ? frame.id : undefined;
+    const parentId = frame.parentFrameId;
+    const frameLabel = frameId ?? `frames[${frameIndex}]`;
+
+    if (typeof parentId !== 'string') {
+      errors.push({
+        code: 'UNKNOWN_PARENT_FRAME_ID',
+        message: `${frameLabel} has a non-string parentFrameId (got ${describeType(parentId)}).`,
+        frameId,
+      });
+      continue;
+    }
+    if (!parentId.trim()) {
+      errors.push({
+        code: 'UNKNOWN_PARENT_FRAME_ID',
+        message: `${frameLabel} has an empty parentFrameId.`,
+        frameId,
+      });
+      continue;
+    }
+    if (frameId !== undefined && parentId === frameId) {
+      errors.push({
+        code: 'SELF_PARENT_FRAME',
+        message: `Frame "${frameId}" lists itself as parentFrameId.`,
+        frameId,
+      });
+      continue;
+    }
+    if (!frameIds.has(parentId)) {
+      errors.push({
+        code: 'UNKNOWN_PARENT_FRAME_ID',
+        message: `${frameLabel} references unknown parentFrameId "${parentId}".`,
+        frameId,
+      });
+      continue;
+    }
+    if (frameId !== undefined) parentOf.set(frameId, parentId);
+  }
+
+  const inCycle = new Set<string>();
+  for (const startId of parentOf.keys()) {
+    const path: string[] = [];
+    const indexOf = new Map<string, number>();
+    let current: string | undefined = startId;
+    while (current && parentOf.has(current)) {
+      const seenAt = indexOf.get(current);
+      if (seenAt !== undefined) {
+        for (const id of path.slice(seenAt)) inCycle.add(id);
+        break;
+      }
+      indexOf.set(current, path.length);
+      path.push(current);
+      current = parentOf.get(current);
+    }
+  }
+  for (const frame of storyboard.frames) {
+    if (frame == null || typeof frame !== 'object' || Array.isArray(frame)) continue;
+    if (typeof frame.id === 'string' && inCycle.has(frame.id)) {
+      errors.push({
+        code: 'PARENT_CYCLE',
+        message: `Frame "${frame.id}" participates in a parentFrameId cycle.`,
+        frameId: frame.id,
       });
     }
   }

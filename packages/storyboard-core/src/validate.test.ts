@@ -883,3 +883,81 @@ describe('validateStoryboard schemaVersion', () => {
     expect(result.errors.some(e => e.code === 'INVALID_SCHEMA_VERSION')).toBe(true);
   });
 });
+
+// ─── Nest parentFrameId (F-89ebeea1) ──────────────────────────────────────────
+// Unknown parent, self-parent, and cycles. Collapse lives on collapsedIds, not
+// on the frame, so these checks do not invent an RPG fan type.
+
+describe('validateStoryboard parentFrameId nest', () => {
+  it('accepts a one-level nest with a known parent', () => {
+    const storyboard: Storyboard = {
+      id: 'sb',
+      title: 'Fan',
+      frames: [
+        makeFrame('choice'),
+        { ...makeFrame('a'), parentFrameId: 'choice' },
+        { ...makeFrame('b'), parentFrameId: 'choice' },
+      ],
+      connections: [],
+      collapsedIds: ['choice'],
+    };
+    expect(validateStoryboard(storyboard).valid).toBe(true);
+  });
+
+  it('rejects an unknown parentFrameId', () => {
+    const storyboard: Storyboard = {
+      id: 'sb',
+      title: 'Unknown parent',
+      frames: [{ ...makeFrame('f1'), parentFrameId: 'ghost' }],
+      connections: [],
+    };
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(
+      result.errors.some(e => e.code === 'UNKNOWN_PARENT_FRAME_ID' && e.frameId === 'f1'),
+    ).toBe(true);
+  });
+
+  it('rejects a self-parent', () => {
+    const storyboard: Storyboard = {
+      id: 'sb',
+      title: 'Self parent',
+      frames: [{ ...makeFrame('f1'), parentFrameId: 'f1' }],
+      connections: [],
+    };
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(
+      result.errors.some(e => e.code === 'SELF_PARENT_FRAME' && e.frameId === 'f1'),
+    ).toBe(true);
+    expect(result.errors.some(e => e.code === 'PARENT_CYCLE')).toBe(false);
+  });
+
+  it('rejects a parent cycle', () => {
+    const storyboard: Storyboard = {
+      id: 'sb',
+      title: 'Cycle',
+      frames: [
+        { ...makeFrame('a'), parentFrameId: 'b' },
+        { ...makeFrame('b'), parentFrameId: 'a' },
+      ],
+      connections: [],
+    };
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'PARENT_CYCLE' && e.frameId === 'a')).toBe(true);
+    expect(result.errors.some(e => e.code === 'PARENT_CYCLE' && e.frameId === 'b')).toBe(true);
+  });
+
+  it('returns UNKNOWN_PARENT_FRAME_ID (no throw) for a non-string parentFrameId', () => {
+    const storyboard = {
+      id: 'sb',
+      title: 'Bad parent type',
+      frames: [{ ...makeFrame('f1'), parentFrameId: 42 }],
+      connections: [],
+    } as unknown as Storyboard;
+    const result = validateStoryboard(storyboard);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.code === 'UNKNOWN_PARENT_FRAME_ID')).toBe(true);
+  });
+});

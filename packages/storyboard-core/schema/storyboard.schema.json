@@ -31,6 +31,12 @@
       "type": "array",
       "items": { "$ref": "#/$defs/connection" }
     },
+    "collapsedIds": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonEmptyString" },
+      "uniqueItems": true,
+      "description": "Author-owned collapsed parent ids. Absent means all expanded. Collapse does not mutate frame records."
+    },
     "canvasWidth": { "type": "number" },
     "canvasHeight": { "type": "number" }
   },
@@ -57,6 +63,10 @@
         "annotations": {
           "type": "array",
           "items": { "$ref": "#/$defs/annotation" }
+        },
+        "parentFrameId": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "Optional parent frame id for one nest level. Not a collapsed flag."
         }
       }
     },
