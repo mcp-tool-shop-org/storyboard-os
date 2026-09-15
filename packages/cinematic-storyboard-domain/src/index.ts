@@ -48,6 +48,18 @@ export {
 export type { ProductionBrief, ProductionBriefShot, ProductionBriefConnection } from './handoff';
 
 export {
+  validateProductionBrief,
+  serializeProductionBriefJson,
+  assertValidProductionBrief,
+  InvalidProductionBriefError,
+  PRODUCTION_BRIEF_SCHEMA,
+  PRODUCTION_BRIEF_SCHEMA_ID,
+} from './validateProductionBrief';
+export type { ProductionBriefValidationError, ProductionBriefValidationResult } from './validateProductionBrief';
+
+export { cardBeatLine, CARD_BEAT_MAX_CHARS } from './cardBeat';
+
+export {
   getSequenceProductionSignals,
   parseDurationRange,
 } from './productionSignals';

@@ -54,7 +54,12 @@ describe('generateProductionBrief', () => {
     const brief = generateProductionBrief(sb);
     const establishShot = brief.shots[0];
     expect(establishShot.camera).not.toBeNull();
-    expect(establishShot.camera).toContain('Wide');
+    expect(establishShot.camera).toContain('EWS');
+  });
+
+  it('stamps $schema on generated briefs', () => {
+    const brief = generateProductionBrief(createCinematicStoryboard('trailer_flow'));
+    expect(brief.$schema).toContain('production-brief.json');
   });
 
   it('shots contain required assets', () => {
