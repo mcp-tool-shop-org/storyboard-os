@@ -150,8 +150,9 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{
             display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-            background: accent, fontSize: 10, fontWeight: 700,
-            color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase',
+            background: `${accent}22`, border: `1px solid ${accent}44`,
+            fontSize: 10, fontWeight: 700,
+            color: accent, letterSpacing: '0.08em', textTransform: 'uppercase',
             alignSelf: 'flex-start',
           }}>
             {typeLabel}

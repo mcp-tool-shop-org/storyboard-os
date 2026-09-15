@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Storyboard, StoryboardFrame, FrameContent } from './schema';
-import type { StoryboardConnection } from '@storyboard-os/core';
+import { statusLabels, type StoryboardConnection } from '@storyboard-os/core';
 import { getBeatStatus, getStoryboardReadiness } from './beatStatus';
 import type { BeatStatusLevel, MissingSpecReason } from './beatStatus';
 import type { RpgStoryboardProject, ProjectProgressSummary } from './project';
@@ -321,10 +321,10 @@ export function generateHandoff(storyboard: Storyboard): QuestHandoff {
 // ─── Markdown renderer ────────────────────────────────────────────────────────
 
 const STATUS_LABELS: Record<BeatStatusLevel, string> = {
-  ready:   'READY',
-  partial: 'PARTIAL',
-  draft:   'DRAFT',
-  blocked: 'BLOCKED',
+  ready:   statusLabels.ready,   // 'SPEC' — VP-005: never READY
+  partial: statusLabels.partial,
+  draft:   statusLabels.draft,
+  blocked: statusLabels.blocked,
 };
 
 const CONNECTION_TYPE_LABELS: Record<string, string> = {
@@ -576,10 +576,10 @@ export function generateMarkdown(handoff: QuestHandoff): string {
   const { ready, partial, draft, blocked, total } = handoff.readiness;
 
   const readinessParts: string[] = [];
-  if (ready   > 0) readinessParts.push(`**${ready} READY**`);
-  if (partial > 0) readinessParts.push(`${partial} PARTIAL`);
-  if (blocked > 0) readinessParts.push(`${blocked} BLOCKED`);
-  if (draft   > 0) readinessParts.push(`${draft} DRAFT`);
+  if (ready   > 0) readinessParts.push(`**${ready} ${STATUS_LABELS.ready}**`);
+  if (partial > 0) readinessParts.push(`${partial} ${STATUS_LABELS.partial}`);
+  if (blocked > 0) readinessParts.push(`${blocked} ${STATUS_LABELS.blocked}`);
+  if (draft   > 0) readinessParts.push(`${draft} ${STATUS_LABELS.draft}`);
 
   const sections: string[] = [];
 
@@ -865,10 +865,10 @@ export function generateProjectMarkdown(handoff: ProjectHandoff): string {
   const { doneChecklist, totalChecklist, doneTests, totalTests } = handoff.progress;
 
   const readinessParts: string[] = [];
-  if (ready   > 0) readinessParts.push(`**${ready} READY**`);
-  if (partial > 0) readinessParts.push(`${partial} PARTIAL`);
-  if (blocked > 0) readinessParts.push(`${blocked} BLOCKED`);
-  if (draft   > 0) readinessParts.push(`${draft} DRAFT`);
+  if (ready   > 0) readinessParts.push(`**${ready} ${STATUS_LABELS.ready}**`);
+  if (partial > 0) readinessParts.push(`${partial} ${STATUS_LABELS.partial}`);
+  if (blocked > 0) readinessParts.push(`${blocked} ${STATUS_LABELS.blocked}`);
+  if (draft   > 0) readinessParts.push(`${draft} ${STATUS_LABELS.draft}`);
 
   const sections: string[] = [];
 

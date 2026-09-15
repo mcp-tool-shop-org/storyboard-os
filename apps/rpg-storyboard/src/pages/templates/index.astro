@@ -1,5 +1,6 @@
 ---
 import { STORYBOARD_TEMPLATES } from '@storyboard-os/rpg-domain';
+import { textColors } from '@storyboard-os/core';
 import { TEMPLATE_PREVIEW_META, getTemplatePreviewStoryboards } from '../../lib/storyboard/templatePreviews';
 
 // Generate the full storyboards so we can show the beat-type sequences
@@ -74,21 +75,21 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
       padding: 0 24px; height: 48px;
       display: flex; align-items: center; gap: 16px;
     }
-    .topbar-home { font-size: 11px; color: #475569; text-decoration: none; }
-    .topbar-home:hover { color: #94a3b8; }
-    .topbar-sep  { color: #1e293b; }
+    .topbar-home { font-size: 11px; color: var(--text-secondary); text-decoration: none; }
+    .topbar-home:hover { color: var(--text-heading); }
+    .topbar-sep  { color: var(--text-secondary); }
     .topbar-label {
       font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: #475569;
+      text-transform: uppercase; color: var(--text-secondary);
     }
     .topbar-right-links {
       margin-left: auto; display: flex; gap: 16px; align-items: center;
     }
     .topbar-demo {
-      font-size: 11px; color: #334155;
+      font-size: 11px; color: var(--text-secondary);
       text-decoration: none;
     }
-    .topbar-demo:hover { color: #475569; }
+    .topbar-demo:hover { color: var(--text-heading); }
 
     /* Page */
     .page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
@@ -97,7 +98,7 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
     .hero { margin-bottom: 48px; }
     .hero-label {
       font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
-      text-transform: uppercase; color: #334155; margin-bottom: 12px;
+      text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px;
     }
     .hero-title { font-size: 30px; font-weight: 800; color: #f1f5f9; line-height: 1.2; margin-bottom: 12px; }
     .hero-body  { font-size: 14px; color: #64748b; line-height: 1.7; max-width: 600px; }
@@ -119,7 +120,7 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
     .card-name    { font-size: 18px; font-weight: 800; color: #f1f5f9; }
     .card-best    { font-size: 13px; color: #94a3b8; line-height: 1.55; }
     .card-count   {
-      font-size: 11px; font-weight: 700; color: #334155;
+      font-size: 11px; font-weight: 700; color: var(--text-heading);
       padding: 4px 10px; border-radius: 20px;
       background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
       white-space: nowrap; flex-shrink: 0; align-self: flex-start;
@@ -134,7 +135,7 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
     /* Beat sequence */
     .sequence-label {
       font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: #334155; margin-bottom: 10px;
+      text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px;
     }
     .sequence-row  {
       display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
@@ -143,7 +144,7 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
       font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
       padding: 3px 8px; border-radius: 3px; white-space: nowrap;
     }
-    .beat-arrow { font-size: 11px; color: #1e293b; }
+    .beat-arrow { font-size: 11px; color: var(--text-secondary); }
 
     /* Card footer */
     .card-footer {
@@ -163,21 +164,21 @@ const TEMPLATE_RATIONALE: Record<string, string> = {
       border: 1px solid rgba(255,255,255,0.12);
     }
     .btn-secondary {
-      background: transparent; color: #475569;
+      background: transparent; color: var(--text-secondary);
       border: 1px solid rgba(255,255,255,0.07);
     }
-    .btn-secondary:hover { color: #94a3b8; }
+    .btn-secondary:hover { color: var(--text-heading); }
     .btn-create {
       background: rgba(139,92,246,0.12); color: #8B5CF6;
       border: 1px solid rgba(139,92,246,0.28);
     }
     .btn-create:hover { opacity: 0.85; }
     .card-footer-note {
-      margin-left: auto; font-size: 11px; color: #1e293b;
+      margin-left: auto; font-size: 11px; color: var(--text-secondary);
     }
   </style>
 </head>
-<body>
+<body style={`--text-heading:${textColors.heading};--text-secondary:${textColors.secondary}`}>
 
   <nav class="topbar">
     <a href="/" class="topbar-home">← Home</a>

@@ -21,6 +21,7 @@ import {
 } from '@storyboard-os/rpg-domain';
 import { getProject, getLastReadWarning } from '../../lib/storyboard/projectStorage';
 import { loadProjectHandoff } from '../../lib/storyboard/handoffLoad';
+import { statusLabels, textColors } from '@storyboard-os/core';
 import ErrorBoundary from '../ErrorBoundary';
 import CorruptStoreRecovery from './CorruptStoreRecovery';
 
@@ -34,10 +35,10 @@ const STATUS_COLORS: Record<BeatStatusLevel, string> = {
 };
 
 const STATUS_LABELS: Record<BeatStatusLevel, string> = {
-  ready:   'READY',
-  partial: 'PARTIAL',
-  draft:   'DRAFT',
-  blocked: 'BLOCKED',
+  ready:   statusLabels.ready,   // 'SPEC' — VP-005: never READY
+  partial: statusLabels.partial,
+  draft:   statusLabels.draft,
+  blocked: statusLabels.blocked,
 };
 
 const CONN_LABELS: Record<string, string> = {
@@ -187,12 +188,12 @@ function ProjectHandoffPageInner() {
         padding: '0 24px', height: 48,
         display: 'flex', alignItems: 'center', gap: 16,
       }}>
-        <a href={boardHref} style={{ fontSize: 12, color: '#475569', textDecoration: 'none' }}>← Board</a>
-        <span style={{ color: '#1e293b' }}>|</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <a href={boardHref} style={{ fontSize: 12, color: textColors.secondary, textDecoration: 'none' }}>← Board</a>
+        <span style={{ color: textColors.muted }}>|</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: textColors.heading, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {handoff.title}
         </span>
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: textColors.secondary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Project Handoff
         </span>
         <button
@@ -222,11 +223,11 @@ function ProjectHandoffPageInner() {
               {handoff.description}
             </p>
           )}
-          <p style={{ fontSize: 11, color: '#334155', fontFamily: 'ui-monospace, monospace' }}>
+          <p style={{ fontSize: 11, color: textColors.secondary, fontFamily: 'ui-monospace, monospace' }}>
             Generated {dateStr} · Project {handoff.projectId}
             {handoff.sourceTemplateId && ` · Template: ${handoff.sourceTemplateId}`}
           </p>
-          <p style={{ fontSize: 11, color: '#1e293b', fontFamily: 'ui-monospace, monospace', marginTop: 3 }}>
+          <p style={{ fontSize: 11, color: textColors.secondary, fontFamily: 'ui-monospace, monospace', marginTop: 3 }}>
             Created {handoff.createdAt.split('T')[0]} · Updated {handoff.updatedAt.split('T')[0]}
           </p>
         </div>
@@ -263,7 +264,7 @@ function ProjectHandoffPageInner() {
           <SectionTitle>Beat Readiness</SectionTitle>
           <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9', marginBottom: 8 }}>
             {handoff.readiness.ready} / {handoff.readiness.total} beats ready
-            <span style={{ fontSize: 14, fontWeight: 400, color: '#475569', marginLeft: 8 }}>
+            <span style={{ fontSize: 14, fontWeight: 400, color: textColors.secondary, marginLeft: 8 }}>
               ({readyPct}%)
             </span>
           </p>
@@ -545,7 +546,7 @@ function BeatCard({ beat, index }: { beat: ProjectHandoffBeat; index: number }) 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <p style={{
-      fontSize: 11, fontWeight: 700, color: '#475569',
+      fontSize: 11, fontWeight: 700, color: textColors.secondary,
       textTransform: 'uppercase', letterSpacing: '0.12em',
       marginBottom: 16, paddingBottom: 8,
       borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -586,7 +587,7 @@ function ProgressChip({ color, label, pct }: { color: string; label: string; pct
   );
 }
 
-function BeatField({ label, accentColor = '#475569', children }: { label: string; accentColor?: string; children: React.ReactNode }) {
+function BeatField({ label, accentColor = textColors.secondary, children }: { label: string; accentColor?: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: accentColor }}>
@@ -676,7 +677,7 @@ function IssueGroup({ title, titleColor, subtitle, ids, beats, dotColor, gapFilt
                 >
                   {beat.title}
                 </a>
-                <span style={{ fontSize: 11, color: '#334155', fontFamily: 'ui-monospace, monospace', marginLeft: 6 }}>
+                <span style={{ fontSize: 11, color: textColors.secondary, fontFamily: 'ui-monospace, monospace', marginLeft: 6 }}>
                   {id}
                 </span>
                 {gaps.length > 0 && (
@@ -694,7 +695,7 @@ function IssueGroup({ title, titleColor, subtitle, ids, beats, dotColor, gapFilt
 }
 
 function Dim({ children }: { children: React.ReactNode }) {
-  return <span style={{ fontSize: 12, color: '#334155' }}>{children}</span>;
+  return <span style={{ fontSize: 12, color: textColors.secondary }}>{children}</span>;
 }
 
 function StateScreen({
@@ -718,10 +719,10 @@ function StateScreen({
       height: '100vh', gap: 12, background: '#0b1120', color: '#f1f5f9',
       fontFamily: 'ui-sans-serif, system-ui, sans-serif', padding: 24, textAlign: 'center',
     }}>
-      <span style={{ fontSize: 16, fontWeight: 700, color: '#94a3b8' }}>{text}</span>
+      <span style={{ fontSize: 16, fontWeight: 700, color: textColors.heading }}>{text}</span>
       {detail && (
         <span style={{
-          fontSize: 12, color: '#475569', maxWidth: 480, lineHeight: 1.5,
+          fontSize: 12, color: textColors.secondary, maxWidth: 480, lineHeight: 1.5,
           fontFamily: 'ui-monospace, monospace',
         }}>
           {detail}
@@ -731,7 +732,7 @@ function StateScreen({
         <a href={link} style={{ fontSize: 13, color: '#8B5CF6', textDecoration: 'none' }}>{linkLabel}</a>
       )}
       {secondaryLink && (
-        <a href={secondaryLink} style={{ fontSize: 12, color: '#475569', textDecoration: 'none' }}>
+        <a href={secondaryLink} style={{ fontSize: 12, color: textColors.secondary, textDecoration: 'none' }}>
           {secondaryLinkLabel}
         </a>
       )}

@@ -41,7 +41,7 @@ const TYPE_LABELS: Record<StoryboardFrameType, string> = {
   choice:      'Choice',
   encounter:   'Encounter',
   reveal:      'Reveal',
-  npc_beat:    'Character Beat',
+  npc_beat:    'NPC Beat',
   consequence: 'Consequence',
 };
 
@@ -139,7 +139,6 @@ const { content, annotations } = frame;
         padding: 3px 10px; border-radius: 4px; margin-bottom: 16px;
         font-size: 11px; font-weight: 700;
         letter-spacing: 0.1em; text-transform: uppercase;
-        color: #fff;
       }
       .hero-title {
         font-size: 28px; font-weight: 800; color: #f8fafc;
@@ -338,7 +337,7 @@ const { content, annotations } = frame;
 
     <!-- Hero: type, title, summary -->
     <div class="hero">
-      <div class="type-badge" style={`background: ${accentColor}`}>
+      <div class="type-badge" style={`background: ${accentColor}22; color: ${accentColor}; border: 1px solid ${accentColor}44`}>
         {TYPE_LABELS[frame.type]}
       </div>
       <h1 class="hero-title">{frame.title}</h1>

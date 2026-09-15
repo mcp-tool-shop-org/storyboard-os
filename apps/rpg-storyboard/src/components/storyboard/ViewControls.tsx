@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ViewportHandle } from '@storyboard-os/canvas';
+import { textColors } from '@storyboard-os/core';
 
 interface Props {
   canvasRef: React.RefObject<ViewportHandle | null>;
@@ -118,7 +119,7 @@ export default function ViewControls({ canvasRef, scale }: Props) {
           style={{
             fontSize: 11,
             fontWeight: 700,
-            color: '#475569',
+            color: textColors.heading,
             minWidth: 36,
             textAlign: 'center',
             letterSpacing: '0.04em',
