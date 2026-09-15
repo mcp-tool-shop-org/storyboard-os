@@ -15,8 +15,10 @@ import type { StoryboardFrame, StoryboardFrameType } from '../../lib/storyboard/
 import {
   getBeatStatus,
   BLOCKING_REASONS,
+  isEmptyCombatSpec,
   type BeatStatusLevel,
   type MissingSpecReason,
+  type CombatSpec,
 } from '@storyboard-os/rpg-domain';
 import { statusColors, statusLabels, textColors } from '@storyboard-os/core';
 import type { FrameProgress } from '../../lib/storyboard/project';
@@ -317,6 +319,9 @@ export default function FrameInspector({ frame, storyboardId, onClose, onEditCli
             }).join('\n\n')}
           />
         )}
+        {frame.type === 'encounter' && (
+          <CombatSpecFields spec={content.combatSpec} />
+        )}
       </div>
 
       {/* ── Footer actions ────────────────────────────────────────────────────── */}
@@ -464,6 +469,27 @@ function ProgressChecklist({ label, items, progress, accentColor, onChange }: Pr
 }
 
 // ─── Field ────────────────────────────────────────────────────────────────────
+
+function CombatSpecFields({ spec }: { spec: CombatSpec | undefined }) {
+  if (!spec || isEmptyCombatSpec(spec)) {
+    return (
+      <Field
+        label="Combat Spec"
+        value="No combat attachment — this encounter stays quest-logic. Empty combatSpec is valid."
+      />
+    );
+  }
+  const lines: string[] = [];
+  if (spec.anticipation) lines.push(`Anticipation: ${spec.anticipation}`);
+  if (spec.hit) lines.push(`Hit: ${spec.hit}`);
+  if (spec.followThrough) lines.push(`Follow-through: ${spec.followThrough}`);
+  if (spec.recovery) lines.push(`Recovery: ${spec.recovery}`);
+  if (spec.ability) {
+    const ap = spec.ability.ap !== undefined ? ` · AP ${spec.ability.ap}` : '';
+    lines.push(`Ability: ${spec.ability.id}${ap}`);
+  }
+  return <Field label="Combat Spec" value={lines.join('\n')} color="#EF4444" />;
+}
 
 function Field({ label, value, color = '#94a3b8' }: { label: string; value: string; color?: string }) {
   return (

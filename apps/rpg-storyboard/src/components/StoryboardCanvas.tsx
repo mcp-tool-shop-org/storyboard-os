@@ -28,6 +28,7 @@ import {
   getFrameBadges,
   getStoryboardReadiness,
   rpgColors,
+  visibleRpgBoard,
   type BeatStatusLevel,
   type FrameContent,
   type FrameAnnotation,
@@ -40,6 +41,7 @@ import type { TopologyBanner } from '../lib/storyboard/topology';
 import { CONNECTION_TYPE_OPTIONS } from '../lib/storyboard/topology';
 import FrameInspector from './storyboard/FrameInspector';
 import ViewControls from './storyboard/ViewControls';
+import FanControls from './storyboard/FanControls';
 import BeatEditPanel from './projects/BeatEditPanel';
 import TopologyToolbar from './projects/TopologyToolbar';
 import ErrorBoundary from './ErrorBoundary';
@@ -215,6 +217,9 @@ function StoryboardCanvasInner({
   const [connectArmed, setConnectArmed]                 = useState(false);
   const [connectFromId, setConnectFromId]               = useState<string | null>(null);
   const [connectToId, setConnectToId]                   = useState<string | null>(null);
+  const [expandedFanIds, setExpandedFanIds]             = useState<string[]>([]);
+  const [typeFilter, setTypeFilter]                     = useState<StoryboardFrameType | 'all'>('all');
+  const [readinessFilter, setReadinessFilter]           = useState<BeatStatusLevel | 'all'>('all');
 
   const canvasRef = useRef<ViewportHandle | null>(null);
   const boardAreaRef = useRef<HTMLDivElement | null>(null);
@@ -304,9 +309,19 @@ function StoryboardCanvasInner({
     setEditingFrameId(null);
   }, []);
 
-  // ── RPG badge + readiness computation ─────────────────────────────────────
+  // ── Nest choice fans + optional type/readiness filter (F-b0fe9ec9) ────────
+  // Core visibleFrames is preferred inside visibleRpgBoard when present.
+  const boardView = useMemo(
+    () => visibleRpgBoard(storyboard, {
+      expandedFanIds,
+      typeFilter,
+      readinessFilter,
+    }),
+    [storyboard, expandedFanIds, typeFilter, readinessFilter],
+  );
+
   const canvasFrames = useMemo<CanvasFrame[]>(() => {
-    return storyboard.frames.map(frame => ({
+    return boardView.frames.map(frame => ({
       id: frame.id,
       type: frame.type,
       title: frame.title,
@@ -315,7 +330,7 @@ function StoryboardCanvasInner({
       size: frame.size,
       badges: getFrameBadges(frame),
     }));
-  }, [storyboard.frames]);
+  }, [boardView.frames]);
 
   const readinessSummary = useMemo(
     () => getStoryboardReadiness(storyboard),
@@ -443,7 +458,9 @@ function StoryboardCanvasInner({
         )}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <span style={{ fontSize: typeScale.xs, color: textColors.muted }}>
-            {storyboard.frames.length} frames · {storyboard.connections.length} connections
+            {boardView.frames.length === storyboard.frames.length
+              ? `${storyboard.frames.length} frames · ${storyboard.connections.length} connections`
+              : `${boardView.frames.length}/${storyboard.frames.length} visible · ${boardView.connections.length} connections`}
           </span>
           <ReadinessCounts summary={readinessSummary} />
           {progressSummary && <ProgressCounts summary={progressSummary} />}
@@ -494,7 +511,7 @@ function StoryboardCanvasInner({
           <KonvaBoard
             ref={canvasRef}
             frames={canvasFrames}
-            connections={storyboard.connections}
+            connections={boardView.connections}
             config={RPG_CANVAS_CONFIG}
             selectedFrameId={selectedFrameId}
             onSelectFrame={handleSelectFrame}
@@ -511,6 +528,24 @@ function StoryboardCanvasInner({
 
           {/* Viewport controls — absolutely positioned over canvas */}
           <ViewControls canvasRef={canvasRef} scale={scale} />
+
+          <FanControls
+            fans={boardView.fans}
+            expandedFanIds={new Set(expandedFanIds)}
+            onToggleFan={id => {
+              setExpandedFanIds(current =>
+                current.includes(id) ? current.filter(x => x !== id) : [...current, id],
+              );
+            }}
+            onExpandAll={() => setExpandedFanIds(boardView.fans.map(f => f.parentId))}
+            onCollapseAll={() => setExpandedFanIds([])}
+            typeFilter={typeFilter}
+            readinessFilter={readinessFilter}
+            onTypeFilter={setTypeFilter}
+            onReadinessFilter={setReadinessFilter}
+            visibleCount={boardView.frames.length}
+            totalCount={storyboard.frames.length}
+          />
 
           {topology && (
             <TopologyToolbar

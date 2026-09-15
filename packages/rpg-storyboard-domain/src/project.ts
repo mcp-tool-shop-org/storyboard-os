@@ -605,6 +605,27 @@ function nextFramePosition(frames: readonly StoryboardFrame[]): FramePosition {
   return { x: maxX + NEW_FRAME_GAP, y: yAtMax };
 }
 
+/**
+ * Stamp content.parentFrameId on a choice/consequence destination when the
+ * source is a choice beat. Does not invent extra edges (C3: no auto-wire).
+ */
+function stampChoiceFanParent(
+  frames: readonly StoryboardFrame[],
+  fromFrameId: string,
+  toFrameId: string,
+  connType: StoryboardConnectionType,
+): StoryboardFrame[] {
+  if (connType !== 'choice' && connType !== 'consequence') return [...frames];
+  const from = frames.find(f => f.id === fromFrameId);
+  if (!from || from.type !== 'choice') return [...frames];
+  return frames.map(f => {
+    if (f.id !== toFrameId) return f;
+    const content = (f.content ?? {}) as FrameContent;
+    if (content.parentFrameId) return f;
+    return { ...f, content: { ...content, parentFrameId: fromFrameId } };
+  });
+}
+
 function omitFrameProgress(progress: ProjectProgress, frameId: string): ProjectProgress {
   if (!(frameId in progress.frames)) return progress;
   const { [frameId]: _removed, ...frames } = progress.frames;
@@ -766,6 +787,12 @@ export function addConnection(
     project,
     {
       ...project.storyboard,
+      frames: stampChoiceFanParent(
+        project.storyboard.frames,
+        input.fromFrameId,
+        input.toFrameId,
+        input.type,
+      ),
       connections: [...project.storyboard.connections, connection],
     },
     project.progress,

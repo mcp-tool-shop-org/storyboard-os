@@ -11,7 +11,7 @@
 import { useState } from 'react';
 import type { StoryboardFrame, StoryboardFrameType, FrameAnnotation, FrameAnnotationType } from '../../lib/storyboard/schema';
 import type { FrameBasicsPatch } from '../../lib/storyboard/project';
-import type { FrameContent } from '@storyboard-os/rpg-domain';
+import type { CombatSpec, FrameContent } from '@storyboard-os/rpg-domain';
 import { textColors } from '@storyboard-os/core';
 
 // ─── Type label config ────────────────────────────────────────────────────────
@@ -128,6 +128,16 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
   const [authorOnlyNotes,        setAuthorOnlyNotes]        = useState(arrToLines(existing.authorOnlyNotes));
   const [annotationsText,        setAnnotationsText]        = useState(formatAnnotations(frame.annotations ?? []));
 
+  const existingCombat = existing.combatSpec ?? {};
+  const [anticipation, setAnticipation] = useState(existingCombat.anticipation ?? '');
+  const [hit, setHit] = useState(existingCombat.hit ?? '');
+  const [followThrough, setFollowThrough] = useState(existingCombat.followThrough ?? '');
+  const [recovery, setRecovery] = useState(existingCombat.recovery ?? '');
+  const [abilityId, setAbilityId] = useState(existingCombat.ability?.id ?? '');
+  const [abilityAp, setAbilityAp] = useState(
+    existingCombat.ability?.ap !== undefined ? String(existingCombat.ability.ap) : '',
+  );
+
   function handleSave() {
     const basics: FrameBasicsPatch = {};
     if (title.trim()   !== frame.title)        basics.title   = title.trim();
@@ -148,6 +158,25 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
       implementationChecklist:linesToArr(implementationChecklist),
       authorOnlyNotes:        linesToArr(authorOnlyNotes),
     };
+
+    if (frame.type === 'encounter') {
+      const apRaw = abilityAp.trim();
+      const apNum = apRaw === '' ? undefined : Number(apRaw);
+      const ability = abilityId.trim()
+        ? {
+            id: abilityId.trim(),
+            ...(apNum !== undefined && Number.isFinite(apNum) ? { ap: apNum } : {}),
+          }
+        : undefined;
+      const combatSpec: CombatSpec = {
+        ...(anticipation.trim() ? { anticipation: anticipation.trim() } : {}),
+        ...(hit.trim() ? { hit: hit.trim() } : {}),
+        ...(followThrough.trim() ? { followThrough: followThrough.trim() } : {}),
+        ...(recovery.trim() ? { recovery: recovery.trim() } : {}),
+        ...(ability ? { ability } : {}),
+      };
+      content.combatSpec = Object.keys(combatSpec).length > 0 ? combatSpec : undefined;
+    }
 
     onSave(basics, content, parseAnnotations(annotationsText, frame.annotations ?? []));
   }
@@ -232,6 +261,64 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
             placeholder="What's at risk in this beat"
           />
         </Section>
+
+        {frame.type === 'encounter' && (
+          <>
+            <Section label="Combat — Anticipation" accent={accent}>
+              <textarea
+                value={anticipation}
+                onChange={e => setAnticipation(e.target.value)}
+                rows={2}
+                style={taStyle}
+                placeholder="Optional 4-beat timing — wind-up before the hit"
+              />
+            </Section>
+            <Section label="Combat — Hit" accent={accent}>
+              <textarea
+                value={hit}
+                onChange={e => setHit(e.target.value)}
+                rows={2}
+                style={taStyle}
+                placeholder="Impact / connect"
+              />
+            </Section>
+            <Section label="Combat — Follow-through" accent={accent}>
+              <textarea
+                value={followThrough}
+                onChange={e => setFollowThrough(e.target.value)}
+                rows={2}
+                style={taStyle}
+                placeholder="Weight and motion after the hit"
+              />
+            </Section>
+            <Section label="Combat — Recovery" accent={accent}>
+              <textarea
+                value={recovery}
+                onChange={e => setRecovery(e.target.value)}
+                rows={2}
+                style={taStyle}
+                placeholder="Return to guard / next action"
+              />
+            </Section>
+            <Section label="Combat — Ability Resource id" accent={accent}>
+              <input
+                value={abilityId}
+                onChange={e => setAbilityId(e.target.value)}
+                style={inputStyle}
+                placeholder="res://abilities/slash.tres"
+              />
+            </Section>
+            <Section label="Combat — Ability AP" accent={accent}>
+              <input
+                value={abilityAp}
+                onChange={e => setAbilityAp(e.target.value)}
+                style={inputStyle}
+                placeholder="Action-point cost (optional)"
+                inputMode="decimal"
+              />
+            </Section>
+          </>
+        )}
 
         <Section label="Designer Notes" accent={accent}>
           <textarea
