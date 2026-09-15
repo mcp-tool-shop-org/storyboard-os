@@ -1,6 +1,7 @@
 ---
 import { tollhouseLedgerProject } from '@storyboard-os/rpg-domain';
 import { generateHandoff, generateMarkdown } from '@storyboard-os/rpg-domain';
+import { statusLabels } from '@storyboard-os/core';
 import type { Storyboard } from '../../../lib/storyboard/schema';
 import { getTemplatePreviewStoryboards } from '../../../lib/storyboard/templatePreviews';
 
@@ -35,10 +36,10 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  ready:   'READY',
-  partial: 'PARTIAL',
-  draft:   'DRAFT',
-  blocked: 'BLOCKED',
+  ready:   statusLabels.ready,   // 'SPEC' — VP-005: never READY
+  partial: statusLabels.partial,
+  draft:   statusLabels.draft,
+  blocked: statusLabels.blocked,
 };
 
 const CONN_LABELS: Record<string, string> = {
@@ -290,22 +291,22 @@ function humanizeReasonShort(code: string): string {
       <div class="readiness-chips">
         {handoff.readiness.ready > 0 && (
           <span class="readiness-chip" style={`background: ${STATUS_COLORS.ready}18; border: 1px solid ${STATUS_COLORS.ready}44; color: ${STATUS_COLORS.ready}`}>
-            {handoff.readiness.ready} READY
+            {handoff.readiness.ready} {STATUS_LABELS.ready}
           </span>
         )}
         {handoff.readiness.partial > 0 && (
           <span class="readiness-chip" style={`background: ${STATUS_COLORS.partial}18; border: 1px solid ${STATUS_COLORS.partial}44; color: ${STATUS_COLORS.partial}`}>
-            {handoff.readiness.partial} PARTIAL
+            {handoff.readiness.partial} {STATUS_LABELS.partial}
           </span>
         )}
         {handoff.readiness.blocked > 0 && (
           <span class="readiness-chip" style={`background: ${STATUS_COLORS.blocked}18; border: 1px solid ${STATUS_COLORS.blocked}44; color: ${STATUS_COLORS.blocked}`}>
-            {handoff.readiness.blocked} BLOCKED
+            {handoff.readiness.blocked} {STATUS_LABELS.blocked}
           </span>
         )}
         {handoff.readiness.draft > 0 && (
           <span class="readiness-chip" style={`background: ${STATUS_COLORS.draft}18; border: 1px solid ${STATUS_COLORS.draft}44; color: ${STATUS_COLORS.draft}`}>
-            {handoff.readiness.draft} DRAFT
+            {handoff.readiness.draft} {STATUS_LABELS.draft}
           </span>
         )}
       </div>
@@ -329,7 +330,7 @@ function humanizeReasonShort(code: string): string {
               </span>
               <span class="beat-title">{beat.title}</span>
               <span class="beat-status" style={`background: ${accentColor}18; border: 1px solid ${accentColor}44; color: ${accentColor}`}>
-                {STATUS_LABELS[beat.status] ?? beat.status.toUpperCase()}
+                {STATUS_LABELS[beat.status] ?? beat.status}
               </span>
             </div>
 

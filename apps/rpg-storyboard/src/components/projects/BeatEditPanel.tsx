@@ -12,6 +12,7 @@ import { useState } from 'react';
 import type { StoryboardFrame, StoryboardFrameType, FrameAnnotation, FrameAnnotationType } from '../../lib/storyboard/schema';
 import type { FrameBasicsPatch } from '../../lib/storyboard/project';
 import type { FrameContent } from '@storyboard-os/rpg-domain';
+import { textColors } from '@storyboard-os/core';
 
 // ─── Type label config ────────────────────────────────────────────────────────
 
@@ -168,8 +169,9 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
       }}>
         <span style={{
           display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-          background: accent, fontSize: 10, fontWeight: 700,
-          color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase',
+          background: `${accent}22`, border: `1px solid ${accent}44`,
+          fontSize: 10, fontWeight: 700,
+          color: accent, letterSpacing: '0.08em', textTransform: 'uppercase',
         }}>
           {typeLabel}
         </span>
@@ -180,7 +182,7 @@ export default function BeatEditPanel({ frame, onSave, onCancel }: Props) {
         <button
           onClick={onCancel}
           style={{
-            background: 'none', border: 'none', color: '#475569',
+            background: 'none', border: 'none', color: textColors.secondary,
             cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 2px',
           }}
           aria-label="Cancel editing"

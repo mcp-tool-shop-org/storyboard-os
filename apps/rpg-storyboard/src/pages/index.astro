@@ -1,5 +1,6 @@
 ---
 // Landing page — entry point for the RPG authoring tool.
+import { textColors } from '@storyboard-os/core';
 ---
 
 <!DOCTYPE html>
@@ -38,7 +39,7 @@
 
     .label {
       font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
-      text-transform: uppercase; color: #334155; margin-bottom: 16px;
+      text-transform: uppercase; color: var(--text-secondary); margin-bottom: 16px;
     }
 
     h1 {
@@ -77,13 +78,13 @@
     .entry-card:hover { border-color: rgba(255,255,255,0.18); }
     .entry-card-label {
       font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: #334155;
+      text-transform: uppercase; color: var(--text-secondary);
     }
     .entry-card-title {
       font-size: 15px; font-weight: 700; color: #f1f5f9;
     }
     .entry-card-desc {
-      font-size: 12px; color: #475569; line-height: 1.55;
+      font-size: 12px; color: var(--text-secondary); line-height: 1.55;
     }
     .entry-card-cta {
       font-size: 11px; color: #94a3b8; margin-top: 4px;
@@ -94,7 +95,7 @@
       padding-top: 32px;
     }
     .what-is-title {
-      font-size: 11px; font-weight: 700; color: #334155;
+      font-size: 11px; font-weight: 700; color: var(--text-secondary);
       text-transform: uppercase; letter-spacing: 0.1em;
       margin-bottom: 14px;
     }
@@ -103,13 +104,13 @@
       list-style: none;
     }
     .what-is-item {
-      font-size: 12px; color: #475569; line-height: 1.5;
+      font-size: 12px; color: var(--text-secondary); line-height: 1.5;
       display: flex; gap: 8px;
     }
-    .what-is-bullet { color: #1e293b; flex-shrink: 0; }
+    .what-is-bullet { color: var(--text-secondary); flex-shrink: 0; }
   </style>
 </head>
-<body>
+<body style={`--text-heading:${textColors.heading};--text-secondary:${textColors.secondary}`}>
   <main class="page">
 
     <p class="label">RPG Storyboard OS</p>
