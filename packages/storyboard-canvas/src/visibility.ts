@@ -23,7 +23,7 @@ export function toIdSet(ids: IdCollection): Set<string> {
     }
     return out;
   }
-  return new Set(ids.filter(isUsableId));
+  return new Set([...ids].filter(isUsableId));
 }
 
 /** Direct children of `rootId` (one nest level), in `frames` order. */
