@@ -60,8 +60,11 @@ import {
   getCinematicBeatStatus, getSequenceReadiness,
   getSequenceProductionSignals,
   generateProductionBrief, generateProductionMarkdown, HANDOFF_FORMAT_VERSION,
+  validateProductionBrief, serializeProductionBriefJson,
+  cardBeatLine,
   storyboardOsLaunchTrailer,
 } from '@storyboard-os/cinematic-domain';
+import productionBriefSchema from '@storyboard-os/cinematic-domain/schema/production-brief.json';
 ```
 
 - **Templates** — `CINEMATIC_TEMPLATES`, `getCinematicTemplate(id)`, `createCinematicStoryboard(...)`: production starting points with typed shot sequences. `getCinematicTemplate` returns `undefined` for an unknown id (it does not throw).
@@ -69,7 +72,8 @@ import {
 - **Frame signals** — `getCinematicFrameSignal(frame)` / `getCinematicFrameBadges(frame)` derive per-shot state and canvas badges; `cinematicColors` is the canonical badge palette (shared status swatches from core + `vfx`, `camera`, `sfx`).
 - **Readiness model** — `getCinematicBeatStatus(frame)` classifies a shot's readiness; `getSequenceReadiness(board)` rolls the shots up into a sequence readiness summary.
 - **Production signals** — `getSequenceProductionSignals(board)` surfaces sequence **health**, **VFX** and **audio** burden, **camera-complexity** hotspots, **continuity risk**, **blocked shots**, and a **duration rollup** — the "where is the pain" view for a producer.
-- **Handoff** — two-step: `const brief = generateProductionBrief(board)` then `generateProductionMarkdown(brief)`. The markdown helper takes a `ProductionBrief`, not a `Storyboard`. Briefs carry `HANDOFF_FORMAT_VERSION` for downstream consumers. User text is neutralized before interpolation.
+- **Handoff** — two-step: `const brief = generateProductionBrief(board)` then `generateProductionMarkdown(brief)`. The markdown helper takes a `ProductionBrief`, not a `Storyboard`. Briefs carry `HANDOFF_FORMAT_VERSION` and `$schema`. `generateProductionBrief` and `serializeProductionBriefJson` run `validateProductionBrief` against the published 2020-12 schema (`./schema/production-brief.json`). Markdown is the human twin; do not treat `.tres`/`.uasset` as the contract.
+- **Card beat** — `cardBeatLine(frame)` is the one implementable line for the Konva card (intent, else truncated summary). Inspector keeps the full spec.
 - **Demo** — `storyboardOsLaunchTrailer` is a complete example sequence for tests and previews.
 
 ## Trust model

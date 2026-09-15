@@ -5,6 +5,7 @@ import {
   createCinematicStoryboard,
   generateProductionBrief,
   generateProductionMarkdown,
+  serializeProductionBriefJson,
   getSequenceReadiness,
   humanizeFrameType,
   humanizeStatus,
@@ -33,7 +34,7 @@ const { sequenceId } = Astro.params;
 
 const brief = generateProductionBrief(storyboard);
 const markdownText = generateProductionMarkdown(brief);
-const jsonText = JSON.stringify(brief, null, 2);
+const jsonText = serializeProductionBriefJson(brief);
 const filename = `${sequenceId}-production-brief`;
 const boardUrl = `/sequences/${sequenceId}`;
 const readiness = getSequenceReadiness(storyboard);
