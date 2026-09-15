@@ -60,7 +60,7 @@ Boards are static SSG demos. There is no `localStorage` and no project list. Tre
 
 ### 1. Open a campaign
 
-`pnpm dev:marketing`, then **`/campaigns/campaign-01`** (“Launch rpg-storyboard as First Storyboard OS Vertical”). The index lists the demo plus template-derived boards.
+`pnpm dev:marketing`, then **`/campaigns/campaign-01`** (“Launch rpg-storyboard as First Storyboard OS Vertical”). Also live: `/campaigns/template-product_launch`, `/campaigns/template-campaign_funnel`, `/campaigns/template-content_to_conversion`. `createCampaignFromTemplate` ids are `product_launch` | `campaign_funnel` | `content_to_conversion`.
 
 ### 2. Read launch readiness
 

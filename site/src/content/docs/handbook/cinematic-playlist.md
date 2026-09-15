@@ -1,11 +1,11 @@
 ---
 title: Cinematic playlist
-description: Intended C5 reel — ordered sequence ids, optional take labels, SSG-loaded. Sequences stay the authored unit.
+description: Shipped C5 reel — ordered sequence ids, optional take labels, SSG at /reels/demo-launch-reel. Sequences stay the authored unit.
 sidebar:
   order: 5
 ---
 
-A cinematic **sequence** is the authored unit. A **playlist / reel** is a thin folder that owns many sequences. This page is the intended shape (Feature Pass C5). It can ship in the handbook now and grow when the domain lands. It is **not** an RPG project clone.
+A cinematic **sequence** is the authored unit. A **playlist / reel** is a thin folder that owns many sequences. This page documents the **shipped** `SequencePlaylist` (Feature Pass C5). It is **not** an RPG project clone.
 
 ## Sequencer grain
 
@@ -17,11 +17,11 @@ Unreal Sequencer: a Level Sequence is the container; shots are sub-sequence asse
 | Master / reel that assembles shots | Playlist — ordered sequence ids |
 | Take | Optional **label** on a playlist item, not a persist fork |
 
-The sequence board, inspector, production signals, and production-brief handoff do not move onto the reel. The reel does not become a second edit surface.
+The sequence board, inspector, production signals, and production-brief handoff do not move onto the reel. The reel is not a second edit surface.
 
-## Intended document
+## Shipped document
 
-SSG-loaded authored JSON, same load path as today's demo + template sequences. `BOARD_SCHEMA_VERSION` is the migration hook. No browser store.
+SSG-loaded authored JSON, same catalog path as demo + template sequences. `BOARD_SCHEMA_VERSION` is the migration hook. No browser store.
 
 ```ts
 interface SequencePlaylist {
@@ -36,14 +36,24 @@ interface SequencePlaylist {
 }
 ```
 
-Optional **reel-level brief** (a short production rollup for the folder) may sit beside the playlist. It does not replace per-sequence `generateProductionBrief`.
+Factory: `createSequencePlaylist` in `@storyboard-os/cinematic-domain`. Demo reel: `storyboardOsDemoReel` (`id: demo-launch-reel`).
 
-When this lands:
+## Live SSG catalog
 
-1. One demo reel references existing sequence ids (demo trailer + templates).
-2. The cinematic landing page renders **reel order**.
-3. `/sequences/:id` stays the authored board.
-4. SSG `getStaticPaths` walks reel ids the same way it walks sequence ids today.
+`pnpm dev:cinematic` (or the Pages cinematic app) serves:
+
+| Route | What it is |
+|---|---|
+| `/reels/demo-launch-reel` | Demo reel — launch trailer + three templates, playback order |
+| `/sequences/demo-launch-trailer` | Authored demo sequence |
+| `/sequences/template-trailer-flow` | Gold template `trailer_flow` |
+| `/sequences/template-cutscene-sequence` | Gold template `cutscene_sequence` |
+| `/sequences/template-explainer-video` | Gold template `explainer_video` |
+| `/sequences/:id/handoff` | Per-sequence production brief (Markdown + JSON `formatVersion` 3) |
+
+The cinematic landing page renders **reel order**. `/sequences/:id` stays the authored board. `getStaticPaths` walks reel ids the same way it walks sequence ids.
+
+A take on a reel item is a **label** (`take: 'A'` on the demo trailer). It is not a persist fork and not a copy of the sequence.
 
 ## What this is not
 
@@ -51,18 +61,13 @@ When this lands:
 |---|---|
 | `CinematicStoryboardProject` | RPG project envelope wrapping a cloned `Storyboard` |
 | `localStorage` / `projectStorage.ts` | RPG-only persist. Cinematic boards are SSG. |
-| `/projects/{index,new,board,handoff}` | RPG app routes. Cinematic stays on `/sequences`. |
+| `/projects/{index,new,board,handoff}` | RPG app routes. Cinematic stays on `/sequences` and `/reels`. |
 | `generateCinematicProjectHandoff` | Handoff stays per-sequence; reel brief is optional and thin |
-| Progress overlay / checklist completion store | Sequence readiness is spec depth, not a project.progress map |
+| Progress overlay / checklist completion store | Sequence readiness is spec depth, not a `project.progress` map |
 | App-shell extraction | C6 waits on playlist parity |
 
 Marketing `/campaigns` is also not the template. Campaigns are the marketing authored unit (one board). A cinematic reel is a **list of already-authored sequences**, not a campaign-shaped storyboard.
 
-## Today (before the domain lands)
+Camera language on shots is structured Sequencer fields (`shotSize` / `lensMm` / `fovDeg` / `move`). It is not a 35° sprite-orbit / azimuth / turnaround vocabulary.
 
-- Open a sequence: `/sequences/demo-launch-trailer` after `pnpm dev:cinematic`.
-- Inspect shots, read production signals, export the production brief — [Cinematic sequences](./cinematic-storyboard/).
-- Persistence: none. Edits are not saved across reload. The deliverable is the handoff export.
-- Getting started no longer points cinematic persist at a localStorage project model. See [Getting Started](./getting-started/).
-
-Roadmap: [`docs/roadmap.md`](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/roadmap.md) §1.
+See [Cinematic sequences](./cinematic-storyboard/) and [Getting Started](./getting-started/).

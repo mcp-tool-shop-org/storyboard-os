@@ -9,45 +9,26 @@
 
 ---
 
-## 1. Cinematic vertical — playlist / reel (C5)
+## 1. Cinematic vertical — playlist / reel (C5) — SHIPPED (v1.3.0)
 
 **Findings:** F-5ee88c75 (HIGH) — Feature Pass C5. Replaces the v1.1.0 wording that specified an RPG project clone.
 
 **Where:** `packages/cinematic-storyboard-domain/` and `apps/cinematic-storyboard/`
 
-**Current state:**
-- **Sequences are the authored unit.** The cinematic app serves `/sequences/:id` boards (demo trailer + templates) as SSG, with per-sequence production-brief handoff. There is no cinematic project store and no `localStorage`.
-- RPG ships durable `RpgStoryboardProject` + `/projects/*` + `projectStorage.ts`. Marketing's *package* has campaign-project helpers; the marketing *app* routes under `/campaigns` and does not persist. Cinematic must not copy either of those as the grouping model.
+**Shipped:**
+- **Sequences are the authored unit.** `/sequences/:id` boards (demo trailer + three gold templates) as SSG, with per-sequence production-brief handoff (`formatVersion` 3). No cinematic project store and no `localStorage`.
+- **`SequencePlaylist`** is a thin reel of authored sequence ids. Demo reel `demo-launch-reel` at `/reels/demo-launch-reel` orders `demo-launch-trailer` + the three templates. A take is a label, not a persist fork.
+- Landing renders reel order; `getStaticPaths` walks reel ids.
 
-**Intended shape (Unreal Sequencer grain):** a **sequence** stays the authored board (shots, camera, continuity, production signals, `/sequences/:id` + handoff). A **playlist / reel** is a thin folder that owns many sequences: an ordered list of sequence ids, optional take labels, optional reel-level brief. The reel is SSG-loaded like today's boards. A take is a label, not a persist fork.
-
-```ts
-// Intended SequencePlaylist — domain JSON, not a Storyboard clone
-{
-  schemaVersion: number, // BOARD_SCHEMA_VERSION as the migration hook
-  id: string,
-  title: string,
-  description?: string,
-  items: Array<{ sequenceId: string; take?: string }>,
-  // optional reel-level brief — not a per-frame progress overlay
-}
-```
-
-**In scope when the domain lands:**
-- Domain `SequencePlaylist` factory + one demo reel that references existing sequence ids
-- Landing renders reel order; `/sequences/:id` remains the authored board
-- SSG `getStaticPaths` over reel ids (authored JSON, same load path as today's sequences)
-- Optional take label on an item; optional reel-level brief
-
-**Out of scope (rejected clone — do not build):**
+**Still out of scope (rejected clone — do not build):**
 - `CinematicStoryboardProject` wrapping a cloned `Storyboard`
 - `projectStorage.ts` / `localStorage` / quota / `NEWER_SCHEMA` / progress overlay
 - `pages/projects/{index,new,board,handoff}.astro`
 - `generateCinematicProjectHandoff`
 - `@storyboard-os/routing` `projectRoute` (RPG-shaped)
-- App-shell extraction — C6 waits on playlist parity; do not invent a third persist stack to "catch up" with RPG
+- App-shell extraction — C6 waits; do not invent a third persist stack to "catch up" with RPG
 
-Handbook: [Cinematic playlist](../site/src/content/docs/handbook/cinematic-playlist.md) (intended-shape now; grows when the domain lands).
+Handbook: [Cinematic playlist](../site/src/content/docs/handbook/cinematic-playlist.md).
 
 **Why deferred from v1.1.0:** Feature Pass scope. The earlier spec cloned RPG projects; that is the wrong product.
 

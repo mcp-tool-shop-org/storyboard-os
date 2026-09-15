@@ -60,11 +60,11 @@ Continuity **connections** feed the continuity-risk signal.
 
 ## Authoring loop (`/sequences`)
 
-Boards are static SSG demos. There is no `localStorage`. The authored unit is the **sequence**. A future reel only orders sequence ids — [Cinematic playlist](./cinematic-playlist/).
+Boards are static SSG demos. There is no `localStorage`. The authored unit is the **sequence**. Grouping many sequences is a shipped **playlist / reel** — [Cinematic playlist](./cinematic-playlist/).
 
 ### 1. Open a sequence
 
-`pnpm dev:cinematic`, then **`/sequences/demo-launch-trailer`** (“Storyboard OS Launch Trailer”). The index lists the demo plus template sequences.
+`pnpm dev:cinematic`, then **`/sequences/demo-launch-trailer`** (“Storyboard OS Launch Trailer”). Also live: `/sequences/template-trailer-flow`, `/sequences/template-cutscene-sequence`, `/sequences/template-explainer-video`, and the reel `/reels/demo-launch-reel`.
 
 ### 2. Read production signals
 
@@ -103,7 +103,7 @@ Pointer gestures and keyboard work on every vertical. The **board list** (top-le
 
 ### 5. Export a production brief
 
-Open **`/sequences/demo-launch-trailer/handoff`** (or **Handoff →**). Download **Markdown** (editor / animator / producer document) or **JSON** (schema-validated shot list). JSON `formatVersion` is currently **2** and may bump this wave for structured camera — [Handoff JSON contract](./handoff-json/).
+Open **`/sequences/demo-launch-trailer/handoff`** (or **Handoff →**). Download **Markdown** (editor / animator / producer document) or **JSON** (schema-validated shot list). JSON `formatVersion` is **3** (structured camera) — [Handoff JSON contract](./handoff-json/).
 
 Engine-native files (Godot `.tres`, Unreal `.uasset`) are **compile adapters** after this JSON, never the authoring source.
 

@@ -3,32 +3,34 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/mcp-tool-shop-org/brand/main/logos/storyboard-os/readme.png" alt="Storyboard OS — Visual Stories. Structured. Implemented." width="400" />
+  <img src="https://raw.githubusercontent.com/mcp-tool-shop-org/brand/main/logos/storyboard-os/readme.png" alt="Storyboard OS — Visual Stories. Structured. Implemented." width="550" />
 </p>
 
 <p align="center">
   <a href="https://github.com/mcp-tool-shop-org/storyboard-os/actions/workflows/ci.yml"><img src="https://github.com/mcp-tool-shop-org/storyboard-os/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
+  <a href="https://mcp-tool-shop-org.github.io/storyboard-os/"><img src="https://img.shields.io/badge/landing-Pages-0ea5e9.svg" alt="Landing page" /></a>
+  <a href="https://www.npmjs.com/package/@storyboard-os/core"><img src="https://img.shields.io/npm/v/@storyboard-os/core.svg" alt="npm @storyboard-os/core" /></a>
 </p>
 
 
 ---
 
-インタラクティブな物語（クエスト、キャンペーン、シネマティックなど）のためのビジュアルストーリー構造作成プラットフォーム。これらは相互に接続され、そのつながりを実現する制作ロジックを含みます。
+インタラクティブな物語（クエスト、キャンペーン、シネマティックなど）のための、視覚的なストーリー構造作成プラットフォーム。これらは相互に接続され、その接続を管理する制作ロジックを含みます。
 
 **3つの分野、1つのプラットフォーム：**
 
-| 分野 | ドメイン |
+| 分野 | 領域 |
 |---|---|
 | `rpg-storyboard` | RPGクエスト／ゲームの物語 — 実装可能な形式での作成 |
-| `marketing-storyboard` | キャンペーン開始 — 準備完了状態＋クリティカルパス |
-| `cinematic-storyboard` | 予告編／カットシーン／解説動画 — 制作段階のストーリーボード |
+| `marketing-storyboard` | キャンペーンの開始 — 開始準備 + 重要な経路 |
+| `cinematic-storyboard` | 予告編／カットシーン／解説 — 制作段階のストーリーボード |
 
-これら3つは製品であり、デモではありません。互いにインポートすることはありません。
+これら3つは製品であり、デモではありません。また、互いにデータをインポートすることはありません。
 
 ---
 
-## Storyboard OSとは何か
+## Storyboard OSとは
 
 **実装可能な物語**を設計するための構造化されたボード。キャンバス上のすべてのフレームは、以下の要素を持つシーンです。
 - 開始条件と終了条件
@@ -37,69 +39,69 @@
 - 合否判定を含むテスト基準
 - 実装チェックリスト
 
-このボードは、単なるストーリーのシーケンスだけでなく、ゲームの状態の流れを視覚化します。接続には意味があります。選択肢による分岐、結果につながる展開、物語の主要な流れ、代替経路などです。デザイナーはこのボードを見て、ゲームが実際にどのように機能するかを理解できます。
+このボードは、ストーリーのシーケンスだけでなく、ゲームの状態の流れを視覚化します。接続には意味があり、選択肢の分岐、結果の展開、シーケンスの骨格、代替経路などを表現します。デザイナーはボードを見るだけで、ゲームが実際にどのように機能するかを理解できます。
 
 ## Storyboard OSではないもの
 
 - 汎用的な図表作成ツールやホワイトボードツール
-- セッションランナーまたはGM（ゲームマスター）支援ツール
-- 世界観構築のためのWikiやデータベース
-- 対話ツリーのみを編集するエディター
-- キャンペーン準備アプリ
+- セッションの進行やゲームマスターの支援ツール
+- 世界観の構築や伝承のデータベース
+- 対話ツリーのみを編集するツール
+- キャンペーンの準備アプリ
 
-読者がこれを上記のいずれかと混同してしまう場合、製品の方向性がずれていることになります。
+もし読者がこれを上記のいずれかと混同してしまうようなら、製品の方向性がずれていることになります。
 
 ---
 
 ## rpg-storyboardが実現すること（フェーズ2）
 
-フェーズ2の後、デザイナーはブラウザを離れることなく、プロジェクトの開始から最終的な引き渡しまで、すべての作業を行うことができます。
+フェーズ2の後、デザイナーはブラウザから離れることなく、プロジェクトの開始から最終的な引き渡しまで、すべての作業を行うことができます。
 
 | 機能 | 得られるもの |
 |---|---|
-| **Project creation** | テンプレートから名前付きのプロジェクトを作成します。ボードの位置と編集内容はlocalStorageに保存されます。 |
-| **Visual board** | クエストの流れとゲームの状態の変化を、Konvaキャンバス上で並べて表示します。 |
-| **Beat editing** | 任意のシーンのタイトル、概要、およびすべての実装仕様フィールドを、ボード上で直接編集できます。 |
-| **Progress tracking** | 各シーンの実装チェックリスト項目とテスト基準を確認し、状態を保存します（リロード後も保持されます）。 |
-| **Game-state signal** | 各フレームにバッジを表示します（STATE、SPEC／PARTIAL／DRAFT）。ボードから離れる必要はありません。 |
-| **Implementation readiness** | 各シーンは、READY／PARTIAL／DRAFT／BLOCKEDの状態と、不足している要素を表示します。 |
-| **Project handoff** | ライブプロジェクトの状態から再生成されます。編集されたコンテンツ、シーンごとの進捗状況、および情報源が含まれます。 |
-| **Quest handoff** | テンプレートプレビューボード用の静的なMarkdown + JSONエクスポート機能。 |
-| **Templates** | 3つのRPG制作の開始点（シーンタイプのシーケンスと根拠を含む）。 |
+| **Project creation** | テンプレートから名前付きのプロジェクトを作成。ボードの位置と編集内容はlocalStorageに保存されます。 |
+| **Visual board** | クエストの流れとゲームの状態の分岐ロジックを、Konvaキャンバス上で並べて表示します。 |
+| **Beat editing** | ボード上で、各シーンのタイトル、概要、およびすべての実装仕様フィールドを直接編集できます。 |
+| **Progress tracking** | 実装チェックリストの項目と、各シーンのテスト基準をチェック。状態はリロード後も保持されます。 |
+| **Game-state signal** | 各フレームにバッジ（STATE、SPEC/PARTIAL/DRAFT）を表示。ボードから離れる必要はありません。 |
+| **Implementation readiness** | 各シーンには、READY/PARTIAL/DRAFT/BLOCKEDの状態と、不足しているものが表示されます。 |
+| **Project handoff** | ライブプロジェクトの状態から再生成されます。編集されたコンテンツ、各シーンの進捗状況、およびソース情報が含まれます。 |
+| **Quest handoff** | テンプレートプレビューボード用の、静的なMarkdown + JSONエクスポート。 |
+| **Templates** | シーンタイプのシーケンスと根拠を含む、3つのRPG制作の開始点。 |
 | **Board operations** | ズーム、パン、ボード全体への表示、リセット、キーボードショートカット — ラップトップで使いやすいナビゲーション。 |
 
-このボードは作成のための表面です。シーンインスペクターは編集可能な実装仕様です。引き渡しは、実際のプロジェクトの状態から生成されたドキュメントであり、静的なスナップショットではありません。
+ボードは作成のための表面です。シーンインスペクターは、編集可能な実装仕様です。引き渡しは、実際のプロジェクトの状態から生成されたドキュメントであり、静的なスナップショットではありません。
 
 ### フェーズ1の機能（引き続き利用可能）
 
-フェーズ1では、読み取り専用のプレビュー機能を確立しました。これには、キャンバスレンダリング、ゲームの状態シグナル、実装準備モデル、クエスト引き渡しエクスポート、テンプレートギャラリー、およびボードナビゲーションが含まれます。フェーズ1のすべての機能は保持され、フェーズ2で拡張されます。
+フェーズ1では、読み取り専用のプレビュー機能が確立されました。これには、キャンバスのレンダリング、ゲームの状態のシグナル、実装の準備モデル、クエストの引き渡しエクスポート、テンプレートギャラリー、およびボードのナビゲーションが含まれます。フェーズ1のすべての機能は保持され、フェーズ2で拡張されています。
 
 ---
 
 ## パッケージ
 
-| パッケージ | 含まれるもの |
+| パッケージ | 所有するもの |
 |---|---|
-| `@storyboard-os/core` | 汎用的なストーリーボードプリミティブ：フレーム、接続（タイプに依存しない）、注釈、テンプレート、構造検証ツール。各ドメインは独自の接続語彙を持ちます。 |
-| `@storyboard-os/rpg-domain` | RPGゲーム作成契約：フレームのタイプ、コンテンツフィールド、テンプレート、準備モデル、引き渡しジェネレーター、Tollhouse Ledgerデモクエスト。 |
-| `@storyboard-os/marketing-domain` | マーケティングキャンペーン実装契約：フレームのタイプ（ターゲットオーディエンス、メッセージ、タッチポイント、アセット、承認、ローンチイベント、測定）、ローンチ準備モデル、クリティカルパス、承認ゲート、測定ループ、キャンペーン概要エクスポート、デモキャンペーン。 |
-| `@storyboard-os/cinematic-domain` | シネマティック制作契約：9つのフレームタイプ、カメラの表現方法、VFX／オーディオ／連続性の要件、制作シグナル（健全性、負担、複雑さ、問題のあるショット）、制作概要引き渡し、3つのテンプレート、デモ予告編シーケンス。 |
-| `@storyboard-os/canvas` | Konvaキャンバスレンダラー：フレーム、接続、選択、ドラッグ、タイプバッジ、接続ラベル、ズーム／パンビューポート。ドメイン設定が渡されます。 |
-| `@storyboard-os/routing` | 構成可能なURLヘルパー：ボードとフレームのルート生成。依存関係はありません。 |
+| `@storyboard-os/core` | 汎用的なストーリーボードのプリミティブ：フレーム、接続（タイプに依存しない）、注釈、テンプレート、構造検証ツール。各領域は、独自の接続語彙を所有します。 |
+| `@storyboard-os/rpg-domain` | RPGゲーム作成の契約：フレームタイプ、コンテンツフィールド、テンプレート、準備モデル、引き渡しジェネレーター、Tollhouse Ledgerデモクエスト。 |
+| `@storyboard-os/marketing-domain` | マーケティングキャンペーンの実装契約：フレームタイプ（オーディエンス、メッセージ、タッチポイント、アセット、承認、開始イベント、測定）、開始準備モデル、重要な経路、承認ゲート、測定ループ、キャンペーン概要のエクスポート、デモキャンペーン。 |
+| `@storyboard-os/cinematic-domain` | シネマティック制作契約：9つのフレームタイプ、カメラの表現、VFX／オーディオ／連続性の要件、制作シグナル（健全性、負担、複雑さ、問題のあるショット）、制作概要の引き渡し、3つのテンプレート、デモ予告編シーケンス。 |
+| `@storyboard-os/canvas` | Konvaキャンバスレンダラー：フレーム、接続、選択、ドラッグ、タイプバッジ、接続ラベル、ズーム／パンビューポート。ドメイン構成が渡されます。 |
+| `@storyboard-os/routing` | 設定可能なURLヘルパー：ボードとフレームのルート生成。依存関係はありません。 |
 
 ## アプリケーション
 
-| アプリ | 概要 |
+| アプリケーション | その内容 |
 |---|---|
-| `rpg-storyboard` | Astro RPGゲーム作成製品。含まれるもの：RPGキャンバス設定、フレームインスペクター、引き渡しページ、テンプレートギャラリー、ルート設定、ページレイアウト。 |
-| `marketing-storyboard` | Astroキャンペーン実装ストーリーボード。含まれるもの：マーケティングキャンバス設定、キャンペーンボード、フレームインスペクター、ローンチ準備バッジ、クリティカルパスの強調表示、ローンチブロックパネル、キャンペーン概要引き渡し。 |
-| `cinematic-storyboard` | Astroシネマティック制作ストーリーボード。含まれるもの：シネマティックキャンバス設定、シーケンスボード、フレームインスペクター（カメラ／VFX／オーディオ／連続性）、制作シグナルパネル（健全性／負担／複雑さ）、制作概要引き渡し。 |
+| `rpg-storyboard` | Astro RPGゲーム作成製品。所有するもの：RPGキャンバス構成、フレームインスペクター、引き渡しページ、テンプレートギャラリー、ルート設定、ページレイアウト。 |
+| `marketing-storyboard` | Astroキャンペーン実装ストーリーボード。所有するもの：マーケティングキャンバス構成、キャンペーンボード、フレームインスペクター、開始準備バッジ、重要な経路の強調表示、開始の障害パネル、キャンペーン概要の引き渡し。 |
+| `cinematic-storyboard` | Astroシネマティック制作ストーリーボード。所有するもの：シネマティックキャンバス構成、シーケンスボード、フレームインスペクター（カメラ／VFX／オーディオ／連続性）、制作シグナルパネル（健全性／負担／複雑さ）、制作概要の引き渡し。 |
 
 ---
 
 ## アーキテクチャ
 
-これらのパッケージは、明確な依存関係チェーンを形成します。
+パッケージは、明確な依存関係チェーンを形成します。
 
 ```
 apps/rpg-storyboard
@@ -136,40 +138,40 @@ apps/cinematic-storyboard
   → (no deps)
 ```
 
-4番目の分野を作成すると、独自のドメインパッケージが作成され、既存のドメインパッケージに触れることなく、`@storyboard-os/core`、`@storyboard-os/canvas`、および`@storyboard-os/routing`を再利用します。3つの分野でこのパターンが証明されています：キャンバス、コア、またはルーティングに変更はありません。
+4番目の分野を作成すると、独自のドメインパッケージを作成し、既存のドメインパッケージに触れることなく、`@storyboard-os/core`、`@storyboard-os/canvas`、および`@storyboard-os/routing`を再利用できます。3つの分野でこのパターンが証明されました。キャンバス、コア、またはルーティングに変更はありません。
 
-詳細については、[`docs/architecture.md`](docs/architecture.md)を参照してください。
+詳細は、[`docs/architecture.md`](docs/architecture.md)を参照してください。
 
 ---
 
 ## クイックスタート
 
-<!-- AUTOGEN-NOTE: Snapshot values (937 tests, 54 pages) below are manually updated.
-Verify with: pnpm test (test count), pnpm -r build (page count).
-See docs/snapshot-checklist.md for every location that holds these snapshots. -->
+<!-- AUTOGEN-NOTE: Snapshot values (1413 tests, 63 pages) below are manually updated.
+     Verify with: pnpm test (test count), pnpm -r build (page count).
+     See docs/snapshot-checklist.md for every location that holds these snapshots. -->
 
 ```bash
 pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
-pnpm test       # runs all package + app tests (937 tests)
-pnpm build      # builds all 3 apps (54 pages)
+pnpm test       # runs all package + app tests (1413 tests)
+pnpm build      # builds all 3 apps (63 pages)
 pnpm verify     # typecheck + test + build in one command (ship gate)
 ```
 
-要件：Node ≥ 20、pnpm ≥ 10。
+要件：Node ≥ 22.13、pnpm ≥ 11。
 
-テストの範囲は、`@storyboard-os/*` パッケージと `rpg-storyboard` に自動的に絞り込まれます。親ディレクトリ内の関連ワークスペースは対象外となります。
+テストの範囲は、自動的に`@storyboard-os/*`パッケージと`rpg-storyboard`にフィルタリングされます。親ディレクトリ内の他のワークスペースは対象外です。
 
 ---
 
 ## 信頼モデル
 
-Storyboard OS は **ローカル専用のブラウザアプリケーション** です。サーバー、アカウント、ネットワークへのデータ送信はありません。
+Storyboard OSは、**ローカルのみのブラウザアプリケーション**（3つの分野）です。サーバー、アカウント、ネットワークへのデータ送信はありません。
 
-- **アクセスされるデータ:** ユーザーのデバイス上のブラウザの `localStorage` に保存されているプロジェクトデータ（ビート仕様、ボードの位置、チェックリストの進捗）。
-- **アクセスされないデータ:** 認証情報、支払い情報、デザイナーがビート仕様フィールドに入力する以外の個人データ。
-- **実行時のネットワークリクエストはありません。** アプリは静的なサイトです。最初のページ読み込み後、ネットワークへの接続は一切行われません。
-- **テレメトリー機能はありません。** データの収集や送信は行いません。
+- **アクセスされたデータ:** **RPGのみ** — ユーザーのデバイス上のブラウザ `localStorage` 内のプロジェクトデータ（ビートの仕様、ボードの位置、チェックリストの進捗）。マーケティングおよびシネマティック部門は、ハンドオフのエクスポート機能付きの静的なデモボードを使用しますが、本日は `localStorage` は使用しません。
+- **アクセスされないデータ:** 認証情報、支払い情報、オペレーターが仕様フィールド（RPG）に入力する情報や、静的なデモコンテンツに作成された情報以外の個人データは一切使用しません。
+- **実行時のネットワークリクエストはありません。** 各アプリケーションは静的なサイトです。最初のページ読み込み後、ネットワークへのアクセスは一切行われません。
+- **テレメトリーは行いません。** データの収集や送信は行いません。
 
 完全な信頼モデルと脆弱性報告については、[`SECURITY.md`](SECURITY.md) を参照してください。
 
@@ -177,57 +179,67 @@ Storyboard OS は **ローカル専用のブラウザアプリケーション** 
 
 ## ステータス
 
-<!-- AUTOGEN-NOTE: 以下のスナップショット値（937テスト、54ページ、6パッケージ、3アプリ）は手動で更新されます。次のコマンドで確認してください。
-pnpm test                       # テストの実行結果
-pnpm -r build                   # ビルドされたページの数（Astroの出力からカウント）
-ls packages/ | wc -l            # パッケージの数
-ls apps/ | wc -l                # アプリの数
-これらの値が保存されているすべてのドキュメントの場所については、docs/snapshot-checklist.md を参照してください。 -->
+<!-- AUTOGEN-NOTE: Snapshot values below (1413 tests, 63 pages, 6 packages, 3 apps) are
+     manually updated. Verify with:
+       pnpm test                       # tests passing
+       pnpm -r build                   # pages built (count from Astro output)
+       ls packages/ | wc -l            # package count
+       ls apps/ | wc -l                # app count
+     See docs/snapshot-checklist.md for every doc location that holds these. -->
 
 ```
-Phase 2 + Marketing Phase 0 + Cinematic Phase 0 + Core Hardening 1A + v1.2.0 Health Hardening
-937/937 tests passing
-54/54 pages built
+v1.3.0 Feature Pass — gold templates, playlist, nest, engine adapters
+1413/1413 tests passing
+63/63 pages built
 6 packages · 3 apps
 ```
 
 | フェーズ | 説明 | ステータス |
 |---|---|---|
-| 0A–0F | RPG 制作のプロトタイプ — キャンバス、ビートページ、テンプレート、デモクエスト | ✅ |
+| 0A–0F | RPGの作成の検証 — キャンバス、ビートページ、テンプレート、デモクエスト | ✅ |
 | 0R | 修正と再アンカー — すべてのフレームにゲームの状態仕様が含まれる | ✅ |
-| 0M | モノリポジトリへの移行 — コア、ドメイン、キャンバス、ルーティングを分離 | ✅ |
+| 0M | モノリポジトリへの移行 — コア、ドメイン、キャンバス、ルーティングを抽出 | ✅ |
 | 1A | ブランチとキャンバス上の状態の可視化 | ✅ |
-| 1B | ビートごとの実装準備状況 | ✅ |
-| 1C | クエストハンドオフのエクスポート | ✅ |
+| 1B | ビートごとの実装の準備状況 | ✅ |
+| 1C | クエストのハンドオフエクスポート | ✅ |
 | 1D | テンプレートギャラリー | ✅ |
 | 1E | ボード操作 — ズーム、パン、フィット、ビューポートコントロール | ✅ |
 | 1F | リリース完了 — ドキュメント、変更履歴、アーキテクチャに関する注記 | ✅ |
-| 2A | テンプレートからのプロジェクト作成 — `localStorage` による永続化 | ✅ |
-| 2B | プロジェクトごとのボード位置の永続化 | ✅ |
+| 2A | テンプレートからのプロジェクトの作成 — localStorageによる永続化 | ✅ |
+| 2B | プロジェクトごとの永続的なボードの位置 | ✅ |
 | 2C | 編集可能なビートコンテンツ — 仕様フィールドは再読み込み後も保持される | ✅ |
-| 2D | チェックリスト/進捗状況の永続化 — 仕様テキストとは別に保存 | ✅ |
-| 2E | プロジェクトハンドオフ — 保存されたプロジェクトの状態から再生成 | ✅ |
+| 2D | チェックリスト/進捗の永続化 — 仕様テキストとは別に保存 | ✅ |
+| 2E | プロジェクトのハンドオフ — 保存されたプロジェクトの状態から再生成 | ✅ |
 | 2F | リリース完了 — ドキュメント、変更履歴、アーキテクチャに関する注記 | ✅ |
 | M-0A | マーケティングドメインパッケージ — スキーマ、シグナル、テンプレート、検証、デモキャンペーン | ✅ |
-| M-0B | マーケティングアプリの垂直方向 — Astro キャンペーンボード、フレームインスペクター、ハンドオフ | ✅ |
-| M-0C | ローンチ準備完了シグナルレイヤー — 重要なパス、承認ゲート、測定ループ | ✅ |
+| M-0B | マーケティングアプリの垂直方向 — Astroキャンペーンボード、フレームインスペクター、ハンドオフ | ✅ |
+| M-0C | ローンチの準備状況シグナルレイヤー — 重要なパス、承認ゲート、測定ループ | ✅ |
 | M-0D | マーケティング完了 — ドキュメント、変更履歴、アーキテクチャの検証 | ✅ |
 | C-0A | シネマティックドメインパッケージ — スキーマ、カメラ言語、VFX/オーディオ、テンプレート、検証、デモ | ✅ |
-| C-0B | シネマティックアプリの垂直方向 — Astro シーケンスボード、フレームインスペクター、制作概要 | ✅ |
-| C-0C | 制作シグナルレイヤー — 健全性、VFX/オーディオの負荷、カメラの複雑さ、問題のあるショット | ✅ |
+| C-0B | シネマティックアプリの垂直方向 — Astroシーケンスボード、フレームインスペクター、制作概要 | ✅ |
+| C-0C | 制作シグナルレイヤー — 健全性、VFX/オーディオの負担、カメラの複雑さ、問題のあるショット | ✅ |
 | C-0D | シネマティック完了 — ドキュメント、変更履歴、アーキテクチャの検証 | ✅ |
 | H-1A | コアの強化 — ジェネリックな接続タイプ、ドメインは独自の語彙を持つ | ✅ |
-| v1.2.0 | 健全性の強化 — バリデーターによるエラー発生回避、ストアの堅牢性 + `localStorage` スキーマバージョニング、デザイン トークンレイヤー、キーボード/スクリーンリーダーによるキャンバスへのアクセス、Astro 5 + CI 依存関係監査ゲート | ✅ |
+| v1.2.0 | 健全性の強化 — バリデーターは例外をスローしない、ストアの回復力 + localStorageのスキーマバージョン管理、デザイン トークンレイヤー、キーボード/スクリーンリーダーによるキャンバスへのアクセス、Astro 5 + CI依存関係監査ゲート | ✅ |
+| v1.3.0 | 機能パス — 9つのゴールドテンプレート + SSGカタログ、シネマティックシーケンスプレイリスト `/reels/demo-launch-reel`、ネスト（`parentFrameId` + `collapsedIds`）、一方通行のエンジンアダプター、JSONスキーマのハンドオフ | ✅ |
 
 ---
 
 ## デモ
 
-**The Tollhouse Ledger** — 3つの派閥が同じ隠された台帳を狙っています。プレイヤーは誰が勝つか、誰が負けるか、そしてその地域の将来の姿を決定します。完全なゲーム状態仕様（フラグ名、アセット要件、パス/フェイルテスト基準、実装チェックリスト）を備えた8つのビートがあります。
+**「The Tollhouse Ledger」** — 3つの派閥が同じ隠された台帳を求めています。プレイヤーは、誰が勝つか、誰が負けるか、そしてこの地域が今後どのように見えるかを決定します。完全なゲームの状態仕様を持つ8つのビート：フラグの名前、アセットの要件、パス/フェイルのテスト基準、実装のチェックリスト。
 
 デモ内のすべてのフレームは、追加のドキュメントなしで、RPGエンジンのクエストとして実装できます。
 
-ルート: `/storyboards/quest-01`
+ルート：`/storyboards/quest-01`
+
+**公開されたカタログ（SSG）：**
+
+| 分野 | デモ | テンプレート |
+|---|---|---|
+| RPG | `/storyboards/quest-01` | `/storyboards/template-quest-flow`, `template-quest-branch`, `template-cutscene-beat` |
+| マーケティング | `/campaigns/campaign-01` | `/campaigns/template-product_launch`, `template-campaign_funnel`, `template-content_to_conversion` |
+| シネマティック | `/sequences/demo-launch-trailer` · リール `/reels/demo-launch-reel` | `/sequences/template-trailer-flow`, `template-cutscene-sequence`, `template-explainer-video` |
 
 ---
 
@@ -235,13 +247,18 @@ Phase 2 + Marketing Phase 0 + Cinematic Phase 0 + Core Hardening 1A + v1.2.0 Hea
 
 - [`docs/architecture.md`](docs/architecture.md) — パッケージの分離、依存関係ルール、キャンバスビューポートモデル、プロジェクトストレージ境界、拡張性
 - [`docs/product-brief.md`](docs/product-brief.md) — rpg-storyboardとは何か、ターゲットユーザー、ドリフト警告、受け入れゲート
-- [`docs/rpg-storyboard.md`](docs/rpg-storyboard.md) — RPGゲーム制作の契約、完全な制作ループ（フェーズ2）、準備完了モデル、ハンドオフのエクスポート
-- [`docs/marketing-storyboard.md`](docs/marketing-storyboard.md) — マーケティングキャンペーン実装の契約、ローンチ準備完了モデル、重要なパス、除外事項
-- [`docs/cinematic-storyboard.md`](docs/cinematic-storyboard.md) — シネマティック制作ストーリーボード、制作シグナル、カメラ言語、意図的な除外事項
+- [`docs/rpg-storyboard.md`](docs/rpg-storyboard.md) — RPGゲーム作成の契約、完全な作成ループ（フェーズ2）、準備モデル、ハンドオフエクスポート
+- [`docs/marketing-storyboard.md`](docs/marketing-storyboard.md) — マーケティングキャンペーンの実装契約、ローンチの準備モデル、重要なパス、除外
+- [`docs/cinematic-storyboard.md`](docs/cinematic-storyboard.md) — シネマティック制作のストーリーボード、制作シグナル、カメラ言語、意図的な除外
 - [`docs/cinematic-phase-0-closeout.md`](docs/cinematic-phase-0-closeout.md) — シネマティックフェーズ0の主要なナラティブ、受け入れゲート、検証
 - [`docs/marketing-phase-0-closeout.md`](docs/marketing-phase-0-closeout.md) — マーケティングフェーズ0の主要なナラティブ、受け入れゲート、検証
-- [`docs/phase-2-closeout.md`](docs/phase-2-closeout.md) — フェーズ2の主要なナラティブ、アーキテクチャ整合性の記録、意図的な除外事項
-- [`docs/phase-1-closeout.md`](docs/phase-1-closeout.md) — フェーズ1の主要なナラティブとアーキテクチャ整合性の記録
-- [`docs/phase-0-closeout.md`](docs/phase-0-closeout.md) — フェーズ0の犬食いテストの結果と、元のフェーズ1のバックログ
-- [`docs/monorepo-migration.md`](docs/monorepo-migration.md) — 0M移行ログ：何が移動したか、その理由、および結果として得られたアーキテクチャ
+- [`docs/phase-2-closeout.md`](docs/phase-2-closeout.md) — フェーズ2の主要なナラティブ、アーキテクチャの整合性記録、意図的な除外
+- [`docs/phase-1-closeout.md`](docs/phase-1-closeout.md) — フェーズ1の主要なナラティブとアーキテクチャの整合性記録
+- [`docs/phase-0-closeout.md`](docs/phase-0-closeout.md) — フェーズ0のドッグフードの評価と、元のフェーズ1のバックログ
+- [`docs/monorepo-migration.md`](docs/monorepo-migration.md) — 0M移行ログ：何が移行されたか、その理由、およびその結果のアーキテクチャ
 - [`CHANGELOG.md`](CHANGELOG.md) — リリース履歴
+- [ランディングページ](https://mcp-tool-shop-org.github.io/storyboard-os/) · [ハンドブック](https://mcp-tool-shop-org.github.io/storyboard-os/handbook/)
+
+---
+
+<p align="center">Built by <a href="https://mcp-tool-shop.github.io/">MCP Tool Shop</a></p>

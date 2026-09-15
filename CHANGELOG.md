@@ -2,15 +2,32 @@
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-09-15
+
+### Feature Pass (dogfood swarm `swarm-1789422023-bba8`)
+
+Nine gold SPEC templates, JSON Schema handoffs, SSG catalogs, cinematic playlist, nest, and one-way engine adapters. Tests: **937 → 1413**. Pages: **54 → 63**.
+
+### Added
+
+- **Nine gold templates** with full spec depth (no scaffold copy): RPG `quest_flow` / `quest_branch` / `cutscene_beat`; marketing `product_launch` / `campaign_funnel` / `content_to_conversion`; cinematic `trailer_flow` / `cutscene_sequence` / `explainer_video`.
+- **SSG catalogs** — marketing `campaign-01` plus `template-product_launch`, `template-campaign_funnel`, `template-content_to_conversion`; cinematic `demo-launch-trailer` plus `template-trailer-flow`, `template-cutscene-sequence`, `template-explainer-video`.
+- **Cinematic `SequencePlaylist`** — thin reel of authored sequence ids. Demo `/reels/demo-launch-reel`. Take is a label, not a persist fork. Not an RPG project clone.
+- **Structured camera** on cinematic `ProductionBrief` (`formatVersion` **3**): `shotSize` / `lensMm` / `fovDeg` / `move`. `orbit` aliases `arc`. Not a 35° sprite-orbit vocabulary.
+- **Nest** — optional `parentFrameId` + board-level `collapsedIds`; `visibleFrames`; canvas collapse chip. Default show-all. RPG choice fans; cinematic cutaway/reaction fans. Density warn 50 / refuse 100.
+- **One-way adapters** — RPG `.tres` + world-forge pack; marketing assets CSV / events JSON / checklist MD; cinematic Sequencer/Godot compile DTOs. Schema-gated. No reverse import.
+- **Published 2020-12 JSON Schemas** for storyboard, quest/project handoff, campaign handoff, production brief — copied into `docs/schemas/` and `site/public/schemas/`.
+- **CycloneDX SBOM** on GitHub release (`@cyclonedx/cyclonedx-npm`); `publish.yml` `environment: npm-publish`; `check-site-dist.mjs` in CI and Pages.
+
 ### Docs
 
-- Handbook Feature Pass C1–C5: cinematic **playlist/reel** (ordered sequence ids, optional take labels, SSG — not an RPG project clone); marketing + cinematic **authoring loops** on Pages; **Handoff JSON contract** (`formatVersion` discriminators, C4 fields, Markdown vs JSON, engine-native as adapter); **card vs inspector** C2 law + density warn/over (~50 / ~100); encounter stays quest-logic (no 4-beat motion frame); **no AI auto-wire** of frames or connections; **AccessibleFrameList** keyboard (Arrow Up/Down, Enter/Space) in handbook tables.
-- Copied Wave 1 domain JSON Schemas into `docs/schemas/` and `site/public/schemas/` (quest/project handoff, campaign handoff, production brief). Cinematic `ProductionBrief` is `formatVersion` 2 in the published file and may bump for structured camera — consumers must switch on the discriminator.
-- Roadmap §1 rewritten off `CinematicStoryboardProject` / `localStorage` / `pages/projects/*`.
+- Handbook catalog ids match the live SSG routes. Cinematic playlist page documents the shipped reel. Cinematic JSON is `formatVersion` 3. Nest is documented as shipped, not intended.
+- Operator playbook, C1–C5 laws (card vs inspector, no AI auto-wire, encounter stays quest-logic).
 
 ### Security / Dependencies
 
 - Apps pin **astro ^7.3.1**. The two SSR-only `auditConfig.ignoreGhsas` suppressions (`GHSA-2pvr-wf23-7pc7`, `GHSA-8hv8-536x-4wqp`) are removed from `pnpm-workspace.yaml`; `pnpm audit --prod --audit-level=high` runs unsuppressed in CI.
+- Package `engines.node` aligned to `>=22.13.0`. The three Astro apps are `private: true` (not published).
 
 ## [1.2.1] — 2026-07-07
 

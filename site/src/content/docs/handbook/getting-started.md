@@ -34,35 +34,36 @@ Only one `pnpm dev*` process is needed for the vertical you are trying. Marketin
 pnpm verify
 ```
 
-<!-- AUTOGEN-NOTE: Snapshot values (937 tests, 54 pages) below are manually updated.
+<!-- AUTOGEN-NOTE: Snapshot values (1413 tests, 63 pages) below are manually updated.
      Verify with: pnpm test (test count), pnpm -r build (page count).
      See docs/snapshot-checklist.md for every doc location that holds these snapshots. -->
 
-Runs all 937 tests + builds all 54 pages across all three apps. This is the gate before any commit.
+Runs all 1413 tests + builds all 63 pages across all three apps. This is the gate before any commit.
 
 ---
 
 ## First run — marketing (`/campaigns`)
 
 1. Start the app: `pnpm dev:marketing`.
-2. Open the index — it lists the demo campaign and any template-derived boards.
-3. Open the demo campaign board: **`/campaigns/campaign-01`** (“Launch rpg-storyboard as First Storyboard OS Vertical”).
+2. Open the index — it lists the demo campaign and the three gold templates.
+3. Open the demo campaign board: **`/campaigns/campaign-01`**. Also live: `/campaigns/template-product_launch`, `/campaigns/template-campaign_funnel`, `/campaigns/template-content_to_conversion`. Factory ids for `createCampaignFromTemplate` are `product_launch` | `campaign_funnel` | `content_to_conversion`.
 4. Inspect frames for launch-readiness signals (approval gates, critical path, measurement loops). Full authoring loop: [Marketing campaigns](./marketing-storyboard/).
 5. Open **`/campaigns/campaign-01/handoff`** and download the campaign brief as Markdown or JSON.
 
-No project list and no browser persistence — edits are not saved across reload in this Phase-0 app. Treat the handoff export as the deliverable.
+No project list and no browser persistence — edits are not saved across reload. Treat the handoff export as the deliverable.
 
 ---
 
 ## First run — cinematic (`/sequences`)
 
 1. Start the app: `pnpm dev:cinematic`.
-2. Open the index — demo trailer plus template sequences.
-3. Open the demo sequence board: **`/sequences/demo-launch-trailer`** (“Storyboard OS Launch Trailer”).
-4. Use the production signal panel (health, continuity risk, VFX/audio burden, camera complexity). Full authoring loop: [Cinematic sequences](./cinematic-storyboard/).
-5. Open **`/sequences/demo-launch-trailer/handoff`** and download the production brief as Markdown or JSON.
+2. Open the index — demo trailer plus template sequences, in reel order.
+3. Open the demo sequence board: **`/sequences/demo-launch-trailer`**. Also live: `/sequences/template-trailer-flow`, `/sequences/template-cutscene-sequence`, `/sequences/template-explainer-video`.
+4. Open the shipped reel: **`/reels/demo-launch-reel`**.
+5. Use the production signal panel (health, continuity risk, VFX/audio burden, camera complexity). Full authoring loop: [Cinematic sequences](./cinematic-storyboard/).
+6. Open **`/sequences/demo-launch-trailer/handoff`** and download the production brief as Markdown or JSON (`formatVersion` 3).
 
-Same persistence note as marketing: static SSG boards today. Sequences stay the authored unit. Grouping many sequences is a **playlist / reel** (ordered sequence ids, optional take labels, SSG-loaded) — not an RPG-style `localStorage` project. See [Cinematic playlist](./cinematic-playlist/) and roadmap §1.
+Same persistence note as marketing: static SSG boards. Sequences stay the authored unit. Grouping many sequences is a shipped **playlist / reel** (ordered sequence ids, optional take labels) — not an RPG-style `localStorage` project. See [Cinematic playlist](./cinematic-playlist/).
 
 ---
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="README.ja.md">日本語</a> | <a href="README.zh.md">中文</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.hi.md">हिन्दी</a> | <a href="README.it.md">Italiano</a> | <a href="README.pt-BR.md">Português (BR)</a>
+  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.zh.md">中文</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.hi.md">हिन्दी</a> | <a href="README.it.md">Italiano</a> | <a href="README.pt-BR.md">Português (BR)</a>
 </p>
 
 <p align="center">
@@ -9,6 +9,8 @@
 <p align="center">
   <a href="https://github.com/mcp-tool-shop-org/storyboard-os/actions/workflows/ci.yml"><img src="https://github.com/mcp-tool-shop-org/storyboard-os/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
+  <a href="https://mcp-tool-shop-org.github.io/storyboard-os/"><img src="https://img.shields.io/badge/landing-Pages-0ea5e9.svg" alt="Landing page" /></a>
+  <a href="https://www.npmjs.com/package/@storyboard-os/core"><img src="https://img.shields.io/npm/v/@storyboard-os/core.svg" alt="npm @storyboard-os/core" /></a>
 </p>
 
 
@@ -144,15 +146,15 @@ See [`docs/architecture.md`](docs/architecture.md) for full detail.
 
 ## Quick Start
 
-<!-- AUTOGEN-NOTE: Snapshot values (937 tests, 54 pages) below are manually updated.
+<!-- AUTOGEN-NOTE: Snapshot values (1413 tests, 63 pages) below are manually updated.
      Verify with: pnpm test (test count), pnpm -r build (page count).
      See docs/snapshot-checklist.md for every location that holds these snapshots. -->
 
 ```bash
 pnpm install
 pnpm dev        # starts rpg-storyboard at localhost:4321
-pnpm test       # runs all package + app tests (937 tests)
-pnpm build      # builds all 3 apps (54 pages)
+pnpm test       # runs all package + app tests (1413 tests)
+pnpm build      # builds all 3 apps (63 pages)
 pnpm verify     # typecheck + test + build in one command (ship gate)
 ```
 
@@ -177,7 +179,7 @@ See [`SECURITY.md`](SECURITY.md) for the full trust model and vulnerability repo
 
 ## Status
 
-<!-- AUTOGEN-NOTE: Snapshot values below (937 tests, 54 pages, 6 packages, 3 apps) are
+<!-- AUTOGEN-NOTE: Snapshot values below (1413 tests, 63 pages, 6 packages, 3 apps) are
      manually updated. Verify with:
        pnpm test                       # tests passing
        pnpm -r build                   # pages built (count from Astro output)
@@ -186,9 +188,9 @@ See [`SECURITY.md`](SECURITY.md) for the full trust model and vulnerability repo
      See docs/snapshot-checklist.md for every doc location that holds these. -->
 
 ```
-Phase 2 + Marketing Phase 0 + Cinematic Phase 0 + Core Hardening 1A + v1.2.0 Health Hardening
-937/937 tests passing
-54/54 pages built
+v1.3.0 Feature Pass — gold templates, playlist, nest, engine adapters
+1413/1413 tests passing
+63/63 pages built
 6 packages · 3 apps
 ```
 
@@ -219,6 +221,7 @@ Phase 2 + Marketing Phase 0 + Cinematic Phase 0 + Core Hardening 1A + v1.2.0 Hea
 | C-0D | Cinematic closeout — docs, changelog, architecture proof | ✅ |
 | H-1A | Core Hardening — generic connection types, domains own their vocabulary | ✅ |
 | v1.2.0 | Health hardening — validator no-throw, store resilience + localStorage schema versioning, design-token layer, keyboard/screen-reader canvas access, astro 5 + CI dependency-audit gate | ✅ |
+| v1.3.0 | Feature Pass — nine gold templates + SSG catalogs; cinematic SequencePlaylist `/reels/demo-launch-reel`; nest (`parentFrameId` + `collapsedIds`); one-way engine adapters; JSON Schema handoffs | ✅ |
 
 ---
 
@@ -229,6 +232,14 @@ Phase 2 + Marketing Phase 0 + Cinematic Phase 0 + Core Hardening 1A + v1.2.0 Hea
 Every frame in the demo is implementable as a quest in an RPG engine without supplementary documentation.
 
 Route: `/storyboards/quest-01`
+
+**Published catalogs (SSG):**
+
+| Vertical | Demo | Templates |
+|---|---|---|
+| RPG | `/storyboards/quest-01` | `/storyboards/template-quest-flow`, `template-quest-branch`, `template-cutscene-beat` |
+| Marketing | `/campaigns/campaign-01` | `/campaigns/template-product_launch`, `template-campaign_funnel`, `template-content_to_conversion` |
+| Cinematic | `/sequences/demo-launch-trailer` · reel `/reels/demo-launch-reel` | `/sequences/template-trailer-flow`, `template-cutscene-sequence`, `template-explainer-video` |
 
 ---
 
@@ -246,3 +257,8 @@ Route: `/storyboards/quest-01`
 - [`docs/phase-0-closeout.md`](docs/phase-0-closeout.md) — Phase 0 dogfood verdict and original Phase 1 backlog
 - [`docs/monorepo-migration.md`](docs/monorepo-migration.md) — 0M migration log: what moved, why, and the resulting architecture
 - [`CHANGELOG.md`](CHANGELOG.md) — release history
+- [Landing page](https://mcp-tool-shop-org.github.io/storyboard-os/) · [Handbook](https://mcp-tool-shop-org.github.io/storyboard-os/handbook/)
+
+---
+
+<p align="center">Built by <a href="https://mcp-tool-shop.github.io/">MCP Tool Shop</a></p>
