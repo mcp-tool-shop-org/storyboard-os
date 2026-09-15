@@ -24,7 +24,7 @@ Most narrative tools capture story. Storyboard OS captures game-state. Every fra
 
 A frame without those fields is a story note. Storyboard OS makes the distinction visible: `SPEC` / `PARTIAL` / `DRAFT` badges show implementation depth at a glance without opening a single inspector.
 
-## Two workflows
+## Three workflows
 
 ### rpg-storyboard
 

@@ -12,11 +12,19 @@ export default defineConfig({
       title: 'Storyboard OS',
       description: 'Visual story-structure platform with three shipped verticals — rpg, marketing, and cinematic.',
       logo: {
-        src: './src/assets/logo.png',
+        src: './src/assets/mark.png',
         alt: 'Storyboard OS',
         href: '/storyboard-os/',
         replacesTitle: false,
       },
+      // fileWithBase prefixes Astro `base`, so this emits /storyboard-os/favicon.svg
+      favicon: '/favicon.svg',
+      head: [
+        { tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/storyboard-os/apple-touch-icon.png' } },
+        { tag: 'meta', attrs: { property: 'og:image', content: 'https://mcp-tool-shop-org.github.io/storyboard-os/og.png' } },
+        { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: 'https://mcp-tool-shop-org.github.io/storyboard-os/og.png' } },
+      ],
       // Starlight's recovery 404 page renders by default — keep it so visitors
       // hitting a stale or mistyped handbook URL get a navigable error page
       // rather than a bare host 404.
