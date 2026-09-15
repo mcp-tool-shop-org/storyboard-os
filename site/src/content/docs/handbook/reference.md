@@ -246,7 +246,8 @@ getMeasurementLoopSignals(storyboard)
 
 ```ts
 MARKETING_TEMPLATES
-// → product_launch | brand_awareness | content_campaign
+// → product_launch | campaign_funnel | content_to_conversion
+// SSG ids: template-product_launch | template-campaign_funnel | template-content_to_conversion
 
 getMarketingTemplate(id)
 createCampaignFromTemplate(templateId, input)

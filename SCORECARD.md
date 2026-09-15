@@ -4,9 +4,9 @@
 > [`SHIP_GATE.md`](SHIP_GATE.md) — this file does not invent shipcheck totals.
 
 **Repo:** mcp-tool-shop-org/storyboard-os  
-**Date:** 2026-09-14  
+**Date:** 2026-09-15  
 **Type tags:** `[npm]` (six `@storyboard-os/*` packages) · browser-static apps · docs site  
-**Release line scored:** 1.2.x (tree at docs-site humanization amend)
+**Release line scored:** 1.3.0 (Phase 10 full treatment)
 
 ## Pre-Remediation Assessment
 
@@ -25,41 +25,32 @@ For the authoritative checkbox gate, see SHIP_GATE.md.
 | E. Identity (soft) | 9/10 | Logo, translations, Pages landing, org noreply report path; keep home paths / personal mailboxes out of tracked files |
 | **Overall** | **37/50** | |
 
-## Key Gaps
+## Key Gaps (closed in 1.2.x / 1.3.0 unless noted)
 
-1. **Operator playbook missing** — release/fourth-vertical/store recovery scattered across phase closeouts (roadmap §3 / F-DS-205).
-2. **Trust model overclaim** — SECURITY + README said all verticals use localStorage; only RPG does.
-3. **Getting-started / landing RPG-centric** — no marketing `/campaigns` or cinematic `/sequences` first-run path; site-config implied durable projects for every vertical.
-4. **Node floor drift** — root `engines.node` is `>=22.13.0`; README/handbook/SHIP_GATE still said 20.
-5. **npm Trusted Publishing** — `publish.yml` uses environment `npm-publish` and OIDC `id-token`; registry auth still `NODE_AUTH_TOKEN` until Trusted Publisher is bound on npmjs.com.
+1. Operator playbook — shipped (`docs/operator-playbook.md`).
+2. Trust model overclaim — corrected (RPG-only persistence).
+3. Getting-started RPG-centric — marketing `/campaigns` and cinematic `/sequences` + `/reels` first-run paths.
+4. Node floor drift — root and six packages `engines.node` `>=22.13.0`.
+5. npm Trusted Publishing — `publish.yml` uses environment `npm-publish` and OIDC `id-token`; registry auth still `NODE_AUTH_TOKEN` until Trusted Publisher is bound on npmjs.com.
+6. Handbook catalog-id lag (F-374b0ed0) — closed this treatment: live template ids and `/reels/demo-launch-reel`.
 
-## Remediation Priority
+## Post-Remediation (v1.3.0 Phase 10)
 
-| Priority | Item | Estimated effort |
-|----------|------|-----------------|
-| 1 | Ship `docs/operator-playbook.md`; close roadmap §3; link from handbook | half day |
-| 2 | Correct SECURITY + README trust model (RPG-only persistence) | under 1 hour |
-| 3 | Getting-started + site-config: marketing/cinematic first-run; soften durable-project copy | under 1 hour |
-| 4 | Align Node ≥ 22.13 in README, handbook, SHIP_GATE; fill this scorecard | under 1 hour |
-| 5 | SBOM on release (tracked in SHIP_GATE / roadmap §4) — tooling decision, not this amend | separate |
-
-## Post-Remediation
-
-After this docs-site humanization amend (2026-09-14). Again: category scores are
-rubric estimates; checkbox truth remains SHIP_GATE.md. Translated README Node
-lines intentionally deferred (Phase 10 polyglot).
+Category scores are rubric estimates; checkbox truth remains SHIP_GATE.md.
+`npx @mcptoolshop/shipcheck@1.0.7 audit` — 23 checked, 11 skipped, 0 unchecked, 100% pass (A–D).
 
 | Category | Before | After |
 |----------|--------|-------|
 | A. Security | 7/10 | 9/10 |
 | B. Error Handling | 8/10 | 8/10 |
 | C. Operator Docs | 5/10 | 9/10 |
-| D. Shipping Hygiene | 8/10 | 8/10 |
+| D. Shipping Hygiene | 8/10 | **9/10** |
 | E. Identity (soft) | 9/10 | 9/10 |
-| **Overall** | **37/50** | **43/50** |
+| **Overall** | **37/50** | **44/50** |
 
-### Still open (see SHIP_GATE.md)
+### Still open
 
-- `[npm]` SBOM generation — CycloneDX JSON attached on GitHub release via `publish.yml` (2026-09-15).
+- npm Trusted Publisher bind on npmjs.com (operator-side; `NODE_AUTH_TOKEN` stays until then).
+- Codecov upload (Phase 4 coverage badge) — not wired; `pnpm test` remains the floor.
+- App-shell (C6), polyglot README locale refresh runs as part of this treatment.
 - CLI/MCP/desktop/vscode rows remain `SKIP` (browser-static product).
-- README.`*` locale Node lines await Phase 10 polyglot refresh.

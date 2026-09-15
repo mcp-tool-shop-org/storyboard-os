@@ -36,7 +36,7 @@ Storyboard OS is a **local-only browser application** shipped as three verticals
 | **marketing-storyboard** | None — SSG demo / template boards | No project store; campaign content is build-time static |
 | **cinematic-storyboard** | None — SSG demo / template boards | No project store; sequence content is build-time static |
 
-Cinematic grouping, when it ships, is a playlist/reel of sequence ids (SSG), not a localStorage project clone — see roadmap §1. Do not assume marketing or cinematic read or trust a browser store.
+Cinematic grouping is a shipped playlist/reel of sequence ids (SSG at `/reels/demo-launch-reel`), not a localStorage project clone. Do not assume marketing or cinematic read or trust a browser store.
 
 - **Data NOT touched (all verticals):** No credentials, no authentication tokens, no payment information, no personal information beyond what an operator types into editable RPG fields or authors into static demo content. No project data is ever uploaded.
 - **Network requests:** None at runtime, in any vertical. Each app is served as static HTML/JS. After the initial page load, no network calls are made.

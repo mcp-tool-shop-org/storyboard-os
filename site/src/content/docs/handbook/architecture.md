@@ -73,7 +73,7 @@ Visible-frame count is a soft cap, measured in `@storyboard-os/core` (`DENSITY_S
 | `warn` | ≥ 50 | Soft cap — nest/collapse of consequence fans is the intended response |
 | `over` | ≥ 100 | Hard cap — the board is a hairball |
 
-Caps are **node counts** (frames), not edges. The canvas still paints every frame and every edge; it does not auto-hide, nest, or filter. **Nest / collapse of consequence fans is intended after topology work; it is not shipped.** Feature Pass must not treat “put more prose on the card” as the density fix.
+Caps are **node counts** (frames), not edges. The density chip is chrome-only — it does not hide edges. **Nest is shipped:** optional `parentFrameId` plus board-level `collapsedIds`. Default is show-all (no auto-collapse). Expand is opt-in. Do not treat “put more prose on the card” as the density fix.
 
 ---
 
@@ -157,7 +157,7 @@ Does not import from any app, `@storyboard-os/canvas`, `@storyboard-os/routing`,
 - Launch readiness: `getCampaignLaunchReadiness()`, `getCampaignCriticalPath()`
 - Approval gates: `getApprovalGateSignals()`
 - Measurement loops: `getMeasurementLoopSignals()`
-- Templates: product_launch, brand_awareness, content_campaign — `createCampaignFromTemplate()`
+- Templates: product_launch, campaign_funnel, content_to_conversion — `createCampaignFromTemplate()`; SSG ids `template-product_launch`, `template-campaign_funnel`, `template-content_to_conversion` plus demo `campaign-01`
 - Handoff: `generateCampaignHandoff(board)` → `CampaignHandoff`, then `generateCampaignMarkdown(handoff)`
 
 ### What the marketing domain is NOT

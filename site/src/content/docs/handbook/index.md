@@ -70,7 +70,7 @@ Download as **Markdown** (developer-readable) or **JSON** (schema-validated, `fo
 
 ### Marketing and cinematic — SSG briefs
 
-Marketing `/campaigns/:id/handoff` and cinematic `/sequences/:id/handoff` are static SSG campaign / production briefs. There is no project store and no progress overlay — Markdown and JSON are generated from the authored demo or template board at build time, then offered as a download. Cinematic JSON is `formatVersion` 2 today and may bump for structured camera — importers must switch on the discriminator.
+Marketing `/campaigns/:id/handoff` and cinematic `/sequences/:id/handoff` are static SSG campaign / production briefs. There is no project store and no progress overlay — Markdown and JSON are generated from the authored demo or template board at build time, then offered as a download. Cinematic JSON is `formatVersion` **3** (structured camera). Importers must switch on the discriminator.
 
 ## Next steps
 
@@ -78,7 +78,7 @@ Marketing `/campaigns/:id/handoff` and cinematic `/sequences/:id/handoff` are st
 - [Authoring Workflow](./usage/) — the RPG design loop from project creation to handoff
 - [Marketing campaigns](./marketing-storyboard/) — launch readiness, inspect a beat, Launch Blockers, export a brief
 - [Cinematic sequences](./cinematic-storyboard/) — production signals, inspect a shot, export a brief
-- [Cinematic playlist](./cinematic-playlist/) — intended reel (ordered sequence ids); not an RPG project clone
+- [Cinematic playlist](./cinematic-playlist/) — shipped reel (`/reels/demo-launch-reel`); not an RPG project clone
 - [Architecture](./architecture/) — package map, card vs inspector, density cap, no-AI-auto-wire
 - [Reference](./reference/) — frame types, connection types, readiness model, API
 - [Handoff JSON contract](./handoff-json/) — `formatVersion`, C4 fields, Markdown vs JSON, engine adapters

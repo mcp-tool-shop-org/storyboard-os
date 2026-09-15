@@ -163,7 +163,7 @@ getApprovalGateSignals()       // per-approval: status, blocksLaunch, requiremen
 getMeasurementLoopSignals()    // per-measurement: hasMetrics, isLoop, connections
 
 // Templates (M-0A)
-MARKETING_TEMPLATES            // product_launch | brand_awareness | content_campaign
+MARKETING_TEMPLATES            // product_launch | campaign_funnel | content_to_conversion
 getMarketingTemplate()
 createCampaignFromTemplate()   // (templateId, input) → Storyboard
 
