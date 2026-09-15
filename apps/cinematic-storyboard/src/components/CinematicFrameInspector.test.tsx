@@ -11,7 +11,10 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 const beatStatusMock = vi.hoisted(() => ({
-  getCinematicBeatStatus: vi.fn(() => ({ level: 'draft' as const, missingReasons: [] as string[] })),
+  getCinematicBeatStatus: vi.fn(() => ({
+    level: 'draft' as 'draft' | 'ready' | 'partial' | 'blocked',
+    missingReasons: [] as string[],
+  })),
 }));
 
 vi.mock('@storyboard-os/cinematic-domain', () => ({
