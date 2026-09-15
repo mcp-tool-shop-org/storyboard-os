@@ -108,10 +108,15 @@ function coreVisibleFrameIds(
   const candidate = (core as Record<string, unknown>).visibleFrames;
   if (typeof candidate !== 'function') return undefined;
   try {
-    const result = (candidate as (input: unknown, options?: unknown) => unknown)(
-      storyboard,
-      { collapsedParentIds },
-    );
+    const frames = (Array.isArray(storyboard.frames) ? storyboard.frames : []).map(frame => ({
+      ...frame,
+      parentFrameId: frame.parentFrameId ?? contentOf(frame).parentFrameId,
+    }));
+    const result = (candidate as (input: unknown) => unknown)({
+      ...storyboard,
+      frames,
+      collapsedIds: collapsedParentIds,
+    });
     if (Array.isArray(result)) {
       const ids = result
         .map(item => (typeof item === 'string' ? item : (item as { id?: string })?.id))
