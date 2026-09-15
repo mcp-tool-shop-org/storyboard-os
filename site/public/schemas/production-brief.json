@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mcp-tool-shop-org/storyboard-os/schemas/cinematic/production-brief.json",
   "title": "Cinematic production brief",
-  "description": "Portable formatVersion 2 shot-list handoff for a cinematic sequence. Markdown is the human twin; this JSON is the runtime contract for downstream Unreal/Godot importers. Engine-native .tres/.uasset files are adapters after this schema gate, not the source of truth.",
+  "description": "Portable formatVersion 3 shot-list handoff for a cinematic sequence. Markdown is the human twin; this JSON is the runtime contract for downstream Unreal/Godot importers. Engine-native .tres/.uasset files are adapters after this schema gate, not the source of truth.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,9 +22,9 @@
     },
     "formatVersion": {
       "title": "Format version",
-      "description": "Handoff artifact discriminator. Version 2 adds connections and optional missingReasons on shots. Importers must reject any other value.",
+      "description": "Handoff artifact discriminator. Version 3 makes camera a structured object (shotSize, lensMm, fovDeg, move, notes). Importers must reject any other value.",
       "type": "integer",
-      "const": 2
+      "const": 3
     },
     "title": {
       "title": "Sequence title",
@@ -131,8 +131,40 @@
         },
         "camera": {
           "title": "Camera",
-          "description": "Shot-list camera line joining angle and movement (shot size, lens/FOV, Sequencer move). Null when both are unspecified. Not a 35° sprite-turnaround orbit.",
-          "type": ["string", "null"]
+          "description": "Structured Sequencer camera (shotSize, lensMm, fovDeg, move) plus optional free-text notes. Null when unspecified. arc is the orbit/arc moving-camera token. Not a 35° sprite-turnaround orbit; no azimuth/turnaround fields.",
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "shotSize": {
+              "title": "Shot size",
+              "description": "Sequencer shot-size token.",
+              "type": "string",
+              "enum": ["EWS", "WS", "MS", "MCU", "CU", "ECU", "POV", "insert"]
+            },
+            "lensMm": {
+              "title": "Lens millimetres",
+              "description": "Focal length in millimetres.",
+              "type": "number",
+              "minimum": 0
+            },
+            "fovDeg": {
+              "title": "Field of view",
+              "description": "Horizontal field of view in degrees.",
+              "type": "number",
+              "minimum": 0
+            },
+            "move": {
+              "title": "Camera move",
+              "description": "Sequencer move token. arc covers orbit/arc shots.",
+              "type": "string",
+              "enum": ["static", "dolly", "pan", "tilt", "track", "crane", "handheld", "steadicam", "zoom", "arc"]
+            },
+            "notes": {
+              "title": "Author notes",
+              "description": "Free-text cameraAngle / cameraMovement copy. Not used to classify complexity.",
+              "type": "string"
+            }
+          }
         },
         "framing": {
           "title": "Framing",

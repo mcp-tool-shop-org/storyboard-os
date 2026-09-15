@@ -16,7 +16,7 @@ This page is the on-disk contract. TypeScript call signatures live on [Reference
 | RPG `QuestHandoff` | `1` (const) | [`docs/schemas/quest-handoff.json`](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/schemas/quest-handoff.json) | `https://storyboard-os.dev/schemas/rpg/quest-handoff.json` |
 | RPG `ProjectHandoff` | `1` (const) | [`docs/schemas/project-handoff.json`](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/schemas/project-handoff.json) | `https://storyboard-os.dev/schemas/rpg/project-handoff.json` |
 | Marketing `CampaignHandoff` | `1` (const) | [`docs/schemas/campaign-handoff.schema.json`](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/schemas/campaign-handoff.schema.json) | package schema URI under `packages/marketing-storyboard-domain/schema/` |
-| Cinematic `ProductionBrief` | `2` (const in the published file) | [`docs/schemas/production-brief.json`](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/schemas/production-brief.json) | `https://github.com/mcp-tool-shop-org/storyboard-os/schemas/cinematic/production-brief.json` |
+| Cinematic `ProductionBrief` | `3` (const in the published file) | [`docs/schemas/production-brief.json`](https://github.com/mcp-tool-shop-org/storyboard-os/blob/main/docs/schemas/production-brief.json) | `https://github.com/mcp-tool-shop-org/storyboard-os/schemas/cinematic/production-brief.json` |
 
 Pages also serves the same bytes from `/storyboard-os/schemas/` (copied into `site/public/schemas/`). Domain packages remain the authoring originals; if they disagree, the package file wins and this copy must be refreshed.
 
@@ -27,8 +27,8 @@ Pages also serves the same bytes from `/storyboard-os/schemas/` (copied into `si
 | Value | Artifact | Importer rule |
 |---|---|---|
 | `1` | RPG quest + project handoff; marketing campaign handoff | Reject any other integer. RPG/marketing schemas pin `const: 1`. |
-| `2` | Cinematic `ProductionBrief` as published | Connections array + optional `missingReasons` on shots. `camera` is `string \| null` (angle + movement joined). Reject v1 cinematic payloads. |
-| `3` (this Feature Pass, cinematic domain) | Structured camera on `ProductionBriefShot` | **May land this wave.** `camera` becomes an object (shot size, optional lens/FOV, move) instead of a concatenated string. Do not block consumers on cinematic landing — **switch on `formatVersion`**. Treat unknown versions as reject, not coerce. |
+| `2` | Prior cinematic `ProductionBrief` | Connections array + optional `missingReasons` on shots. `camera` is `string \| null` (angle + movement joined). Reject v1 cinematic payloads. |
+| `3` | Current cinematic `ProductionBrief` | Structured camera on `ProductionBriefShot`: `camera` is an object (shot size, optional lens/FOV, move) plus a free-text author note. **Switch on `formatVersion`**. Treat unknown versions as reject, not coerce. |
 
 Always read `formatVersion` (and `$schema` when present) before walking beats. Do not infer the vertical from filename alone.
 
