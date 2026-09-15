@@ -1,6 +1,6 @@
 ---
 import { tollhouseLedgerProject } from '@storyboard-os/rpg-domain';
-import { generateHandoff, generateMarkdown } from '@storyboard-os/rpg-domain';
+import { generateHandoff, generateMarkdown, serializeHandoffJson } from '@storyboard-os/rpg-domain';
 import { statusLabels } from '@storyboard-os/core';
 import type { Storyboard } from '../../../lib/storyboard/schema';
 import { getTemplatePreviewStoryboards } from '../../../lib/storyboard/templatePreviews';
@@ -21,8 +21,15 @@ const { storyboard } = Astro.props;
 const { storyboardId } = Astro.params;
 
 const handoff       = generateHandoff(storyboard);
+// Markdown is the human brief — generated independently of JSON schema validation
+// so a schema miss cannot blank the readable handoff.
 const markdownText  = generateMarkdown(handoff);
-const jsonText      = JSON.stringify(handoff, null, 2);
+let jsonText = '';
+try {
+  jsonText = serializeHandoffJson(handoff);
+} catch (err) {
+  console.error('[handoff.astro] JSON handoff failed schema validation; JSON download disabled.', err);
+}
 const filename      = `${storyboardId}-handoff`;
 const boardUrl      = `/storyboards/${storyboardId}`;
 const dateStr       = handoff.generatedAt.split('T')[0];
@@ -618,8 +625,10 @@ function humanizeReasonShort(code: string): string {
     }
     document.getElementById('btn-md')?.addEventListener('click', () =>
       download(markdownText, filename + '.md', 'text/markdown'));
-    document.getElementById('btn-json')?.addEventListener('click', () =>
-      download(jsonText, filename + '.json', 'application/json'));
+    document.getElementById('btn-json')?.addEventListener('click', () => {
+      if (!jsonText) return;
+      download(jsonText, filename + '.json', 'application/json');
+    });
   </script>
 
 </body>

@@ -84,6 +84,26 @@ export type {
 } from './handoff';
 
 export {
+  QUEST_HANDOFF_SCHEMA_ID,
+  PROJECT_HANDOFF_SCHEMA_ID,
+  validateHandoff,
+  validateProjectHandoff,
+  assertValidHandoff,
+  assertValidProjectHandoff,
+  serializeHandoffJson,
+  serializeProjectHandoffJson,
+  HandoffEnvelopeError,
+  questHandoffSchemaDocument,
+  projectHandoffSchemaDocument,
+} from './handoffValidate';
+
+export type {
+  HandoffIssueSeverity,
+  HandoffValidationIssue,
+  HandoffValidationResult,
+} from './handoffValidate';
+
+export {
   createProject,
   updateFramePosition,
   updateFrameBasics,
