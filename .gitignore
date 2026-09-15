@@ -10,4 +10,5 @@ site/node_modules/
 site/package-lock.json
 .polyglot-cache.json
 *.tgz
+*.cdx.json
 .swarm/

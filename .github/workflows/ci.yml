@@ -69,3 +69,6 @@ jobs:
 
       - name: Build site
         run: pnpm --filter site build
+
+      - name: Assert site dist artifacts
+        run: pnpm run check:site-dist

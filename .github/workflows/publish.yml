@@ -16,13 +16,22 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   publish:
     name: Build and publish @storyboard-os/*
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Required reviewers / wait timer / branch restriction live on this
+    # GitHub Environment. npm Trusted Publishing is operator-side: bind
+    # this workflow filename (publish.yml) + environment `npm-publish` on
+    # each @storyboard-os/* package at npmjs.com. NODE_AUTH_TOKEN stays on
+    # the pnpm publish steps until that bind is live — dropping
+    # secrets.NPM_TOKEN this wave would break publish. Keep --provenance.
+    environment: npm-publish
+    permissions:
+      contents: write # attach CycloneDX SBOM to the existing GitHub release
+      id-token: write # npm --provenance (and future Trusted Publisher OIDC)
 
     steps:
       - name: Validate tag input
@@ -94,6 +103,33 @@ jobs:
           done
           echo "All six publish targets match tag: ${RESOLVED_TAG}"
 
+      - name: Generate CycloneDX SBOM
+        run: |
+          pnpm exec cyclonedx-npm \
+            --ignore-npm-errors \
+            --omit dev \
+            --output-format JSON \
+            --output-file storyboard-os.cdx.json
+          test -s storyboard-os.cdx.json
+          jq -e '.bomFormat == "CycloneDX"' storyboard-os.cdx.json >/dev/null
+          echo "Wrote $(wc -c < storyboard-os.cdx.json) bytes to storyboard-os.cdx.json"
+
+      - name: Attach SBOM to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HAS_RELEASE_EVENT: ${{ github.event_name == 'release' }}
+        run: |
+          set -euo pipefail
+          if [ "$HAS_RELEASE_EVENT" = "true" ]; then
+            gh release upload "$RESOLVED_TAG" storyboard-os.cdx.json --clobber
+            echo "Attached storyboard-os.cdx.json to $RESOLVED_TAG (release event)"
+          elif gh release view "$RESOLVED_TAG" >/dev/null 2>&1; then
+            gh release upload "$RESOLVED_TAG" storyboard-os.cdx.json --clobber
+            echo "Attached storyboard-os.cdx.json to existing release $RESOLVED_TAG"
+          else
+            echo "No GitHub release for $RESOLVED_TAG (workflow_dispatch without a release) — skipping SBOM upload"
+          fi
+
       - name: Publish @storyboard-os/core
         id: publish_core
         run: |
@@ -106,6 +142,8 @@ jobs:
             echo "status=published" >> "$GITHUB_OUTPUT"
           fi
         env:
+          # Remaining: NODE_AUTH_TOKEN stays until npm Trusted Publisher is
+          # bound operator-side (workflow publish.yml + environment npm-publish).
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @storyboard-os/routing
