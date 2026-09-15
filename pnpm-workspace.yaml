@@ -34,3 +34,6 @@ onlyBuiltDependencies:
 allowBuilds:
   esbuild: true
   sharp: true
+  # cyclonedx-npm pulls libxmljs2 for XML SBOMs. We emit JSON only; do not
+  # run its native build scripts (pnpm 11 ignored-builds gate).
+  libxmljs2: false

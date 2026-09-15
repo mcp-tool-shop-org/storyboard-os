@@ -60,6 +60,6 @@ lines intentionally deferred (Phase 10 polyglot).
 
 ### Still open (see SHIP_GATE.md)
 
-- `[npm]` SBOM generation — not produced or attached to GitHub releases.
+- `[npm]` SBOM generation — CycloneDX JSON attached on GitHub release via `publish.yml` (2026-09-15).
 - CLI/MCP/desktop/vscode rows remain `SKIP` (browser-static product).
 - README.`*` locale Node lines await Phase 10 polyglot refresh.
