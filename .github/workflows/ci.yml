@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [main]
     paths:
       - 'packages/**'
       - 'apps/**'
@@ -15,7 +15,7 @@ on:
       - '.github/workflows/ci.yml'
       - '.github/scripts/**'
   pull_request:
-    branches: [master, main]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
