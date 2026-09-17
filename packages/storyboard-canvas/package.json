@@ -48,7 +48,7 @@
     "react": "^18.0.0",
     "react-konva": "^18.2.10",
     "typescript": "^5.0.0",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.11"
   },
   "keywords": [
     "storyboard",
