@@ -1,0 +1,674 @@
+{
+  "authored": [
+    ".github/",
+    "apps/cinematic-storyboard/",
+    "apps/marketing-storyboard/",
+    "apps/rpg-storyboard/",
+    "assets/",
+    "docs/",
+    "root",
+    "site/"
+  ],
+  "breaks": [
+    {
+      "doors": 2,
+      "importedBy": [
+        "cinematic-storyboard",
+        "cinematic-storyboard-domain",
+        "marketing-storyboard",
+        "marketing-storyboard-domain",
+        "rpg-storyboard",
+        "rpg-storyboard-domain"
+      ],
+      "importedByTests": [],
+      "kind": "part",
+      "name": "storyboard-core",
+      "partLabel": "storyboard-core"
+    },
+    {
+      "doors": 2,
+      "importedBy": [
+        "cinematic-storyboard",
+        "marketing-storyboard",
+        "rpg-storyboard"
+      ],
+      "importedByTests": [],
+      "kind": "part",
+      "name": "storyboard-canvas",
+      "partLabel": "storyboard-canvas"
+    },
+    {
+      "doors": 2,
+      "importedBy": [
+        "cinematic-storyboard"
+      ],
+      "importedByTests": [],
+      "kind": "part",
+      "name": "cinematic-storyboard-domain",
+      "partLabel": "cinematic-storyboard-domain"
+    },
+    {
+      "doors": 2,
+      "importedBy": [
+        "marketing-storyboard"
+      ],
+      "importedByTests": [],
+      "kind": "part",
+      "name": "marketing-storyboard-domain",
+      "partLabel": "marketing-storyboard-domain"
+    },
+    {
+      "doors": 2,
+      "importedBy": [
+        "rpg-storyboard"
+      ],
+      "importedByTests": [],
+      "kind": "part",
+      "name": "rpg-storyboard-domain",
+      "partLabel": "rpg-storyboard-domain"
+    },
+    {
+      "doors": 2,
+      "importedBy": [
+        "rpg-storyboard"
+      ],
+      "importedByTests": [],
+      "kind": "part",
+      "name": "storyboard-routing",
+      "partLabel": "storyboard-routing"
+    },
+    {
+      "doors": 3,
+      "importedBy": [],
+      "importedByTests": [],
+      "kind": "part",
+      "name": ".github",
+      "partLabel": ".github"
+    },
+    {
+      "doors": 2,
+      "importedBy": [],
+      "importedByTests": [],
+      "kind": "part",
+      "name": "cinematic-storyboard",
+      "partLabel": "the site"
+    }
+  ],
+  "changes": {
+    "first": true
+  },
+  "changesTogether": [
+    {
+      "a": "packages/marketing-storyboard-domain/src/frameSignals.ts",
+      "b": "packages/marketing-storyboard-domain/src/handoff.ts",
+      "either": 6,
+      "partLabels": [
+        "marketing-storyboard-domain",
+        "marketing-storyboard-domain"
+      ],
+      "parts": [
+        "marketing-storyboard-domain",
+        "marketing-storyboard-domain"
+      ],
+      "relation": "inside",
+      "shared": 5
+    },
+    {
+      "a": "packages/storyboard-canvas/src/StoryboardCanvas.tsx",
+      "b": "packages/storyboard-canvas/src/index.ts",
+      "either": 6,
+      "partLabels": [
+        "storyboard-canvas",
+        "storyboard-canvas"
+      ],
+      "parts": [
+        "storyboard-canvas",
+        "storyboard-canvas"
+      ],
+      "relation": "inside",
+      "shared": 5
+    },
+    {
+      "a": "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
+      "b": "packages/rpg-storyboard-domain/src/index.ts",
+      "either": 12,
+      "partLabels": [
+        "the site",
+        "rpg-storyboard-domain"
+      ],
+      "parts": [
+        "rpg-storyboard",
+        "rpg-storyboard-domain"
+      ],
+      "relation": "a-imports-b",
+      "shared": 9
+    },
+    {
+      "a": "apps/rpg-storyboard/src/components/projects/ProjectBoard.tsx",
+      "b": "packages/rpg-storyboard-domain/src/project.test.ts",
+      "either": 6,
+      "partLabels": [
+        "the site",
+        "rpg-storyboard-domain"
+      ],
+      "parts": [
+        "rpg-storyboard",
+        "rpg-storyboard-domain"
+      ],
+      "relation": "a-imports-b",
+      "shared": 4
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/src/frameSignals.test.ts",
+      "b": "packages/marketing-storyboard-domain/src/handoff.test.ts",
+      "either": 6,
+      "partLabels": [
+        "marketing-storyboard-domain",
+        "marketing-storyboard-domain"
+      ],
+      "parts": [
+        "marketing-storyboard-domain",
+        "marketing-storyboard-domain"
+      ],
+      "relation": "inside",
+      "shared": 4
+    }
+  ],
+  "changesTogetherNote": [
+    "2 files changed together with their own tests, as expected.",
+    "Confidence is low: fewer than 20 source files reach 10 revisions in the window.",
+    "Window: 180 days; a pair counts from 3 shared commits, since 3 source files reach 10 revisions; the floor rises to 10 when 25 do."
+  ],
+  "changesTogetherWithTests": 2,
+  "commit": "6714e4a4627a25e59df420bd5e14b6fa4140c776",
+  "defaultBranch": "main",
+  "derived": "14 parts, mostly TypeScript (172 files) and JavaScript (6). Work enters through 3 doors; the busiest is CI, which reaches 11 parts. It publishes to npm.",
+  "doors": [
+    {
+      "checks": [
+        "packages/cinematic-storyboard-domain/src/index.ts",
+        "packages/marketing-storyboard-domain/src/index.ts",
+        "packages/rpg-storyboard-domain/src/index.ts",
+        "packages/storyboard-canvas/src/index.ts",
+        "packages/storyboard-core/src/index.ts",
+        "packages/storyboard-routing/src/index.ts"
+      ],
+      "checksCount": 6,
+      "checksMore": 3,
+      "file": ".github/workflows/ci.yml",
+      "id": ".github/workflows/ci.yml",
+      "landings": [],
+      "name": "CI",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": ".github",
+          "depth": 0,
+          "files": 2
+        },
+        {
+          "boundary": "cinematic-storyboard",
+          "depth": 0,
+          "files": 11
+        },
+        {
+          "boundary": "cinematic-storyboard-domain",
+          "depth": 0,
+          "files": 30
+        },
+        {
+          "boundary": "marketing-storyboard",
+          "depth": 0,
+          "files": 10
+        },
+        {
+          "boundary": "marketing-storyboard-domain",
+          "depth": 0,
+          "files": 22
+        },
+        {
+          "boundary": "rpg-storyboard",
+          "depth": 0,
+          "files": 32
+        },
+        {
+          "boundary": "rpg-storyboard-domain",
+          "depth": 0,
+          "files": 29
+        },
+        {
+          "boundary": "site",
+          "depth": 0,
+          "files": 3
+        },
+        {
+          "boundary": "storyboard-canvas",
+          "depth": 0,
+          "files": 23
+        },
+        {
+          "boundary": "storyboard-core",
+          "depth": 0,
+          "files": 11
+        },
+        {
+          "boundary": "storyboard-routing",
+          "depth": 0,
+          "files": 3
+        }
+      ],
+      "runs": [
+        ".github/scripts/check-pack-contents.mjs",
+        ".github/scripts/check-site-dist.mjs",
+        "apps/cinematic-storyboard/astro.config.mjs",
+        "apps/cinematic-storyboard/src/",
+        "apps/marketing-storyboard/astro.config.mjs",
+        "apps/marketing-storyboard/src/",
+        "apps/rpg-storyboard/astro.config.mjs",
+        "apps/rpg-storyboard/src/",
+        "packages/cinematic-storyboard-domain/src/adapters.test.ts",
+        "packages/cinematic-storyboard-domain/src/beatStatus.test.ts",
+        "packages/cinematic-storyboard-domain/src/cardBeat.test.ts",
+        "packages/cinematic-storyboard-domain/src/contentGuards.test.ts",
+        "packages/cinematic-storyboard-domain/src/frameSignals.test.ts",
+        "packages/cinematic-storyboard-domain/src/handoff.test.ts",
+        "packages/cinematic-storyboard-domain/src/labels.test.ts",
+        "packages/cinematic-storyboard-domain/src/nest.test.ts",
+        "packages/cinematic-storyboard-domain/src/playlist.test.ts",
+        "packages/cinematic-storyboard-domain/src/productionSignals.test.ts",
+        "packages/cinematic-storyboard-domain/src/templates.test.ts",
+        "packages/cinematic-storyboard-domain/src/validate.test.ts",
+        "packages/cinematic-storyboard-domain/src/validateProductionBrief.test.ts",
+        "packages/marketing-storyboard-domain/src/adapters.test.ts",
+        "packages/marketing-storyboard-domain/src/beatStatus.test.ts",
+        "packages/marketing-storyboard-domain/src/contentGuards.test.ts",
+        "packages/marketing-storyboard-domain/src/frameSignals.test.ts",
+        "packages/marketing-storyboard-domain/src/handoff.test.ts",
+        "packages/marketing-storyboard-domain/src/labels.test.ts",
+        "packages/marketing-storyboard-domain/src/launchReadiness.test.ts",
+        "packages/marketing-storyboard-domain/src/project.test.ts",
+        "packages/marketing-storyboard-domain/src/templates.test.ts",
+        "packages/marketing-storyboard-domain/src/validate.test.ts",
+        "packages/rpg-storyboard-domain/src/beatStatus.test.ts",
+        "packages/rpg-storyboard-domain/src/choiceFans.test.ts",
+        "packages/rpg-storyboard-domain/src/combatSpec.test.ts",
+        "packages/rpg-storyboard-domain/src/compileTres.test.ts",
+        "packages/rpg-storyboard-domain/src/contentGuards.test.ts",
+        "packages/rpg-storyboard-domain/src/frameSignals.test.ts",
+        "packages/rpg-storyboard-domain/src/handoff.test.ts",
+        "packages/rpg-storyboard-domain/src/handoffValidate.test.ts",
+        "packages/rpg-storyboard-domain/src/project.test.ts",
+        "packages/rpg-storyboard-domain/src/templates.test.ts",
+        "packages/rpg-storyboard-domain/src/worldForge.test.ts",
+        "packages/storyboard-canvas/src/a11yNav.test.ts",
+        "packages/storyboard-canvas/src/densityChip.test.ts",
+        "packages/storyboard-canvas/src/frameText.test.ts",
+        "packages/storyboard-canvas/src/humanizeType.test.ts",
+        "packages/storyboard-canvas/src/positions.test.ts",
+        "packages/storyboard-canvas/src/typeBarFill.test.ts",
+        "packages/storyboard-canvas/src/viewport.test.ts",
+        "packages/storyboard-canvas/src/visibility.test.ts",
+        "packages/storyboard-core/src/density.test.ts",
+        "packages/storyboard-core/src/nest.test.ts",
+        "packages/storyboard-core/src/schema.lockstep.test.ts",
+        "packages/storyboard-core/src/tokens.test.ts",
+        "packages/storyboard-core/src/validate.test.ts",
+        "packages/storyboard-routing/src/routes.test.ts",
+        "site/astro.config.mjs",
+        "site/src/"
+      ],
+      "runsCount": 58,
+      "runsMore": 103,
+      "sends": [],
+      "stages": [],
+      "triggers": [
+        "on a pull request",
+        "on a push to main touching 11 paths"
+      ]
+    },
+    {
+      "checks": [
+        "packages/cinematic-storyboard-domain/src/index.ts",
+        "packages/marketing-storyboard-domain/src/index.ts",
+        "packages/rpg-storyboard-domain/src/index.ts",
+        "packages/storyboard-canvas/src/index.ts",
+        "packages/storyboard-core/src/index.ts",
+        "packages/storyboard-routing/src/index.ts"
+      ],
+      "checksCount": 6,
+      "checksMore": 3,
+      "file": ".github/workflows/publish.yml",
+      "id": ".github/workflows/publish.yml",
+      "landings": [],
+      "name": "Publish to npm",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": ".github",
+          "depth": 0,
+          "files": 1
+        },
+        {
+          "boundary": "cinematic-storyboard",
+          "depth": 0,
+          "files": 11
+        },
+        {
+          "boundary": "cinematic-storyboard-domain",
+          "depth": 0,
+          "files": 31
+        },
+        {
+          "boundary": "marketing-storyboard",
+          "depth": 0,
+          "files": 10
+        },
+        {
+          "boundary": "marketing-storyboard-domain",
+          "depth": 0,
+          "files": 23
+        },
+        {
+          "boundary": "rpg-storyboard",
+          "depth": 0,
+          "files": 32
+        },
+        {
+          "boundary": "rpg-storyboard-domain",
+          "depth": 0,
+          "files": 30
+        },
+        {
+          "boundary": "storyboard-canvas",
+          "depth": 0,
+          "files": 24
+        },
+        {
+          "boundary": "storyboard-core",
+          "depth": 0,
+          "files": 12
+        },
+        {
+          "boundary": "storyboard-routing",
+          "depth": 0,
+          "files": 4
+        }
+      ],
+      "runs": [
+        ".github/scripts/check-pack-contents.mjs",
+        "packages/cinematic-storyboard-domain/package.json",
+        "packages/marketing-storyboard-domain/package.json",
+        "packages/rpg-storyboard-domain/package.json",
+        "packages/storyboard-canvas/package.json",
+        "packages/storyboard-core/package.json",
+        "packages/storyboard-routing/package.json",
+        "apps/cinematic-storyboard/astro.config.mjs",
+        "apps/cinematic-storyboard/src/",
+        "apps/marketing-storyboard/astro.config.mjs",
+        "apps/marketing-storyboard/src/",
+        "apps/rpg-storyboard/astro.config.mjs",
+        "apps/rpg-storyboard/src/",
+        "packages/cinematic-storyboard-domain/src/adapters.test.ts",
+        "packages/cinematic-storyboard-domain/src/beatStatus.test.ts",
+        "packages/cinematic-storyboard-domain/src/cardBeat.test.ts",
+        "packages/cinematic-storyboard-domain/src/contentGuards.test.ts",
+        "packages/cinematic-storyboard-domain/src/frameSignals.test.ts",
+        "packages/cinematic-storyboard-domain/src/handoff.test.ts",
+        "packages/cinematic-storyboard-domain/src/labels.test.ts",
+        "packages/cinematic-storyboard-domain/src/nest.test.ts",
+        "packages/cinematic-storyboard-domain/src/playlist.test.ts",
+        "packages/cinematic-storyboard-domain/src/productionSignals.test.ts",
+        "packages/cinematic-storyboard-domain/src/templates.test.ts",
+        "packages/cinematic-storyboard-domain/src/validate.test.ts",
+        "packages/cinematic-storyboard-domain/src/validateProductionBrief.test.ts",
+        "packages/marketing-storyboard-domain/src/adapters.test.ts",
+        "packages/marketing-storyboard-domain/src/beatStatus.test.ts",
+        "packages/marketing-storyboard-domain/src/contentGuards.test.ts",
+        "packages/marketing-storyboard-domain/src/frameSignals.test.ts",
+        "packages/marketing-storyboard-domain/src/handoff.test.ts",
+        "packages/marketing-storyboard-domain/src/labels.test.ts",
+        "packages/marketing-storyboard-domain/src/launchReadiness.test.ts",
+        "packages/marketing-storyboard-domain/src/project.test.ts",
+        "packages/marketing-storyboard-domain/src/templates.test.ts",
+        "packages/marketing-storyboard-domain/src/validate.test.ts",
+        "packages/rpg-storyboard-domain/src/beatStatus.test.ts",
+        "packages/rpg-storyboard-domain/src/choiceFans.test.ts",
+        "packages/rpg-storyboard-domain/src/combatSpec.test.ts",
+        "packages/rpg-storyboard-domain/src/compileTres.test.ts",
+        "packages/rpg-storyboard-domain/src/contentGuards.test.ts",
+        "packages/rpg-storyboard-domain/src/frameSignals.test.ts",
+        "packages/rpg-storyboard-domain/src/handoff.test.ts",
+        "packages/rpg-storyboard-domain/src/handoffValidate.test.ts",
+        "packages/rpg-storyboard-domain/src/project.test.ts",
+        "packages/rpg-storyboard-domain/src/templates.test.ts",
+        "packages/rpg-storyboard-domain/src/worldForge.test.ts",
+        "packages/storyboard-canvas/src/a11yNav.test.ts",
+        "packages/storyboard-canvas/src/densityChip.test.ts",
+        "packages/storyboard-canvas/src/frameText.test.ts",
+        "packages/storyboard-canvas/src/humanizeType.test.ts",
+        "packages/storyboard-canvas/src/positions.test.ts",
+        "packages/storyboard-canvas/src/typeBarFill.test.ts",
+        "packages/storyboard-canvas/src/viewport.test.ts",
+        "packages/storyboard-canvas/src/visibility.test.ts",
+        "packages/storyboard-core/src/density.test.ts",
+        "packages/storyboard-core/src/nest.test.ts",
+        "packages/storyboard-core/src/schema.lockstep.test.ts",
+        "packages/storyboard-core/src/tokens.test.ts",
+        "packages/storyboard-core/src/validate.test.ts",
+        "packages/storyboard-routing/src/routes.test.ts"
+      ],
+      "runsCount": 61,
+      "runsMore": 105,
+      "sends": [
+        "publishes to npm",
+        "uploads storyboard-os.cdx.json to the release"
+      ],
+      "stages": [],
+      "triggers": [
+        "when a release is published",
+        "or by hand"
+      ]
+    },
+    {
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
+      "file": ".github/workflows/pages.yml",
+      "id": ".github/workflows/pages.yml",
+      "landings": [],
+      "name": "Deploy site to GitHub Pages",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": ".github",
+          "depth": 0,
+          "files": 1
+        },
+        {
+          "boundary": "site",
+          "depth": 0,
+          "files": 3
+        }
+      ],
+      "runs": [
+        ".github/scripts/check-site-dist.mjs",
+        "site/astro.config.mjs",
+        "site/src/"
+      ],
+      "runsCount": 3,
+      "runsMore": 0,
+      "sends": [
+        "deploys the site"
+      ],
+      "stages": [],
+      "triggers": [
+        "on a push to main touching 6 paths",
+        "or by hand"
+      ]
+    }
+  ],
+  "duplicates": [
+    {
+      "files": [
+        "packages/marketing-storyboard-domain/src/project.ts",
+        "packages/rpg-storyboard-domain/src/project.ts"
+      ],
+      "name": "getFrameProgress",
+      "partLabels": [
+        "marketing-storyboard-domain",
+        "rpg-storyboard-domain"
+      ],
+      "parts": [
+        "marketing-storyboard-domain",
+        "rpg-storyboard-domain"
+      ]
+    },
+    {
+      "files": [
+        "packages/marketing-storyboard-domain/src/project.ts",
+        "packages/rpg-storyboard-domain/src/project.ts"
+      ],
+      "name": "getProjectProgress",
+      "partLabels": [
+        "marketing-storyboard-domain",
+        "rpg-storyboard-domain"
+      ],
+      "parts": [
+        "marketing-storyboard-domain",
+        "rpg-storyboard-domain"
+      ]
+    },
+    {
+      "files": [
+        "packages/cinematic-storyboard-domain/src/labels.ts",
+        "packages/marketing-storyboard-domain/src/labels.ts"
+      ],
+      "name": "humanizeConnectionType",
+      "partLabels": [
+        "cinematic-storyboard-domain",
+        "marketing-storyboard-domain"
+      ],
+      "parts": [
+        "cinematic-storyboard-domain",
+        "marketing-storyboard-domain"
+      ]
+    },
+    {
+      "files": [
+        "packages/cinematic-storyboard-domain/src/labels.ts",
+        "packages/marketing-storyboard-domain/src/labels.ts"
+      ],
+      "name": "humanizeFrameType",
+      "partLabels": [
+        "cinematic-storyboard-domain",
+        "marketing-storyboard-domain"
+      ],
+      "parts": [
+        "cinematic-storyboard-domain",
+        "marketing-storyboard-domain"
+      ]
+    },
+    {
+      "files": [
+        "packages/cinematic-storyboard-domain/src/labels.ts",
+        "packages/marketing-storyboard-domain/src/labels.ts"
+      ],
+      "name": "humanizeMissingReason",
+      "partLabels": [
+        "cinematic-storyboard-domain",
+        "marketing-storyboard-domain"
+      ],
+      "parts": [
+        "cinematic-storyboard-domain",
+        "marketing-storyboard-domain"
+      ]
+    }
+  ],
+  "duplicatesLead": "These are candidates from names and call order, not a judgement.",
+  "duplicatesNote": [
+    "And 5 more pairs."
+  ],
+  "edges": [
+    {
+      "from": "cinematic-storyboard",
+      "fromTests": false,
+      "to": "cinematic-storyboard-domain"
+    },
+    {
+      "from": "cinematic-storyboard",
+      "fromTests": false,
+      "to": "storyboard-canvas"
+    },
+    {
+      "from": "cinematic-storyboard",
+      "fromTests": false,
+      "to": "storyboard-core"
+    },
+    {
+      "from": "cinematic-storyboard-domain",
+      "fromTests": false,
+      "to": "storyboard-core"
+    },
+    {
+      "from": "marketing-storyboard-domain",
+      "fromTests": false,
+      "to": "storyboard-core"
+    },
+    {
+      "from": "rpg-storyboard-domain",
+      "fromTests": false,
+      "to": "storyboard-core"
+    }
+  ],
+  "generated": [],
+  "generatedAt": "2026-09-25T02:08:04.177Z",
+  "limits": [
+    "1 read uses a path built at run time and is not named here.",
+    "15 reads go to a path their caller passes, not to this repository.",
+    "Statistics confidence is low: fewer than 20 source files reach 10 revisions in the window."
+  ],
+  "mainDoor": ".github/workflows/ci.yml",
+  "partLabels": {
+    ".github": ".github",
+    "assets": "assets",
+    "cinematic-storyboard": "the site",
+    "cinematic-storyboard-domain": "cinematic-storyboard-domain",
+    "docs": "docs",
+    "marketing-storyboard": "the site",
+    "marketing-storyboard-domain": "marketing-storyboard-domain",
+    "root": "the repository root",
+    "rpg-storyboard": "the site",
+    "rpg-storyboard-domain": "rpg-storyboard-domain",
+    "site": "the site",
+    "storyboard-canvas": "storyboard-canvas",
+    "storyboard-core": "storyboard-core",
+    "storyboard-routing": "storyboard-routing"
+  },
+  "parts": 14,
+  "readers": [],
+  "repo": "mcp-tool-shop-org/storyboard-os",
+  "sequences": [],
+  "startDoor": ".github/workflows/ci.yml",
+  "startHere": [
+    ".github/workflows/ci.yml",
+    ".github/scripts/check-pack-contents.mjs"
+  ],
+  "summary": null,
+  "summaryFrom": null,
+  "testFiles": 61,
+  "testedBy": {
+    "cinematic-storyboard-domain": 16,
+    "marketing-storyboard-domain": 13,
+    "rpg-storyboard-domain": 14,
+    "storyboard-canvas": 8,
+    "storyboard-core": 36,
+    "storyboard-routing": 1
+  },
+  "unnamedWrites": 0,
+  "unread": [],
+  "unreadFiles": 0,
+  "unreadNote": [],
+  "untested": [],
+  "untestedNote": [],
+  "written": 0
+}

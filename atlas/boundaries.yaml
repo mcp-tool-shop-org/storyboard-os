@@ -1,0 +1,58 @@
+summary: ""
+boundaries:
+  - name: .github
+    globs:
+      - .github/**
+    role: config
+  - name: assets
+    globs:
+      - assets/**
+    role: data
+  - name: cinematic-storyboard
+    globs:
+      - apps/cinematic-storyboard/**
+    role: site
+  - name: cinematic-storyboard-domain
+    globs:
+      - packages/cinematic-storyboard-domain/**
+    role: code
+  - name: docs
+    globs:
+      - docs/**
+    role: docs
+  - name: marketing-storyboard
+    globs:
+      - apps/marketing-storyboard/**
+    role: site
+  - name: marketing-storyboard-domain
+    globs:
+      - packages/marketing-storyboard-domain/**
+    role: code
+  - name: root
+    globs:
+      - "*"
+    role: config
+  - name: rpg-storyboard
+    globs:
+      - apps/rpg-storyboard/**
+    role: site
+  - name: rpg-storyboard-domain
+    globs:
+      - packages/rpg-storyboard-domain/**
+    role: code
+  - name: site
+    globs:
+      - site/**
+    role: site
+  - name: storyboard-canvas
+    globs:
+      - packages/storyboard-canvas/**
+    role: code
+  - name: storyboard-core
+    globs:
+      - packages/storyboard-core/**
+    role: code
+  - name: storyboard-routing
+    globs:
+      - packages/storyboard-routing/**
+    role: code
