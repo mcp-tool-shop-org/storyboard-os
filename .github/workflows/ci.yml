@@ -14,6 +14,7 @@ on:
       - 'pnpm-workspace.yaml'
       - '.github/workflows/ci.yml'
       - '.github/scripts/**'
+      - 'atlas/**'
   pull_request:
     branches: [main]
 
@@ -45,6 +46,9 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
+
+      - name: Atlas check
+        run: npx --yes @dogfood-lab/atlas@1.20.0 check
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

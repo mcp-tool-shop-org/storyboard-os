@@ -1,0 +1,2167 @@
+{
+  "authorship": {
+    "parts": [],
+    "places": []
+  },
+  "boundaries": [
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": []
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": ".github",
+      "qualifyingSourceCommits": 0,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": []
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "assets",
+      "qualifyingSourceCommits": 0,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": []
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "cinematic-storyboard",
+      "qualifyingSourceCommits": 5,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": [
+          "cinematic-storyboard"
+        ]
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "cinematic-storyboard-domain",
+      "qualifyingSourceCommits": 6,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": []
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "docs",
+      "qualifyingSourceCommits": 0,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": []
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "marketing-storyboard",
+      "qualifyingSourceCommits": 4,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": [
+          "marketing-storyboard"
+        ]
+      },
+      "cohesion": 1,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "marketing-storyboard-domain",
+      "qualifyingSourceCommits": 7,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": []
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "root",
+      "qualifyingSourceCommits": 0,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [
+          "rpg-storyboard-domain",
+          "storyboard-canvas"
+        ],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": []
+      },
+      "cohesion": 0.18136,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "rpg-storyboard",
+      "qualifyingSourceCommits": 15,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [
+          "rpg-storyboard"
+        ],
+        "importsOnly": []
+      },
+      "cohesion": 0,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "rpg-storyboard-domain",
+      "qualifyingSourceCommits": 12,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": []
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "site",
+      "qualifyingSourceCommits": 12,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [
+          "rpg-storyboard"
+        ],
+        "importsOnly": [
+          "cinematic-storyboard",
+          "marketing-storyboard"
+        ]
+      },
+      "cohesion": 0.604395,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "storyboard-canvas",
+      "qualifyingSourceCommits": 7,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": [
+          "cinematic-storyboard",
+          "cinematic-storyboard-domain",
+          "marketing-storyboard",
+          "marketing-storyboard-domain",
+          "rpg-storyboard",
+          "rpg-storyboard-domain"
+        ]
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "storyboard-core",
+      "qualifyingSourceCommits": 4,
+      "rebaseline": null
+    },
+    {
+      "breakage": {
+        "coChangesOnly": [],
+        "collapsed": false,
+        "confidence": "low",
+        "importsAndCoChanges": [],
+        "importsOnly": [
+          "rpg-storyboard"
+        ]
+      },
+      "cohesion": null,
+      "cohesionDropped": false,
+      "confidence": "low",
+      "highWater": null,
+      "name": "storyboard-routing",
+      "qualifyingSourceCommits": 1,
+      "rebaseline": null
+    }
+  ],
+  "churn": {
+    "definition": "commits is how many commits in the window touch the file, including merges and commits dropped from coupling. lines is added plus deleted in those commits.",
+    "files": [
+      {
+        "commits": 5,
+        "lines": 49,
+        "path": ".github/dependabot.yml"
+      },
+      {
+        "commits": 1,
+        "lines": 175,
+        "path": ".github/scripts/check-pack-contents.mjs"
+      },
+      {
+        "commits": 1,
+        "lines": 72,
+        "path": ".github/scripts/check-site-dist.mjs"
+      },
+      {
+        "commits": 21,
+        "lines": 134,
+        "path": ".github/workflows/ci.yml"
+      },
+      {
+        "commits": 17,
+        "lines": 137,
+        "path": ".github/workflows/pages.yml"
+      },
+      {
+        "commits": 19,
+        "lines": 346,
+        "path": ".github/workflows/publish.yml"
+      },
+      {
+        "commits": 5,
+        "lines": 14,
+        "path": ".gitignore"
+      },
+      {
+        "commits": 2,
+        "lines": 3,
+        "path": ".npmrc"
+      },
+      {
+        "commits": 14,
+        "lines": 477,
+        "path": "CHANGELOG.md"
+      },
+      {
+        "commits": 1,
+        "lines": 21,
+        "path": "LICENSE"
+      },
+      {
+        "commits": 5,
+        "lines": 1006,
+        "path": "README.es.md"
+      },
+      {
+        "commits": 5,
+        "lines": 1060,
+        "path": "README.fr.md"
+      },
+      {
+        "commits": 5,
+        "lines": 1002,
+        "path": "README.hi.md"
+      },
+      {
+        "commits": 5,
+        "lines": 1002,
+        "path": "README.it.md"
+      },
+      {
+        "commits": 5,
+        "lines": 978,
+        "path": "README.ja.md"
+      },
+      {
+        "commits": 19,
+        "lines": 437,
+        "path": "README.md"
+      },
+      {
+        "commits": 5,
+        "lines": 930,
+        "path": "README.pt-BR.md"
+      },
+      {
+        "commits": 5,
+        "lines": 996,
+        "path": "README.zh.md"
+      },
+      {
+        "commits": 4,
+        "lines": 170,
+        "path": "SCORECARD.md"
+      },
+      {
+        "commits": 5,
+        "lines": 154,
+        "path": "SECURITY.md"
+      },
+      {
+        "commits": 9,
+        "lines": 115,
+        "path": "SHIP_GATE.md"
+      },
+      {
+        "commits": 1,
+        "lines": 6,
+        "path": "apps/cinematic-storyboard/astro.config.mjs"
+      },
+      {
+        "commits": 8,
+        "lines": 112,
+        "path": "apps/cinematic-storyboard/package.json"
+      },
+      {
+        "commits": 5,
+        "lines": 150,
+        "path": "apps/cinematic-storyboard/src/components/CinematicFrameInspector.test.tsx"
+      },
+      {
+        "commits": 9,
+        "lines": 494,
+        "path": "apps/cinematic-storyboard/src/components/CinematicFrameInspector.tsx"
+      },
+      {
+        "commits": 10,
+        "lines": 797,
+        "path": "apps/cinematic-storyboard/src/components/CinematicStoryboardCanvas.tsx"
+      },
+      {
+        "commits": 1,
+        "lines": 130,
+        "path": "apps/cinematic-storyboard/src/components/ErrorBoundary.tsx"
+      },
+      {
+        "commits": 4,
+        "lines": 197,
+        "path": "apps/cinematic-storyboard/src/components/ProductionSignalPanel.test.tsx"
+      },
+      {
+        "commits": 6,
+        "lines": 436,
+        "path": "apps/cinematic-storyboard/src/components/ProductionSignalPanel.tsx"
+      },
+      {
+        "commits": 1,
+        "lines": 2,
+        "path": "apps/cinematic-storyboard/src/env.d.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 15,
+        "path": "apps/cinematic-storyboard/src/lib/humanizeReason.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 31,
+        "path": "apps/cinematic-storyboard/src/lib/humanizeReason.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 380,
+        "path": "apps/cinematic-storyboard/src/lib/sequenceBoards.test.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 104,
+        "path": "apps/cinematic-storyboard/src/pages/404.astro"
+      },
+      {
+        "commits": 3,
+        "lines": 165,
+        "path": "apps/cinematic-storyboard/src/pages/index.astro"
+      },
+      {
+        "commits": 1,
+        "lines": 92,
+        "path": "apps/cinematic-storyboard/src/pages/reels/[reelId].astro"
+      },
+      {
+        "commits": 3,
+        "lines": 149,
+        "path": "apps/cinematic-storyboard/src/pages/sequences/[sequenceId].astro"
+      },
+      {
+        "commits": 10,
+        "lines": 656,
+        "path": "apps/cinematic-storyboard/src/pages/sequences/[sequenceId]/handoff.astro"
+      },
+      {
+        "commits": 1,
+        "lines": 7,
+        "path": "apps/cinematic-storyboard/tsconfig.json"
+      },
+      {
+        "commits": 2,
+        "lines": 8,
+        "path": "apps/marketing-storyboard/astro.config.mjs"
+      },
+      {
+        "commits": 9,
+        "lines": 168,
+        "path": "apps/marketing-storyboard/package.json"
+      },
+      {
+        "commits": 2,
+        "lines": 133,
+        "path": "apps/marketing-storyboard/src/components/ErrorBoundary.tsx"
+      },
+      {
+        "commits": 10,
+        "lines": 1254,
+        "path": "apps/marketing-storyboard/src/components/MarketingFrameInspector.tsx"
+      },
+      {
+        "commits": 11,
+        "lines": 2647,
+        "path": "apps/marketing-storyboard/src/components/MarketingStoryboardCanvas.tsx"
+      },
+      {
+        "commits": 1,
+        "lines": 2,
+        "path": "apps/marketing-storyboard/src/env.d.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 307,
+        "path": "apps/marketing-storyboard/src/lib/campaignBoards.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 11,
+        "path": "apps/marketing-storyboard/src/lib/frameContent.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 50,
+        "path": "apps/marketing-storyboard/src/lib/inspectorContent.test.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 422,
+        "path": "apps/marketing-storyboard/src/lib/launchBlockers.test.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 263,
+        "path": "apps/marketing-storyboard/src/lib/launchBlockers.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 147,
+        "path": "apps/marketing-storyboard/src/pages/404.astro"
+      },
+      {
+        "commits": 3,
+        "lines": 137,
+        "path": "apps/marketing-storyboard/src/pages/campaigns/[campaignId].astro"
+      },
+      {
+        "commits": 8,
+        "lines": 842,
+        "path": "apps/marketing-storyboard/src/pages/campaigns/[campaignId]/handoff.astro"
+      },
+      {
+        "commits": 4,
+        "lines": 152,
+        "path": "apps/marketing-storyboard/src/pages/index.astro"
+      },
+      {
+        "commits": 2,
+        "lines": 19,
+        "path": "apps/marketing-storyboard/tsconfig.json"
+      },
+      {
+        "commits": 1,
+        "lines": 6,
+        "path": "apps/rpg-storyboard/astro.config.mjs"
+      },
+      {
+        "commits": 5,
+        "lines": 50,
+        "path": "apps/rpg-storyboard/package.json"
+      },
+      {
+        "commits": 2,
+        "lines": 193,
+        "path": "apps/rpg-storyboard/src/components/ErrorBoundary.tsx"
+      },
+      {
+        "commits": 19,
+        "lines": 1722,
+        "path": "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx"
+      },
+      {
+        "commits": 6,
+        "lines": 564,
+        "path": "apps/rpg-storyboard/src/components/projects/BeatEditPanel.tsx"
+      },
+      {
+        "commits": 1,
+        "lines": 77,
+        "path": "apps/rpg-storyboard/src/components/projects/CorruptStoreRecovery.tsx"
+      },
+      {
+        "commits": 4,
+        "lines": 230,
+        "path": "apps/rpg-storyboard/src/components/projects/CreateProjectForm.tsx"
+      },
+      {
+        "commits": 2,
+        "lines": 73,
+        "path": "apps/rpg-storyboard/src/components/projects/NewProjectPage.tsx"
+      },
+      {
+        "commits": 12,
+        "lines": 430,
+        "path": "apps/rpg-storyboard/src/components/projects/ProjectBoard.tsx"
+      },
+      {
+        "commits": 8,
+        "lines": 923,
+        "path": "apps/rpg-storyboard/src/components/projects/ProjectHandoffPage.tsx"
+      },
+      {
+        "commits": 8,
+        "lines": 627,
+        "path": "apps/rpg-storyboard/src/components/projects/ProjectList.tsx"
+      },
+      {
+        "commits": 1,
+        "lines": 313,
+        "path": "apps/rpg-storyboard/src/components/projects/TopologyToolbar.tsx"
+      },
+      {
+        "commits": 1,
+        "lines": 185,
+        "path": "apps/rpg-storyboard/src/components/storyboard/FanControls.tsx"
+      },
+      {
+        "commits": 13,
+        "lines": 911,
+        "path": "apps/rpg-storyboard/src/components/storyboard/FrameInspector.tsx"
+      },
+      {
+        "commits": 2,
+        "lines": 141,
+        "path": "apps/rpg-storyboard/src/components/storyboard/ViewControls.tsx"
+      },
+      {
+        "commits": 1,
+        "lines": 628,
+        "path": "apps/rpg-storyboard/src/data/demo-project.json"
+      },
+      {
+        "commits": 1,
+        "lines": 2,
+        "path": "apps/rpg-storyboard/src/env.d.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 63,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/boardViewStorage.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 68,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/boardViewStorage.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 87,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/handoffLoad.test.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 51,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/handoffLoad.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 52,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/project.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 61,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.test.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 59,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 1180,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/projectStorage.test.ts"
+      },
+      {
+        "commits": 11,
+        "lines": 1237,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/projectStorage.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 15,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/routes.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 23,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/schema.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 87,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 342,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/templates.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 17,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/templates.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 50,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/topology.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 62,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/topology.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 9,
+        "path": "apps/rpg-storyboard/src/lib/storyboard/validate.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 200,
+        "path": "apps/rpg-storyboard/src/pages/index.astro"
+      },
+      {
+        "commits": 2,
+        "lines": 116,
+        "path": "apps/rpg-storyboard/src/pages/projects/board.astro"
+      },
+      {
+        "commits": 2,
+        "lines": 119,
+        "path": "apps/rpg-storyboard/src/pages/projects/handoff.astro"
+      },
+      {
+        "commits": 2,
+        "lines": 77,
+        "path": "apps/rpg-storyboard/src/pages/projects/index.astro"
+      },
+      {
+        "commits": 2,
+        "lines": 72,
+        "path": "apps/rpg-storyboard/src/pages/projects/new.astro"
+      },
+      {
+        "commits": 3,
+        "lines": 138,
+        "path": "apps/rpg-storyboard/src/pages/storyboards/[storyboardId].astro"
+      },
+      {
+        "commits": 6,
+        "lines": 642,
+        "path": "apps/rpg-storyboard/src/pages/storyboards/[storyboardId]/frames/[frameId].astro"
+      },
+      {
+        "commits": 5,
+        "lines": 671,
+        "path": "apps/rpg-storyboard/src/pages/storyboards/[storyboardId]/handoff.astro"
+      },
+      {
+        "commits": 4,
+        "lines": 306,
+        "path": "apps/rpg-storyboard/src/pages/templates/index.astro"
+      },
+      {
+        "commits": 1,
+        "lines": 7,
+        "path": "apps/rpg-storyboard/tsconfig.json"
+      },
+      {
+        "commits": 1,
+        "lines": 0,
+        "path": "assets/logo.png"
+      },
+      {
+        "commits": 10,
+        "lines": 575,
+        "path": "docs/architecture.md"
+      },
+      {
+        "commits": 2,
+        "lines": 157,
+        "path": "docs/cinematic-phase-0-closeout.md"
+      },
+      {
+        "commits": 3,
+        "lines": 180,
+        "path": "docs/cinematic-storyboard.md"
+      },
+      {
+        "commits": 3,
+        "lines": 139,
+        "path": "docs/marketing-phase-0-closeout.md"
+      },
+      {
+        "commits": 3,
+        "lines": 132,
+        "path": "docs/marketing-storyboard.md"
+      },
+      {
+        "commits": 1,
+        "lines": 180,
+        "path": "docs/monorepo-migration.md"
+      },
+      {
+        "commits": 3,
+        "lines": 226,
+        "path": "docs/operator-playbook.md"
+      },
+      {
+        "commits": 2,
+        "lines": 175,
+        "path": "docs/phase-0-closeout.md"
+      },
+      {
+        "commits": 2,
+        "lines": 193,
+        "path": "docs/phase-1-closeout.md"
+      },
+      {
+        "commits": 2,
+        "lines": 127,
+        "path": "docs/phase-2-closeout.md"
+      },
+      {
+        "commits": 2,
+        "lines": 223,
+        "path": "docs/product-brief.md"
+      },
+      {
+        "commits": 7,
+        "lines": 345,
+        "path": "docs/roadmap.md"
+      },
+      {
+        "commits": 6,
+        "lines": 377,
+        "path": "docs/rpg-storyboard.md"
+      },
+      {
+        "commits": 1,
+        "lines": 228,
+        "path": "docs/schemas/campaign-handoff.schema.json"
+      },
+      {
+        "commits": 1,
+        "lines": 362,
+        "path": "docs/schemas/production-brief.json"
+      },
+      {
+        "commits": 2,
+        "lines": 244,
+        "path": "docs/schemas/project-handoff.json"
+      },
+      {
+        "commits": 2,
+        "lines": 193,
+        "path": "docs/schemas/quest-handoff.json"
+      },
+      {
+        "commits": 1,
+        "lines": 114,
+        "path": "docs/schemas/storyboard.schema.json"
+      },
+      {
+        "commits": 4,
+        "lines": 113,
+        "path": "docs/snapshot-checklist.md"
+      },
+      {
+        "commits": 25,
+        "lines": 125,
+        "path": "package.json"
+      },
+      {
+        "commits": 2,
+        "lines": 42,
+        "path": "packages/cinematic-storyboard-domain/LICENSE"
+      },
+      {
+        "commits": 5,
+        "lines": 174,
+        "path": "packages/cinematic-storyboard-domain/README.md"
+      },
+      {
+        "commits": 10,
+        "lines": 99,
+        "path": "packages/cinematic-storyboard-domain/package.json"
+      },
+      {
+        "commits": 2,
+        "lines": 372,
+        "path": "packages/cinematic-storyboard-domain/schema/production-brief.json"
+      },
+      {
+        "commits": 1,
+        "lines": 65,
+        "path": "packages/cinematic-storyboard-domain/src/adapters.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 97,
+        "path": "packages/cinematic-storyboard-domain/src/adapters.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 281,
+        "path": "packages/cinematic-storyboard-domain/src/beatStatus.test.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 263,
+        "path": "packages/cinematic-storyboard-domain/src/beatStatus.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 72,
+        "path": "packages/cinematic-storyboard-domain/src/cardBeat.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 36,
+        "path": "packages/cinematic-storyboard-domain/src/cardBeat.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 352,
+        "path": "packages/cinematic-storyboard-domain/src/contentGuards.test.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 175,
+        "path": "packages/cinematic-storyboard-domain/src/demo-sequence.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 223,
+        "path": "packages/cinematic-storyboard-domain/src/frameSignals.test.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 236,
+        "path": "packages/cinematic-storyboard-domain/src/frameSignals.ts"
+      },
+      {
+        "commits": 12,
+        "lines": 499,
+        "path": "packages/cinematic-storyboard-domain/src/handoff.test.ts"
+      },
+      {
+        "commits": 10,
+        "lines": 591,
+        "path": "packages/cinematic-storyboard-domain/src/handoff.ts"
+      },
+      {
+        "commits": 10,
+        "lines": 160,
+        "path": "packages/cinematic-storyboard-domain/src/index.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 240,
+        "path": "packages/cinematic-storyboard-domain/src/jsonSchema.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 52,
+        "path": "packages/cinematic-storyboard-domain/src/labels.test.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 114,
+        "path": "packages/cinematic-storyboard-domain/src/labels.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 166,
+        "path": "packages/cinematic-storyboard-domain/src/nest.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 182,
+        "path": "packages/cinematic-storyboard-domain/src/nest.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 118,
+        "path": "packages/cinematic-storyboard-domain/src/playlist.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 143,
+        "path": "packages/cinematic-storyboard-domain/src/playlist.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 372,
+        "path": "packages/cinematic-storyboard-domain/src/productionSignals.test.ts"
+      },
+      {
+        "commits": 7,
+        "lines": 565,
+        "path": "packages/cinematic-storyboard-domain/src/productionSignals.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 175,
+        "path": "packages/cinematic-storyboard-domain/src/schema.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 200,
+        "path": "packages/cinematic-storyboard-domain/src/templates.test.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 1229,
+        "path": "packages/cinematic-storyboard-domain/src/templates.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 214,
+        "path": "packages/cinematic-storyboard-domain/src/validate.test.ts"
+      },
+      {
+        "commits": 7,
+        "lines": 239,
+        "path": "packages/cinematic-storyboard-domain/src/validate.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 107,
+        "path": "packages/cinematic-storyboard-domain/src/validateProductionBrief.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 61,
+        "path": "packages/cinematic-storyboard-domain/src/validateProductionBrief.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 18,
+        "path": "packages/cinematic-storyboard-domain/tsconfig.json"
+      },
+      {
+        "commits": 1,
+        "lines": 16,
+        "path": "packages/cinematic-storyboard-domain/vitest.config.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 42,
+        "path": "packages/marketing-storyboard-domain/LICENSE"
+      },
+      {
+        "commits": 3,
+        "lines": 170,
+        "path": "packages/marketing-storyboard-domain/README.md"
+      },
+      {
+        "commits": 11,
+        "lines": 269,
+        "path": "packages/marketing-storyboard-domain/package.json"
+      },
+      {
+        "commits": 2,
+        "lines": 228,
+        "path": "packages/marketing-storyboard-domain/schema/campaign-handoff.schema.json"
+      },
+      {
+        "commits": 1,
+        "lines": 184,
+        "path": "packages/marketing-storyboard-domain/src/adapters.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 201,
+        "path": "packages/marketing-storyboard-domain/src/adapters.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 605,
+        "path": "packages/marketing-storyboard-domain/src/beatStatus.test.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 449,
+        "path": "packages/marketing-storyboard-domain/src/beatStatus.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 416,
+        "path": "packages/marketing-storyboard-domain/src/contentGuards.test.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 862,
+        "path": "packages/marketing-storyboard-domain/src/demo-campaign.ts"
+      },
+      {
+        "commits": 8,
+        "lines": 610,
+        "path": "packages/marketing-storyboard-domain/src/frameSignals.test.ts"
+      },
+      {
+        "commits": 9,
+        "lines": 491,
+        "path": "packages/marketing-storyboard-domain/src/frameSignals.ts"
+      },
+      {
+        "commits": 11,
+        "lines": 1043,
+        "path": "packages/marketing-storyboard-domain/src/handoff.test.ts"
+      },
+      {
+        "commits": 11,
+        "lines": 1838,
+        "path": "packages/marketing-storyboard-domain/src/handoff.ts"
+      },
+      {
+        "commits": 8,
+        "lines": 292,
+        "path": "packages/marketing-storyboard-domain/src/index.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 79,
+        "path": "packages/marketing-storyboard-domain/src/labels.test.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 106,
+        "path": "packages/marketing-storyboard-domain/src/labels.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 889,
+        "path": "packages/marketing-storyboard-domain/src/launchReadiness.test.ts"
+      },
+      {
+        "commits": 9,
+        "lines": 987,
+        "path": "packages/marketing-storyboard-domain/src/launchReadiness.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 798,
+        "path": "packages/marketing-storyboard-domain/src/project.test.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 795,
+        "path": "packages/marketing-storyboard-domain/src/project.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 246,
+        "path": "packages/marketing-storyboard-domain/src/schema.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 505,
+        "path": "packages/marketing-storyboard-domain/src/templates.test.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 1689,
+        "path": "packages/marketing-storyboard-domain/src/templates.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 382,
+        "path": "packages/marketing-storyboard-domain/src/validate.test.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 340,
+        "path": "packages/marketing-storyboard-domain/src/validate.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 42,
+        "path": "packages/marketing-storyboard-domain/tsconfig.json"
+      },
+      {
+        "commits": 1,
+        "lines": 16,
+        "path": "packages/marketing-storyboard-domain/vitest.config.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 42,
+        "path": "packages/rpg-storyboard-domain/LICENSE"
+      },
+      {
+        "commits": 1,
+        "lines": 334,
+        "path": "packages/rpg-storyboard-domain/README.es.md"
+      },
+      {
+        "commits": 1,
+        "lines": 334,
+        "path": "packages/rpg-storyboard-domain/README.fr.md"
+      },
+      {
+        "commits": 1,
+        "lines": 334,
+        "path": "packages/rpg-storyboard-domain/README.hi.md"
+      },
+      {
+        "commits": 1,
+        "lines": 334,
+        "path": "packages/rpg-storyboard-domain/README.it.md"
+      },
+      {
+        "commits": 1,
+        "lines": 334,
+        "path": "packages/rpg-storyboard-domain/README.ja.md"
+      },
+      {
+        "commits": 3,
+        "lines": 336,
+        "path": "packages/rpg-storyboard-domain/README.md"
+      },
+      {
+        "commits": 1,
+        "lines": 334,
+        "path": "packages/rpg-storyboard-domain/README.pt-BR.md"
+      },
+      {
+        "commits": 1,
+        "lines": 334,
+        "path": "packages/rpg-storyboard-domain/README.zh.md"
+      },
+      {
+        "commits": 12,
+        "lines": 110,
+        "path": "packages/rpg-storyboard-domain/package.json"
+      },
+      {
+        "commits": 2,
+        "lines": 244,
+        "path": "packages/rpg-storyboard-domain/schema/project-handoff.json"
+      },
+      {
+        "commits": 2,
+        "lines": 193,
+        "path": "packages/rpg-storyboard-domain/schema/quest-handoff.json"
+      },
+      {
+        "commits": 2,
+        "lines": 499,
+        "path": "packages/rpg-storyboard-domain/src/beatStatus.test.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 279,
+        "path": "packages/rpg-storyboard-domain/src/beatStatus.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 129,
+        "path": "packages/rpg-storyboard-domain/src/choiceFans.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 199,
+        "path": "packages/rpg-storyboard-domain/src/choiceFans.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 34,
+        "path": "packages/rpg-storyboard-domain/src/combatSpec.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 69,
+        "path": "packages/rpg-storyboard-domain/src/combatSpec.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 53,
+        "path": "packages/rpg-storyboard-domain/src/compileGate.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 106,
+        "path": "packages/rpg-storyboard-domain/src/compileTres.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 121,
+        "path": "packages/rpg-storyboard-domain/src/compileTres.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 380,
+        "path": "packages/rpg-storyboard-domain/src/contentGuards.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 628,
+        "path": "packages/rpg-storyboard-domain/src/demo-project.json"
+      },
+      {
+        "commits": 1,
+        "lines": 14,
+        "path": "packages/rpg-storyboard-domain/src/demo-project.ts"
+      },
+      {
+        "commits": 5,
+        "lines": 473,
+        "path": "packages/rpg-storyboard-domain/src/frameSignals.test.ts"
+      },
+      {
+        "commits": 6,
+        "lines": 353,
+        "path": "packages/rpg-storyboard-domain/src/frameSignals.ts"
+      },
+      {
+        "commits": 10,
+        "lines": 1104,
+        "path": "packages/rpg-storyboard-domain/src/handoff.test.ts"
+      },
+      {
+        "commits": 11,
+        "lines": 1340,
+        "path": "packages/rpg-storyboard-domain/src/handoff.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 318,
+        "path": "packages/rpg-storyboard-domain/src/handoffValidate.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 386,
+        "path": "packages/rpg-storyboard-domain/src/handoffValidate.ts"
+      },
+      {
+        "commits": 15,
+        "lines": 182,
+        "path": "packages/rpg-storyboard-domain/src/index.ts"
+      },
+      {
+        "commits": 10,
+        "lines": 1188,
+        "path": "packages/rpg-storyboard-domain/src/project.test.ts"
+      },
+      {
+        "commits": 9,
+        "lines": 1005,
+        "path": "packages/rpg-storyboard-domain/src/project.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 134,
+        "path": "packages/rpg-storyboard-domain/src/schema.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 369,
+        "path": "packages/rpg-storyboard-domain/src/templates.test.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 2048,
+        "path": "packages/rpg-storyboard-domain/src/templates.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 127,
+        "path": "packages/rpg-storyboard-domain/src/validate.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 103,
+        "path": "packages/rpg-storyboard-domain/src/worldForge.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 159,
+        "path": "packages/rpg-storyboard-domain/src/worldForge.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 14,
+        "path": "packages/rpg-storyboard-domain/tsconfig.json"
+      },
+      {
+        "commits": 2,
+        "lines": 14,
+        "path": "packages/rpg-storyboard-domain/vitest.config.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 42,
+        "path": "packages/storyboard-canvas/LICENSE"
+      },
+      {
+        "commits": 2,
+        "lines": 323,
+        "path": "packages/storyboard-canvas/README.es.md"
+      },
+      {
+        "commits": 2,
+        "lines": 323,
+        "path": "packages/storyboard-canvas/README.fr.md"
+      },
+      {
+        "commits": 2,
+        "lines": 323,
+        "path": "packages/storyboard-canvas/README.hi.md"
+      },
+      {
+        "commits": 2,
+        "lines": 323,
+        "path": "packages/storyboard-canvas/README.it.md"
+      },
+      {
+        "commits": 2,
+        "lines": 323,
+        "path": "packages/storyboard-canvas/README.ja.md"
+      },
+      {
+        "commits": 7,
+        "lines": 401,
+        "path": "packages/storyboard-canvas/README.md"
+      },
+      {
+        "commits": 2,
+        "lines": 323,
+        "path": "packages/storyboard-canvas/README.pt-BR.md"
+      },
+      {
+        "commits": 2,
+        "lines": 323,
+        "path": "packages/storyboard-canvas/README.zh.md"
+      },
+      {
+        "commits": 12,
+        "lines": 117,
+        "path": "packages/storyboard-canvas/package.json"
+      },
+      {
+        "commits": 7,
+        "lines": 922,
+        "path": "packages/storyboard-canvas/src/AccessibleFrameList.tsx"
+      },
+      {
+        "commits": 8,
+        "lines": 372,
+        "path": "packages/storyboard-canvas/src/ConnectionLayer.tsx"
+      },
+      {
+        "commits": 9,
+        "lines": 816,
+        "path": "packages/storyboard-canvas/src/FrameCard.tsx"
+      },
+      {
+        "commits": 14,
+        "lines": 1288,
+        "path": "packages/storyboard-canvas/src/StoryboardCanvas.tsx"
+      },
+      {
+        "commits": 6,
+        "lines": 391,
+        "path": "packages/storyboard-canvas/src/a11yNav.test.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 190,
+        "path": "packages/storyboard-canvas/src/a11yNav.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 87,
+        "path": "packages/storyboard-canvas/src/defaults.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 37,
+        "path": "packages/storyboard-canvas/src/densityChip.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 30,
+        "path": "packages/storyboard-canvas/src/densityChip.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 222,
+        "path": "packages/storyboard-canvas/src/frameText.test.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 137,
+        "path": "packages/storyboard-canvas/src/frameText.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 22,
+        "path": "packages/storyboard-canvas/src/humanizeType.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 4,
+        "path": "packages/storyboard-canvas/src/humanizeType.ts"
+      },
+      {
+        "commits": 9,
+        "lines": 74,
+        "path": "packages/storyboard-canvas/src/index.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 240,
+        "path": "packages/storyboard-canvas/src/positions.test.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 180,
+        "path": "packages/storyboard-canvas/src/positions.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 21,
+        "path": "packages/storyboard-canvas/src/typeBarFill.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 71,
+        "path": "packages/storyboard-canvas/src/typeBarFill.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 98,
+        "path": "packages/storyboard-canvas/src/types.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 657,
+        "path": "packages/storyboard-canvas/src/viewport.test.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 356,
+        "path": "packages/storyboard-canvas/src/viewport.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 142,
+        "path": "packages/storyboard-canvas/src/visibility.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 120,
+        "path": "packages/storyboard-canvas/src/visibility.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 13,
+        "path": "packages/storyboard-canvas/tsconfig.json"
+      },
+      {
+        "commits": 1,
+        "lines": 8,
+        "path": "packages/storyboard-canvas/vitest.config.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 42,
+        "path": "packages/storyboard-core/LICENSE"
+      },
+      {
+        "commits": 1,
+        "lines": 239,
+        "path": "packages/storyboard-core/README.es.md"
+      },
+      {
+        "commits": 1,
+        "lines": 239,
+        "path": "packages/storyboard-core/README.fr.md"
+      },
+      {
+        "commits": 1,
+        "lines": 239,
+        "path": "packages/storyboard-core/README.hi.md"
+      },
+      {
+        "commits": 1,
+        "lines": 239,
+        "path": "packages/storyboard-core/README.it.md"
+      },
+      {
+        "commits": 1,
+        "lines": 239,
+        "path": "packages/storyboard-core/README.ja.md"
+      },
+      {
+        "commits": 8,
+        "lines": 347,
+        "path": "packages/storyboard-core/README.md"
+      },
+      {
+        "commits": 1,
+        "lines": 239,
+        "path": "packages/storyboard-core/README.pt-BR.md"
+      },
+      {
+        "commits": 1,
+        "lines": 239,
+        "path": "packages/storyboard-core/README.zh.md"
+      },
+      {
+        "commits": 14,
+        "lines": 107,
+        "path": "packages/storyboard-core/package.json"
+      },
+      {
+        "commits": 2,
+        "lines": 114,
+        "path": "packages/storyboard-core/schema/storyboard.schema.json"
+      },
+      {
+        "commits": 1,
+        "lines": 83,
+        "path": "packages/storyboard-core/src/density.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 49,
+        "path": "packages/storyboard-core/src/density.ts"
+      },
+      {
+        "commits": 7,
+        "lines": 83,
+        "path": "packages/storyboard-core/src/index.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 134,
+        "path": "packages/storyboard-core/src/nest.test.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 136,
+        "path": "packages/storyboard-core/src/nest.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 418,
+        "path": "packages/storyboard-core/src/schema.lockstep.test.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 152,
+        "path": "packages/storyboard-core/src/schema.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 289,
+        "path": "packages/storyboard-core/src/tokens.test.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 248,
+        "path": "packages/storyboard-core/src/tokens.ts"
+      },
+      {
+        "commits": 8,
+        "lines": 1204,
+        "path": "packages/storyboard-core/src/validate.test.ts"
+      },
+      {
+        "commits": 9,
+        "lines": 748,
+        "path": "packages/storyboard-core/src/validate.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 12,
+        "path": "packages/storyboard-core/tsconfig.json"
+      },
+      {
+        "commits": 1,
+        "lines": 8,
+        "path": "packages/storyboard-core/vitest.config.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 42,
+        "path": "packages/storyboard-routing/LICENSE"
+      },
+      {
+        "commits": 1,
+        "lines": 157,
+        "path": "packages/storyboard-routing/README.es.md"
+      },
+      {
+        "commits": 1,
+        "lines": 157,
+        "path": "packages/storyboard-routing/README.fr.md"
+      },
+      {
+        "commits": 1,
+        "lines": 157,
+        "path": "packages/storyboard-routing/README.hi.md"
+      },
+      {
+        "commits": 1,
+        "lines": 157,
+        "path": "packages/storyboard-routing/README.it.md"
+      },
+      {
+        "commits": 1,
+        "lines": 157,
+        "path": "packages/storyboard-routing/README.ja.md"
+      },
+      {
+        "commits": 4,
+        "lines": 182,
+        "path": "packages/storyboard-routing/README.md"
+      },
+      {
+        "commits": 1,
+        "lines": 157,
+        "path": "packages/storyboard-routing/README.pt-BR.md"
+      },
+      {
+        "commits": 1,
+        "lines": 157,
+        "path": "packages/storyboard-routing/README.zh.md"
+      },
+      {
+        "commits": 13,
+        "lines": 99,
+        "path": "packages/storyboard-routing/package.json"
+      },
+      {
+        "commits": 1,
+        "lines": 8,
+        "path": "packages/storyboard-routing/src/index.ts"
+      },
+      {
+        "commits": 3,
+        "lines": 191,
+        "path": "packages/storyboard-routing/src/routes.test.ts"
+      },
+      {
+        "commits": 4,
+        "lines": 84,
+        "path": "packages/storyboard-routing/src/routes.ts"
+      },
+      {
+        "commits": 1,
+        "lines": 12,
+        "path": "packages/storyboard-routing/tsconfig.json"
+      },
+      {
+        "commits": 1,
+        "lines": 8,
+        "path": "packages/storyboard-routing/vitest.config.ts"
+      },
+      {
+        "commits": 21,
+        "lines": 16881,
+        "path": "pnpm-lock.yaml"
+      },
+      {
+        "commits": 9,
+        "lines": 100,
+        "path": "pnpm-workspace.yaml"
+      },
+      {
+        "commits": 7,
+        "lines": 66,
+        "path": "site/astro.config.mjs"
+      },
+      {
+        "commits": 2,
+        "lines": 7454,
+        "path": "site/package-lock.json"
+      },
+      {
+        "commits": 3,
+        "lines": 24,
+        "path": "site/package.json"
+      },
+      {
+        "commits": 1,
+        "lines": 0,
+        "path": "site/public/apple-touch-icon.png"
+      },
+      {
+        "commits": 1,
+        "lines": 33,
+        "path": "site/public/favicon.svg"
+      },
+      {
+        "commits": 1,
+        "lines": 0,
+        "path": "site/public/og.png"
+      },
+      {
+        "commits": 1,
+        "lines": 228,
+        "path": "site/public/schemas/campaign-handoff.schema.json"
+      },
+      {
+        "commits": 1,
+        "lines": 362,
+        "path": "site/public/schemas/production-brief.json"
+      },
+      {
+        "commits": 2,
+        "lines": 244,
+        "path": "site/public/schemas/project-handoff.json"
+      },
+      {
+        "commits": 2,
+        "lines": 193,
+        "path": "site/public/schemas/quest-handoff.json"
+      },
+      {
+        "commits": 1,
+        "lines": 114,
+        "path": "site/public/schemas/storyboard.schema.json"
+      },
+      {
+        "commits": 1,
+        "lines": 0,
+        "path": "site/src/assets/logo.png"
+      },
+      {
+        "commits": 1,
+        "lines": 0,
+        "path": "site/src/assets/mark.png"
+      },
+      {
+        "commits": 1,
+        "lines": 7,
+        "path": "site/src/content.config.ts"
+      },
+      {
+        "commits": 7,
+        "lines": 387,
+        "path": "site/src/content/docs/handbook/architecture.md"
+      },
+      {
+        "commits": 2,
+        "lines": 113,
+        "path": "site/src/content/docs/handbook/cinematic-playlist.md"
+      },
+      {
+        "commits": 2,
+        "lines": 141,
+        "path": "site/src/content/docs/handbook/cinematic-storyboard.md"
+      },
+      {
+        "commits": 11,
+        "lines": 224,
+        "path": "site/src/content/docs/handbook/getting-started.md"
+      },
+      {
+        "commits": 1,
+        "lines": 83,
+        "path": "site/src/content/docs/handbook/handoff-json.md"
+      },
+      {
+        "commits": 8,
+        "lines": 121,
+        "path": "site/src/content/docs/handbook/index.md"
+      },
+      {
+        "commits": 2,
+        "lines": 120,
+        "path": "site/src/content/docs/handbook/marketing-storyboard.md"
+      },
+      {
+        "commits": 7,
+        "lines": 451,
+        "path": "site/src/content/docs/handbook/reference.md"
+      },
+      {
+        "commits": 4,
+        "lines": 155,
+        "path": "site/src/content/docs/handbook/usage.md"
+      },
+      {
+        "commits": 2,
+        "lines": 42,
+        "path": "site/src/pages/index.astro"
+      },
+      {
+        "commits": 15,
+        "lines": 347,
+        "path": "site/src/site-config.ts"
+      },
+      {
+        "commits": 2,
+        "lines": 21,
+        "path": "site/src/styles/global.css"
+      },
+      {
+        "commits": 2,
+        "lines": 15,
+        "path": "site/src/styles/starlight-custom.css"
+      },
+      {
+        "commits": 1,
+        "lines": 5,
+        "path": "site/tsconfig.json"
+      }
+    ]
+  },
+  "confidence": {
+    "level": "low",
+    "reason": "fewer than 20 source files reach 10 revisions in the window"
+  },
+  "generatedAt": "2026-09-25T02:08:04.177Z",
+  "generatedFrom": {
+    "commit": "6714e4a4627a25e59df420bd5e14b6fa4140c776"
+  },
+  "pairs": [
+    {
+      "a": ".github/workflows/ci.yml",
+      "b": ".github/workflows/pages.yml",
+      "either": 15,
+      "shared": 9,
+      "strength": 0.6
+    },
+    {
+      "a": ".github/workflows/ci.yml",
+      "b": ".github/workflows/publish.yml",
+      "either": 15,
+      "shared": 8,
+      "strength": 0.533333
+    },
+    {
+      "a": ".github/workflows/pages.yml",
+      "b": ".github/workflows/publish.yml",
+      "either": 14,
+      "shared": 7,
+      "strength": 0.5
+    },
+    {
+      "a": "CHANGELOG.md",
+      "b": "docs/architecture.md",
+      "either": 11,
+      "shared": 6,
+      "strength": 0.545455
+    },
+    {
+      "a": "README.md",
+      "b": "docs/architecture.md",
+      "either": 14,
+      "shared": 7,
+      "strength": 0.5
+    },
+    {
+      "a": "apps/marketing-storyboard/package.json",
+      "b": "packages/marketing-storyboard-domain/package.json",
+      "either": 8,
+      "shared": 4,
+      "strength": 0.5
+    },
+    {
+      "a": "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
+      "b": "apps/rpg-storyboard/src/components/storyboard/FrameInspector.tsx",
+      "either": 11,
+      "shared": 6,
+      "strength": 0.545455
+    },
+    {
+      "a": "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
+      "b": "packages/rpg-storyboard-domain/src/index.ts",
+      "either": 12,
+      "shared": 9,
+      "strength": 0.75
+    },
+    {
+      "a": "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
+      "b": "packages/storyboard-canvas/src/StoryboardCanvas.tsx",
+      "either": 11,
+      "shared": 6,
+      "strength": 0.545455
+    },
+    {
+      "a": "apps/rpg-storyboard/src/components/projects/ProjectBoard.tsx",
+      "b": "packages/rpg-storyboard-domain/src/index.ts",
+      "either": 10,
+      "shared": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "apps/rpg-storyboard/src/components/projects/ProjectBoard.tsx",
+      "b": "packages/rpg-storyboard-domain/src/project.test.ts",
+      "either": 6,
+      "shared": 4,
+      "strength": 0.666667
+    },
+    {
+      "a": "packages/cinematic-storyboard-domain/package.json",
+      "b": "packages/marketing-storyboard-domain/package.json",
+      "either": 8,
+      "shared": 5,
+      "strength": 0.625
+    },
+    {
+      "a": "packages/cinematic-storyboard-domain/package.json",
+      "b": "packages/rpg-storyboard-domain/package.json",
+      "either": 9,
+      "shared": 5,
+      "strength": 0.555556
+    },
+    {
+      "a": "packages/cinematic-storyboard-domain/package.json",
+      "b": "packages/storyboard-canvas/package.json",
+      "either": 10,
+      "shared": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "packages/cinematic-storyboard-domain/package.json",
+      "b": "packages/storyboard-core/package.json",
+      "either": 10,
+      "shared": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "packages/cinematic-storyboard-domain/package.json",
+      "b": "packages/storyboard-routing/package.json",
+      "either": 10,
+      "shared": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/package.json",
+      "b": "packages/rpg-storyboard-domain/package.json",
+      "either": 10,
+      "shared": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/src/frameSignals.test.ts",
+      "b": "packages/marketing-storyboard-domain/src/frameSignals.ts",
+      "either": 6,
+      "shared": 5,
+      "strength": 0.833333
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/src/frameSignals.test.ts",
+      "b": "packages/marketing-storyboard-domain/src/handoff.test.ts",
+      "either": 6,
+      "shared": 4,
+      "strength": 0.666667
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/src/frameSignals.test.ts",
+      "b": "packages/marketing-storyboard-domain/src/handoff.ts",
+      "either": 6,
+      "shared": 4,
+      "strength": 0.666667
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/src/frameSignals.ts",
+      "b": "packages/marketing-storyboard-domain/src/handoff.test.ts",
+      "either": 7,
+      "shared": 4,
+      "strength": 0.571429
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/src/frameSignals.ts",
+      "b": "packages/marketing-storyboard-domain/src/handoff.ts",
+      "either": 6,
+      "shared": 5,
+      "strength": 0.833333
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/src/handoff.test.ts",
+      "b": "packages/marketing-storyboard-domain/src/handoff.ts",
+      "either": 6,
+      "shared": 4,
+      "strength": 0.666667
+    },
+    {
+      "a": "packages/rpg-storyboard-domain/package.json",
+      "b": "packages/storyboard-canvas/package.json",
+      "either": 9,
+      "shared": 8,
+      "strength": 0.888889
+    },
+    {
+      "a": "packages/rpg-storyboard-domain/package.json",
+      "b": "packages/storyboard-core/package.json",
+      "either": 9,
+      "shared": 8,
+      "strength": 0.888889
+    },
+    {
+      "a": "packages/rpg-storyboard-domain/package.json",
+      "b": "packages/storyboard-routing/package.json",
+      "either": 9,
+      "shared": 8,
+      "strength": 0.888889
+    },
+    {
+      "a": "packages/storyboard-canvas/package.json",
+      "b": "packages/storyboard-core/package.json",
+      "either": 10,
+      "shared": 8,
+      "strength": 0.8
+    },
+    {
+      "a": "packages/storyboard-canvas/package.json",
+      "b": "packages/storyboard-routing/package.json",
+      "either": 10,
+      "shared": 8,
+      "strength": 0.8
+    },
+    {
+      "a": "packages/storyboard-canvas/src/StoryboardCanvas.tsx",
+      "b": "packages/storyboard-canvas/src/index.ts",
+      "either": 6,
+      "shared": 5,
+      "strength": 0.833333
+    },
+    {
+      "a": "packages/storyboard-core/package.json",
+      "b": "packages/storyboard-routing/package.json",
+      "either": 10,
+      "shared": 8,
+      "strength": 0.8
+    },
+    {
+      "a": "site/src/content/docs/handbook/getting-started.md",
+      "b": "site/src/site-config.ts",
+      "either": 11,
+      "shared": 6,
+      "strength": 0.545455
+    }
+  ],
+  "parameters": {
+    "appliedChangesetLimit": 50,
+    "changeset": 50,
+    "changesetFraction": 0.25,
+    "cohesionDrop": 0.2,
+    "couplingPopulation": "source",
+    "fallenShared": 3,
+    "floor": "fallen",
+    "floorHeld": false,
+    "floorTrigger": "revision-depth",
+    "headDate": "2026-09-17T12:34:52-07:00",
+    "inScopeFiles": 327,
+    "pinnedStart": null,
+    "priorFloor": null,
+    "qualifyingCommits": 62,
+    "qualifyingMinimum": 30,
+    "revisions": 5,
+    "shared": 10,
+    "sharedFloorUsed": 3,
+    "since": "2026-03-21T19:34:52.000Z",
+    "sourceExtensions": [
+      ".js",
+      ".mjs",
+      ".cjs",
+      ".jsx",
+      ".ts",
+      ".tsx",
+      ".mts",
+      ".cts",
+      ".py",
+      ".rs",
+      ".gd"
+    ],
+    "sourceFileReach": 20,
+    "sourceFileRise": 25,
+    "sourceFilesReachingStrongFloor": 3,
+    "strength": 0.5,
+    "windowDays": 180
+  },
+  "strengthDefinition": "strength is the shared qualifying commits divided by either. either is the number of qualifying commits that touch either file."
+}
