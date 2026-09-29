@@ -9,14 +9,12 @@ const coverageLeg = process.env.COVERAGE_LEG === 'true';
 
 export default defineConfig({
   test: {
-    // validate.ts / tokens.ts are pure — no DOM/browser deps, no jsdom needed
-    include: ['src/**/*.test.ts'],
     ...(coverageLeg ? { reporters: ['default', 'junit'], outputFile: { junit: 'junit.xml' } } : {}),
     coverage: {
       enabled: coverageLeg,
       provider: 'v8',
       reporter: ['text', 'lcovonly'],
-      include: ['src/**'],
+      include: ['src/**/*.{ts,tsx}'],
     },
   },
 });
