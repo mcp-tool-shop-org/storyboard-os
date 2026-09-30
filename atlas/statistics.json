@@ -49,7 +49,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "cinematic-storyboard",
-      "qualifyingSourceCommits": 5,
+      "qualifyingSourceCommits": 6,
       "rebaseline": null
     },
     {
@@ -67,7 +67,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "cinematic-storyboard-domain",
-      "qualifyingSourceCommits": 6,
+      "qualifyingSourceCommits": 7,
       "rebaseline": null
     },
     {
@@ -99,7 +99,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "marketing-storyboard",
-      "qualifyingSourceCommits": 4,
+      "qualifyingSourceCommits": 5,
       "rebaseline": null
     },
     {
@@ -117,7 +117,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "marketing-storyboard-domain",
-      "qualifyingSourceCommits": 7,
+      "qualifyingSourceCommits": 8,
       "rebaseline": null
     },
     {
@@ -152,7 +152,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "rpg-storyboard",
-      "qualifyingSourceCommits": 15,
+      "qualifyingSourceCommits": 16,
       "rebaseline": null
     },
     {
@@ -170,7 +170,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "rpg-storyboard-domain",
-      "qualifyingSourceCommits": 12,
+      "qualifyingSourceCommits": 13,
       "rebaseline": null
     },
     {
@@ -207,7 +207,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "storyboard-canvas",
-      "qualifyingSourceCommits": 7,
+      "qualifyingSourceCommits": 8,
       "rebaseline": null
     },
     {
@@ -230,7 +230,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "storyboard-core",
-      "qualifyingSourceCommits": 4,
+      "qualifyingSourceCommits": 5,
       "rebaseline": null
     },
     {
@@ -248,7 +248,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "storyboard-routing",
-      "qualifyingSourceCommits": 1,
+      "qualifyingSourceCommits": 2,
       "rebaseline": null
     }
   ],
@@ -271,8 +271,8 @@
         "path": ".github/scripts/check-site-dist.mjs"
       },
       {
-        "commits": 21,
-        "lines": 134,
+        "commits": 24,
+        "lines": 364,
         "path": ".github/workflows/ci.yml"
       },
       {
@@ -366,8 +366,8 @@
         "path": "apps/cinematic-storyboard/astro.config.mjs"
       },
       {
-        "commits": 8,
-        "lines": 112,
+        "commits": 10,
+        "lines": 114,
         "path": "apps/cinematic-storyboard/package.json"
       },
       {
@@ -452,12 +452,17 @@
       },
       {
         "commits": 2,
+        "lines": 40,
+        "path": "apps/cinematic-storyboard/vitest.config.ts"
+      },
+      {
+        "commits": 2,
         "lines": 8,
         "path": "apps/marketing-storyboard/astro.config.mjs"
       },
       {
-        "commits": 9,
-        "lines": 168,
+        "commits": 11,
+        "lines": 170,
         "path": "apps/marketing-storyboard/package.json"
       },
       {
@@ -531,13 +536,18 @@
         "path": "apps/marketing-storyboard/tsconfig.json"
       },
       {
+        "commits": 2,
+        "lines": 40,
+        "path": "apps/marketing-storyboard/vitest.config.ts"
+      },
+      {
         "commits": 1,
         "lines": 6,
         "path": "apps/rpg-storyboard/astro.config.mjs"
       },
       {
-        "commits": 5,
-        "lines": 50,
+        "commits": 7,
+        "lines": 52,
         "path": "apps/rpg-storyboard/package.json"
       },
       {
@@ -751,9 +761,44 @@
         "path": "apps/rpg-storyboard/tsconfig.json"
       },
       {
+        "commits": 2,
+        "lines": 40,
+        "path": "apps/rpg-storyboard/vitest.config.ts"
+      },
+      {
         "commits": 1,
         "lines": 0,
         "path": "assets/logo.png"
+      },
+      {
+        "commits": 1,
+        "lines": 98,
+        "path": "atlas/README.md"
+      },
+      {
+        "commits": 1,
+        "lines": 58,
+        "path": "atlas/boundaries.yaml"
+      },
+      {
+        "commits": 1,
+        "lines": 674,
+        "path": "atlas/page.json"
+      },
+      {
+        "commits": 1,
+        "lines": 2167,
+        "path": "atlas/statistics.json"
+      },
+      {
+        "commits": 1,
+        "lines": 4470,
+        "path": "atlas/structure.json"
+      },
+      {
+        "commits": 2,
+        "lines": 36,
+        "path": "codecov.yml"
       },
       {
         "commits": 10,
@@ -866,8 +911,8 @@
         "path": "packages/cinematic-storyboard-domain/README.md"
       },
       {
-        "commits": 10,
-        "lines": 99,
+        "commits": 12,
+        "lines": 101,
         "path": "packages/cinematic-storyboard-domain/package.json"
       },
       {
@@ -1026,8 +1071,8 @@
         "path": "packages/cinematic-storyboard-domain/tsconfig.json"
       },
       {
-        "commits": 1,
-        "lines": 16,
+        "commits": 3,
+        "lines": 44,
         "path": "packages/cinematic-storyboard-domain/vitest.config.ts"
       },
       {
@@ -1041,8 +1086,8 @@
         "path": "packages/marketing-storyboard-domain/README.md"
       },
       {
-        "commits": 11,
-        "lines": 269,
+        "commits": 13,
+        "lines": 271,
         "path": "packages/marketing-storyboard-domain/package.json"
       },
       {
@@ -1166,8 +1211,8 @@
         "path": "packages/marketing-storyboard-domain/tsconfig.json"
       },
       {
-        "commits": 1,
-        "lines": 16,
+        "commits": 3,
+        "lines": 44,
         "path": "packages/marketing-storyboard-domain/vitest.config.ts"
       },
       {
@@ -1216,8 +1261,8 @@
         "path": "packages/rpg-storyboard-domain/README.zh.md"
       },
       {
-        "commits": 12,
-        "lines": 110,
+        "commits": 14,
+        "lines": 112,
         "path": "packages/rpg-storyboard-domain/package.json"
       },
       {
@@ -1371,8 +1416,8 @@
         "path": "packages/rpg-storyboard-domain/tsconfig.json"
       },
       {
-        "commits": 2,
-        "lines": 14,
+        "commits": 4,
+        "lines": 42,
         "path": "packages/rpg-storyboard-domain/vitest.config.ts"
       },
       {
@@ -1421,8 +1466,8 @@
         "path": "packages/storyboard-canvas/README.zh.md"
       },
       {
-        "commits": 12,
-        "lines": 117,
+        "commits": 14,
+        "lines": 119,
         "path": "packages/storyboard-canvas/package.json"
       },
       {
@@ -1546,8 +1591,8 @@
         "path": "packages/storyboard-canvas/tsconfig.json"
       },
       {
-        "commits": 1,
-        "lines": 8,
+        "commits": 3,
+        "lines": 36,
         "path": "packages/storyboard-canvas/vitest.config.ts"
       },
       {
@@ -1596,8 +1641,8 @@
         "path": "packages/storyboard-core/README.zh.md"
       },
       {
-        "commits": 14,
-        "lines": 107,
+        "commits": 16,
+        "lines": 109,
         "path": "packages/storyboard-core/package.json"
       },
       {
@@ -1666,8 +1711,8 @@
         "path": "packages/storyboard-core/tsconfig.json"
       },
       {
-        "commits": 1,
-        "lines": 8,
+        "commits": 3,
+        "lines": 36,
         "path": "packages/storyboard-core/vitest.config.ts"
       },
       {
@@ -1716,8 +1761,8 @@
         "path": "packages/storyboard-routing/README.zh.md"
       },
       {
-        "commits": 13,
-        "lines": 99,
+        "commits": 15,
+        "lines": 101,
         "path": "packages/storyboard-routing/package.json"
       },
       {
@@ -1741,13 +1786,13 @@
         "path": "packages/storyboard-routing/tsconfig.json"
       },
       {
-        "commits": 1,
-        "lines": 8,
+        "commits": 3,
+        "lines": 36,
         "path": "packages/storyboard-routing/vitest.config.ts"
       },
       {
-        "commits": 21,
-        "lines": 16881,
+        "commits": 23,
+        "lines": 17389,
         "path": "pnpm-lock.yaml"
       },
       {
@@ -1899,26 +1944,19 @@
   },
   "confidence": {
     "level": "low",
-    "reason": "fewer than 20 source files reach 10 revisions in the window"
+    "reason": "fewer than 25 source files reach 10 revisions in the window"
   },
-  "generatedAt": "2026-09-25T02:08:04.177Z",
+  "generatedAt": "2026-09-30T20:13:40.556Z",
   "generatedFrom": {
-    "commit": "6714e4a4627a25e59df420bd5e14b6fa4140c776"
+    "commit": "736766f1f17065fe64a4f3813db0d86d52ee8c72"
   },
   "pairs": [
     {
       "a": ".github/workflows/ci.yml",
       "b": ".github/workflows/pages.yml",
-      "either": 15,
+      "either": 17,
       "shared": 9,
-      "strength": 0.6
-    },
-    {
-      "a": ".github/workflows/ci.yml",
-      "b": ".github/workflows/publish.yml",
-      "either": 15,
-      "shared": 8,
-      "strength": 0.533333
+      "strength": 0.529412
     },
     {
       "a": ".github/workflows/pages.yml",
@@ -1942,11 +1980,32 @@
       "strength": 0.5
     },
     {
+      "a": "apps/cinematic-storyboard/package.json",
+      "b": "apps/marketing-storyboard/package.json",
+      "either": 7,
+      "shared": 4,
+      "strength": 0.571429
+    },
+    {
+      "a": "apps/cinematic-storyboard/package.json",
+      "b": "apps/rpg-storyboard/package.json",
+      "either": 6,
+      "shared": 4,
+      "strength": 0.666667
+    },
+    {
+      "a": "apps/marketing-storyboard/package.json",
+      "b": "apps/rpg-storyboard/package.json",
+      "either": 7,
+      "shared": 4,
+      "strength": 0.571429
+    },
+    {
       "a": "apps/marketing-storyboard/package.json",
       "b": "packages/marketing-storyboard-domain/package.json",
-      "either": 8,
-      "shared": 4,
-      "strength": 0.5
+      "either": 9,
+      "shared": 5,
+      "strength": 0.555556
     },
     {
       "a": "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
@@ -1986,43 +2045,64 @@
     {
       "a": "packages/cinematic-storyboard-domain/package.json",
       "b": "packages/marketing-storyboard-domain/package.json",
-      "either": 8,
-      "shared": 5,
-      "strength": 0.625
+      "either": 9,
+      "shared": 6,
+      "strength": 0.666667
     },
     {
       "a": "packages/cinematic-storyboard-domain/package.json",
       "b": "packages/rpg-storyboard-domain/package.json",
-      "either": 9,
-      "shared": 5,
-      "strength": 0.555556
+      "either": 10,
+      "shared": 6,
+      "strength": 0.6
     },
     {
       "a": "packages/cinematic-storyboard-domain/package.json",
       "b": "packages/storyboard-canvas/package.json",
-      "either": 10,
-      "shared": 5,
-      "strength": 0.5
+      "either": 11,
+      "shared": 6,
+      "strength": 0.545455
     },
     {
       "a": "packages/cinematic-storyboard-domain/package.json",
       "b": "packages/storyboard-core/package.json",
-      "either": 10,
-      "shared": 5,
-      "strength": 0.5
+      "either": 11,
+      "shared": 6,
+      "strength": 0.545455
     },
     {
       "a": "packages/cinematic-storyboard-domain/package.json",
       "b": "packages/storyboard-routing/package.json",
-      "either": 10,
-      "shared": 5,
-      "strength": 0.5
+      "either": 11,
+      "shared": 6,
+      "strength": 0.545455
     },
     {
       "a": "packages/marketing-storyboard-domain/package.json",
       "b": "packages/rpg-storyboard-domain/package.json",
-      "either": 10,
-      "shared": 5,
+      "either": 11,
+      "shared": 6,
+      "strength": 0.545455
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/package.json",
+      "b": "packages/storyboard-canvas/package.json",
+      "either": 12,
+      "shared": 6,
+      "strength": 0.5
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/package.json",
+      "b": "packages/storyboard-core/package.json",
+      "either": 12,
+      "shared": 6,
+      "strength": 0.5
+    },
+    {
+      "a": "packages/marketing-storyboard-domain/package.json",
+      "b": "packages/storyboard-routing/package.json",
+      "either": 12,
+      "shared": 6,
       "strength": 0.5
     },
     {
@@ -2070,37 +2150,37 @@
     {
       "a": "packages/rpg-storyboard-domain/package.json",
       "b": "packages/storyboard-canvas/package.json",
-      "either": 9,
-      "shared": 8,
-      "strength": 0.888889
+      "either": 10,
+      "shared": 9,
+      "strength": 0.9
     },
     {
       "a": "packages/rpg-storyboard-domain/package.json",
       "b": "packages/storyboard-core/package.json",
-      "either": 9,
-      "shared": 8,
-      "strength": 0.888889
+      "either": 10,
+      "shared": 9,
+      "strength": 0.9
     },
     {
       "a": "packages/rpg-storyboard-domain/package.json",
       "b": "packages/storyboard-routing/package.json",
-      "either": 9,
-      "shared": 8,
-      "strength": 0.888889
+      "either": 10,
+      "shared": 9,
+      "strength": 0.9
     },
     {
       "a": "packages/storyboard-canvas/package.json",
       "b": "packages/storyboard-core/package.json",
-      "either": 10,
-      "shared": 8,
-      "strength": 0.8
+      "either": 11,
+      "shared": 9,
+      "strength": 0.818182
     },
     {
       "a": "packages/storyboard-canvas/package.json",
       "b": "packages/storyboard-routing/package.json",
-      "either": 10,
-      "shared": 8,
-      "strength": 0.8
+      "either": 11,
+      "shared": 9,
+      "strength": 0.818182
     },
     {
       "a": "packages/storyboard-canvas/src/StoryboardCanvas.tsx",
@@ -2112,9 +2192,9 @@
     {
       "a": "packages/storyboard-core/package.json",
       "b": "packages/storyboard-routing/package.json",
-      "either": 10,
-      "shared": 8,
-      "strength": 0.8
+      "either": 11,
+      "shared": 9,
+      "strength": 0.818182
     },
     {
       "a": "site/src/content/docs/handbook/getting-started.md",
@@ -2134,16 +2214,16 @@
     "floor": "fallen",
     "floorHeld": false,
     "floorTrigger": "revision-depth",
-    "headDate": "2026-09-17T12:34:52-07:00",
-    "inScopeFiles": 327,
+    "headDate": "2026-09-29T16:48:36-07:00",
+    "inScopeFiles": 336,
     "pinnedStart": null,
-    "priorFloor": null,
-    "qualifyingCommits": 62,
+    "priorFloor": "fallen",
+    "qualifyingCommits": 65,
     "qualifyingMinimum": 30,
     "revisions": 5,
     "shared": 10,
     "sharedFloorUsed": 3,
-    "since": "2026-03-21T19:34:52.000Z",
+    "since": "2026-04-02T23:48:36.000Z",
     "sourceExtensions": [
       ".js",
       ".mjs",

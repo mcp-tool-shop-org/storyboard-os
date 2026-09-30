@@ -15,6 +15,22 @@
         {
           "entry": "packedPathsFromListing",
           "entryRule": 1,
+          "failurePaths": [
+            {
+              "in": "runPackDryRun",
+              "kind": "throw",
+              "line": 85
+            },
+            {
+              "in": "runPackDryRun",
+              "kind": "throw",
+              "line": 92
+            },
+            {
+              "kind": "catch",
+              "line": 123
+            }
+          ],
           "hash": "722fb67648a9fb99e384d1fc5e7a58d1dd7148be514c8cf7c36ad32495c1cacf",
           "path": ".github/scripts/check-pack-contents.mjs",
           "sequences": []
@@ -22,12 +38,24 @@
         {
           "entry": "walkHtml",
           "entryRule": 1,
+          "failurePaths": [
+            {
+              "in": "walkHtml",
+              "kind": "catch",
+              "line": 42
+            },
+            {
+              "in": "walkHtml",
+              "kind": "throw",
+              "line": 43
+            }
+          ],
           "hash": "2ce69599c1d3568c4c90c71078cfaf0cb075c87b36d2a49b45fb85e672880dba",
           "path": ".github/scripts/check-site-dist.mjs",
           "sequences": []
         },
         {
-          "hash": "dc15cdeb00e4f8afd5794b3a356a4e9c42de08644981c29aee373ea730d46987",
+          "hash": "f469affcebf6755b2d6b67281faa34c1ec75351b34d710ef49e053376e592687",
           "path": ".github/workflows/ci.yml"
         },
         {
@@ -95,7 +123,7 @@
           "path": "apps/cinematic-storyboard/astro.config.mjs"
         },
         {
-          "hash": "c4e584b8d65f6047b038f5c8d607e69de4ff71d382c08d148e801f1dcf8c1e76",
+          "hash": "c4727322fd3bf0f98cbb444768a7587943cf68df7dcb26f99e5dd9b56da7de9b",
           "path": "apps/cinematic-storyboard/package.json"
         },
         {
@@ -103,13 +131,18 @@
           "importsFiles": [
             "apps/cinematic-storyboard/src/components/CinematicFrameInspector.tsx"
           ],
-          "path": "apps/cinematic-storyboard/src/components/CinematicFrameInspector.test.tsx"
+          "path": "apps/cinematic-storyboard/src/components/CinematicFrameInspector.test.tsx",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "CinematicFrameInspector"
           ],
           "hash": "2fb9626169f75124af3b07d861ef6b7789fa7a318c75230e892bb09771256138",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/index.ts",
+            "apps/cinematic-storyboard/src/lib/humanizeReason.ts"
+          ],
           "importsFiles": [
             "apps/cinematic-storyboard/src/lib/humanizeReason.ts",
             "packages/cinematic-storyboard-domain/src/index.ts"
@@ -121,6 +154,14 @@
             "CinematicStoryboardCanvas"
           ],
           "hash": "c14cacc4e3887a9dfcf8b4ae971b780579ee77f4079019c3b80100768a9e6b74",
+          "importOrder": [
+            "packages/storyboard-canvas/src/index.ts",
+            "packages/cinematic-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/cinematic-storyboard/src/components/CinematicFrameInspector.tsx",
+            "apps/cinematic-storyboard/src/components/ProductionSignalPanel.tsx",
+            "apps/cinematic-storyboard/src/components/ErrorBoundary.tsx"
+          ],
           "importsFiles": [
             "apps/cinematic-storyboard/src/components/CinematicFrameInspector.tsx",
             "apps/cinematic-storyboard/src/components/ErrorBoundary.tsx",
@@ -141,13 +182,18 @@
             "apps/cinematic-storyboard/src/components/ProductionSignalPanel.tsx",
             "packages/cinematic-storyboard-domain/src/index.ts"
           ],
-          "path": "apps/cinematic-storyboard/src/components/ProductionSignalPanel.test.tsx"
+          "path": "apps/cinematic-storyboard/src/components/ProductionSignalPanel.test.tsx",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "ProductionSignalPanel"
           ],
           "hash": "d22cd1935b270e872265dde596a5e15c6c1be2535aac238297dda45bda52a13d",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/index.ts",
+            "apps/cinematic-storyboard/src/lib/humanizeReason.ts"
+          ],
           "importsFiles": [
             "apps/cinematic-storyboard/src/lib/humanizeReason.ts",
             "packages/cinematic-storyboard-domain/src/index.ts"
@@ -164,7 +210,8 @@
           "importsFiles": [
             "apps/cinematic-storyboard/src/lib/humanizeReason.ts"
           ],
-          "path": "apps/cinematic-storyboard/src/lib/humanizeReason.test.ts"
+          "path": "apps/cinematic-storyboard/src/lib/humanizeReason.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -178,31 +225,65 @@
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/index.ts"
           ],
-          "path": "apps/cinematic-storyboard/src/lib/sequenceBoards.test.ts"
+          "path": "apps/cinematic-storyboard/src/lib/sequenceBoards.test.ts",
+          "testFramework": "vitest"
         },
         {
           "hash": "6c890a8b62341f4b2b2561029d3baf8be98aa1da73f84e5a691a3fbd87b6f100",
+          "importsFiles": [
+            "packages/cinematic-storyboard-domain/src/index.ts"
+          ],
           "path": "apps/cinematic-storyboard/src/pages/404.astro"
         },
         {
           "hash": "9d4afd13a6f7055b35a0b534f0296bf23e32c7d1d806eeaddf4d7fdd1078f5b6",
+          "importsFiles": [
+            "packages/cinematic-storyboard-domain/src/index.ts"
+          ],
           "path": "apps/cinematic-storyboard/src/pages/index.astro"
         },
         {
+          "exports": [
+            "getStaticPaths"
+          ],
           "hash": "7140ad66c1bfaba161771cec9a12d797cf8cc570e886c4016bee1a218cb75f3e",
+          "importsFiles": [
+            "packages/cinematic-storyboard-domain/src/index.ts"
+          ],
           "path": "apps/cinematic-storyboard/src/pages/reels/[reelId].astro"
         },
         {
+          "exports": [
+            "getStaticPaths"
+          ],
           "hash": "0e48370cf4b082550f8ec06ddb1e942cb81cc97997cf2e8d5659a03071a35462",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/index.ts",
+            "apps/cinematic-storyboard/src/components/CinematicStoryboardCanvas.tsx"
+          ],
+          "importsFiles": [
+            "apps/cinematic-storyboard/src/components/CinematicStoryboardCanvas.tsx",
+            "packages/cinematic-storyboard-domain/src/index.ts"
+          ],
           "path": "apps/cinematic-storyboard/src/pages/sequences/[sequenceId].astro"
         },
         {
+          "exports": [
+            "getStaticPaths"
+          ],
           "hash": "44134cadbb911a5f44a3468dc1f04022e14b6a9c62ebe90de99d87f97505299d",
+          "importsFiles": [
+            "packages/cinematic-storyboard-domain/src/index.ts"
+          ],
           "path": "apps/cinematic-storyboard/src/pages/sequences/[sequenceId]/handoff.astro"
         },
         {
           "hash": "8d9fef6b31e716fd134519d239886eff1baf2e511ed952264596612407ee5059",
           "path": "apps/cinematic-storyboard/tsconfig.json"
+        },
+        {
+          "hash": "8b64a7aaebe0e0ba617c587c8ea3b09884ea2e67625d4ccbf94b35afd15a37c7",
+          "path": "apps/cinematic-storyboard/vitest.config.ts"
         }
       ],
       "globs": [
@@ -212,6 +293,9 @@
       "name": "cinematic-storyboard",
       "origin": "authored",
       "role": "site",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 3,
       "unresolvedSites": 0
     },
@@ -234,7 +318,7 @@
           "path": "packages/cinematic-storyboard-domain/README.md"
         },
         {
-          "hash": "483a863aa738676c306f457e682a1a89ff804ffda1be989456821c8736eae317",
+          "hash": "0173341372fb823255cff9ef73a868fb106ae47ec0bed1d3566a0432f47d6ffc",
           "path": "packages/cinematic-storyboard-domain/package.json"
         },
         {
@@ -243,6 +327,13 @@
         },
         {
           "hash": "e7cf6717b9cb5577aea38ffa5f4129544b9191598320a4d505ee6ec44508197c",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/handoff.ts",
+            "packages/cinematic-storyboard-domain/src/templates.ts",
+            "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
+            "packages/cinematic-storyboard-domain/src/validateProductionBrief.ts",
+            "packages/cinematic-storyboard-domain/src/adapters.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/adapters.ts",
             "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
@@ -250,7 +341,8 @@
             "packages/cinematic-storyboard-domain/src/templates.ts",
             "packages/cinematic-storyboard-domain/src/validateProductionBrief.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/adapters.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/adapters.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -271,7 +363,8 @@
             "packages/cinematic-storyboard-domain/src/beatStatus.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/beatStatus.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/beatStatus.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -286,12 +379,18 @@
         },
         {
           "hash": "54f23c8869d5be2134687647d8246f6c0a23193870e3be749efb07cb038f9929",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/cardBeat.ts",
+            "packages/cinematic-storyboard-domain/src/templates.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/cardBeat.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts",
             "packages/cinematic-storyboard-domain/src/templates.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/cardBeat.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/cardBeat.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -305,6 +404,14 @@
         },
         {
           "hash": "4191ca90ce11e03546a6d682838cc1d3035f00f9880026c1fb51cb5e57875048",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/beatStatus.ts",
+            "packages/cinematic-storyboard-domain/src/frameSignals.ts",
+            "packages/cinematic-storyboard-domain/src/handoff.ts",
+            "packages/cinematic-storyboard-domain/src/productionSignals.ts",
+            "packages/cinematic-storyboard-domain/src/validate.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/beatStatus.ts",
             "packages/cinematic-storyboard-domain/src/frameSignals.ts",
@@ -313,7 +420,8 @@
             "packages/cinematic-storyboard-domain/src/schema.ts",
             "packages/cinematic-storyboard-domain/src/validate.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/contentGuards.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/contentGuards.test.ts",
+          "testFramework": "vitest"
         },
         {
           "hash": "ea2e6634f2009182cde7ddef872d638a94754a7b190ca3fe07aa16b7a73330ea",
@@ -324,12 +432,18 @@
         },
         {
           "hash": "605ddb365eb2decf7ba976f7e7f9aaa9bdb1307b3d188703b0306727fd89eb43",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/frameSignals.ts",
+            "packages/storyboard-core/src/index.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/frameSignals.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/frameSignals.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/frameSignals.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -337,6 +451,12 @@
             "getCinematicFrameSignal"
           ],
           "hash": "e4a55a2a5f02386e9bb30ec406ee282f32a1981d82e88d6a72c79487a992c0c4",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/beatStatus.ts",
+            "packages/storyboard-core/src/index.ts",
+            "packages/cinematic-storyboard-domain/src/labels.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/beatStatus.ts",
             "packages/cinematic-storyboard-domain/src/labels.ts",
@@ -347,13 +467,20 @@
         },
         {
           "hash": "fa9cedb689b448050555de98ea8579a896586a5024b3969a6f3282bac25702ba",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/handoff.ts",
+            "packages/cinematic-storyboard-domain/src/templates.ts",
+            "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
             "packages/cinematic-storyboard-domain/src/handoff.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts",
             "packages/cinematic-storyboard-domain/src/templates.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/handoff.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/handoff.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -362,6 +489,13 @@
             "generateProductionMarkdown"
           ],
           "hash": "2e297803b5ad99c5950fbc2a0e9820bc8cf702e05440b4dd29e33f963b996967",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/beatStatus.ts",
+            "packages/cinematic-storyboard-domain/src/productionSignals.ts",
+            "packages/cinematic-storyboard-domain/src/validateProductionBrief.ts",
+            "packages/cinematic-storyboard-domain/src/labels.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/beatStatus.ts",
             "packages/cinematic-storyboard-domain/src/labels.ts",
@@ -373,6 +507,21 @@
         },
         {
           "hash": "cc06fcb9e1b1fa4d173f7be5d757f6dabb4277029a9234af0a05643b548fd0ce",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/beatStatus.ts",
+            "packages/cinematic-storyboard-domain/src/validate.ts",
+            "packages/cinematic-storyboard-domain/src/frameSignals.ts",
+            "packages/cinematic-storyboard-domain/src/templates.ts",
+            "packages/cinematic-storyboard-domain/src/handoff.ts",
+            "packages/cinematic-storyboard-domain/src/validateProductionBrief.ts",
+            "packages/cinematic-storyboard-domain/src/cardBeat.ts",
+            "packages/cinematic-storyboard-domain/src/productionSignals.ts",
+            "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
+            "packages/cinematic-storyboard-domain/src/playlist.ts",
+            "packages/cinematic-storyboard-domain/src/nest.ts",
+            "packages/cinematic-storyboard-domain/src/adapters.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/adapters.ts",
             "packages/cinematic-storyboard-domain/src/beatStatus.ts",
@@ -395,17 +544,40 @@
           "exports": [
             "validateJsonSchema"
           ],
+          "failurePaths": [
+            {
+              "in": "resolveRef",
+              "kind": "throw",
+              "line": 37
+            },
+            {
+              "in": "resolveRef",
+              "kind": "throw",
+              "line": 43
+            },
+            {
+              "in": "resolveRef",
+              "kind": "throw",
+              "line": 48
+            }
+          ],
           "hash": "0dc3df048db29a82aeae11ba0fdc8185eeea8de926069b7d23f2e1ffb9a71783",
           "path": "packages/cinematic-storyboard-domain/src/jsonSchema.ts"
         },
         {
           "hash": "26a36d5dfe6add5cd04a6048d528c371bcce1406784e40379672a78f8b3dff44",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/cinematic-storyboard-domain/src/labels.ts",
+            "packages/cinematic-storyboard-domain/src/demo-sequence.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
             "packages/cinematic-storyboard-domain/src/labels.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/labels.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/labels.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -416,6 +588,11 @@
             "humanizeStatus"
           ],
           "hash": "a93448e875b2effecd450c2bb05aa977c7d7d441d643a50ce014c49c1e75ead7",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/beatStatus.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/beatStatus.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts",
@@ -425,13 +602,20 @@
         },
         {
           "hash": "d61052a1f4019c98879283f1e2d838ccb22569b16f7cf2b3f50fdad51fa11234",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/cinematic-storyboard-domain/src/nest.ts",
+            "packages/cinematic-storyboard-domain/src/templates.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/nest.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts",
             "packages/cinematic-storyboard-domain/src/templates.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/nest.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/nest.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -441,6 +625,10 @@
             "visibleCinematicBoard"
           ],
           "hash": "73c1ec6f3a1f592dab540e7153fa962d405a8f9bab44879bffb39f9571f1a8e1",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/schema.ts",
             "packages/storyboard-core/src/index.ts"
@@ -449,11 +637,16 @@
         },
         {
           "hash": "604ec1bcff3ec53a9f1ce0cf117adbf98f22ce4383b15993ec24028f1ba9c45b",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/playlist.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/playlist.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/playlist.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/playlist.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -467,6 +660,11 @@
             "serializeSequencePlaylistJson"
           ],
           "hash": "41724ce9722ad61f340b0e235f196358006a2e86f48537fcdfd33c9d5ce7d8eb",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
+            "packages/cinematic-storyboard-domain/src/templates.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts",
@@ -476,12 +674,18 @@
         },
         {
           "hash": "19186635ca3facee16e51556e760c57f7e76ddac7114af851fc1aaeaf06830cd",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/productionSignals.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/demo-sequence.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
             "packages/cinematic-storyboard-domain/src/productionSignals.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/productionSignals.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/productionSignals.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -491,6 +695,10 @@
             "parseDurationSeconds"
           ],
           "hash": "f800bd7555e476f0c6724b6b3ad4b45a781f609c5a58535fed945dbf3ef89a1a",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/beatStatus.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/beatStatus.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts"
@@ -506,18 +714,32 @@
         },
         {
           "hash": "7107c28e85c18120d15b261a6ff3f707645c9d2f95edd1c6cf54a6f69e14a36b",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/templates.ts",
+            "packages/cinematic-storyboard-domain/src/validate.ts",
+            "packages/cinematic-storyboard-domain/src/beatStatus.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/beatStatus.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts",
             "packages/cinematic-storyboard-domain/src/templates.ts",
             "packages/cinematic-storyboard-domain/src/validate.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/templates.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/templates.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "createCinematicStoryboard",
             "getCinematicTemplate"
+          ],
+          "failurePaths": [
+            {
+              "in": "createCinematicStoryboard",
+              "kind": "throw",
+              "line": 776
+            }
           ],
           "hash": "cc15a51d06d8efb2ec1b57388b20302ccf8ea8da8f401f0421d2f953826c0892",
           "importsFiles": [
@@ -527,17 +749,27 @@
         },
         {
           "hash": "0926483388edfd12a8ce9ca30a7285d12131b1347742bfeef63ba5f9c94c34de",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/validate.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/schema.ts",
             "packages/cinematic-storyboard-domain/src/validate.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/validate.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/validate.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "validateCinematicStoryboard"
           ],
           "hash": "b0fe2bc102d05d40da13f4714019f5fd974314378d528612b3a9bc3de17ec1b9",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/cinematic-storyboard-domain/src/schema.ts",
+            "packages/cinematic-storyboard-domain/src/productionSignals.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/productionSignals.ts",
             "packages/cinematic-storyboard-domain/src/schema.ts",
@@ -547,19 +779,38 @@
         },
         {
           "hash": "06e0ca1ce638308945a8e0d576eb37af6544c6c56079f014866490ff567601e6",
+          "importOrder": [
+            "packages/cinematic-storyboard-domain/src/handoff.ts",
+            "packages/cinematic-storyboard-domain/src/templates.ts",
+            "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
+            "packages/cinematic-storyboard-domain/src/validateProductionBrief.ts"
+          ],
           "importsFiles": [
             "packages/cinematic-storyboard-domain/src/demo-sequence.ts",
             "packages/cinematic-storyboard-domain/src/handoff.ts",
             "packages/cinematic-storyboard-domain/src/templates.ts",
             "packages/cinematic-storyboard-domain/src/validateProductionBrief.ts"
           ],
-          "path": "packages/cinematic-storyboard-domain/src/validateProductionBrief.test.ts"
+          "path": "packages/cinematic-storyboard-domain/src/validateProductionBrief.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "assertValidProductionBrief",
             "serializeProductionBriefJson",
             "validateProductionBrief"
+          ],
+          "failurePaths": [
+            {
+              "in": "serializeProductionBriefJson",
+              "kind": "throw",
+              "line": 50
+            },
+            {
+              "in": "assertValidProductionBrief",
+              "kind": "throw",
+              "line": 59
+            }
           ],
           "hash": "4cc5e5b50a52128cde297294783f2cc1d5dcac17379f6b8e6ba4f1f821586589",
           "importsFiles": [
@@ -573,7 +824,7 @@
           "path": "packages/cinematic-storyboard-domain/tsconfig.json"
         },
         {
-          "hash": "e31ea1692d083f2f34c65fe1d70a72091e7b95b21e808e9b417c535260345412",
+          "hash": "bed1b14f554d5171465e64c1242db7e8d1d15e694d3aa30a90acd729e6e724b2",
           "path": "packages/cinematic-storyboard-domain/vitest.config.ts"
         }
       ],
@@ -594,6 +845,9 @@
       ],
       "outsideReads": 4,
       "role": "code",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 16,
       "unresolvedSites": 0
     },
@@ -705,7 +959,7 @@
           "path": "apps/marketing-storyboard/astro.config.mjs"
         },
         {
-          "hash": "c45f19c3ed20bd1d03722234a88a46eeac058812a5e8e4b8e647aad02dd359e9",
+          "hash": "16f33e773d3f1c03335858008ec5e4f6d56bcdb75dba43ed06805dab28d61cdb",
           "path": "apps/marketing-storyboard/package.json"
         },
         {
@@ -720,6 +974,11 @@
             "MarketingFrameInspector"
           ],
           "hash": "4d584f078cae4333757c65490b03d73e932c3e56eedd9cf5138ba1ee80d66a1c",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/marketing-storyboard/src/lib/frameContent.ts"
+          ],
           "importsFiles": [
             "apps/marketing-storyboard/src/lib/frameContent.ts",
             "packages/marketing-storyboard-domain/src/index.ts",
@@ -732,6 +991,14 @@
             "MarketingStoryboardCanvas"
           ],
           "hash": "5a11c7e8e4d5ebf1efe0facd248faa82a162d4611ed5f392080dd27a05ee6cc7",
+          "importOrder": [
+            "packages/storyboard-canvas/src/index.ts",
+            "packages/marketing-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/marketing-storyboard/src/lib/launchBlockers.ts",
+            "apps/marketing-storyboard/src/components/MarketingFrameInspector.tsx",
+            "apps/marketing-storyboard/src/components/ErrorBoundary.tsx"
+          ],
           "importsFiles": [
             "apps/marketing-storyboard/src/components/ErrorBoundary.tsx",
             "apps/marketing-storyboard/src/components/MarketingFrameInspector.tsx",
@@ -752,7 +1019,8 @@
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/index.ts"
           ],
-          "path": "apps/marketing-storyboard/src/lib/campaignBoards.test.ts"
+          "path": "apps/marketing-storyboard/src/lib/campaignBoards.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -766,19 +1034,29 @@
         },
         {
           "hash": "92c43b3ce414cb36a09e066c4af8732b0a0633725dbfe68900e52dec4bf3e0c4",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/index.ts",
+            "apps/marketing-storyboard/src/lib/frameContent.ts"
+          ],
           "importsFiles": [
             "apps/marketing-storyboard/src/lib/frameContent.ts",
             "packages/marketing-storyboard-domain/src/index.ts"
           ],
-          "path": "apps/marketing-storyboard/src/lib/inspectorContent.test.ts"
+          "path": "apps/marketing-storyboard/src/lib/inspectorContent.test.ts",
+          "testFramework": "vitest"
         },
         {
           "hash": "8e004b72adf17610f755d9299c163c2af44d37d7e75c26f1c964f87bde49f935",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/index.ts",
+            "apps/marketing-storyboard/src/lib/launchBlockers.ts"
+          ],
           "importsFiles": [
             "apps/marketing-storyboard/src/lib/launchBlockers.ts",
             "packages/marketing-storyboard-domain/src/index.ts"
           ],
-          "path": "apps/marketing-storyboard/src/lib/launchBlockers.test.ts"
+          "path": "apps/marketing-storyboard/src/lib/launchBlockers.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -798,23 +1076,59 @@
         },
         {
           "hash": "3f8ec70cdca37d94ff9d90633c41a38690ab727cc1f4714b7fe41fc7fd5119ff",
+          "importsFiles": [
+            "packages/marketing-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "path": "apps/marketing-storyboard/src/pages/404.astro"
         },
         {
+          "exports": [
+            "getStaticPaths"
+          ],
           "hash": "10160bfd87a918765804e2334f04290f39153a8ade904b9d0961cf3ee6fb90d5",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/index.ts",
+            "apps/marketing-storyboard/src/components/MarketingStoryboardCanvas.tsx"
+          ],
+          "importsFiles": [
+            "apps/marketing-storyboard/src/components/MarketingStoryboardCanvas.tsx",
+            "packages/marketing-storyboard-domain/src/index.ts"
+          ],
           "path": "apps/marketing-storyboard/src/pages/campaigns/[campaignId].astro"
         },
         {
+          "exports": [
+            "getStaticPaths"
+          ],
+          "failurePaths": [
+            {
+              "kind": "throw",
+              "line": 40
+            }
+          ],
           "hash": "aca5e3aa36417c279e33d8b128646435293efe61a3252f2eeb73882f72f174ab",
+          "importsFiles": [
+            "packages/marketing-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "path": "apps/marketing-storyboard/src/pages/campaigns/[campaignId]/handoff.astro"
         },
         {
           "hash": "941e698de8db6b9c2109599aead27f8486a5cfb7247b5423a166ca2cf8ee6680",
+          "importsFiles": [
+            "packages/marketing-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "path": "apps/marketing-storyboard/src/pages/index.astro"
         },
         {
           "hash": "8de772ddce6f69817538d546c728134cb7723c41ee75e1018d12560033a9c382",
           "path": "apps/marketing-storyboard/tsconfig.json"
+        },
+        {
+          "hash": "8b64a7aaebe0e0ba617c587c8ea3b09884ea2e67625d4ccbf94b35afd15a37c7",
+          "path": "apps/marketing-storyboard/vitest.config.ts"
         }
       ],
       "globs": [
@@ -834,6 +1148,9 @@
       ],
       "outsideReads": 1,
       "role": "site",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 2,
       "unresolvedSites": 0
     },
@@ -856,7 +1173,7 @@
           "path": "packages/marketing-storyboard-domain/README.md"
         },
         {
-          "hash": "f1c4a18d7cc92c0b1e1e1da82bec523f36e20b5dc415cefe47be7c536fc86025",
+          "hash": "fa21e01bfc6b2f144727188aa778edf756cea2c249bf2da483a079d5e8ad0d24",
           "path": "packages/marketing-storyboard-domain/package.json"
         },
         {
@@ -865,6 +1182,13 @@
         },
         {
           "hash": "671ddacbeb186f36a21df4814fbe7dab8c80ac23add39463ca6cdd4ec0a7e4b6",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/handoff.ts",
+            "packages/marketing-storyboard-domain/src/adapters.ts",
+            "packages/marketing-storyboard-domain/src/demo-campaign.ts",
+            "packages/marketing-storyboard-domain/src/templates.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/adapters.ts",
             "packages/marketing-storyboard-domain/src/demo-campaign.ts",
@@ -872,7 +1196,8 @@
             "packages/marketing-storyboard-domain/src/schema.ts",
             "packages/marketing-storyboard-domain/src/templates.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/adapters.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/adapters.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -880,6 +1205,13 @@
             "adaptCampaignHandoffToChecklistPack",
             "adaptCampaignHandoffToEventMap",
             "fallbackEventId"
+          ],
+          "failurePaths": [
+            {
+              "in": "requireValidCampaignHandoff",
+              "kind": "throw",
+              "line": 33
+            }
           ],
           "hash": "5839b50dc5e27bdc75a2e16bfea0323c90a06f310dae97a8d97fc59cdf62c67e",
           "importsFiles": [
@@ -893,7 +1225,8 @@
             "packages/marketing-storyboard-domain/src/beatStatus.ts",
             "packages/marketing-storyboard-domain/src/schema.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/beatStatus.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/beatStatus.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -908,6 +1241,15 @@
         },
         {
           "hash": "45b6f7c86e4b8a6a1946848415a3d45644e3c5b2ab7343a63882d7e3d0b8cfd9",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/beatStatus.ts",
+            "packages/marketing-storyboard-domain/src/frameSignals.ts",
+            "packages/marketing-storyboard-domain/src/handoff.ts",
+            "packages/marketing-storyboard-domain/src/launchReadiness.ts",
+            "packages/marketing-storyboard-domain/src/project.ts",
+            "packages/marketing-storyboard-domain/src/validate.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/beatStatus.ts",
             "packages/marketing-storyboard-domain/src/frameSignals.ts",
@@ -917,7 +1259,8 @@
             "packages/marketing-storyboard-domain/src/schema.ts",
             "packages/marketing-storyboard-domain/src/validate.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/contentGuards.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/contentGuards.test.ts",
+          "testFramework": "vitest"
         },
         {
           "hash": "99ea0aead105a8c3f6eba7272d0ade54ad73319a8d5f3210d5b5ee458ca79c3a",
@@ -928,12 +1271,18 @@
         },
         {
           "hash": "fa0fb60cfa540456befc7045d54833c0833cc9cbfac123755c054b486c63289b",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/frameSignals.ts",
+            "packages/storyboard-core/src/index.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/frameSignals.ts",
             "packages/marketing-storyboard-domain/src/schema.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/frameSignals.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/frameSignals.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -943,6 +1292,11 @@
             "getSegmentPathCount"
           ],
           "hash": "00385513f428e3a915f80b7c56760bffe479122ee3f0755f8d00b725ee513bcb",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/schema.ts",
+            "packages/storyboard-core/src/index.ts",
+            "packages/marketing-storyboard-domain/src/beatStatus.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/beatStatus.ts",
             "packages/marketing-storyboard-domain/src/schema.ts",
@@ -952,6 +1306,15 @@
         },
         {
           "hash": "e0f8c6f0849ef2917277c30bf16d6eea47d945cf8af4d1ffa2fa61c3ecb04291",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/marketing-storyboard-domain/src/handoff.ts",
+            "packages/marketing-storyboard-domain/src/launchReadiness.ts",
+            "packages/marketing-storyboard-domain/src/templates.ts",
+            "packages/marketing-storyboard-domain/src/demo-campaign.ts",
+            "packages/marketing-storyboard-domain/src/project.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/demo-campaign.ts",
             "packages/marketing-storyboard-domain/src/handoff.ts",
@@ -961,7 +1324,8 @@
             "packages/marketing-storyboard-domain/src/templates.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/handoff.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/handoff.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -971,7 +1335,21 @@
             "generateProjectCampaignMarkdown",
             "validateCampaignHandoff"
           ],
+          "failurePaths": [
+            {
+              "in": "generateCampaignHandoff",
+              "kind": "throw",
+              "line": 557
+            }
+          ],
           "hash": "435b7381c86fc47440d785ac12297641a3c7e28e00106480ce9c65766164fde8",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/schema.ts",
+            "packages/marketing-storyboard-domain/src/beatStatus.ts",
+            "packages/marketing-storyboard-domain/src/project.ts",
+            "packages/marketing-storyboard-domain/src/labels.ts",
+            "packages/marketing-storyboard-domain/src/launchReadiness.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/beatStatus.ts",
             "packages/marketing-storyboard-domain/src/labels.ts",
@@ -983,6 +1361,19 @@
         },
         {
           "hash": "52499d575446323d56767732a994f388eaced86294a083ad1790bc1f20395b97",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/schema.ts",
+            "packages/marketing-storyboard-domain/src/templates.ts",
+            "packages/marketing-storyboard-domain/src/validate.ts",
+            "packages/marketing-storyboard-domain/src/demo-campaign.ts",
+            "packages/marketing-storyboard-domain/src/frameSignals.ts",
+            "packages/marketing-storyboard-domain/src/beatStatus.ts",
+            "packages/marketing-storyboard-domain/src/labels.ts",
+            "packages/marketing-storyboard-domain/src/handoff.ts",
+            "packages/marketing-storyboard-domain/src/adapters.ts",
+            "packages/marketing-storyboard-domain/src/project.ts",
+            "packages/marketing-storyboard-domain/src/launchReadiness.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/adapters.ts",
             "packages/marketing-storyboard-domain/src/beatStatus.ts",
@@ -1001,11 +1392,16 @@
         },
         {
           "hash": "75a459eb99d56a806d5d8e1449aaff0952f45ea6b4795c8540019c3cb2bf8160",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/marketing-storyboard-domain/src/labels.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/labels.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/labels.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/labels.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1016,6 +1412,11 @@
             "humanizeMissingReason"
           ],
           "hash": "6711d40a4d5c858907229070b7593c30cb541ce35e137b91c4d3cb6ec638bfa1",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/marketing-storyboard-domain/src/beatStatus.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/beatStatus.ts",
             "packages/marketing-storyboard-domain/src/schema.ts",
@@ -1025,12 +1426,18 @@
         },
         {
           "hash": "00a3cec81ff8099844aa49ad0b2b2a66531bb87852e0b90fa1412a4b98ccefee",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/launchReadiness.ts",
+            "packages/marketing-storyboard-domain/src/demo-campaign.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/demo-campaign.ts",
             "packages/marketing-storyboard-domain/src/launchReadiness.ts",
             "packages/marketing-storyboard-domain/src/schema.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/launchReadiness.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/launchReadiness.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1040,6 +1447,10 @@
             "getMeasurementLoopSignals"
           ],
           "hash": "20f8b0b5460d0433d76362b7de1ee7e01a7ad98faf97f7c2e310d6ec0ed4dcd5",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/schema.ts",
+            "packages/marketing-storyboard-domain/src/beatStatus.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/beatStatus.ts",
             "packages/marketing-storyboard-domain/src/schema.ts"
@@ -1048,11 +1459,16 @@
         },
         {
           "hash": "b5bcf30118054c42b2372ce081b5115fece76ba58e7b6ea26e869a6904739be6",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/project.ts",
+            "packages/marketing-storyboard-domain/src/handoff.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/handoff.ts",
             "packages/marketing-storyboard-domain/src/project.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/project.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/project.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1081,6 +1497,14 @@
         },
         {
           "hash": "d88821e6bfbc54afd04452a2a42ad0c1f8cac19b59df3097b27bc5072c023e37",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/templates.ts",
+            "packages/marketing-storyboard-domain/src/validate.ts",
+            "packages/marketing-storyboard-domain/src/launchReadiness.ts",
+            "packages/marketing-storyboard-domain/src/beatStatus.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts",
+            "packages/marketing-storyboard-domain/src/demo-campaign.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/beatStatus.ts",
             "packages/marketing-storyboard-domain/src/demo-campaign.ts",
@@ -1089,7 +1513,8 @@
             "packages/marketing-storyboard-domain/src/templates.ts",
             "packages/marketing-storyboard-domain/src/validate.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/templates.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/templates.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1097,7 +1522,19 @@
             "getMarketingTemplate",
             "listPublishedCampaigns"
           ],
+          "failurePaths": [
+            {
+              "in": "createCampaignFromTemplate",
+              "kind": "throw",
+              "line": 801
+            }
+          ],
           "hash": "7a429f5c475bffed20a426b2bf10c077c4c85e40033fa865b494f41b80a60635",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts",
+            "packages/marketing-storyboard-domain/src/demo-campaign.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/demo-campaign.ts",
             "packages/marketing-storyboard-domain/src/schema.ts",
@@ -1107,17 +1544,26 @@
         },
         {
           "hash": "8e5bc34ea2bea6311bba9664d37db96047db899c952cda11f809541bcd37cc43",
+          "importOrder": [
+            "packages/marketing-storyboard-domain/src/validate.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/schema.ts",
             "packages/marketing-storyboard-domain/src/validate.ts"
           ],
-          "path": "packages/marketing-storyboard-domain/src/validate.test.ts"
+          "path": "packages/marketing-storyboard-domain/src/validate.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "validateMarketingStoryboard"
           ],
           "hash": "78f0da0aedb0268bacb6e38063b780a6631a43a430d2957df1ca611487528037",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/marketing-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/marketing-storyboard-domain/src/schema.ts",
             "packages/storyboard-core/src/index.ts"
@@ -1129,7 +1575,7 @@
           "path": "packages/marketing-storyboard-domain/tsconfig.json"
         },
         {
-          "hash": "e31ea1692d083f2f34c65fe1d70a72091e7b95b21e808e9b417c535260345412",
+          "hash": "bed1b14f554d5171465e64c1242db7e8d1d15e694d3aa30a90acd729e6e724b2",
           "path": "packages/marketing-storyboard-domain/vitest.config.ts"
         }
       ],
@@ -1150,6 +1596,9 @@
       ],
       "outsideReads": 3,
       "role": "code",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 13,
       "unresolvedSites": 0
     },
@@ -1222,11 +1671,15 @@
           "path": "SHIP_GATE.md"
         },
         {
+          "hash": "59ca3f6a5be96b80fee73bebf2b778211208d17cd3fb82e2134608dff0729c76",
+          "path": "codecov.yml"
+        },
+        {
           "hash": "690ca2b790cb70497bbd6836e9ac8a2ae881d6a88ffee47b42f05d7c4baa7eb9",
           "path": "package.json"
         },
         {
-          "hash": "d90ef52500cd6e95ca67a255a1d7d5356c4c3982a2df2bfe167b51b758edf535",
+          "hash": "725e79915f3eca312f1c7e670ae19e498690e32c51a8b60d04ef3c6fdce11229",
           "path": "pnpm-lock.yaml"
         },
         {
@@ -1257,7 +1710,7 @@
           "path": "apps/rpg-storyboard/astro.config.mjs"
         },
         {
-          "hash": "902d6718ab4cd377aca8d93d7cec3004037e6f4b046061363efa463b4b448a39",
+          "hash": "fa31a64399606bf4fa6cad9f1b99d521233fcb3f306b1fe7846ef103c6d251e5",
           "path": "apps/rpg-storyboard/package.json"
         },
         {
@@ -1269,6 +1722,21 @@
             "StoryboardCanvas"
           ],
           "hash": "2af268d9181076ec1c1347bd076147ace0fc0c772f3e6eb172c1ed02708f8e9f",
+          "importOrder": [
+            "packages/storyboard-canvas/src/index.ts",
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/project.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/boardViewStorage.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/topology.ts",
+            "apps/rpg-storyboard/src/components/storyboard/FrameInspector.tsx",
+            "apps/rpg-storyboard/src/components/storyboard/ViewControls.tsx",
+            "apps/rpg-storyboard/src/components/storyboard/FanControls.tsx",
+            "apps/rpg-storyboard/src/components/projects/BeatEditPanel.tsx",
+            "apps/rpg-storyboard/src/components/projects/TopologyToolbar.tsx",
+            "apps/rpg-storyboard/src/components/ErrorBoundary.tsx"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/components/ErrorBoundary.tsx",
             "apps/rpg-storyboard/src/components/projects/BeatEditPanel.tsx",
@@ -1291,6 +1759,12 @@
             "BeatEditPanel"
           ],
           "hash": "b0ef55042cb06b9921129d92d37947930c9186ba32a1b6e7f829b16e9bc02f3a",
+          "importOrder": [
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/project.ts",
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/project.ts",
             "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
@@ -1304,6 +1778,10 @@
             "CorruptStoreRecovery"
           ],
           "hash": "2c267ede5a3b7a5ca8518708c02c124a78a058d602cdadb7129a670e6fd5de32",
+          "importOrder": [
+            "apps/rpg-storyboard/src/lib/storyboard/projectStorage.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.ts"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.ts",
             "apps/rpg-storyboard/src/lib/storyboard/projectStorage.ts"
@@ -1339,6 +1817,17 @@
             "ProjectBoard"
           ],
           "hash": "f3a87df3d71194b47e48d9e036b2484912c1c494a2555646f4bf441f43a1b0a8",
+          "importOrder": [
+            "apps/rpg-storyboard/src/lib/storyboard/projectStorage.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/project.ts",
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/topology.ts",
+            "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
+            "packages/storyboard-core/src/index.ts",
+            "apps/rpg-storyboard/src/components/ErrorBoundary.tsx",
+            "apps/rpg-storyboard/src/components/projects/CorruptStoreRecovery.tsx"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/components/ErrorBoundary.tsx",
             "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
@@ -1356,7 +1845,22 @@
           "exports": [
             "ProjectHandoffPage"
           ],
+          "failurePaths": [
+            {
+              "in": "ProjectHandoffPageInner",
+              "kind": "catch",
+              "line": 157
+            }
+          ],
           "hash": "238a9bce9ed453816a05cf4a4a2ae34d7d66f14e12ea3e3a969ed141916021e4",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/projectStorage.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/handoffLoad.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/rpg-storyboard/src/components/ErrorBoundary.tsx",
+            "apps/rpg-storyboard/src/components/projects/CorruptStoreRecovery.tsx"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/components/ErrorBoundary.tsx",
             "apps/rpg-storyboard/src/components/projects/CorruptStoreRecovery.tsx",
@@ -1372,6 +1876,13 @@
             "ProjectList"
           ],
           "hash": "ddb7571cfb29023698c02bc30a82ed7d49d39c947e2dff2674040d532fa59366",
+          "importOrder": [
+            "apps/rpg-storyboard/src/lib/storyboard/projectStorage.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.ts",
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/rpg-storyboard/src/components/ErrorBoundary.tsx"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/components/ErrorBoundary.tsx",
             "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.ts",
@@ -1398,6 +1909,11 @@
             "FanControls"
           ],
           "hash": "c2af53b1013c291c8b1d07c88e2e0101cf2c64f53723baa74c1ef91126843438",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
             "packages/rpg-storyboard-domain/src/index.ts",
@@ -1410,6 +1926,14 @@
             "FrameInspector"
           ],
           "hash": "0af2dab955dcf74ff099ea00c83fbc72f3ce7b8d17a6ab6db7694f4d7c689d2a",
+          "importOrder": [
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/project.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/routes.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/project.ts",
             "apps/rpg-storyboard/src/lib/storyboard/routes.ts",
@@ -1445,12 +1969,25 @@
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/boardViewStorage.ts"
           ],
-          "path": "apps/rpg-storyboard/src/lib/storyboard/boardViewStorage.test.ts"
+          "path": "apps/rpg-storyboard/src/lib/storyboard/boardViewStorage.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "loadBoardView",
             "saveBoardView"
+          ],
+          "failurePaths": [
+            {
+              "in": "loadBoardView",
+              "kind": "catch",
+              "line": 51
+            },
+            {
+              "in": "saveBoardView",
+              "kind": "catch",
+              "line": 65
+            }
           ],
           "hash": "c2144b40232b3d56606d6fa3ae964440137733056455b37c6e0ef7152a418a28",
           "path": "apps/rpg-storyboard/src/lib/storyboard/boardViewStorage.ts"
@@ -1461,11 +1998,19 @@
             "apps/rpg-storyboard/src/lib/storyboard/handoffLoad.ts",
             "packages/rpg-storyboard-domain/src/index.ts"
           ],
-          "path": "apps/rpg-storyboard/src/lib/storyboard/handoffLoad.test.ts"
+          "path": "apps/rpg-storyboard/src/lib/storyboard/handoffLoad.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "loadProjectHandoff"
+          ],
+          "failurePaths": [
+            {
+              "in": "loadProjectHandoff",
+              "kind": "catch",
+              "line": 45
+            }
           ],
           "hash": "0565a08c99995586a23f201d4ba52bf1d8f438482a1d39995292cca5b3781225",
           "importsFiles": [
@@ -1486,7 +2031,8 @@
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.ts"
           ],
-          "path": "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.test.ts"
+          "path": "apps/rpg-storyboard/src/lib/storyboard/projectListEmpty.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1504,7 +2050,8 @@
             "apps/rpg-storyboard/src/lib/storyboard/projectStorage.ts",
             "packages/rpg-storyboard-domain/src/index.ts"
           ],
-          "path": "apps/rpg-storyboard/src/lib/storyboard/projectStorage.test.ts"
+          "path": "apps/rpg-storyboard/src/lib/storyboard/projectStorage.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1515,6 +2062,38 @@
             "getRawStoreBlob",
             "listProjects",
             "saveProject"
+          ],
+          "failurePaths": [
+            {
+              "in": "getRawStoreBlob",
+              "kind": "catch",
+              "line": 132
+            },
+            {
+              "in": "downloadRawStoreBlob",
+              "kind": "catch",
+              "line": 155
+            },
+            {
+              "in": "devWarn",
+              "kind": "catch",
+              "line": 171
+            },
+            {
+              "in": "readRawEntries",
+              "kind": "catch",
+              "line": 431
+            },
+            {
+              "in": "readAll",
+              "kind": "catch",
+              "line": 446
+            },
+            {
+              "in": "writeAll",
+              "kind": "catch",
+              "line": 584
+            }
           ],
           "hash": "86633d031bffbe714780b44824f101c49ff914d59e15b9fd67e5cd8996509c45",
           "importsFiles": [
@@ -1543,6 +2122,10 @@
             "isSsgPreviewStoryboardId"
           ],
           "hash": "775f47800c4ddb1fb18a06c2d4b6a4bcad86b8392a6494987880d04a633b4ba5",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
             "packages/rpg-storyboard-domain/src/index.ts"
@@ -1551,12 +2134,18 @@
         },
         {
           "hash": "71479d41928b45852f58b4ab5c97180b9753aee20f454b82a41b54561aee9179",
+          "importOrder": [
+            "apps/rpg-storyboard/src/lib/storyboard/templates.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/validate.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts",
             "apps/rpg-storyboard/src/lib/storyboard/templates.ts",
             "apps/rpg-storyboard/src/lib/storyboard/validate.ts"
           ],
-          "path": "apps/rpg-storyboard/src/lib/storyboard/templates.test.ts"
+          "path": "apps/rpg-storyboard/src/lib/storyboard/templates.test.ts",
+          "testFramework": "vitest"
         },
         {
           "hash": "bec5c3ea39f8ef6676b6e06861e6dc1a35f6a153c35e01b49e791cfe5e3599d2",
@@ -1572,7 +2161,8 @@
             "apps/rpg-storyboard/src/lib/storyboard/topology.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "apps/rpg-storyboard/src/lib/storyboard/topology.test.ts"
+          "path": "apps/rpg-storyboard/src/lib/storyboard/topology.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1581,6 +2171,10 @@
             "topologyOpBanner"
           ],
           "hash": "f41ea7704892598407713dca15473b390b09c5a53e9d0ebdba77716950823a34",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts"
+          ],
           "importsFiles": [
             "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
             "packages/storyboard-core/src/index.ts"
@@ -1597,43 +2191,123 @@
         },
         {
           "hash": "cfccc1f3ce482a3c7b7dd9cc824d0842d446634d8e828aa24d7a62f280ae4698",
+          "importsFiles": [
+            "packages/storyboard-core/src/index.ts"
+          ],
           "path": "apps/rpg-storyboard/src/pages/index.astro"
         },
         {
           "hash": "a2632d7ceda8fc7055003aca5fac58da14dcab62d1d020f00f0461cafffa99ff",
+          "importsFiles": [
+            "apps/rpg-storyboard/src/components/projects/ProjectBoard.tsx"
+          ],
           "path": "apps/rpg-storyboard/src/pages/projects/board.astro"
         },
         {
           "hash": "b59c4558ea0dd8fa9a9eddebe719e7a28410d965c98505927d487c2c9f10b2b6",
+          "importsFiles": [
+            "apps/rpg-storyboard/src/components/projects/ProjectHandoffPage.tsx"
+          ],
           "path": "apps/rpg-storyboard/src/pages/projects/handoff.astro"
         },
         {
           "hash": "162d0a22746790c6161b38501092d6aeab807c497c5f2a6a9d8d1b0cadfefdea",
+          "importsFiles": [
+            "apps/rpg-storyboard/src/components/projects/ProjectList.tsx"
+          ],
           "path": "apps/rpg-storyboard/src/pages/projects/index.astro"
         },
         {
           "hash": "525b23b03c9e1a56fed3701d134a7283df6a9007f3ec4b129a2b8a89f7a0151b",
+          "importsFiles": [
+            "apps/rpg-storyboard/src/components/projects/NewProjectPage.tsx"
+          ],
           "path": "apps/rpg-storyboard/src/pages/projects/new.astro"
         },
         {
+          "exports": [
+            "getStaticPaths"
+          ],
           "hash": "94daba4b502bf337cf9f3a96438141477d4a88b0d003f5cdbc7ee910e983bb45",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts"
+          ],
+          "importsFiles": [
+            "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts",
+            "packages/rpg-storyboard-domain/src/index.ts"
+          ],
           "path": "apps/rpg-storyboard/src/pages/storyboards/[storyboardId].astro"
         },
         {
+          "exports": [
+            "getStaticPaths"
+          ],
           "hash": "b8dc21ec35ca04650b09d91e8f664410263012e0a12337d0971f8539c32c7a3d",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/routes.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts"
+          ],
+          "importsFiles": [
+            "apps/rpg-storyboard/src/lib/storyboard/routes.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts",
+            "packages/rpg-storyboard-domain/src/index.ts"
+          ],
           "path": "apps/rpg-storyboard/src/pages/storyboards/[storyboardId]/frames/[frameId].astro"
         },
         {
+          "exports": [
+            "getStaticPaths"
+          ],
+          "failurePaths": [
+            {
+              "kind": "catch",
+              "line": 30
+            }
+          ],
           "hash": "d60a32607e0dff0e439a234e1fb6ad0a458c3bc7582b3010f1f88a40f433dbe0",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts"
+          ],
+          "importsFiles": [
+            "apps/rpg-storyboard/src/lib/storyboard/schema.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts",
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "path": "apps/rpg-storyboard/src/pages/storyboards/[storyboardId]/handoff.astro"
         },
         {
           "hash": "4ec96f91aa472355eeb7b11764192af30c63fc81f990eda138863a06b66b38e2",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts",
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts"
+          ],
+          "importsFiles": [
+            "apps/rpg-storyboard/src/lib/storyboard/templatePreviews.ts",
+            "packages/rpg-storyboard-domain/src/index.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "path": "apps/rpg-storyboard/src/pages/templates/index.astro"
         },
         {
           "hash": "478dde4bae41385329f01fd64700bd228065ccb07735e44f2009cda912fd3d31",
           "path": "apps/rpg-storyboard/tsconfig.json"
+        },
+        {
+          "hash": "8b64a7aaebe0e0ba617c587c8ea3b09884ea2e67625d4ccbf94b35afd15a37c7",
+          "path": "apps/rpg-storyboard/vitest.config.ts"
         }
       ],
       "globs": [
@@ -1643,6 +2317,9 @@
       "name": "rpg-storyboard",
       "origin": "authored",
       "role": "site",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 6,
       "unresolvedSites": 0
     },
@@ -1693,7 +2370,7 @@
           "path": "packages/rpg-storyboard-domain/README.zh.md"
         },
         {
-          "hash": "15f2c3b781e046230432f6c832aa19fd3bbbb35afee469f9171153c683c1366d",
+          "hash": "fa486a4ec0fde338856ba4385c7079af86d71eec3230dbb9a562b3cd15f02a87",
           "path": "packages/rpg-storyboard-domain/package.json"
         },
         {
@@ -1710,7 +2387,8 @@
             "packages/rpg-storyboard-domain/src/beatStatus.ts",
             "packages/rpg-storyboard-domain/src/schema.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/beatStatus.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/beatStatus.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1725,20 +2403,39 @@
         },
         {
           "hash": "8b22885580698a38eb3daf9af1584d61163d3b290fe69ce3dd8ec6b45ab5182c",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/templates.ts",
+            "packages/rpg-storyboard-domain/src/choiceFans.ts",
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/choiceFans.ts",
             "packages/rpg-storyboard-domain/src/schema.ts",
             "packages/rpg-storyboard-domain/src/templates.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/choiceFans.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/choiceFans.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "listChoiceFans",
             "visibleRpgBoard"
           ],
+          "failurePaths": [
+            {
+              "in": "coreVisibleFrameIds",
+              "kind": "catch",
+              "line": 132
+            }
+          ],
           "hash": "b7da2226d3d84f6b2fa90f6bd68ca26d5eb20b43910cb5ab3fa10e903c7de48e",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/rpg-storyboard-domain/src/beatStatus.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/beatStatus.ts",
             "packages/rpg-storyboard-domain/src/schema.ts",
@@ -1751,7 +2448,8 @@
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/combatSpec.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/combatSpec.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/combatSpec.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1769,6 +2467,13 @@
             "isProjectHandoff",
             "requireSchemaValidHandoff"
           ],
+          "failurePaths": [
+            {
+              "in": "requireSchemaValidHandoff",
+              "kind": "catch",
+              "line": 31
+            }
+          ],
           "hash": "2091ddaa006a484ac6602bd79b19722c58b1dc0d541f47cdfb017fdeec222892",
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/handoff.ts",
@@ -1778,6 +2483,14 @@
         },
         {
           "hash": "eba067940d6b56767b0a9d724aaed13545b5fa139ac1eff86af12a632a8d7010",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/compileTres.ts",
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/handoffValidate.ts",
+            "packages/rpg-storyboard-domain/src/project.ts",
+            "packages/rpg-storyboard-domain/src/templates.ts",
+            "packages/rpg-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/compileTres.ts",
             "packages/rpg-storyboard-domain/src/handoff.ts",
@@ -1786,13 +2499,20 @@
             "packages/rpg-storyboard-domain/src/schema.ts",
             "packages/rpg-storyboard-domain/src/templates.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/compileTres.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/compileTres.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "compileHandoffToTres"
           ],
           "hash": "9d9a8409ca84957bc8f0798fa77cb148a4147ba309e3549dcabaa33c2302c57f",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/combatSpec.ts",
+            "packages/rpg-storyboard-domain/src/compileGate.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/combatSpec.ts",
             "packages/rpg-storyboard-domain/src/compileGate.ts",
@@ -1803,6 +2523,14 @@
         },
         {
           "hash": "6c5848eace56f462c51135ec2c8b0b289c95f2b32bccfdf33a04d959e8d83f90",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/beatStatus.ts",
+            "packages/rpg-storyboard-domain/src/frameSignals.ts",
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/project.ts",
+            "packages/rpg-storyboard-domain/src/validate.ts",
+            "packages/rpg-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/beatStatus.ts",
             "packages/rpg-storyboard-domain/src/frameSignals.ts",
@@ -1811,7 +2539,8 @@
             "packages/rpg-storyboard-domain/src/schema.ts",
             "packages/rpg-storyboard-domain/src/validate.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/contentGuards.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/contentGuards.test.ts",
+          "testFramework": "vitest"
         },
         {
           "hash": "9da2a7a6abfc10b2d814768b2105bb31f5658dba31e6f186b27e60b7fb703bd2",
@@ -1819,6 +2548,10 @@
         },
         {
           "hash": "65ff665c155c5d938ee6ab6b5304ee60be7e8f93490affe0e6a5f4ba1deec308",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/rpg-storyboard-domain/src/demo-project.json"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/demo-project.json",
             "packages/rpg-storyboard-domain/src/schema.ts"
@@ -1832,7 +2565,8 @@
             "packages/rpg-storyboard-domain/src/schema.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/frameSignals.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/frameSignals.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1841,6 +2575,11 @@
             "getFrameSignal"
           ],
           "hash": "455fabf49c85546fa539981cb93de7a46de77906fa4cd9719c6f8a53d96edbad",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/storyboard-core/src/index.ts",
+            "packages/rpg-storyboard-domain/src/beatStatus.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/beatStatus.ts",
             "packages/rpg-storyboard-domain/src/schema.ts",
@@ -1850,6 +2589,13 @@
         },
         {
           "hash": "fa270a014c690b1180dd093a4b70c38f7e51fa332c1e1b6dab6f17494b79df8b",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/storyboard-core/src/index.ts",
+            "packages/rpg-storyboard-domain/src/demo-project.ts",
+            "packages/rpg-storyboard-domain/src/project.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/demo-project.ts",
             "packages/rpg-storyboard-domain/src/handoff.ts",
@@ -1857,7 +2603,8 @@
             "packages/rpg-storyboard-domain/src/schema.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/handoff.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/handoff.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1867,6 +2614,14 @@
             "generateProjectMarkdown"
           ],
           "hash": "b5d3b04dc8c3e68c2746f47f3aefa2fde37e0e3a80e19bf96dad78b719d19f0f",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/storyboard-core/src/index.ts",
+            "packages/rpg-storyboard-domain/src/beatStatus.ts",
+            "packages/rpg-storyboard-domain/src/combatSpec.ts",
+            "packages/rpg-storyboard-domain/src/project.ts",
+            "packages/rpg-storyboard-domain/src/handoffValidate.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/beatStatus.ts",
             "packages/rpg-storyboard-domain/src/combatSpec.ts",
@@ -1879,6 +2634,15 @@
         },
         {
           "hash": "9a5bed361a119a26c2f56677346785d6ef89f7457537426d1d9b56389ba85194",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/handoffValidate.ts",
+            "packages/rpg-storyboard-domain/src/templates.ts",
+            "packages/rpg-storyboard-domain/src/project.ts",
+            "packages/rpg-storyboard-domain/src/demo-project.ts",
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/demo-project.ts",
             "packages/rpg-storyboard-domain/src/handoff.ts",
@@ -1888,7 +2652,8 @@
             "packages/rpg-storyboard-domain/src/templates.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/handoffValidate.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/handoffValidate.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1899,7 +2664,33 @@
             "validateHandoff",
             "validateProjectHandoff"
           ],
+          "failurePaths": [
+            {
+              "in": "resolveRef",
+              "kind": "throw",
+              "line": 109
+            },
+            {
+              "in": "resolveRef",
+              "kind": "throw",
+              "line": 114
+            },
+            {
+              "in": "validateAgainst",
+              "kind": "catch",
+              "line": 317
+            },
+            {
+              "in": "assertEnvelope",
+              "kind": "throw",
+              "line": 339
+            }
+          ],
           "hash": "24178eb7a1f8876ada7bbba2458dd4f606417a669359c273bfd32f917d7e9ac3",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/schema/quest-handoff.json",
+            "packages/rpg-storyboard-domain/schema/project-handoff.json"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/schema/project-handoff.json",
             "packages/rpg-storyboard-domain/schema/quest-handoff.json"
@@ -1908,6 +2699,21 @@
         },
         {
           "hash": "0b512799a75ef1da6b3bc4158bd95223f8223495ddd2bb6ccbcef432c0401b61",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/rpg-storyboard-domain/src/combatSpec.ts",
+            "packages/rpg-storyboard-domain/src/choiceFans.ts",
+            "packages/rpg-storyboard-domain/src/compileTres.ts",
+            "packages/rpg-storyboard-domain/src/worldForge.ts",
+            "packages/rpg-storyboard-domain/src/templates.ts",
+            "packages/rpg-storyboard-domain/src/validate.ts",
+            "packages/rpg-storyboard-domain/src/demo-project.ts",
+            "packages/rpg-storyboard-domain/src/frameSignals.ts",
+            "packages/rpg-storyboard-domain/src/beatStatus.ts",
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/handoffValidate.ts",
+            "packages/rpg-storyboard-domain/src/project.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/beatStatus.ts",
             "packages/rpg-storyboard-domain/src/choiceFans.ts",
@@ -1928,13 +2734,20 @@
         },
         {
           "hash": "13964479f82ade7b9474955d2377bc7e7dae0b0038130aa1201030a4f6840773",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/project.ts",
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/validate.ts",
+            "packages/storyboard-core/src/index.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/handoff.ts",
             "packages/rpg-storyboard-domain/src/project.ts",
             "packages/rpg-storyboard-domain/src/validate.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/project.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/project.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -1975,12 +2788,20 @@
             "packages/rpg-storyboard-domain/src/templates.ts",
             "packages/storyboard-core/src/index.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/templates.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/templates.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "createStoryboardFromTemplate",
             "getStoryboardTemplate"
+          ],
+          "failurePaths": [
+            {
+              "in": "createStoryboardFromTemplate",
+              "kind": "throw",
+              "line": 1189
+            }
           ],
           "hash": "922b5c95fe817566cdd393271c21e929d11ce1fd8ba3c1a8759924d13d8ecaf9",
           "importsFiles": [
@@ -1994,6 +2815,10 @@
             "validateRpgStoryboard"
           ],
           "hash": "4b05d65a69fcf36a4ba4865dc57b5a29dc55a39090226e9b49ba21d0dd50b4ce",
+          "importOrder": [
+            "packages/storyboard-core/src/index.ts",
+            "packages/rpg-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/schema.ts",
             "packages/storyboard-core/src/index.ts"
@@ -2002,6 +2827,14 @@
         },
         {
           "hash": "94b8679e48c1ebfc7d7fe11c3407dfbe58d010b00a69eee54a848943760c6504",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/worldForge.ts",
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/handoffValidate.ts",
+            "packages/rpg-storyboard-domain/src/project.ts",
+            "packages/rpg-storyboard-domain/src/templates.ts",
+            "packages/rpg-storyboard-domain/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/handoff.ts",
             "packages/rpg-storyboard-domain/src/handoffValidate.ts",
@@ -2010,13 +2843,20 @@
             "packages/rpg-storyboard-domain/src/templates.ts",
             "packages/rpg-storyboard-domain/src/worldForge.ts"
           ],
-          "path": "packages/rpg-storyboard-domain/src/worldForge.test.ts"
+          "path": "packages/rpg-storyboard-domain/src/worldForge.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
             "compileHandoffToWorldForgePack"
           ],
           "hash": "caacb5f3615c532741b6fe8eb0962f483e0c4d0c634d77619d3e1f78c667e2b2",
+          "importOrder": [
+            "packages/rpg-storyboard-domain/src/schema.ts",
+            "packages/rpg-storyboard-domain/src/handoff.ts",
+            "packages/rpg-storyboard-domain/src/combatSpec.ts",
+            "packages/rpg-storyboard-domain/src/compileGate.ts"
+          ],
           "importsFiles": [
             "packages/rpg-storyboard-domain/src/combatSpec.ts",
             "packages/rpg-storyboard-domain/src/compileGate.ts",
@@ -2030,7 +2870,7 @@
           "path": "packages/rpg-storyboard-domain/tsconfig.json"
         },
         {
-          "hash": "ef285647c24938fefc393cbf88c0a43d5ddd646218d1c9b4ade8cdb6253a391b",
+          "hash": "3b489b4129a6d19091a3a6b5fc49a0277dd3930c45e0081c9011711ecbcef739",
           "path": "packages/rpg-storyboard-domain/vitest.config.ts"
         }
       ],
@@ -2051,6 +2891,9 @@
       ],
       "outsideReads": 2,
       "role": "code",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 14,
       "unresolvedSites": 0
     },
@@ -2111,6 +2954,7 @@
           "path": "site/src/assets/mark.png"
         },
         {
+          "constantOnly": true,
           "hash": "ee756dfba4122d2acc94a39b2555d9f200fff56a87a8c0b10f9cd01df26a8b62",
           "path": "site/src/content.config.ts"
         },
@@ -2152,9 +2996,18 @@
         },
         {
           "hash": "b1444b6325542ad34a8f563c85dcf80d6da0b85d6089d1904658ec27d6c755f9",
+          "importOrder": [
+            "site/src/styles/global.css",
+            "site/src/site-config.ts"
+          ],
+          "importsFiles": [
+            "site/src/site-config.ts",
+            "site/src/styles/global.css"
+          ],
           "path": "site/src/pages/index.astro"
         },
         {
+          "constantOnly": true,
           "hash": "55caf27799df193cbbb0fe70b65b47d903c1342463b06fda05ed62023b83e85e",
           "path": "site/src/site-config.ts"
         },
@@ -2228,7 +3081,7 @@
           "path": "packages/storyboard-canvas/README.zh.md"
         },
         {
-          "hash": "4eacab6ea1ff4595c844478b36bc1d6b4f546d44c0380e5ccb33c2ff57ac5192",
+          "hash": "bf4c735cdecf4fa27457ea89d1a5a2ff387e4d8ab354a7a7c20ed03ca52b4034",
           "path": "packages/storyboard-canvas/package.json"
         },
         {
@@ -2236,6 +3089,13 @@
             "AccessibleFrameList"
           ],
           "hash": "b74f624d7770106bb1e55cf37eba8e6cafe9ed065cf6ec769371f007dea9ad6c",
+          "importOrder": [
+            "packages/storyboard-canvas/src/types.ts",
+            "packages/storyboard-canvas/src/a11yNav.ts",
+            "packages/storyboard-canvas/src/defaults.ts",
+            "packages/storyboard-canvas/src/frameText.ts",
+            "packages/storyboard-canvas/src/humanizeType.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-canvas/src/a11yNav.ts",
             "packages/storyboard-canvas/src/defaults.ts",
@@ -2246,7 +3106,18 @@
           "path": "packages/storyboard-canvas/src/AccessibleFrameList.tsx"
         },
         {
+          "failurePaths": [
+            {
+              "in": "measureLabelWidth",
+              "kind": "catch",
+              "line": 52
+            }
+          ],
           "hash": "06101d7cac03fa9ae65d8b6e2ef5960edf416f2d17eaf9a4f9b71c06eedc871a",
+          "importOrder": [
+            "packages/storyboard-canvas/src/types.ts",
+            "packages/storyboard-canvas/src/defaults.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-canvas/src/defaults.ts",
             "packages/storyboard-canvas/src/types.ts"
@@ -2257,7 +3128,21 @@
           "exports": [
             "FrameCard"
           ],
+          "failurePaths": [
+            {
+              "in": "measureBadgeTextWidth",
+              "kind": "catch",
+              "line": 58
+            }
+          ],
           "hash": "4c0139d649ec7ce63dfaf0051e628bdfb5cd2607aef4f34ed24c773e3f52c8af",
+          "importOrder": [
+            "packages/storyboard-canvas/src/types.ts",
+            "packages/storyboard-canvas/src/defaults.ts",
+            "packages/storyboard-canvas/src/positions.ts",
+            "packages/storyboard-canvas/src/frameText.ts",
+            "packages/storyboard-canvas/src/typeBarFill.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-canvas/src/defaults.ts",
             "packages/storyboard-canvas/src/frameText.ts",
@@ -2269,6 +3154,18 @@
         },
         {
           "hash": "02efe9ec2f406b2b5913a1edd8842fbc26d96d5c200391c6e5a60b11e5cf6fc7",
+          "importOrder": [
+            "packages/storyboard-canvas/src/types.ts",
+            "packages/storyboard-canvas/src/viewport.ts",
+            "packages/storyboard-canvas/src/ConnectionLayer.tsx",
+            "packages/storyboard-canvas/src/FrameCard.tsx",
+            "packages/storyboard-canvas/src/AccessibleFrameList.tsx",
+            "packages/storyboard-canvas/src/defaults.ts",
+            "packages/storyboard-canvas/src/humanizeType.ts",
+            "packages/storyboard-canvas/src/positions.ts",
+            "packages/storyboard-canvas/src/densityChip.ts",
+            "packages/storyboard-canvas/src/visibility.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-canvas/src/AccessibleFrameList.tsx",
             "packages/storyboard-canvas/src/ConnectionLayer.tsx",
@@ -2288,7 +3185,13 @@
           "importsFiles": [
             "packages/storyboard-canvas/src/a11yNav.ts"
           ],
-          "path": "packages/storyboard-canvas/src/a11yNav.test.ts"
+          "names": [
+            "packages/storyboard-canvas/src/AccessibleFrameList.tsx",
+            "packages/storyboard-canvas/src/ConnectionLayer.tsx",
+            "packages/storyboard-canvas/src/FrameCard.tsx"
+          ],
+          "path": "packages/storyboard-canvas/src/a11yNav.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2310,7 +3213,8 @@
           "importsFiles": [
             "packages/storyboard-canvas/src/densityChip.ts"
           ],
-          "path": "packages/storyboard-canvas/src/densityChip.test.ts"
+          "path": "packages/storyboard-canvas/src/densityChip.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2326,7 +3230,8 @@
             "packages/storyboard-canvas/src/defaults.ts",
             "packages/storyboard-canvas/src/frameText.ts"
           ],
-          "path": "packages/storyboard-canvas/src/frameText.test.ts"
+          "path": "packages/storyboard-canvas/src/frameText.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2341,6 +3246,11 @@
             "headerLabel"
           ],
           "hash": "542fe89c00c6caa3021c095e97feee8e19a7e4bb3a40affd2c494ab8597805ef",
+          "importOrder": [
+            "packages/storyboard-canvas/src/types.ts",
+            "packages/storyboard-canvas/src/defaults.ts",
+            "packages/storyboard-canvas/src/humanizeType.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-canvas/src/defaults.ts",
             "packages/storyboard-canvas/src/humanizeType.ts",
@@ -2353,7 +3263,8 @@
           "importsFiles": [
             "packages/storyboard-canvas/src/humanizeType.ts"
           ],
-          "path": "packages/storyboard-canvas/src/humanizeType.test.ts"
+          "path": "packages/storyboard-canvas/src/humanizeType.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2364,6 +3275,19 @@
         },
         {
           "hash": "c00bad09d73a3a81e0d28a49eaa82e2ad99a38fd05994b473b03d46a88dd3530",
+          "importOrder": [
+            "packages/storyboard-canvas/src/StoryboardCanvas.tsx",
+            "packages/storyboard-canvas/src/FrameCard.tsx",
+            "packages/storyboard-canvas/src/ConnectionLayer.tsx",
+            "packages/storyboard-canvas/src/AccessibleFrameList.tsx",
+            "packages/storyboard-canvas/src/types.ts",
+            "packages/storyboard-canvas/src/viewport.ts",
+            "packages/storyboard-canvas/src/defaults.ts",
+            "packages/storyboard-canvas/src/visibility.ts",
+            "packages/storyboard-canvas/src/a11yNav.ts",
+            "packages/storyboard-canvas/src/positions.ts",
+            "packages/storyboard-canvas/src/frameText.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-canvas/src/AccessibleFrameList.tsx",
             "packages/storyboard-canvas/src/ConnectionLayer.tsx",
@@ -2386,7 +3310,8 @@
             "packages/storyboard-canvas/src/positions.ts",
             "packages/storyboard-canvas/src/types.ts"
           ],
-          "path": "packages/storyboard-canvas/src/positions.test.ts"
+          "path": "packages/storyboard-canvas/src/positions.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2406,7 +3331,8 @@
           "importsFiles": [
             "packages/storyboard-canvas/src/typeBarFill.ts"
           ],
-          "path": "packages/storyboard-canvas/src/typeBarFill.test.ts"
+          "path": "packages/storyboard-canvas/src/typeBarFill.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2421,11 +3347,16 @@
         },
         {
           "hash": "86d596e2f87945b72e00b660f2deb6824c3dff7049520ca142fcde3648fbb04d",
+          "importOrder": [
+            "packages/storyboard-canvas/src/viewport.ts",
+            "packages/storyboard-canvas/src/defaults.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-canvas/src/defaults.ts",
             "packages/storyboard-canvas/src/viewport.ts"
           ],
-          "path": "packages/storyboard-canvas/src/viewport.test.ts"
+          "path": "packages/storyboard-canvas/src/viewport.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2443,11 +3374,16 @@
         },
         {
           "hash": "c0aafe41dba9f986c803caa67f56e217f9004f4f667575b9a693ebb215b32ad4",
+          "importOrder": [
+            "packages/storyboard-canvas/src/visibility.ts",
+            "packages/storyboard-canvas/src/types.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-canvas/src/types.ts",
             "packages/storyboard-canvas/src/visibility.ts"
           ],
-          "path": "packages/storyboard-canvas/src/visibility.test.ts"
+          "path": "packages/storyboard-canvas/src/visibility.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2466,7 +3402,7 @@
           "path": "packages/storyboard-canvas/tsconfig.json"
         },
         {
-          "hash": "c02d07c0c12df72a3fc23f07bec244233703991bb0f0466c58b8037d9ad4dcd1",
+          "hash": "163f77a468348f6732cb51ecd62926fa71bfd2bafac0904b5a69f94ed6530cd3",
           "path": "packages/storyboard-canvas/vitest.config.ts"
         }
       ],
@@ -2487,6 +3423,9 @@
       ],
       "outsideReads": 3,
       "role": "code",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 8,
       "unresolvedSites": 0
     },
@@ -2537,7 +3476,7 @@
           "path": "packages/storyboard-core/README.zh.md"
         },
         {
-          "hash": "8d3612d5b46e37b6861f45552e808c4bb4d471d2fc4649cfd8935960777cc803",
+          "hash": "adbc49c7c5eaff78295246f2f7c17e79c542096530b3c78e4999ead15288f201",
           "path": "packages/storyboard-core/package.json"
         },
         {
@@ -2549,7 +3488,8 @@
           "importsFiles": [
             "packages/storyboard-core/src/density.ts"
           ],
-          "path": "packages/storyboard-core/src/density.test.ts"
+          "path": "packages/storyboard-core/src/density.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2560,6 +3500,13 @@
         },
         {
           "hash": "dd3ae913eddd1b0acb796204c7c7291a763135e3f89a5f222d80e1ca3236914c",
+          "importOrder": [
+            "packages/storyboard-core/src/schema.ts",
+            "packages/storyboard-core/src/validate.ts",
+            "packages/storyboard-core/src/density.ts",
+            "packages/storyboard-core/src/nest.ts",
+            "packages/storyboard-core/src/tokens.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-core/src/density.ts",
             "packages/storyboard-core/src/nest.ts",
@@ -2576,7 +3523,8 @@
             "packages/storyboard-core/src/nest.ts",
             "packages/storyboard-core/src/schema.ts"
           ],
-          "path": "packages/storyboard-core/src/nest.test.ts"
+          "path": "packages/storyboard-core/src/nest.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2593,11 +3541,16 @@
         },
         {
           "hash": "0716f1faaec0fd1aed5a224bcbf467a40362f24367a7ec1ba37189a15846f45d",
+          "importOrder": [
+            "packages/storyboard-core/src/validate.ts",
+            "packages/storyboard-core/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-core/src/schema.ts",
             "packages/storyboard-core/src/validate.ts"
           ],
-          "path": "packages/storyboard-core/src/schema.lockstep.test.ts"
+          "path": "packages/storyboard-core/src/schema.lockstep.test.ts",
+          "testFramework": "vitest"
         },
         {
           "hash": "cc6a7eede31050e40092ec4c4c59fc0596468d927f93ad2c3e9b3a940a369d38",
@@ -2608,7 +3561,8 @@
           "importsFiles": [
             "packages/storyboard-core/src/tokens.ts"
           ],
-          "path": "packages/storyboard-core/src/tokens.test.ts"
+          "path": "packages/storyboard-core/src/tokens.test.ts",
+          "testFramework": "vitest"
         },
         {
           "hash": "67a5cbf8bfa294d72181af6bd51ecacdba86225b5be45f65ef07193a76ce9168",
@@ -2616,11 +3570,16 @@
         },
         {
           "hash": "255577d86d9cc825d40099e303e488de5643af962969ce01bf41346f17a0ee87",
+          "importOrder": [
+            "packages/storyboard-core/src/validate.ts",
+            "packages/storyboard-core/src/schema.ts"
+          ],
           "importsFiles": [
             "packages/storyboard-core/src/schema.ts",
             "packages/storyboard-core/src/validate.ts"
           ],
-          "path": "packages/storyboard-core/src/validate.test.ts"
+          "path": "packages/storyboard-core/src/validate.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2637,7 +3596,7 @@
           "path": "packages/storyboard-core/tsconfig.json"
         },
         {
-          "hash": "b4055586a8ce10d3e5cab5290bff3ec70ce72a5d59b7b0f5307eb2078e336ae6",
+          "hash": "5b0902efbc2535bb7d3e7df0eb8bb37ab557487ba65b6a2dbb99cd9cdc8184ae",
           "path": "packages/storyboard-core/vitest.config.ts"
         }
       ],
@@ -2658,6 +3617,9 @@
       ],
       "outsideReads": 1,
       "role": "code",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 36,
       "unresolvedSites": 0
     },
@@ -2708,7 +3670,7 @@
           "path": "packages/storyboard-routing/README.zh.md"
         },
         {
-          "hash": "5b95eded47485a0dda0dca38f856634255b9ac6d9584ad875fb814568d7e6075",
+          "hash": "a8015320047a0b5dc2b89d29d8e8ad641572716c5347d68731e0106139594df1",
           "path": "packages/storyboard-routing/package.json"
         },
         {
@@ -2724,7 +3686,8 @@
           "importsFiles": [
             "packages/storyboard-routing/src/routes.ts"
           ],
-          "path": "packages/storyboard-routing/src/routes.test.ts"
+          "path": "packages/storyboard-routing/src/routes.test.ts",
+          "testFramework": "vitest"
         },
         {
           "exports": [
@@ -2738,7 +3701,7 @@
           "path": "packages/storyboard-routing/tsconfig.json"
         },
         {
-          "hash": "52c60fe8501005218216be55a73225d577540f94a1b7b387bfc39044610edd5b",
+          "hash": "324708195bf2110cea1a8d09924030c14b5b075069dfbdc15fb0503eb261068f",
           "path": "packages/storyboard-routing/vitest.config.ts"
         }
       ],
@@ -2749,72 +3712,153 @@
       "name": "storyboard-routing",
       "origin": "authored",
       "role": "code",
+      "testRunners": [
+        "vitest"
+      ],
       "testedBy": 1,
       "unresolvedSites": 0
     }
   ],
   "doors": [
     {
-      "checksCount": 6,
+      "checksCount": 0,
       "commands": [
         {
+          "dir": "",
           "job": "verify",
-          "step": "Atlas check",
-          "text": "npx --yes @dogfood-lab/atlas@1.20.0 check"
+          "programs": [
+            "npx"
+          ],
+          "step": "Atlas check"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Install dependencies",
-          "text": "pnpm install --frozen-lockfile"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Install dependencies"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Audit production dependencies",
-          "text": "pnpm audit --prod --audit-level=high"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Audit production dependencies"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Build packages",
-          "text": "pnpm run build:packages"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Build packages"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Packed-tarball contents proof",
-          "text": "pnpm run pack:smoke"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Packed-tarball contents proof"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Typecheck packages + apps",
-          "text": "pnpm run check"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Typecheck packages + apps"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Run tests",
-          "text": "pnpm test"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Run tests"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Build app",
-          "text": "pnpm build"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Build app"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Build site",
-          "text": "pnpm --filter site build"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Build site"
         },
         {
+          "dir": "",
           "job": "verify",
-          "step": "Assert site dist artifacts",
-          "text": "pnpm run check:site-dist"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Assert site dist artifacts"
         }
       ],
       "elsewhere": [],
       "file": ".github/workflows/ci.yml",
+      "jobs": [
+        {
+          "basis": "declared",
+          "name": "verify",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ],
+          "setup": [
+            {
+              "ranges": [
+                {
+                  "from": "22",
+                  "range": ">=22.0.0 <23.0.0-0"
+                }
+              ],
+              "step": "2",
+              "uses": "actions/setup-node",
+              "version": "22"
+            }
+          ]
+        },
+        {
+          "basis": "declared",
+          "name": "codecov",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ]
+        }
+      ],
       "landings": [],
       "mentions": [],
       "name": "CI",
       "permissions": [
-        "contents:read"
+        "contents:read",
+        "id-token:write"
       ],
       "pushes": false,
       "reach": [
@@ -2826,7 +3870,7 @@
         {
           "boundary": "cinematic-storyboard",
           "depth": 0,
-          "files": 11
+          "files": 16
         },
         {
           "boundary": "cinematic-storyboard-domain",
@@ -2836,7 +3880,7 @@
         {
           "boundary": "marketing-storyboard",
           "depth": 0,
-          "files": 10
+          "files": 14
         },
         {
           "boundary": "marketing-storyboard-domain",
@@ -2846,7 +3890,7 @@
         {
           "boundary": "rpg-storyboard",
           "depth": 0,
-          "files": 32
+          "files": 41
         },
         {
           "boundary": "rpg-storyboard-domain",
@@ -2856,7 +3900,7 @@
         {
           "boundary": "site",
           "depth": 0,
-          "files": 3
+          "files": 5
         },
         {
           "boundary": "storyboard-canvas",
@@ -2974,9 +4018,10 @@
           "via": "vitest packages/cinematic-storyboard-domain/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "verify",
           "path": "packages/cinematic-storyboard-domain/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "verify",
@@ -3063,9 +4108,10 @@
           "via": "vitest packages/marketing-storyboard-domain/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "verify",
           "path": "packages/marketing-storyboard-domain/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "verify",
@@ -3159,9 +4205,10 @@
           "via": "vitest packages/rpg-storyboard-domain/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "verify",
           "path": "packages/rpg-storyboard-domain/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "verify",
@@ -3213,9 +4260,10 @@
           "via": "vitest packages/storyboard-canvas/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "verify",
           "path": "packages/storyboard-canvas/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "verify",
@@ -3253,9 +4301,10 @@
           "via": "vitest packages/storyboard-core/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "verify",
           "path": "packages/storyboard-core/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "verify",
@@ -3286,9 +4335,10 @@
           "via": "vitest packages/storyboard-core/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "verify",
           "path": "packages/storyboard-routing/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "verify",
@@ -3326,6 +4376,116 @@
         "releases": false
       },
       "stages": [],
+      "tests": [
+        {
+          "config": "apps/cinematic-storyboard/vitest.config.ts",
+          "dir": "apps/cinematic-storyboard",
+          "files": 4,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (apps/cinematic-storyboard)"
+          ]
+        },
+        {
+          "config": "apps/marketing-storyboard/vitest.config.ts",
+          "dir": "apps/marketing-storyboard",
+          "files": 3,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (apps/marketing-storyboard)"
+          ]
+        },
+        {
+          "config": "apps/rpg-storyboard/vitest.config.ts",
+          "dir": "apps/rpg-storyboard",
+          "files": 6,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (apps/rpg-storyboard)"
+          ]
+        },
+        {
+          "config": "packages/cinematic-storyboard-domain/vitest.config.ts",
+          "dir": "packages/cinematic-storyboard-domain",
+          "files": 13,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/cinematic-storyboard-domain)"
+          ]
+        },
+        {
+          "config": "packages/marketing-storyboard-domain/vitest.config.ts",
+          "dir": "packages/marketing-storyboard-domain",
+          "files": 10,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/marketing-storyboard-domain)"
+          ]
+        },
+        {
+          "config": "packages/rpg-storyboard-domain/vitest.config.ts",
+          "dir": "packages/rpg-storyboard-domain",
+          "files": 11,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/rpg-storyboard-domain)"
+          ]
+        },
+        {
+          "config": "packages/storyboard-canvas/vitest.config.ts",
+          "dir": "packages/storyboard-canvas",
+          "files": 8,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/storyboard-canvas)"
+          ]
+        },
+        {
+          "config": "packages/storyboard-core/vitest.config.ts",
+          "dir": "packages/storyboard-core",
+          "files": 5,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/storyboard-core)"
+          ]
+        },
+        {
+          "config": "packages/storyboard-routing/vitest.config.ts",
+          "dir": "packages/storyboard-routing",
+          "files": 1,
+          "job": "verify",
+          "runner": "vitest",
+          "step": "Run tests",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/storyboard-routing)"
+          ]
+        }
+      ],
       "triggers": [
         {
           "branches": [
@@ -3344,6 +4504,7 @@
             ".npmrc",
             "apps/**",
             "atlas/**",
+            "codecov.yml",
             "package.json",
             "packages/**",
             "pnpm-lock.yaml",
@@ -3355,7 +4516,10 @@
       ],
       "uses": [
         "actions/checkout",
+        "actions/download-artifact",
         "actions/setup-node",
+        "actions/upload-artifact",
+        "codecov/codecov-action",
         "pnpm/action-setup"
       ],
       "usesWorkflowToken": false
@@ -3364,23 +4528,82 @@
       "checksCount": 0,
       "commands": [
         {
+          "dir": "",
           "job": "build",
-          "step": "Install dependencies",
-          "text": "pnpm install --frozen-lockfile"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Install dependencies"
         },
         {
+          "dir": "",
           "job": "build",
-          "step": "Build site",
-          "text": "pnpm --filter site build"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Build site"
         },
         {
+          "dir": "",
           "job": "build",
-          "step": "Assert site dist artifacts",
-          "text": "pnpm run check:site-dist"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Assert site dist artifacts"
         }
       ],
       "elsewhere": [],
       "file": ".github/workflows/pages.yml",
+      "jobs": [
+        {
+          "basis": "declared",
+          "name": "build",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ],
+          "setup": [
+            {
+              "ranges": [
+                {
+                  "from": "22",
+                  "range": ">=22.0.0 <23.0.0-0"
+                }
+              ],
+              "step": "2",
+              "uses": "actions/setup-node",
+              "version": "22"
+            }
+          ]
+        },
+        {
+          "basis": "declared",
+          "environment": {
+            "name": "github-pages"
+          },
+          "name": "deploy",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ]
+        }
+      ],
       "landings": [],
       "mentions": [],
       "name": "Deploy site to GitHub Pages",
@@ -3399,7 +4622,7 @@
         {
           "boundary": "site",
           "depth": 0,
-          "files": 3
+          "files": 5
         }
       ],
       "readers": [],
@@ -3467,83 +4690,206 @@
       "usesWorkflowToken": false
     },
     {
-      "checksCount": 6,
+      "checksCount": 0,
       "commands": [
         {
+          "dir": "",
           "job": "publish",
-          "step": "Validate tag input",
-          "text": "if [ -z \"$TAG\" ]; then\n  echo \"ERROR: tag input required (got empty value)\"\n  exit 1\nfi\nif ! echo \"$TAG\" | grep -Eq '^v[0-9]+\\.[0-9]+\\.[0-9]+(-.*)?$'; then\n  echo \"ERROR: tag '$TAG' does not match v[0-9]+.[0-9]+.[0-9]+(-.*)? semver pattern\"\n  exit 1\nfi\necho \"Validated tag: $TAG\"\necho \"RESOLVED_TAG=$TAG\" >> \"$GITHUB_ENV\"\n"
+          "programs": [
+            "echo",
+            "grep"
+          ],
+          "step": "Validate tag input"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Install dependencies",
-          "text": "pnpm install --frozen-lockfile"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Install dependencies"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Verify build before publish (trust-but-verify)",
-          "text": "pnpm audit --prod --audit-level=high\npnpm run build:packages\npnpm run check\npnpm test\npnpm build\n"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Verify build before publish (trust-but-verify)"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Packed-tarball contents proof",
-          "text": "pnpm run pack:smoke"
+          "programs": [
+            "pnpm"
+          ],
+          "step": "Packed-tarball contents proof"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Tag-vs-version consistency check",
-          "text": "EXPECTED_VERSION=\"${RESOLVED_TAG#v}\"\nPKG_JSONS=(\n  packages/storyboard-core/package.json\n  packages/storyboard-routing/package.json\n  packages/storyboard-canvas/package.json\n  packages/rpg-storyboard-domain/package.json\n  packages/marketing-storyboard-domain/package.json\n  packages/cinematic-storyboard-domain/package.json\n)\nfor PKG_JSON in \"${PKG_JSONS[@]}\"; do\n  PKG_VERSION=$(jq -r .version \"$PKG_JSON\")\n  PKG_NAME=$(jq -r .name \"$PKG_JSON\")\n  if [ \"$PKG_VERSION\" != \"$EXPECTED_VERSION\" ]; then\n    echo \"ERROR: tag ${RESOLVED_TAG} does not match ${PKG_NAME} version ${PKG_VERSION} in ${PKG_JSON} (expected ${EXPECTED_VERSION})\"\n    exit 1\n  fi\n  echo \"OK: ${PKG_NAME}@${PKG_VERSION} matches ${RESOLVED_TAG}\"\ndone\necho \"All six publish targets match tag: ${RESOLVED_TAG}\"\n"
+          "programs": [
+            "echo",
+            "jq"
+          ],
+          "step": "Tag-vs-version consistency check"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Generate CycloneDX SBOM",
-          "text": "pnpm exec cyclonedx-npm \\\n  --ignore-npm-errors \\\n  --omit dev \\\n  --output-format JSON \\\n  --output-file storyboard-os.cdx.json\ntest -s storyboard-os.cdx.json\njq -e '.bomFormat == \"CycloneDX\"' storyboard-os.cdx.json >/dev/null\necho \"Wrote $(wc -c < storyboard-os.cdx.json) bytes to storyboard-os.cdx.json\"\n"
+          "programs": [
+            "echo",
+            "jq",
+            "pnpm",
+            "test",
+            "wc"
+          ],
+          "step": "Generate CycloneDX SBOM"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Attach SBOM to GitHub release",
-          "text": "set -euo pipefail\nif [ \"$HAS_RELEASE_EVENT\" = \"true\" ]; then\n  gh release upload \"$RESOLVED_TAG\" storyboard-os.cdx.json --clobber\n  echo \"Attached storyboard-os.cdx.json to $RESOLVED_TAG (release event)\"\nelif gh release view \"$RESOLVED_TAG\" >/dev/null 2>&1; then\n  gh release upload \"$RESOLVED_TAG\" storyboard-os.cdx.json --clobber\n  echo \"Attached storyboard-os.cdx.json to existing release $RESOLVED_TAG\"\nelse\n  echo \"No GitHub release for $RESOLVED_TAG (workflow_dispatch without a release) — skipping SBOM upload\"\nfi\n"
+          "programs": [
+            "1",
+            "echo",
+            "gh"
+          ],
+          "step": "Attach SBOM to GitHub release"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Publish @storyboard-os/core",
-          "text": "PKG_VERSION=$(jq -r .version packages/storyboard-core/package.json)\nif pnpm view @storyboard-os/core@$PKG_VERSION version 2>/dev/null; then\n  echo \"@storyboard-os/core@$PKG_VERSION already published — skipping\"\n  echo \"status=skipped\" >> \"$GITHUB_OUTPUT\"\nelse\n  pnpm publish --filter @storyboard-os/core --no-git-checks --access public --provenance\n  echo \"status=published\" >> \"$GITHUB_OUTPUT\"\nfi\n"
+          "programs": [
+            "echo",
+            "jq",
+            "pnpm"
+          ],
+          "step": "Publish @storyboard-os/core"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Publish @storyboard-os/routing",
-          "text": "PKG_VERSION=$(jq -r .version packages/storyboard-routing/package.json)\nif pnpm view @storyboard-os/routing@$PKG_VERSION version 2>/dev/null; then\n  echo \"@storyboard-os/routing@$PKG_VERSION already published — skipping\"\n  echo \"status=skipped\" >> \"$GITHUB_OUTPUT\"\nelse\n  pnpm publish --filter @storyboard-os/routing --no-git-checks --access public --provenance\n  echo \"status=published\" >> \"$GITHUB_OUTPUT\"\nfi\n"
+          "programs": [
+            "echo",
+            "jq",
+            "pnpm"
+          ],
+          "step": "Publish @storyboard-os/routing"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Publish @storyboard-os/rpg-domain",
-          "text": "PKG_VERSION=$(jq -r .version packages/rpg-storyboard-domain/package.json)\nif pnpm view @storyboard-os/rpg-domain@$PKG_VERSION version 2>/dev/null; then\n  echo \"@storyboard-os/rpg-domain@$PKG_VERSION already published — skipping\"\n  echo \"status=skipped\" >> \"$GITHUB_OUTPUT\"\nelse\n  pnpm publish --filter @storyboard-os/rpg-domain --no-git-checks --access public --provenance\n  echo \"status=published\" >> \"$GITHUB_OUTPUT\"\nfi\n"
+          "programs": [
+            "echo",
+            "jq",
+            "pnpm"
+          ],
+          "step": "Publish @storyboard-os/rpg-domain"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Publish @storyboard-os/canvas",
-          "text": "PKG_VERSION=$(jq -r .version packages/storyboard-canvas/package.json)\nif pnpm view @storyboard-os/canvas@$PKG_VERSION version 2>/dev/null; then\n  echo \"@storyboard-os/canvas@$PKG_VERSION already published — skipping\"\n  echo \"status=skipped\" >> \"$GITHUB_OUTPUT\"\nelse\n  pnpm publish --filter @storyboard-os/canvas --no-git-checks --access public --provenance\n  echo \"status=published\" >> \"$GITHUB_OUTPUT\"\nfi\n"
+          "programs": [
+            "echo",
+            "jq",
+            "pnpm"
+          ],
+          "step": "Publish @storyboard-os/canvas"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Publish @storyboard-os/marketing-domain",
-          "text": "PKG_VERSION=$(jq -r .version packages/marketing-storyboard-domain/package.json)\nif pnpm view @storyboard-os/marketing-domain@$PKG_VERSION version 2>/dev/null; then\n  echo \"@storyboard-os/marketing-domain@$PKG_VERSION already published — skipping\"\n  echo \"status=skipped\" >> \"$GITHUB_OUTPUT\"\nelse\n  pnpm publish --filter @storyboard-os/marketing-domain --no-git-checks --access public --provenance\n  echo \"status=published\" >> \"$GITHUB_OUTPUT\"\nfi\n"
+          "programs": [
+            "echo",
+            "jq",
+            "pnpm"
+          ],
+          "step": "Publish @storyboard-os/marketing-domain"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Publish @storyboard-os/cinematic-domain",
-          "text": "PKG_VERSION=$(jq -r .version packages/cinematic-storyboard-domain/package.json)\nif pnpm view @storyboard-os/cinematic-domain@$PKG_VERSION version 2>/dev/null; then\n  echo \"@storyboard-os/cinematic-domain@$PKG_VERSION already published — skipping\"\n  echo \"status=skipped\" >> \"$GITHUB_OUTPUT\"\nelse\n  pnpm publish --filter @storyboard-os/cinematic-domain --no-git-checks --access public --provenance\n  echo \"status=published\" >> \"$GITHUB_OUTPUT\"\nfi\n"
+          "programs": [
+            "echo",
+            "jq",
+            "pnpm"
+          ],
+          "step": "Publish @storyboard-os/cinematic-domain"
         },
         {
+          "dir": "",
           "job": "publish",
-          "step": "Post-publish smoke verify",
-          "text": "echo \"=== Publish summary ===\"\necho \"core:               ${{ steps.publish_core.outputs.status }}\"\necho \"routing:            ${{ steps.publish_routing.outputs.status }}\"\necho \"rpg-domain:         ${{ steps.publish_rpg_domain.outputs.status }}\"\necho \"canvas:             ${{ steps.publish_canvas.outputs.status }}\"\necho \"marketing-domain:   ${{ steps.publish_marketing_domain.outputs.status }}\"\necho \"cinematic-domain:   ${{ steps.publish_cinematic_domain.outputs.status }}\"\necho \"\"\necho \"=== Smoke-verify versions live on npm ===\"\n# name => directory mapping (npm package names don't match directory layout for domain packages)\ndeclare -A PKG_DIRS=(\n  [\"core\"]=\"packages/storyboard-core\"\n  [\"routing\"]=\"packages/storyboard-routing\"\n  [\"canvas\"]=\"packages/storyboard-canvas\"\n  [\"rpg-domain\"]=\"packages/rpg-storyboard-domain\"\n  [\"marketing-domain\"]=\"packages/marketing-storyboard-domain\"\n  [\"cinematic-domain\"]=\"packages/cinematic-storyboard-domain\"\n)\nMISSING=0\nMISMATCH=0\nfor PKG in core routing canvas rpg-domain marketing-domain cinematic-domain; do\n  PKG_DIR=\"${PKG_DIRS[$PKG]}\"\n  if [ -f \"${PKG_DIR}/package.json\" ]; then\n    EXPECTED=$(jq -r .version \"${PKG_DIR}/package.json\")\n    ACTUAL=$(pnpm view \"@storyboard-os/${PKG}@${EXPECTED}\" version 2>/dev/null || echo \"MISSING\")\n    echo \"@storyboard-os/${PKG}: expected=${EXPECTED} live=${ACTUAL}\"\n    if [ \"$ACTUAL\" = \"MISSING\" ]; then\n      MISSING=$((MISSING + 1))\n    elif [ \"$ACTUAL\" != \"$EXPECTED\" ]; then\n      MISMATCH=$((MISMATCH + 1))\n    fi\n  else\n    echo \"@storyboard-os/${PKG}: directory ${PKG_DIR} not found\"\n    MISSING=$((MISSING + 1))\n  fi\ndone\nif [ \"$MISSING\" -gt 0 ] || [ \"$MISMATCH\" -gt 0 ]; then\n  echo \"ERROR: post-publish smoke failed (missing=${MISSING} mismatch=${MISMATCH})\"\n  exit 1\nfi\necho \"All expected @storyboard-os/* versions are live on npm.\"\n"
+          "programs": [
+            "echo",
+            "jq",
+            "pnpm"
+          ],
+          "step": "Post-publish smoke verify"
         }
       ],
       "elsewhere": [],
       "file": ".github/workflows/publish.yml",
+      "jobs": [
+        {
+          "basis": "declared",
+          "environment": {
+            "name": "npm-publish"
+          },
+          "name": "publish",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ],
+          "setup": [
+            {
+              "ranges": [
+                {
+                  "from": "22",
+                  "range": ">=22.0.0 <23.0.0-0"
+                }
+              ],
+              "step": "3",
+              "uses": "actions/setup-node",
+              "version": "22"
+            }
+          ]
+        }
+      ],
       "landings": [],
-      "mentions": [],
+      "mentions": [
+        {
+          "job": "publish",
+          "path": "packages/cinematic-storyboard-domain/package.json"
+        },
+        {
+          "job": "publish",
+          "path": "packages/marketing-storyboard-domain/package.json"
+        },
+        {
+          "job": "publish",
+          "path": "packages/rpg-storyboard-domain/package.json"
+        },
+        {
+          "job": "publish",
+          "path": "packages/storyboard-canvas/package.json"
+        },
+        {
+          "job": "publish",
+          "path": "packages/storyboard-core/package.json"
+        },
+        {
+          "job": "publish",
+          "path": "packages/storyboard-routing/package.json"
+        }
+      ],
       "name": "Publish to npm",
       "permissions": [
         "contents:read",
@@ -3560,47 +4906,47 @@
         {
           "boundary": "cinematic-storyboard",
           "depth": 0,
-          "files": 11
+          "files": 16
         },
         {
           "boundary": "cinematic-storyboard-domain",
           "depth": 0,
-          "files": 31
+          "files": 30
         },
         {
           "boundary": "marketing-storyboard",
           "depth": 0,
-          "files": 10
+          "files": 14
         },
         {
           "boundary": "marketing-storyboard-domain",
           "depth": 0,
-          "files": 23
+          "files": 22
         },
         {
           "boundary": "rpg-storyboard",
           "depth": 0,
-          "files": 32
+          "files": 41
         },
         {
           "boundary": "rpg-storyboard-domain",
           "depth": 0,
-          "files": 30
+          "files": 29
         },
         {
           "boundary": "storyboard-canvas",
           "depth": 0,
-          "files": 24
+          "files": 23
         },
         {
           "boundary": "storyboard-core",
           "depth": 0,
-          "files": 12
+          "files": 11
         },
         {
           "boundary": "storyboard-routing",
           "depth": 0,
-          "files": 4
+          "files": 3
         }
       ],
       "readers": [],
@@ -3657,11 +5003,6 @@
         },
         {
           "job": "publish",
-          "path": "packages/cinematic-storyboard-domain/package.json",
-          "runKind": "executes"
-        },
-        {
-          "job": "publish",
           "matched": true,
           "path": "packages/cinematic-storyboard-domain/src/adapters.test.ts",
           "runKind": "executes",
@@ -3703,9 +5044,10 @@
           "via": "vitest packages/cinematic-storyboard-domain/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "publish",
           "path": "packages/cinematic-storyboard-domain/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "publish",
@@ -3758,11 +5100,6 @@
         },
         {
           "job": "publish",
-          "path": "packages/marketing-storyboard-domain/package.json",
-          "runKind": "executes"
-        },
-        {
-          "job": "publish",
           "matched": true,
           "path": "packages/marketing-storyboard-domain/src/adapters.test.ts",
           "runKind": "executes",
@@ -3797,9 +5134,10 @@
           "via": "vitest packages/marketing-storyboard-domain/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "publish",
           "path": "packages/marketing-storyboard-domain/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "publish",
@@ -3835,11 +5173,6 @@
           "path": "packages/marketing-storyboard-domain/src/validate.test.ts",
           "runKind": "executes",
           "via": "vitest packages/marketing-storyboard-domain/vitest.config.ts"
-        },
-        {
-          "job": "publish",
-          "path": "packages/rpg-storyboard-domain/package.json",
-          "runKind": "executes"
         },
         {
           "job": "publish",
@@ -3898,9 +5231,10 @@
           "via": "vitest packages/rpg-storyboard-domain/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "publish",
           "path": "packages/rpg-storyboard-domain/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "publish",
@@ -3922,11 +5256,6 @@
           "path": "packages/rpg-storyboard-domain/src/worldForge.test.ts",
           "runKind": "executes",
           "via": "vitest packages/rpg-storyboard-domain/vitest.config.ts"
-        },
-        {
-          "job": "publish",
-          "path": "packages/storyboard-canvas/package.json",
-          "runKind": "executes"
         },
         {
           "job": "publish",
@@ -3957,9 +5286,10 @@
           "via": "vitest packages/storyboard-canvas/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "publish",
           "path": "packages/storyboard-canvas/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "publish",
@@ -3991,20 +5321,16 @@
         },
         {
           "job": "publish",
-          "path": "packages/storyboard-core/package.json",
-          "runKind": "executes"
-        },
-        {
-          "job": "publish",
           "matched": true,
           "path": "packages/storyboard-core/src/density.test.ts",
           "runKind": "executes",
           "via": "vitest packages/storyboard-core/vitest.config.ts"
         },
         {
+          "built": true,
           "job": "publish",
           "path": "packages/storyboard-core/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "publish",
@@ -4035,14 +5361,10 @@
           "via": "vitest packages/storyboard-core/vitest.config.ts"
         },
         {
-          "job": "publish",
-          "path": "packages/storyboard-routing/package.json",
-          "runKind": "executes"
-        },
-        {
+          "built": true,
           "job": "publish",
           "path": "packages/storyboard-routing/src/index.ts",
-          "runKind": "checks"
+          "runKind": "executes"
         },
         {
           "job": "publish",
@@ -4052,7 +5374,7 @@
           "via": "vitest packages/storyboard-routing/vitest.config.ts"
         }
       ],
-      "runsCount": 67,
+      "runsCount": 61,
       "secrets": [
         "NPM_TOKEN"
       ],
@@ -4065,6 +5387,38 @@
         "opensIssues": false,
         "opensIssuesOnFailure": false,
         "opensPullRequests": false,
+        "packages": [
+          {
+            "dir": "packages/cinematic-storyboard-domain",
+            "name": "@storyboard-os/cinematic-domain",
+            "registry": "npm"
+          },
+          {
+            "dir": "packages/marketing-storyboard-domain",
+            "name": "@storyboard-os/marketing-domain",
+            "registry": "npm"
+          },
+          {
+            "dir": "packages/rpg-storyboard-domain",
+            "name": "@storyboard-os/rpg-domain",
+            "registry": "npm"
+          },
+          {
+            "dir": "packages/storyboard-canvas",
+            "name": "@storyboard-os/canvas",
+            "registry": "npm"
+          },
+          {
+            "dir": "packages/storyboard-core",
+            "name": "@storyboard-os/core",
+            "registry": "npm"
+          },
+          {
+            "dir": "packages/storyboard-routing",
+            "name": "@storyboard-os/routing",
+            "registry": "npm"
+          }
+        ],
         "publishes": true,
         "publishesTo": [
           "npm"
@@ -4072,6 +5426,116 @@
         "releases": false
       },
       "stages": [],
+      "tests": [
+        {
+          "config": "apps/cinematic-storyboard/vitest.config.ts",
+          "dir": "apps/cinematic-storyboard",
+          "files": 4,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (apps/cinematic-storyboard)"
+          ]
+        },
+        {
+          "config": "apps/marketing-storyboard/vitest.config.ts",
+          "dir": "apps/marketing-storyboard",
+          "files": 3,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (apps/marketing-storyboard)"
+          ]
+        },
+        {
+          "config": "apps/rpg-storyboard/vitest.config.ts",
+          "dir": "apps/rpg-storyboard",
+          "files": 6,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (apps/rpg-storyboard)"
+          ]
+        },
+        {
+          "config": "packages/cinematic-storyboard-domain/vitest.config.ts",
+          "dir": "packages/cinematic-storyboard-domain",
+          "files": 13,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/cinematic-storyboard-domain)"
+          ]
+        },
+        {
+          "config": "packages/marketing-storyboard-domain/vitest.config.ts",
+          "dir": "packages/marketing-storyboard-domain",
+          "files": 10,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/marketing-storyboard-domain)"
+          ]
+        },
+        {
+          "config": "packages/rpg-storyboard-domain/vitest.config.ts",
+          "dir": "packages/rpg-storyboard-domain",
+          "files": 11,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/rpg-storyboard-domain)"
+          ]
+        },
+        {
+          "config": "packages/storyboard-canvas/vitest.config.ts",
+          "dir": "packages/storyboard-canvas",
+          "files": 8,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/storyboard-canvas)"
+          ]
+        },
+        {
+          "config": "packages/storyboard-core/vitest.config.ts",
+          "dir": "packages/storyboard-core",
+          "files": 5,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/storyboard-core)"
+          ]
+        },
+        {
+          "config": "packages/storyboard-routing/vitest.config.ts",
+          "dir": "packages/storyboard-routing",
+          "files": 1,
+          "job": "publish",
+          "runner": "vitest",
+          "step": "Verify build before publish (trust-but-verify)",
+          "through": [
+            "pnpm test",
+            "pnpm test (packages/storyboard-routing)"
+          ]
+        }
+      ],
       "triggers": [
         {
           "event": "release",
@@ -4089,6 +5553,311 @@
         "pnpm/action-setup"
       ],
       "usesWorkflowToken": true
+    },
+    {
+      "checksCount": 0,
+      "commands": [],
+      "elsewhere": [],
+      "entry": "packages/cinematic-storyboard-domain/src/index.ts",
+      "file": "packages/cinematic-storyboard-domain/package.json",
+      "kind": "package",
+      "landings": [],
+      "mentions": [],
+      "name": "@storyboard-os/cinematic-domain",
+      "permissions": [],
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "cinematic-storyboard-domain",
+          "depth": 0,
+          "files": 17
+        },
+        {
+          "boundary": "storyboard-core",
+          "depth": 2,
+          "enters": {
+            "file": "packages/storyboard-core/src/index.ts",
+            "from": "packages/cinematic-storyboard-domain/src/frameSignals.ts"
+          },
+          "files": 6
+        }
+      ],
+      "readers": [],
+      "runs": [
+        {
+          "path": "packages/cinematic-storyboard-domain/schema/production-brief.json",
+          "runKind": "executes"
+        },
+        {
+          "path": "packages/cinematic-storyboard-domain/src/index.ts",
+          "runKind": "executes"
+        }
+      ],
+      "runsCount": 2,
+      "secrets": [],
+      "sends": {
+        "deploysPages": false,
+        "dispatchesTo": [],
+        "opensIssues": false,
+        "opensIssuesOnFailure": false,
+        "opensPullRequests": false,
+        "publishes": false,
+        "publishesTo": [],
+        "releases": false
+      },
+      "stages": [],
+      "triggers": [],
+      "uses": [],
+      "usesWorkflowToken": false
+    },
+    {
+      "checksCount": 0,
+      "commands": [],
+      "elsewhere": [],
+      "entry": "packages/marketing-storyboard-domain/src/index.ts",
+      "file": "packages/marketing-storyboard-domain/package.json",
+      "kind": "package",
+      "landings": [],
+      "mentions": [],
+      "name": "@storyboard-os/marketing-domain",
+      "permissions": [],
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "marketing-storyboard-domain",
+          "depth": 0,
+          "files": 13
+        },
+        {
+          "boundary": "storyboard-core",
+          "depth": 2,
+          "enters": {
+            "file": "packages/storyboard-core/src/index.ts",
+            "from": "packages/marketing-storyboard-domain/src/frameSignals.ts"
+          },
+          "files": 6
+        }
+      ],
+      "readers": [],
+      "runs": [
+        {
+          "path": "packages/marketing-storyboard-domain/schema/campaign-handoff.schema.json",
+          "runKind": "executes"
+        },
+        {
+          "path": "packages/marketing-storyboard-domain/src/index.ts",
+          "runKind": "executes"
+        }
+      ],
+      "runsCount": 2,
+      "secrets": [],
+      "sends": {
+        "deploysPages": false,
+        "dispatchesTo": [],
+        "opensIssues": false,
+        "opensIssuesOnFailure": false,
+        "opensPullRequests": false,
+        "publishes": false,
+        "publishesTo": [],
+        "releases": false
+      },
+      "stages": [],
+      "triggers": [],
+      "uses": [],
+      "usesWorkflowToken": false
+    },
+    {
+      "checksCount": 0,
+      "commands": [],
+      "elsewhere": [],
+      "entry": "packages/rpg-storyboard-domain/src/index.ts",
+      "file": "packages/rpg-storyboard-domain/package.json",
+      "kind": "package",
+      "landings": [],
+      "mentions": [],
+      "name": "@storyboard-os/rpg-domain",
+      "permissions": [],
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "rpg-storyboard-domain",
+          "depth": 0,
+          "files": 18
+        },
+        {
+          "boundary": "storyboard-core",
+          "depth": 2,
+          "enters": {
+            "file": "packages/storyboard-core/src/index.ts",
+            "from": "packages/rpg-storyboard-domain/src/choiceFans.ts"
+          },
+          "files": 6
+        }
+      ],
+      "readers": [],
+      "runs": [
+        {
+          "path": "packages/rpg-storyboard-domain/schema/project-handoff.json",
+          "runKind": "executes"
+        },
+        {
+          "path": "packages/rpg-storyboard-domain/schema/quest-handoff.json",
+          "runKind": "executes"
+        },
+        {
+          "path": "packages/rpg-storyboard-domain/src/index.ts",
+          "runKind": "executes"
+        }
+      ],
+      "runsCount": 3,
+      "secrets": [],
+      "sends": {
+        "deploysPages": false,
+        "dispatchesTo": [],
+        "opensIssues": false,
+        "opensIssuesOnFailure": false,
+        "opensPullRequests": false,
+        "publishes": false,
+        "publishesTo": [],
+        "releases": false
+      },
+      "stages": [],
+      "triggers": [],
+      "uses": [],
+      "usesWorkflowToken": false
+    },
+    {
+      "checksCount": 0,
+      "commands": [],
+      "elsewhere": [],
+      "entry": "packages/storyboard-canvas/src/index.ts",
+      "file": "packages/storyboard-canvas/package.json",
+      "kind": "package",
+      "landings": [],
+      "mentions": [],
+      "name": "@storyboard-os/canvas",
+      "permissions": [],
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "storyboard-canvas",
+          "depth": 0,
+          "files": 15
+        }
+      ],
+      "readers": [],
+      "runs": [
+        {
+          "path": "packages/storyboard-canvas/src/index.ts",
+          "runKind": "executes"
+        }
+      ],
+      "runsCount": 1,
+      "secrets": [],
+      "sends": {
+        "deploysPages": false,
+        "dispatchesTo": [],
+        "opensIssues": false,
+        "opensIssuesOnFailure": false,
+        "opensPullRequests": false,
+        "publishes": false,
+        "publishesTo": [],
+        "releases": false
+      },
+      "stages": [],
+      "triggers": [],
+      "uses": [],
+      "usesWorkflowToken": false
+    },
+    {
+      "checksCount": 0,
+      "commands": [],
+      "elsewhere": [],
+      "entry": "packages/storyboard-core/src/index.ts",
+      "file": "packages/storyboard-core/package.json",
+      "kind": "package",
+      "landings": [],
+      "mentions": [],
+      "name": "@storyboard-os/core",
+      "permissions": [],
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "storyboard-core",
+          "depth": 0,
+          "files": 7
+        }
+      ],
+      "readers": [],
+      "runs": [
+        {
+          "path": "packages/storyboard-core/schema/storyboard.schema.json",
+          "runKind": "executes"
+        },
+        {
+          "path": "packages/storyboard-core/src/index.ts",
+          "runKind": "executes"
+        }
+      ],
+      "runsCount": 2,
+      "secrets": [],
+      "sends": {
+        "deploysPages": false,
+        "dispatchesTo": [],
+        "opensIssues": false,
+        "opensIssuesOnFailure": false,
+        "opensPullRequests": false,
+        "publishes": false,
+        "publishesTo": [],
+        "releases": false
+      },
+      "stages": [],
+      "triggers": [],
+      "uses": [],
+      "usesWorkflowToken": false
+    },
+    {
+      "checksCount": 0,
+      "commands": [],
+      "elsewhere": [],
+      "entry": "packages/storyboard-routing/src/index.ts",
+      "file": "packages/storyboard-routing/package.json",
+      "kind": "package",
+      "landings": [],
+      "mentions": [],
+      "name": "@storyboard-os/routing",
+      "permissions": [],
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "storyboard-routing",
+          "depth": 0,
+          "files": 2
+        }
+      ],
+      "readers": [],
+      "runs": [
+        {
+          "path": "packages/storyboard-routing/src/index.ts",
+          "runKind": "executes"
+        }
+      ],
+      "runsCount": 1,
+      "secrets": [],
+      "sends": {
+        "deploysPages": false,
+        "dispatchesTo": [],
+        "opensIssues": false,
+        "opensIssuesOnFailure": false,
+        "opensPullRequests": false,
+        "publishes": false,
+        "publishesTo": [],
+        "releases": false
+      },
+      "stages": [],
+      "triggers": [],
+      "uses": [],
+      "usesWorkflowToken": false
     }
   ],
   "edges": [
@@ -4158,9 +5927,10 @@
       "to": "storyboard-core"
     }
   ],
+  "engine": "1.24.0",
   "generatedFrom": {
-    "commit": "6714e4a4627a25e59df420bd5e14b6fa4140c776",
-    "tracked": 327
+    "commit": "736766f1f17065fe64a4f3813db0d86d52ee8c72",
+    "tracked": 331
   },
   "landings": [
     {
@@ -4230,6 +6000,10 @@
           "by": ".github/scripts/check-pack-contents.mjs",
           "call": "readFileSync",
           "confidence": "ast"
+        },
+        {
+          "by": ".github/workflows/publish.yml",
+          "confidence": "config"
         }
       ],
       "target": "packages/cinematic-storyboard-domain/package.json",
@@ -4269,6 +6043,10 @@
           "by": ".github/scripts/check-pack-contents.mjs",
           "call": "readFileSync",
           "confidence": "ast"
+        },
+        {
+          "by": ".github/workflows/publish.yml",
+          "confidence": "config"
         }
       ],
       "target": "packages/marketing-storyboard-domain/package.json",
@@ -4308,6 +6086,10 @@
           "by": ".github/scripts/check-pack-contents.mjs",
           "call": "readFileSync",
           "confidence": "ast"
+        },
+        {
+          "by": ".github/workflows/publish.yml",
+          "confidence": "config"
         }
       ],
       "target": "packages/rpg-storyboard-domain/package.json",
@@ -4335,6 +6117,10 @@
           "by": ".github/scripts/check-pack-contents.mjs",
           "call": "readFileSync",
           "confidence": "ast"
+        },
+        {
+          "by": ".github/workflows/publish.yml",
+          "confidence": "config"
         }
       ],
       "target": "packages/storyboard-canvas/package.json",
@@ -4362,6 +6148,10 @@
           "by": ".github/scripts/check-pack-contents.mjs",
           "call": "readFileSync",
           "confidence": "ast"
+        },
+        {
+          "by": ".github/workflows/publish.yml",
+          "confidence": "config"
         },
         {
           "by": "packages/storyboard-core/src/schema.lockstep.test.ts",
@@ -4423,6 +6213,10 @@
           "by": ".github/scripts/check-pack-contents.mjs",
           "call": "readFileSync",
           "confidence": "ast"
+        },
+        {
+          "by": ".github/workflows/publish.yml",
+          "confidence": "config"
         }
       ],
       "target": "packages/storyboard-routing/package.json",
@@ -4466,5 +6260,17 @@
   "submodules": [],
   "symlinks": [],
   "testFiles": 61,
-  "unassigned": []
+  "unassigned": [],
+  "workspaces": [
+    "apps/cinematic-storyboard",
+    "apps/marketing-storyboard",
+    "apps/rpg-storyboard",
+    "packages/cinematic-storyboard-domain",
+    "packages/marketing-storyboard-domain",
+    "packages/rpg-storyboard-domain",
+    "packages/storyboard-canvas",
+    "packages/storyboard-core",
+    "packages/storyboard-routing",
+    "site"
+  ]
 }

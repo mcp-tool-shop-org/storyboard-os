@@ -11,7 +11,7 @@
   ],
   "breaks": [
     {
-      "doors": 2,
+      "doors": 6,
       "importedBy": [
         "cinematic-storyboard",
         "cinematic-storyboard-domain",
@@ -26,7 +26,7 @@
       "partLabel": "storyboard-core"
     },
     {
-      "doors": 2,
+      "doors": 3,
       "importedBy": [
         "cinematic-storyboard",
         "marketing-storyboard",
@@ -38,7 +38,7 @@
       "partLabel": "storyboard-canvas"
     },
     {
-      "doors": 2,
+      "doors": 3,
       "importedBy": [
         "cinematic-storyboard"
       ],
@@ -48,7 +48,7 @@
       "partLabel": "cinematic-storyboard-domain"
     },
     {
-      "doors": 2,
+      "doors": 3,
       "importedBy": [
         "marketing-storyboard"
       ],
@@ -58,7 +58,7 @@
       "partLabel": "marketing-storyboard-domain"
     },
     {
-      "doors": 2,
+      "doors": 3,
       "importedBy": [
         "rpg-storyboard"
       ],
@@ -68,7 +68,7 @@
       "partLabel": "rpg-storyboard-domain"
     },
     {
-      "doors": 2,
+      "doors": 3,
       "importedBy": [
         "rpg-storyboard"
       ],
@@ -91,11 +91,92 @@
       "importedByTests": [],
       "kind": "part",
       "name": "cinematic-storyboard",
-      "partLabel": "the site"
+      "partLabel": "cinematic-storyboard"
     }
   ],
   "changes": {
-    "first": true
+    "fileCounts": {
+      "added": 4,
+      "changed": 17,
+      "moved": 0,
+      "parts": 11,
+      "removed": 0
+    },
+    "items": [
+      {
+        "kind": "door",
+        "sentence": "CI's push trigger now also names `codecov.yml`.",
+        "subjects": [
+          ".github/workflows/ci.yml"
+        ]
+      },
+      {
+        "kind": "door",
+        "sentence": "Publish to npm no longer runs packages/cinematic-storyboard-domain/package.json, packages/marketing-storyboard-domain/package.json, packages/rpg-storyboard-domain/package.json and 3 more.",
+        "subjects": [
+          ".github/workflows/publish.yml",
+          "packages/cinematic-storyboard-domain/package.json",
+          "packages/marketing-storyboard-domain/package.json",
+          "packages/rpg-storyboard-domain/package.json",
+          "packages/storyboard-canvas/package.json",
+          "packages/storyboard-core/package.json",
+          "packages/storyboard-routing/package.json"
+        ]
+      },
+      {
+        "kind": "door",
+        "sentence": "@storyboard-os/cinematic-domain (packages/cinematic-storyboard-domain/package.json) is a new package. It loads packages/cinematic-storyboard-domain/schema/production-brief.json and packages/cinematic-storyboard-domain/src/index.ts.",
+        "subjects": [
+          "packages/cinematic-storyboard-domain/package.json",
+          "packages/cinematic-storyboard-domain/schema/production-brief.json",
+          "packages/cinematic-storyboard-domain/src/index.ts"
+        ]
+      },
+      {
+        "kind": "door",
+        "sentence": "And 5 more changes to doors.",
+        "subjects": []
+      },
+      {
+        "kind": "landing",
+        "sentence": "packages/cinematic-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.",
+        "subjects": [
+          "packages/cinematic-storyboard-domain/package.json",
+          ".github/workflows/publish.yml"
+        ]
+      },
+      {
+        "kind": "landing",
+        "sentence": "packages/marketing-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.",
+        "subjects": [
+          "packages/marketing-storyboard-domain/package.json",
+          ".github/workflows/publish.yml"
+        ]
+      },
+      {
+        "kind": "landing",
+        "sentence": "packages/rpg-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.",
+        "subjects": [
+          "packages/rpg-storyboard-domain/package.json",
+          ".github/workflows/publish.yml"
+        ]
+      },
+      {
+        "kind": "landing",
+        "sentence": "And 3 more new writers and readers of places.",
+        "subjects": []
+      },
+      {
+        "kind": "counts",
+        "sentence": "4 files added and 17 changed content, across 11 parts.",
+        "subjects": []
+      }
+    ],
+    "since": {
+      "commit": "6714e4a4627a25e59df420bd5e14b6fa4140c776",
+      "generatedAt": "2026-09-25T02:08:04.177Z"
+    },
+    "unchanged": false
   },
   "changesTogether": [
     {
@@ -133,7 +214,7 @@
       "b": "packages/rpg-storyboard-domain/src/index.ts",
       "either": 12,
       "partLabels": [
-        "the site",
+        "rpg-storyboard",
         "rpg-storyboard-domain"
       ],
       "parts": [
@@ -148,7 +229,7 @@
       "b": "packages/rpg-storyboard-domain/src/project.test.ts",
       "either": 6,
       "partLabels": [
-        "the site",
+        "rpg-storyboard",
         "rpg-storyboard-domain"
       ],
       "parts": [
@@ -176,16 +257,16 @@
   ],
   "changesTogetherNote": [
     "2 files changed together with their own tests, as expected.",
-    "Confidence is low: fewer than 20 source files reach 10 revisions in the window.",
+    "Confidence is low: fewer than 25 source files reach 10 revisions in the window.",
     "Window: 180 days; a pair counts from 3 shared commits, since 3 source files reach 10 revisions; the floor rises to 10 when 25 do."
   ],
   "changesTogetherWithTests": 2,
-  "commit": "6714e4a4627a25e59df420bd5e14b6fa4140c776",
+  "commit": "736766f1f17065fe64a4f3813db0d86d52ee8c72",
   "defaultBranch": "main",
-  "derived": "14 parts, mostly TypeScript (172 files) and JavaScript (6). Work enters through 3 doors; the busiest is CI, which reaches 11 parts. It publishes to npm.",
+  "derived": "14 parts, mostly TypeScript (175 files), Astro (19), JavaScript (6) and CSS (2). Work enters through 9 doors; the busiest is CI, which reaches 11 parts. It publishes @storyboard-os/cinematic-domain (packages/cinematic-storyboard-domain), @storyboard-os/marketing-domain (packages/marketing-storyboard-domain), @storyboard-os/rpg-domain (packages/rpg-storyboard-domain), @storyboard-os/canvas (packages/storyboard-canvas), @storyboard-os/core (packages/storyboard-core) and @storyboard-os/routing (packages/storyboard-routing) to npm. It deploys a site to GitHub Pages. People import @storyboard-os/canvas, @storyboard-os/cinematic-domain, @storyboard-os/core, @storyboard-os/marketing-domain, @storyboard-os/routing and @storyboard-os/rpg-domain.",
   "doors": [
     {
-      "checks": [
+      "builds": [
         "packages/cinematic-storyboard-domain/src/index.ts",
         "packages/marketing-storyboard-domain/src/index.ts",
         "packages/rpg-storyboard-domain/src/index.ts",
@@ -193,8 +274,9 @@
         "packages/storyboard-core/src/index.ts",
         "packages/storyboard-routing/src/index.ts"
       ],
-      "checksCount": 6,
-      "checksMore": 3,
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
       "file": ".github/workflows/ci.yml",
       "id": ".github/workflows/ci.yml",
       "landings": [],
@@ -209,7 +291,7 @@
         {
           "boundary": "cinematic-storyboard",
           "depth": 0,
-          "files": 11
+          "files": 16
         },
         {
           "boundary": "cinematic-storyboard-domain",
@@ -219,7 +301,7 @@
         {
           "boundary": "marketing-storyboard",
           "depth": 0,
-          "files": 10
+          "files": 14
         },
         {
           "boundary": "marketing-storyboard-domain",
@@ -229,7 +311,7 @@
         {
           "boundary": "rpg-storyboard",
           "depth": 0,
-          "files": 32
+          "files": 41
         },
         {
           "boundary": "rpg-storyboard-domain",
@@ -239,7 +321,7 @@
         {
           "boundary": "site",
           "depth": 0,
-          "files": 3
+          "files": 5
         },
         {
           "boundary": "storyboard-canvas",
@@ -319,15 +401,17 @@
       ],
       "runsCount": 58,
       "runsMore": 103,
-      "sends": [],
+      "sends": [
+        "uploads coverage to Codecov"
+      ],
       "stages": [],
       "triggers": [
-        "on a pull request",
-        "on a push to main touching 11 paths"
+        "on a pull request to main",
+        "on a push to main touching 12 paths"
       ]
     },
     {
-      "checks": [
+      "builds": [
         "packages/cinematic-storyboard-domain/src/index.ts",
         "packages/marketing-storyboard-domain/src/index.ts",
         "packages/rpg-storyboard-domain/src/index.ts",
@@ -335,8 +419,9 @@
         "packages/storyboard-core/src/index.ts",
         "packages/storyboard-routing/src/index.ts"
       ],
-      "checksCount": 6,
-      "checksMore": 3,
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
       "file": ".github/workflows/publish.yml",
       "id": ".github/workflows/publish.yml",
       "landings": [],
@@ -351,57 +436,51 @@
         {
           "boundary": "cinematic-storyboard",
           "depth": 0,
-          "files": 11
+          "files": 16
         },
         {
           "boundary": "cinematic-storyboard-domain",
           "depth": 0,
-          "files": 31
+          "files": 30
         },
         {
           "boundary": "marketing-storyboard",
           "depth": 0,
-          "files": 10
+          "files": 14
         },
         {
           "boundary": "marketing-storyboard-domain",
           "depth": 0,
-          "files": 23
+          "files": 22
         },
         {
           "boundary": "rpg-storyboard",
           "depth": 0,
-          "files": 32
+          "files": 41
         },
         {
           "boundary": "rpg-storyboard-domain",
           "depth": 0,
-          "files": 30
+          "files": 29
         },
         {
           "boundary": "storyboard-canvas",
           "depth": 0,
-          "files": 24
+          "files": 23
         },
         {
           "boundary": "storyboard-core",
           "depth": 0,
-          "files": 12
+          "files": 11
         },
         {
           "boundary": "storyboard-routing",
           "depth": 0,
-          "files": 4
+          "files": 3
         }
       ],
       "runs": [
         ".github/scripts/check-pack-contents.mjs",
-        "packages/cinematic-storyboard-domain/package.json",
-        "packages/marketing-storyboard-domain/package.json",
-        "packages/rpg-storyboard-domain/package.json",
-        "packages/storyboard-canvas/package.json",
-        "packages/storyboard-core/package.json",
-        "packages/storyboard-routing/package.json",
         "apps/cinematic-storyboard/astro.config.mjs",
         "apps/cinematic-storyboard/src/",
         "apps/marketing-storyboard/astro.config.mjs",
@@ -457,10 +536,10 @@
         "packages/storyboard-core/src/validate.test.ts",
         "packages/storyboard-routing/src/routes.test.ts"
       ],
-      "runsCount": 61,
-      "runsMore": 105,
+      "runsCount": 55,
+      "runsMore": 90,
       "sends": [
-        "publishes to npm",
+        "publishes @storyboard-os/cinematic-domain (packages/cinematic-storyboard-domain), @storyboard-os/marketing-domain (packages/marketing-storyboard-domain), @storyboard-os/rpg-domain (packages/rpg-storyboard-domain), @storyboard-os/canvas (packages/storyboard-canvas), @storyboard-os/core (packages/storyboard-core) and @storyboard-os/routing (packages/storyboard-routing) to npm",
         "uploads storyboard-os.cdx.json to the release"
       ],
       "stages": [],
@@ -487,7 +566,7 @@
         {
           "boundary": "site",
           "depth": 0,
-          "files": 3
+          "files": 5
         }
       ],
       "runs": [
@@ -505,6 +584,182 @@
         "on a push to main touching 6 paths",
         "or by hand"
       ]
+    },
+    {
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
+      "file": "packages/cinematic-storyboard-domain/package.json",
+      "id": "packages/cinematic-storyboard-domain/package.json#@storyboard-os/cinematic-domain",
+      "kind": "package",
+      "landings": [],
+      "name": "@storyboard-os/cinematic-domain",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "cinematic-storyboard-domain",
+          "depth": 0,
+          "files": 17
+        },
+        {
+          "boundary": "storyboard-core",
+          "depth": 2,
+          "files": 6
+        }
+      ],
+      "runs": [
+        "packages/cinematic-storyboard-domain/src/index.ts",
+        "packages/cinematic-storyboard-domain/schema/production-brief.json"
+      ],
+      "runsCount": 2,
+      "runsMore": 0,
+      "sends": [],
+      "stages": [],
+      "triggers": []
+    },
+    {
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
+      "file": "packages/marketing-storyboard-domain/package.json",
+      "id": "packages/marketing-storyboard-domain/package.json#@storyboard-os/marketing-domain",
+      "kind": "package",
+      "landings": [],
+      "name": "@storyboard-os/marketing-domain",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "marketing-storyboard-domain",
+          "depth": 0,
+          "files": 13
+        },
+        {
+          "boundary": "storyboard-core",
+          "depth": 2,
+          "files": 6
+        }
+      ],
+      "runs": [
+        "packages/marketing-storyboard-domain/src/index.ts",
+        "packages/marketing-storyboard-domain/schema/campaign-handoff.schema.json"
+      ],
+      "runsCount": 2,
+      "runsMore": 0,
+      "sends": [],
+      "stages": [],
+      "triggers": []
+    },
+    {
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
+      "file": "packages/rpg-storyboard-domain/package.json",
+      "id": "packages/rpg-storyboard-domain/package.json#@storyboard-os/rpg-domain",
+      "kind": "package",
+      "landings": [],
+      "name": "@storyboard-os/rpg-domain",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "rpg-storyboard-domain",
+          "depth": 0,
+          "files": 18
+        },
+        {
+          "boundary": "storyboard-core",
+          "depth": 2,
+          "files": 6
+        }
+      ],
+      "runs": [
+        "packages/rpg-storyboard-domain/src/index.ts",
+        "packages/rpg-storyboard-domain/schema/project-handoff.json",
+        "packages/rpg-storyboard-domain/schema/quest-handoff.json"
+      ],
+      "runsCount": 3,
+      "runsMore": 0,
+      "sends": [],
+      "stages": [],
+      "triggers": []
+    },
+    {
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
+      "file": "packages/storyboard-canvas/package.json",
+      "id": "packages/storyboard-canvas/package.json#@storyboard-os/canvas",
+      "kind": "package",
+      "landings": [],
+      "name": "@storyboard-os/canvas",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "storyboard-canvas",
+          "depth": 0,
+          "files": 15
+        }
+      ],
+      "runs": [
+        "packages/storyboard-canvas/src/index.ts"
+      ],
+      "runsCount": 1,
+      "runsMore": 0,
+      "sends": [],
+      "stages": [],
+      "triggers": []
+    },
+    {
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
+      "file": "packages/storyboard-core/package.json",
+      "id": "packages/storyboard-core/package.json#@storyboard-os/core",
+      "kind": "package",
+      "landings": [],
+      "name": "@storyboard-os/core",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "storyboard-core",
+          "depth": 0,
+          "files": 7
+        }
+      ],
+      "runs": [
+        "packages/storyboard-core/src/index.ts",
+        "packages/storyboard-core/schema/storyboard.schema.json"
+      ],
+      "runsCount": 2,
+      "runsMore": 0,
+      "sends": [],
+      "stages": [],
+      "triggers": []
+    },
+    {
+      "checks": [],
+      "checksCount": 0,
+      "checksMore": 0,
+      "file": "packages/storyboard-routing/package.json",
+      "id": "packages/storyboard-routing/package.json#@storyboard-os/routing",
+      "kind": "package",
+      "landings": [],
+      "name": "@storyboard-os/routing",
+      "pushes": false,
+      "reach": [
+        {
+          "boundary": "storyboard-routing",
+          "depth": 0,
+          "files": 2
+        }
+      ],
+      "runs": [
+        "packages/storyboard-routing/src/index.ts"
+      ],
+      "runsCount": 1,
+      "runsMore": 0,
+      "sends": [],
+      "stages": [],
+      "triggers": []
     }
   ],
   "duplicates": [
@@ -539,6 +794,25 @@
       ]
     },
     {
+      "contract": true,
+      "files": [
+        "apps/cinematic-storyboard/src/pages/sequences/[sequenceId]/handoff.astro",
+        "apps/marketing-storyboard/src/pages/campaigns/[campaignId]/handoff.astro",
+        "apps/rpg-storyboard/src/pages/storyboards/[storyboardId]/handoff.astro"
+      ],
+      "name": "getStaticPaths",
+      "partLabels": [
+        "cinematic-storyboard",
+        "marketing-storyboard",
+        "rpg-storyboard"
+      ],
+      "parts": [
+        "cinematic-storyboard",
+        "marketing-storyboard",
+        "rpg-storyboard"
+      ]
+    },
+    {
       "files": [
         "packages/cinematic-storyboard-domain/src/labels.ts",
         "packages/marketing-storyboard-domain/src/labels.ts"
@@ -567,26 +841,11 @@
         "cinematic-storyboard-domain",
         "marketing-storyboard-domain"
       ]
-    },
-    {
-      "files": [
-        "packages/cinematic-storyboard-domain/src/labels.ts",
-        "packages/marketing-storyboard-domain/src/labels.ts"
-      ],
-      "name": "humanizeMissingReason",
-      "partLabels": [
-        "cinematic-storyboard-domain",
-        "marketing-storyboard-domain"
-      ],
-      "parts": [
-        "cinematic-storyboard-domain",
-        "marketing-storyboard-domain"
-      ]
     }
   ],
   "duplicatesLead": "These are candidates from names and call order, not a judgement.",
   "duplicatesNote": [
-    "And 5 more pairs."
+    "And 6 more pairs."
   ],
   "edges": [
     {
@@ -620,26 +879,27 @@
       "to": "storyboard-core"
     }
   ],
+  "engine": "1.24.0",
   "generated": [],
-  "generatedAt": "2026-09-25T02:08:04.177Z",
+  "generatedAt": "2026-09-30T20:13:40.556Z",
   "limits": [
     "1 read uses a path built at run time and is not named here.",
     "15 reads go to a path their caller passes, not to this repository.",
-    "Statistics confidence is low: fewer than 20 source files reach 10 revisions in the window."
+    "Statistics confidence is low: fewer than 25 source files reach 10 revisions in the window."
   ],
   "mainDoor": ".github/workflows/ci.yml",
   "partLabels": {
     ".github": ".github",
     "assets": "assets",
-    "cinematic-storyboard": "the site",
+    "cinematic-storyboard": "cinematic-storyboard",
     "cinematic-storyboard-domain": "cinematic-storyboard-domain",
     "docs": "docs",
-    "marketing-storyboard": "the site",
+    "marketing-storyboard": "marketing-storyboard",
     "marketing-storyboard-domain": "marketing-storyboard-domain",
     "root": "the repository root",
-    "rpg-storyboard": "the site",
+    "rpg-storyboard": "rpg-storyboard",
     "rpg-storyboard-domain": "rpg-storyboard-domain",
-    "site": "the site",
+    "site": "site",
     "storyboard-canvas": "storyboard-canvas",
     "storyboard-core": "storyboard-core",
     "storyboard-routing": "storyboard-routing"
@@ -651,7 +911,10 @@
   "startDoor": ".github/workflows/ci.yml",
   "startHere": [
     ".github/workflows/ci.yml",
-    ".github/scripts/check-pack-contents.mjs"
+    "packages/cinematic-storyboard-domain/src/index.ts",
+    "packages/cinematic-storyboard-domain/src/beatStatus.ts",
+    "packages/cinematic-storyboard-domain/src/schema.ts",
+    "packages/storyboard-core/src/density.ts"
   ],
   "summary": null,
   "summaryFrom": null,
