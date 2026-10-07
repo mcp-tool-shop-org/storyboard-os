@@ -57,7 +57,7 @@ jobs:
       # `version: 11` is rejected as a mismatch; omitting version lets
       # action-setup self-install 11.7 then switch, which can leave PATH
       # on 11.7 for `pnpm install --frozen-lockfile`.
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
           version: 11.4.0
 
