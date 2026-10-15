@@ -96,172 +96,31 @@
   ],
   "changes": {
     "fileCounts": {
-      "added": 4,
-      "changed": 17,
+      "added": 0,
+      "changed": 12,
       "moved": 0,
-      "parts": 11,
+      "parts": 10,
       "removed": 0
     },
     "items": [
       {
-        "kind": "door",
-        "sentence": "CI's push trigger now also names `codecov.yml`.",
-        "subjects": [
-          ".github/workflows/ci.yml"
-        ]
-      },
-      {
-        "kind": "door",
-        "sentence": "Publish to npm no longer runs packages/cinematic-storyboard-domain/package.json, packages/marketing-storyboard-domain/package.json, packages/rpg-storyboard-domain/package.json and 3 more.",
-        "subjects": [
-          ".github/workflows/publish.yml",
-          "packages/cinematic-storyboard-domain/package.json",
-          "packages/marketing-storyboard-domain/package.json",
-          "packages/rpg-storyboard-domain/package.json",
-          "packages/storyboard-canvas/package.json",
-          "packages/storyboard-core/package.json",
-          "packages/storyboard-routing/package.json"
-        ]
-      },
-      {
-        "kind": "door",
-        "sentence": "@storyboard-os/cinematic-domain (packages/cinematic-storyboard-domain/package.json) is a new package. It loads packages/cinematic-storyboard-domain/schema/production-brief.json and packages/cinematic-storyboard-domain/src/index.ts.",
-        "subjects": [
-          "packages/cinematic-storyboard-domain/package.json",
-          "packages/cinematic-storyboard-domain/schema/production-brief.json",
-          "packages/cinematic-storyboard-domain/src/index.ts"
-        ]
-      },
-      {
-        "kind": "door",
-        "sentence": "And 5 more changes to doors.",
-        "subjects": []
-      },
-      {
-        "kind": "landing",
-        "sentence": "packages/cinematic-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.",
-        "subjects": [
-          "packages/cinematic-storyboard-domain/package.json",
-          ".github/workflows/publish.yml"
-        ]
-      },
-      {
-        "kind": "landing",
-        "sentence": "packages/marketing-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.",
-        "subjects": [
-          "packages/marketing-storyboard-domain/package.json",
-          ".github/workflows/publish.yml"
-        ]
-      },
-      {
-        "kind": "landing",
-        "sentence": "packages/rpg-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.",
-        "subjects": [
-          "packages/rpg-storyboard-domain/package.json",
-          ".github/workflows/publish.yml"
-        ]
-      },
-      {
-        "kind": "landing",
-        "sentence": "And 3 more new writers and readers of places.",
-        "subjects": []
-      },
-      {
         "kind": "counts",
-        "sentence": "4 files added and 17 changed content, across 11 parts.",
+        "sentence": "Nothing structural changed since 2026-09-30; 12 files changed content.",
         "subjects": []
       }
     ],
     "since": {
-      "commit": "6714e4a4627a25e59df420bd5e14b6fa4140c776",
-      "generatedAt": "2026-09-25T02:08:04.177Z"
+      "commit": "736766f1f17065fe64a4f3813db0d86d52ee8c72",
+      "generatedAt": "2026-09-30T20:13:40.556Z"
     },
-    "unchanged": false
+    "unchanged": true
   },
-  "changesTogether": [
-    {
-      "a": "packages/marketing-storyboard-domain/src/frameSignals.ts",
-      "b": "packages/marketing-storyboard-domain/src/handoff.ts",
-      "either": 6,
-      "partLabels": [
-        "marketing-storyboard-domain",
-        "marketing-storyboard-domain"
-      ],
-      "parts": [
-        "marketing-storyboard-domain",
-        "marketing-storyboard-domain"
-      ],
-      "relation": "inside",
-      "shared": 5
-    },
-    {
-      "a": "packages/storyboard-canvas/src/StoryboardCanvas.tsx",
-      "b": "packages/storyboard-canvas/src/index.ts",
-      "either": 6,
-      "partLabels": [
-        "storyboard-canvas",
-        "storyboard-canvas"
-      ],
-      "parts": [
-        "storyboard-canvas",
-        "storyboard-canvas"
-      ],
-      "relation": "inside",
-      "shared": 5
-    },
-    {
-      "a": "apps/rpg-storyboard/src/components/StoryboardCanvas.tsx",
-      "b": "packages/rpg-storyboard-domain/src/index.ts",
-      "either": 12,
-      "partLabels": [
-        "rpg-storyboard",
-        "rpg-storyboard-domain"
-      ],
-      "parts": [
-        "rpg-storyboard",
-        "rpg-storyboard-domain"
-      ],
-      "relation": "a-imports-b",
-      "shared": 9
-    },
-    {
-      "a": "apps/rpg-storyboard/src/components/projects/ProjectBoard.tsx",
-      "b": "packages/rpg-storyboard-domain/src/project.test.ts",
-      "either": 6,
-      "partLabels": [
-        "rpg-storyboard",
-        "rpg-storyboard-domain"
-      ],
-      "parts": [
-        "rpg-storyboard",
-        "rpg-storyboard-domain"
-      ],
-      "relation": "a-imports-b",
-      "shared": 4
-    },
-    {
-      "a": "packages/marketing-storyboard-domain/src/frameSignals.test.ts",
-      "b": "packages/marketing-storyboard-domain/src/handoff.test.ts",
-      "either": 6,
-      "partLabels": [
-        "marketing-storyboard-domain",
-        "marketing-storyboard-domain"
-      ],
-      "parts": [
-        "marketing-storyboard-domain",
-        "marketing-storyboard-domain"
-      ],
-      "relation": "inside",
-      "shared": 4
-    }
-  ],
+  "changesTogether": [],
   "changesTogetherNote": [
-    "2 files changed together with their own tests, as expected.",
-    "Confidence is low: fewer than 25 source files reach 10 revisions in the window.",
-    "Window: 180 days; a pair counts from 3 shared commits, since 3 source files reach 10 revisions; the floor rises to 10 when 25 do."
+    "Window: 180 days; a pair counts from 3 shared commits, since the window holds fewer than 30 qualifying commits."
   ],
-  "changesTogetherWithTests": 2,
-  "commit": "736766f1f17065fe64a4f3813db0d86d52ee8c72",
+  "changesTogetherWithTests": 0,
+  "commit": "1fc45e46e4fc094e0d0c8971521a05588e240054",
   "defaultBranch": "main",
   "derived": "14 parts, mostly TypeScript (175 files), Astro (19), JavaScript (6) and CSS (2). Work enters through 9 doors; the busiest is CI, which reaches 11 parts. It publishes @storyboard-os/cinematic-domain (packages/cinematic-storyboard-domain), @storyboard-os/marketing-domain (packages/marketing-storyboard-domain), @storyboard-os/rpg-domain (packages/rpg-storyboard-domain), @storyboard-os/canvas (packages/storyboard-canvas), @storyboard-os/core (packages/storyboard-core) and @storyboard-os/routing (packages/storyboard-routing) to npm. It deploys a site to GitHub Pages. People import @storyboard-os/canvas, @storyboard-os/cinematic-domain, @storyboard-os/core, @storyboard-os/marketing-domain, @storyboard-os/routing and @storyboard-os/rpg-domain.",
   "doors": [
@@ -881,11 +740,11 @@
   ],
   "engine": "1.24.0",
   "generated": [],
-  "generatedAt": "2026-09-30T20:13:40.556Z",
+  "generatedAt": "2026-10-15T03:02:04.304Z",
   "limits": [
     "1 read uses a path built at run time and is not named here.",
     "15 reads go to a path their caller passes, not to this repository.",
-    "Statistics confidence is low: fewer than 25 source files reach 10 revisions in the window."
+    "Statistics confidence is low: fewer than 30 qualifying commits in the window, and fewer than 25 source files reach 10 revisions."
   ],
   "mainDoor": ".github/workflows/ci.yml",
   "partLabels": {
