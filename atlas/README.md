@@ -1,22 +1,14 @@
 # storyboard-os: how it works
 
-Mapped at 2026-09-30 from commit 736766f by Atlas 1.24.0.
+Mapped at 2026-10-15 from commit 1fc45e4 by Atlas 1.24.0.
 
 ## What this is
 
 14 parts, mostly TypeScript (175 files), Astro (19), JavaScript (6) and CSS (2). Work enters through 9 doors; the busiest is CI, which reaches 11 parts. It publishes @storyboard-os/cinematic-domain (packages/cinematic-storyboard-domain), @storyboard-os/marketing-domain (packages/marketing-storyboard-domain), @storyboard-os/rpg-domain (packages/rpg-storyboard-domain), @storyboard-os/canvas (packages/storyboard-canvas), @storyboard-os/core (packages/storyboard-core) and @storyboard-os/routing (packages/storyboard-routing) to npm. It deploys a site to GitHub Pages. People import @storyboard-os/canvas, @storyboard-os/cinematic-domain, @storyboard-os/core, @storyboard-os/marketing-domain, @storyboard-os/routing and @storyboard-os/rpg-domain.
 
-## What changed since 2026-09-25 (6714e4a)
+## What changed since 2026-09-30 (736766f)
 
-- CI's push trigger now also names `codecov.yml`.
-- Publish to npm no longer runs packages/cinematic-storyboard-domain/package.json, packages/marketing-storyboard-domain/package.json, packages/rpg-storyboard-domain/package.json and 3 more.
-- @storyboard-os/cinematic-domain (packages/cinematic-storyboard-domain/package.json) is a new package. It loads packages/cinematic-storyboard-domain/schema/production-brief.json and packages/cinematic-storyboard-domain/src/index.ts.
-- And 5 more changes to doors.
-- packages/cinematic-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.
-- packages/marketing-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.
-- packages/rpg-storyboard-domain/package.json is now also read by .github/workflows/publish.yml.
-- And 3 more new writers and readers of places.
-- 4 files added and 17 changed content, across 11 parts.
+Nothing structural changed since 2026-09-30; 12 files changed content.
 
 ## What comes in
 
@@ -70,17 +62,9 @@ CI writes nothing this map can see.
 
 ## What tends to change together
 
-- **packages/marketing-storyboard-domain/src/frameSignals.ts** and **packages/marketing-storyboard-domain/src/handoff.ts** changed together in 5 of 6 commits, inside the marketing-storyboard-domain part.
-- **packages/storyboard-canvas/src/StoryboardCanvas.tsx** and **packages/storyboard-canvas/src/index.ts** changed together in 5 of 6 commits, inside the storyboard-canvas part.
-- **apps/rpg-storyboard/src/components/StoryboardCanvas.tsx** and **packages/rpg-storyboard-domain/src/index.ts** changed together in 9 of 12 commits, and the rpg-storyboard part imports the rpg-storyboard-domain part.
-- **apps/rpg-storyboard/src/components/projects/ProjectBoard.tsx** and **packages/rpg-storyboard-domain/src/project.test.ts** changed together in 4 of 6 commits, and the rpg-storyboard part imports the rpg-storyboard-domain part.
-- **packages/marketing-storyboard-domain/src/frameSignals.test.ts** and **packages/marketing-storyboard-domain/src/handoff.test.ts** changed together in 4 of 6 commits, inside the marketing-storyboard-domain part.
+No two source files changed together often enough to name.
 
-2 files changed together with their own tests, as expected.
-
-Confidence is low: fewer than 25 source files reach 10 revisions in the window.
-
-Window: 180 days; a pair counts from 3 shared commits, since 3 source files reach 10 revisions; the floor rises to 10 when 25 do.
+Window: 180 days; a pair counts from 3 shared commits, since the window holds fewer than 30 qualifying commits.
 
 ## What no test touches
 
@@ -120,6 +104,6 @@ Read those in order to follow one pull request end to end.
 
 - 1 read uses a path built at run time and is not named here.
 - 15 reads go to a path their caller passes, not to this repository.
-- Statistics confidence is low: fewer than 25 source files reach 10 revisions in the window.
+- Statistics confidence is low: fewer than 30 qualifying commits in the window, and fewer than 25 source files reach 10 revisions.
 
 Regenerate with `npx --yes @dogfood-lab/atlas map`.

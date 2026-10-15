@@ -123,7 +123,7 @@
           "path": "apps/cinematic-storyboard/astro.config.mjs"
         },
         {
-          "hash": "c4727322fd3bf0f98cbb444768a7587943cf68df7dcb26f99e5dd9b56da7de9b",
+          "hash": "6cdf096136884a10d6be8445f80d4293608295a629cc8f3453edbc4b4916a4ce",
           "path": "apps/cinematic-storyboard/package.json"
         },
         {
@@ -318,7 +318,7 @@
           "path": "packages/cinematic-storyboard-domain/README.md"
         },
         {
-          "hash": "0173341372fb823255cff9ef73a868fb106ae47ec0bed1d3566a0432f47d6ffc",
+          "hash": "f22a6cd32716678f4e4955e8d0ff8b08717ac88676117cf39f0b392072f7061c",
           "path": "packages/cinematic-storyboard-domain/package.json"
         },
         {
@@ -959,7 +959,7 @@
           "path": "apps/marketing-storyboard/astro.config.mjs"
         },
         {
-          "hash": "16f33e773d3f1c03335858008ec5e4f6d56bcdb75dba43ed06805dab28d61cdb",
+          "hash": "f24dceb4b882038c249dca0f66c051851e42da33cd8468f285001f37bf8dbc8f",
           "path": "apps/marketing-storyboard/package.json"
         },
         {
@@ -1173,7 +1173,7 @@
           "path": "packages/marketing-storyboard-domain/README.md"
         },
         {
-          "hash": "fa21e01bfc6b2f144727188aa778edf756cea2c249bf2da483a079d5e8ad0d24",
+          "hash": "1052271ff1b77dc711d25458d9cf833e4555af1d27a852826ed225319729df90",
           "path": "packages/marketing-storyboard-domain/package.json"
         },
         {
@@ -1675,15 +1675,15 @@
           "path": "codecov.yml"
         },
         {
-          "hash": "690ca2b790cb70497bbd6836e9ac8a2ae881d6a88ffee47b42f05d7c4baa7eb9",
+          "hash": "fe6debe44e8b21f242557d48aefe7d0fe3f7b26d5f8a22fe5a2d7baaf764244f",
           "path": "package.json"
         },
         {
-          "hash": "725e79915f3eca312f1c7e670ae19e498690e32c51a8b60d04ef3c6fdce11229",
+          "hash": "93ecb52fd0e9d51a5f60466bfbc35421c98830e548f59af3450bab756571937b",
           "path": "pnpm-lock.yaml"
         },
         {
-          "hash": "578d532ec0d9f029d7edf4deac46cf082b1691f80d70a251368ff0f91aa3f3b2",
+          "hash": "bbd5c58a1f2f4e3a3e8140dc5846f09b671fc216e7959ab0a910b1c7c6278970",
           "path": "pnpm-workspace.yaml"
         }
       ],
@@ -1710,7 +1710,7 @@
           "path": "apps/rpg-storyboard/astro.config.mjs"
         },
         {
-          "hash": "fa31a64399606bf4fa6cad9f1b99d521233fcb3f306b1fe7846ef103c6d251e5",
+          "hash": "04ea243519e67ee8a3eb2884ee59363455139b948dd89fb587349f840f7f4d1f",
           "path": "apps/rpg-storyboard/package.json"
         },
         {
@@ -2370,7 +2370,7 @@
           "path": "packages/rpg-storyboard-domain/README.zh.md"
         },
         {
-          "hash": "fa486a4ec0fde338856ba4385c7079af86d71eec3230dbb9a562b3cd15f02a87",
+          "hash": "2ec216392817c50f2edec929efafe6fb79fb08cd15f9105d26ab527ff59eb1c3",
           "path": "packages/rpg-storyboard-domain/package.json"
         },
         {
@@ -3081,7 +3081,7 @@
           "path": "packages/storyboard-canvas/README.zh.md"
         },
         {
-          "hash": "bf4c735cdecf4fa27457ea89d1a5a2ff387e4d8ab354a7a7c20ed03ca52b4034",
+          "hash": "70e53f00e4c0c9782f3d48a37d2ad2e65ba5a1d7eaec5a5c4329f6c0e2791447",
           "path": "packages/storyboard-canvas/package.json"
         },
         {
@@ -3476,7 +3476,7 @@
           "path": "packages/storyboard-core/README.zh.md"
         },
         {
-          "hash": "adbc49c7c5eaff78295246f2f7c17e79c542096530b3c78e4999ead15288f201",
+          "hash": "0fc1c87dd921083fb9208fd06ec433e41eb06804d6b9e673e95c20b6dda3b8ad",
           "path": "packages/storyboard-core/package.json"
         },
         {
@@ -3670,7 +3670,7 @@
           "path": "packages/storyboard-routing/README.zh.md"
         },
         {
-          "hash": "a8015320047a0b5dc2b89d29d8e8ad641572716c5347d68731e0106139594df1",
+          "hash": "b3d7e8c18278f12c4521654f266e04692b44ffa57b2fc8414fd96bf3a2a803ab",
           "path": "packages/storyboard-routing/package.json"
         },
         {
@@ -5929,7 +5929,7 @@
   ],
   "engine": "1.24.0",
   "generatedFrom": {
-    "commit": "736766f1f17065fe64a4f3813db0d86d52ee8c72",
+    "commit": "1fc45e46e4fc094e0d0c8971521a05588e240054",
     "tracked": 331
   },
   "landings": [
