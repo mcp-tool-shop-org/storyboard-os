@@ -27,8 +27,8 @@
   },
   "packageManager": "pnpm@11.4.0",
   "devDependencies": {
-    "@cyclonedx/cyclonedx-npm": "6.0.1",
-    "@types/node": "^24.13.3",
-    "tsup": "^8.5.1"
+    "@cyclonedx/cyclonedx-npm": "7.0.0",
+    "@types/node": "^26.6.6",
+    "tsup": "^9.0.0"
   }
 }
