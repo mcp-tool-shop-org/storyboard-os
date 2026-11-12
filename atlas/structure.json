@@ -55,15 +55,15 @@
           "sequences": []
         },
         {
-          "hash": "f469affcebf6755b2d6b67281faa34c1ec75351b34d710ef49e053376e592687",
+          "hash": "94ee1fe3bdee06f12926e948f7a9d55818bdb2e8ed3219663be71c127ef6f430",
           "path": ".github/workflows/ci.yml"
         },
         {
-          "hash": "19b966c311aa4cd16c3e17290ff499e8b3ae7363d036a1627b8bd4c09330f826",
+          "hash": "eac029ff44da94f8ff2ea44d3a5bd2cfc237bbaf4a2b191943f69d7926cb579c",
           "path": ".github/workflows/pages.yml"
         },
         {
-          "hash": "5e3f4a1f5f8459b1d5e01265854a4b4866f17ce9810a03c4be4ed6199560500a",
+          "hash": "6fef370f66b41701d48b8aa53886c6ff48e878ddc2754a682620ec7e5e92450f",
           "path": ".github/workflows/publish.yml"
         }
       ],
@@ -123,7 +123,7 @@
           "path": "apps/cinematic-storyboard/astro.config.mjs"
         },
         {
-          "hash": "6cdf096136884a10d6be8445f80d4293608295a629cc8f3453edbc4b4916a4ce",
+          "hash": "7650377220fa215e9b54cca5c2092468060dbf7c4b739f59f4c08ee58b8d2975",
           "path": "apps/cinematic-storyboard/package.json"
         },
         {
@@ -959,7 +959,7 @@
           "path": "apps/marketing-storyboard/astro.config.mjs"
         },
         {
-          "hash": "f24dceb4b882038c249dca0f66c051851e42da33cd8468f285001f37bf8dbc8f",
+          "hash": "2fc0a247223618407a61938f8f4b4ff4fa5b9e6f6033b4081587f2c106d7ac64",
           "path": "apps/marketing-storyboard/package.json"
         },
         {
@@ -1679,7 +1679,7 @@
           "path": "package.json"
         },
         {
-          "hash": "93ecb52fd0e9d51a5f60466bfbc35421c98830e548f59af3450bab756571937b",
+          "hash": "ae9f724ec731691a5e878b09687667dacfc00282dcdfe93976a04d8b97afab34",
           "path": "pnpm-lock.yaml"
         },
         {
@@ -1710,7 +1710,7 @@
           "path": "apps/rpg-storyboard/astro.config.mjs"
         },
         {
-          "hash": "04ea243519e67ee8a3eb2884ee59363455139b948dd89fb587349f840f7f4d1f",
+          "hash": "1453828e0553635bbfcdd6dfa78341d30a8fe86546ee43b658f34879cb946c41",
           "path": "apps/rpg-storyboard/package.json"
         },
         {
@@ -2910,7 +2910,7 @@
           "path": "site/astro.config.mjs"
         },
         {
-          "hash": "fea8b399061d9cdf25419764fecdddc13ee5edc9aa87d1c66300dde37343c1b9",
+          "hash": "d3681a9587f53a280e0f90ec872fd21eef1624012882f3f2f398730ebeafa81a",
           "path": "site/package.json"
         },
         {
@@ -5927,9 +5927,9 @@
       "to": "storyboard-core"
     }
   ],
-  "engine": "1.24.0",
+  "engine": "1.26.0",
   "generatedFrom": {
-    "commit": "1fc45e46e4fc094e0d0c8971521a05588e240054",
+    "commit": "fa04c7bd3ba45ab96eb0a1be5e542b71d7ee8806",
     "tracked": 331
   },
   "landings": [
